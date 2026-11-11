@@ -15,6 +15,10 @@ mkdirSync(output, { recursive: true });
 for (const file of ["index.html", "app.mjs", "style.css"])
   copyFileSync(path.join(root, "web", file), path.join(output, file));
 copyFileSync(
+  path.join(root, "examples", "distorted-camera.ndjson"),
+  path.join(output, "distorted-camera.ndjson"),
+);
+copyFileSync(
   path.join(
     root,
     "_build",

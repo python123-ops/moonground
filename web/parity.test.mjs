@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import {
@@ -13,7 +13,7 @@ import {
 } from "../_build/site/moonground.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const binary = path.join(
+const binaryDirectory = path.join(
   root,
   "_build",
   "native",
@@ -21,7 +21,15 @@ const binary = path.join(
   "build",
   "cmd",
   "main",
-  process.platform === "win32" ? "main.exe" : "main",
+);
+const binary = process.env.MOONGROUND_CLI
+  ? path.resolve(root, process.env.MOONGROUND_CLI)
+  : ["main.exe", "main"]
+      .map((name) => path.join(binaryDirectory, name))
+      .find(existsSync);
+assert.ok(
+  binary,
+  "Build the native release command before running parity tests.",
 );
 const fixture = readFileSync(
   path.join(root, "examples", "warehouse.ndjson"),
@@ -169,5 +177,67 @@ test("browser session capacity is bounded and released", () => {
     );
   } finally {
     handles.forEach(moonground_close);
+  }
+});
+
+test("raw camera measurements and uncertainty gates agree across runtimes", () => {
+  const input = readFileSync(
+    path.join(root, "examples", "distorted-camera.ndjson"),
+    "utf8",
+  );
+  const native = spawnSync(binary, ["--stream"], { input, encoding: "utf8" });
+  assert.equal(native.status, 0, native.stderr);
+  const expected = native.stdout.trim().split("\n").map(JSON.parse);
+  const [config, ...frames] = input.trim().split("\n");
+  const { handle } = unpack(moonground_create(config));
+  try {
+    const actual = frames.map((frame) =>
+      unpack(moonground_update(handle, frame)),
+    );
+    closeNumeric(actual, expected);
+    assert.ok(actual.some((frame) => frame.tracks[0].status === "uncertain"));
+    assert.equal(actual.at(-1).tracks[0].status, "ready");
+    const uncertain = actual.find(
+      (frame) => frame.tracks[0].status === "uncertain",
+    ).tracks[0];
+    assert.equal(uncertain.speed_mps, null);
+    assert.equal(uncertain.velocity_mps.length, 2);
+    assert.ok(uncertain.velocity_std_mps > 0.2);
+    assert.ok(Math.abs(actual[0].tracks[0].position_m[0] - 3.6) < 1e-9);
+  } finally {
+    moonground_close(handle);
+  }
+});
+
+test("camera fit returns its camera and reusable corrected-space ROI", () => {
+  const input = readFileSync(
+    path.join(root, "examples", "distorted-calibration.json"),
+    "utf8",
+  );
+  const native = spawnSync(binary, ["--calibrate"], {
+    input,
+    encoding: "utf8",
+  });
+  assert.equal(native.status, 0, native.stderr);
+  const fitted = unpack(moonground_calibrate(input));
+  closeNumeric(fitted, JSON.parse(native.stdout));
+  assert.deepEqual(fitted.camera, JSON.parse(input).camera);
+  assert.deepEqual(fitted.calibration.roi, JSON.parse(input).roi);
+  assert.ok(fitted.report.check_max_error_m < 1e-8);
+  const config = {
+    session_id: "fit-raw",
+    calibration: fitted.calibration,
+    camera: fitted.camera,
+  };
+  const { handle } = unpack(moonground_create(JSON.stringify(config)));
+  try {
+    const request = {
+      timestamp_us: "0",
+      observations: [{ track_id: 1, point: JSON.parse(input).check_pixels[0] }],
+    };
+    const output = unpack(moonground_update(handle, JSON.stringify(request)));
+    closeNumeric(output.tracks[0].position_m, JSON.parse(input).check_world[0]);
+  } finally {
+    moonground_close(handle);
   }
 });

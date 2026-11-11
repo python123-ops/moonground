@@ -132,6 +132,12 @@ button,
 .panel-title .quiet {
   padding: 5px 9px;
 }
+.example-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
 button:disabled {
   opacity: 0.4;
   cursor: default;

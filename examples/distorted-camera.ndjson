@@ -1,0 +1,16 @@
+{"session_id":"synthetic-lens","mode":"pixel","camera":{"fx":600,"fy":580,"cx":320,"cy":240,"k1":-0.12,"k2":0.015,"p1":0.001,"p2":-0.002,"k3":0.001,"max_normalized_radius":0.8},"calibration":{"matrix":[0.02,0,0,0,0.02,0,0,0,1],"roi":[[0,0],[640,0],[640,480],[0,480]]},"motion":{"q":0.05,"min_span_us":"200000","max_velocity_std_mps":0.2}}
+{"timestamp_us":"0","observations":[{"track_id":7,"point":[180.8047854332734,200.2845724720928],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"100000","observations":[{"track_id":7,"point":[185.72160555613334,200.26562128282754],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"200000","observations":[{"track_id":7,"point":[190.64452402156746,200.24739096646215],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"300000","observations":[{"track_id":7,"point":[195.57330656049493,200.22988339497206],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"400000","observations":[{"track_id":7,"point":[200.50771774953085,200.21310036756063],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"500000","observations":[{"track_id":7,"point":[205.4475210571757,200.1970436109049],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"600000","observations":[{"track_id":7,"point":[210.39247888979435,200.18171477939217],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"700000","observations":[{"track_id":7,"point":[215.34235263739197,200.16711545534642],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"800000","observations":[{"track_id":7,"point":[220.29690271919623,200.1532471492454],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"900000","observations":[{"track_id":7,"point":[225.2558886290537,200.14011129992807],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"1000000","observations":[{"track_id":7,"point":[230.2190689806488,200.12770927479227],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"1100000","observations":[{"track_id":7,"point":[235.18620155255462,200.11604236998272],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"1200000","observations":[{"track_id":7,"point":[240.15704333312232,200.1051118105696],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"1300000","observations":[{"track_id":7,"point":[245.13135056521975,200.09491875071728],"covariance":[4,0.5,3]}]}
+{"timestamp_us":"1400000","observations":[{"track_id":7,"point":[250.10887879082583,200.08546427384334],"covariance":[4,0.5,3]}]}

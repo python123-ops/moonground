@@ -19,6 +19,7 @@ let loadedSource = "";
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
+  uncertain: "不确定性超限",
   rejected_innovation: "异常观测",
   numerical_failure: "数值不可用",
   rejected_projection: "区域外 / 不可测",
@@ -215,6 +216,8 @@ function render() {
         ? track.position_m.map((n) => n.toFixed(2)).join(", ")
         : "—",
       track.speed_mps === null ? "—" : track.speed_mps.toFixed(2),
+      track.position_std_m == null ? "—" : track.position_std_m.toFixed(3),
+      track.velocity_std_mps == null ? "—" : track.velocity_std_mps.toFixed(3),
       track.observed_path_length_m === undefined
         ? "—"
         : track.observed_path_length_m.toFixed(2),
@@ -236,7 +239,7 @@ function render() {
   if (!rows.length) {
     const tr = document.createElement("tr"),
       td = document.createElement("td");
-    td.colSpan = 5;
+    td.colSpan = 7;
     td.textContent = "本帧无可见观测。缺测期间不显示预测速度。";
     tr.append(td);
     rows.push(tr);
@@ -342,7 +345,7 @@ $("download").addEventListener("click", () => {
   const blob = new Blob(
     [
       JSON.stringify(
-        { schema_version: "0.1.0", configuration, frames: results },
+        { schema_version: "0.2.0", configuration, frames: results },
         null,
         2,
       ),
@@ -356,11 +359,11 @@ $("download").addEventListener("click", () => {
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
-async function example() {
+async function example(name = "warehouse.ndjson") {
   invalidate();
   const current = revision;
   try {
-    const response = await fetch("./warehouse.ndjson");
+    const response = await fetch(`./${name}`);
     if (!response.ok) throw new Error("示例读取失败");
     const text = await response.text();
     if (current !== revision) return;
@@ -370,18 +373,28 @@ async function example() {
     if (current === revision) message(error.message, true);
   }
 }
-$("example").addEventListener("click", example);
+$("example").addEventListener("click", () => example());
+$("camera-example").addEventListener("click", () =>
+  example("distorted-camera.ndjson"),
+);
 $("calibrate").addEventListener("click", () => {
   try {
     const fitted = unpack(moonground_calibrate($("calibration-input").value));
     const lines = source.value.trimEnd().split(/\r?\n/);
     const config = JSON.parse(lines[0]);
+    if (config.camera && !fitted.camera)
+      throw new Error(
+        "当前观测使用原始像素；拟合请求需提供 camera，或先改用已校正观测及配置。",
+      );
     config.mode = "pixel";
     config.calibration = fitted.calibration;
+    if (fitted.camera) config.camera = fitted.camera;
     lines[0] = JSON.stringify(config);
     source.value = lines.join("\n") + "\n";
     invalidate();
-    message("标定已替换，请重新计算观测。");
+    message(
+      `标定已替换，观测须使用${fitted.camera ? "原始" : "已校正"}像素；请重新计算。`,
+    );
     $("calibration-message").textContent =
       `拟合 ${fitted.report.fit_count} 点，核验 ${fitted.report.check_count} 点；核验最大残差 ${fitted.report.check_max_error_m.toExponential(2)} m。`;
   } catch (error) {

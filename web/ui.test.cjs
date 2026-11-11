@@ -94,13 +94,11 @@ test("desktop, mobile, local import and stale-result prevention", async () => {
     const fixture = fs.readFileSync(
       path.resolve(__dirname, "..", "examples", "warehouse.ndjson"),
     );
-    await page
-      .locator("#file")
-      .setInputFiles({
-        name: "仓储轨迹.ndjson",
-        mimeType: "application/x-ndjson",
-        buffer: fixture,
-      });
+    await page.locator("#file").setInputFiles({
+      name: "仓储轨迹.ndjson",
+      mimeType: "application/x-ndjson",
+      buffer: fixture,
+    });
     await page.waitForFunction(() =>
       document.querySelector("#message").textContent.includes("已完成 10 帧"),
     );
@@ -121,6 +119,71 @@ test("desktop, mobile, local import and stale-result prevention", async () => {
       path: path.join(directory, "mobile-preview.png"),
       fullPage: true,
     });
+    await page.locator("#camera-example").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 15 帧"),
+    );
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "2";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.match(await page.locator("#tracks").textContent(), /不确定性超限/);
+    assert.equal(await page.locator("#speed").textContent(), "—");
+    assert.equal(await page.locator("#tracks td").count(), 7);
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "14";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.equal(await page.locator("#ready").textContent(), "1");
+    assert.match(await page.locator("#speed").textContent(), /m\/s/);
+    await page.locator("details").evaluate((details) => {
+      details.open = true;
+    });
+    await page
+      .locator("#calibration-input")
+      .fill(
+        fs.readFileSync(
+          path.resolve(
+            __dirname,
+            "..",
+            "examples",
+            "distorted-calibration.json",
+          ),
+          "utf8",
+        ),
+      );
+    await page.locator("#calibrate").click();
+    assert.ok(
+      await page
+        .locator("#source")
+        .evaluate((input) => JSON.parse(input.value.split("\n")[0]).camera),
+    );
+    assert.equal(await page.locator("#download").isDisabled(), true);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 15 帧"),
+    );
+    await page
+      .locator("#calibration-input")
+      .fill(
+        fs.readFileSync(
+          path.resolve(__dirname, "..", "examples", "calibration.json"),
+          "utf8",
+        ),
+      );
+    await page.locator("#calibrate").click();
+    assert.equal(
+      await page
+        .locator("#source")
+        .evaluate(
+          (input) => "camera" in JSON.parse(input.value.split("\n")[0]),
+        ),
+      true,
+    );
+    assert.match(
+      await page.locator("#calibration-message").textContent(),
+      /拟合请求需提供 camera/,
+    );
     await page
       .locator("#source")
       .fill(

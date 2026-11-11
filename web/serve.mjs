@@ -20,6 +20,7 @@ const assets = new Map([
   ["moonground.mjs", "text/javascript; charset=utf-8"],
   ["style.css", "text/css; charset=utf-8"],
   ["warehouse.ndjson", "application/x-ndjson; charset=utf-8"],
+  ["distorted-camera.ndjson", "application/x-ndjson; charset=utf-8"],
   ["calibration.json", "application/json; charset=utf-8"],
 ]);
 const server = http.createServer((request, response) => {
