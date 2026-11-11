@@ -4,6 +4,8 @@ import {
   moonground_close,
   moonground_project,
   moonground_calibrate,
+  moonground_checkpoint,
+  moonground_restore,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -16,6 +18,8 @@ let results = [];
 let configuration = null;
 let playing = null;
 let loadedSource = "";
+let checkpointBusy = false;
+let calibrationEdited = false;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -43,6 +47,7 @@ function invalidate() {
   configuration = null;
   loadedSource = "";
   $("download").disabled = true;
+  $("save-checkpoint").disabled = true;
   $("play").disabled = true;
   slider.disabled = true;
   $("counter").textContent = "0 / 0";
@@ -56,6 +61,56 @@ function unpack(text) {
   const value = JSON.parse(text);
   if (value.error) throw new Error(value.error);
   return value;
+}
+
+function openSession(line) {
+  const handle = unpack(moonground_create(line)).handle;
+  try {
+    const bootstrap = JSON.parse(line);
+    return {
+      handle,
+      resumed: Object.hasOwn(bootstrap, "resume"),
+      configuration: Object.hasOwn(bootstrap, "resume")
+        ? bootstrap.resume.configuration
+        : bootstrap,
+    };
+  } catch (error) {
+    moonground_close(handle);
+    throw error;
+  }
+}
+
+function saveFile(text, name) {
+  const url = URL.createObjectURL(
+    new Blob([text], { type: "application/json" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function selectedCheckpoint(currentRevision) {
+  const lines = loadedSource.trimEnd().split(/\r?\n/);
+  const last = Number(slider.value) + 1;
+  let handle;
+  try {
+    handle = openSession(lines[0]).handle;
+    for (let i = 1; i <= last; i++) {
+      if (revision !== currentRevision) return null;
+      unpack(moonground_update(handle, lines[i]));
+      if (i % 50 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    if (revision !== currentRevision) return null;
+    const checkpoint = moonground_checkpoint(handle);
+    unpack(checkpoint);
+    if (new TextEncoder().encode(checkpoint).length > 8 * 1024 * 1024)
+      throw new Error("检查点超过浏览器 8 MiB 文件上限，请使用原生命令。");
+    return checkpoint;
+  } finally {
+    if (handle !== undefined) moonground_close(handle);
+  }
 }
 
 function draw() {
@@ -259,8 +314,9 @@ async function run() {
     const lines = input.trimEnd().split(/\r?\n/);
     if (lines.length < 2 || lines.length > 5001)
       throw new Error("请输入配置及 1—5000 帧观测。");
-    const config = JSON.parse(lines[0]);
-    handle = unpack(moonground_create(lines[0])).handle;
+    const opened = openSession(lines[0]);
+    const config = opened.configuration;
+    handle = opened.handle;
     const computed = [];
     for (let i = 1; i < lines.length; i++) {
       if (currentRevision !== revision) return;
@@ -285,8 +341,9 @@ async function run() {
     slider.disabled = false;
     $("play").disabled = false;
     $("download").disabled = false;
+    $("save-checkpoint").disabled = checkpointBusy;
     message(
-      `已完成 ${results.length} 帧。有效区域以虚线显示；所有计算均在本地完成。`,
+      `已完成 ${results.length} 帧${opened.resumed ? "（从检查点续接，仅显示后续轨迹）" : ""}。有效区域以虚线显示；所有计算均在本地完成。`,
     );
     render();
   } catch (error) {
@@ -299,6 +356,9 @@ async function run() {
 source.addEventListener("input", () => {
   invalidate();
   message("输入已修改，请重新计算。");
+});
+$("calibration-input").addEventListener("input", () => {
+  calibrationEdited = true;
 });
 $("run").addEventListener("click", run);
 slider.addEventListener("input", () => {
@@ -342,22 +402,70 @@ $("file").addEventListener("change", async (event) => {
 });
 $("download").addEventListener("click", () => {
   if (!results.length || source.value !== loadedSource) return;
-  const blob = new Blob(
-    [
-      JSON.stringify(
-        { schema_version: "0.2.0", configuration, frames: results },
-        null,
-        2,
-      ),
-    ],
-    { type: "application/json" },
+  saveFile(
+    JSON.stringify(
+      { schema_version: "0.2.0", configuration, frames: results },
+      null,
+      2,
+    ),
+    "moonground-results.json",
   );
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "moonground-results.json";
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+$("save-checkpoint").addEventListener("click", async () => {
+  if (checkpointBusy || !results.length || source.value !== loadedSource)
+    return;
+  const current = revision;
+  checkpointBusy = true;
+  $("save-checkpoint").disabled = true;
+  stop();
+  try {
+    const checkpoint = await selectedCheckpoint(current);
+    if (checkpoint !== null) {
+      saveFile(checkpoint + "\n", "moonground-checkpoint.json");
+      message("已保存所选帧的检查点。继续处理时，观测时间须严格晚于该帧。");
+    }
+  } catch (error) {
+    if (revision === current) message(error.message, true);
+  } finally {
+    checkpointBusy = false;
+    $("save-checkpoint").disabled =
+      !results.length || source.value !== loadedSource;
+  }
+});
+
+$("checkpoint-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  // Cancel older asynchronous work while preserving the valid displayed state
+  // until this newly selected checkpoint has passed validation.
+  const current = ++revision;
+  let handle;
+  try {
+    if (file.size > 8 * 1024 * 1024)
+      throw new Error("浏览器检查点文件上限为 8 MiB。");
+    const text = await file.text();
+    if (revision !== current) return;
+    handle = unpack(moonground_restore(text)).handle;
+    const checkpoint = JSON.parse(text);
+    const nextInput = JSON.stringify({ resume: checkpoint }) + "\n";
+    if (new TextEncoder().encode(nextInput).length > 8 * 1024 * 1024)
+      throw new Error("恢复起点超过浏览器 8 MiB 输入上限，请使用原生命令。");
+    if (revision !== current) return;
+    invalidate();
+    source.value = nextInput;
+    configuration = checkpoint.configuration;
+    draw();
+    const last = checkpoint.motion.last_timestamp_us;
+    message(
+      `已载入检查点（最后帧 ${last ?? "尚无观测"} 微秒）。在下一行添加后续观测后计算。`,
+    );
+  } catch (error) {
+    if (revision === current) message(error.message, true);
+  } finally {
+    if (handle !== undefined) moonground_close(handle);
+    event.target.value = "";
+  }
 });
 async function example(name = "warehouse.ndjson") {
   invalidate();
@@ -377,11 +485,14 @@ $("example").addEventListener("click", () => example());
 $("camera-example").addEventListener("click", () =>
   example("distorted-camera.ndjson"),
 );
+$("resume-example").addEventListener("click", () => example("resume.ndjson"));
 $("calibrate").addEventListener("click", () => {
   try {
     const fitted = unpack(moonground_calibrate($("calibration-input").value));
     const lines = source.value.trimEnd().split(/\r?\n/);
     const config = JSON.parse(lines[0]);
+    if (Object.hasOwn(config, "resume"))
+      throw new Error("检查点绑定原标定；修改标定时请新建会话配置。");
     if (config.camera && !fitted.camera)
       throw new Error(
         "当前观测使用原始像素；拟合请求需提供 camera，或先改用已校正观测及配置。",
@@ -407,7 +518,8 @@ fetch("./calibration.json")
     return response.text();
   })
   .then((text) => {
-    $("calibration-input").value = text;
+    if (!calibrationEdited && $("calibration-input").value === "")
+      $("calibration-input").value = text;
   })
   .catch((error) => {
     $("calibration-message").textContent = error.message;

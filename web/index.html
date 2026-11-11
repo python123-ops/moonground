@@ -23,12 +23,13 @@
             <div class="example-buttons">
               <button id="example" class="quiet">仓储示例</button>
               <button id="camera-example" class="quiet">镜头校正示例</button>
+              <button id="resume-example" class="quiet">续接示例</button>
             </div>
           </div>
           <p class="hint">
-            首行为配置，后续每行是一帧观测。配置 camera
+            首行为配置或恢复起点，后续每行是一帧观测。配置 camera
             时输入原始像素，否则输入已校正像素；ROI
-            始终使用已校正像素。两组示例均为合成数据。
+            始终使用已校正像素。示例均为合成数据。
           </p>
           <label for="source" class="sr-only">配置和逐帧 NDJSON</label
           ><textarea id="source" spellcheck="false"></textarea>
@@ -42,6 +43,17 @@
             ><button id="download" class="quiet" disabled>导出结果</button>
           </div>
           <p id="message" role="status" aria-live="polite">正在加载示例…</p>
+          <div class="actions">
+            <button id="save-checkpoint" class="quiet" disabled>
+              保存当前帧检查点
+            </button>
+            <label class="file-button"
+              >载入检查点<input id="checkpoint-file" type="file" accept=".json"
+            /></label>
+          </div>
+          <p class="hint">
+            检查点保留测量状态；载入后在下一行添加更晚的观测继续计算。历史画面需保留原始观测。
+          </p>
           <details>
             <summary>从地面控制点生成标定</summary>
             <p class="hint">
