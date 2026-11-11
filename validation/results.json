@@ -1,0 +1,269 @@
+{
+  "format_version": "1",
+  "seed": 20261111,
+  "tolerance": {
+    "absolute": 1e-08,
+    "relative": 1e-08
+  },
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --eth --output validation/results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "moonbit": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "implementation_verified": true,
+  "source_sha256": "b75b5c247dcd381154c8fcc1acac4d84c7eaa071df99ead03b82a9dc809bb769",
+  "binary_sha256": "ebf84ce4651795b37407cda05ca3a3da9ffb5e2ba787d8d19f97e02843b2ac4e",
+  "projection": {
+    "cases": 384,
+    "maximum_absolute_errors": {
+      "projection_position": 3.552713678800501e-15,
+      "projection_covariance": 3.469446951953614e-18,
+      "projection_jacobian": 1.0408340855860843e-17
+    },
+    "reference_finite_difference_maximum_error": 2.103310581258455e-12,
+    "implementation_compared": true
+  },
+  "monte_carlo_covariance": {
+    "status": "passed",
+    "samples": 10000,
+    "cli_batches": 10,
+    "seed": 20261111,
+    "center_pixel": [
+      320.0,
+      240.0
+    ],
+    "calibration": {
+      "matrix": [
+        0.025,
+        0.003,
+        -4.0,
+        -0.001,
+        0.018,
+        -2.0,
+        0.00015,
+        -0.0001,
+        1.0
+      ],
+      "roi": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          640.0,
+          0.0
+        ],
+        [
+          640.0,
+          480.0
+        ],
+        [
+          0.0,
+          480.0
+        ]
+      ],
+      "max_meters_per_pixel": 0.5,
+      "ground_noise_floor_m": 0.001
+    },
+    "pixel_covariance": [
+      [
+        4.0,
+        1.0
+      ],
+      [
+        1.0,
+        9.0
+      ]
+    ],
+    "independent_ground_noise_std_m": 0.001,
+    "analytic_covariance_m2": [
+      [
+        0.0025184090988002727,
+        0.00083814823301509
+      ],
+      [
+        0.00083814823301509,
+        0.002804096489515155
+      ]
+    ],
+    "empirical_covariance_m2": [
+      [
+        0.002546071324107892,
+        0.0008675263620268046
+      ],
+      [
+        0.0008675263620268046,
+        0.002813495385207477
+      ]
+    ],
+    "relative_frobenius_error": 0.012855160545857903,
+    "relative_frobenius_tolerance": 0.05,
+    "maximum_absolute_covariance_entry_error_m2": 2.937812901171455e-05,
+    "mean_bias_norm_m": 0.000428406758636137,
+    "implementation_compared": true,
+    "conditions": "Gaussian pixel noise near an interior point under a moderate projective map; independent Gaussian ground floor added after actual CLI projections. This tests the local linear covariance approximation under the specified conditions."
+  },
+  "motion": {
+    "cases": [
+      {
+        "name": "stationary",
+        "observations": 64,
+        "rejected_indices": [],
+        "accepted_count": 64,
+        "raw_position_rmse_m": 0.08754520709718158,
+        "filtered_position_rmse_m": 0.06928834056266646,
+        "velocity_vector_rmse_mps": 0.28882712163325,
+        "truth": "analytic physical trajectory; measurement noise generated with the recorded seed",
+        "observed_path_length_m": 4.229341246069854,
+        "true_path_length_m": 0.0,
+        "stationary_distance_bias_m": 4.229341246069854,
+        "distance_interpretation": "The accepted filtered-position polyline accumulates noise even for a stationary object. It is not true travelled distance."
+      },
+      {
+        "name": "constant_velocity",
+        "observations": 64,
+        "rejected_indices": [],
+        "accepted_count": 64,
+        "raw_position_rmse_m": 0.10019437054025036,
+        "filtered_position_rmse_m": 0.08188163859171291,
+        "velocity_vector_rmse_mps": 0.3451137650163139,
+        "truth": "analytic physical trajectory; measurement noise generated with the recorded seed"
+      },
+      {
+        "name": "accelerating",
+        "observations": 64,
+        "rejected_indices": [],
+        "accepted_count": 64,
+        "raw_position_rmse_m": 0.1002907063150607,
+        "filtered_position_rmse_m": 0.07991961285492072,
+        "velocity_vector_rmse_mps": 0.33630789142080214,
+        "truth": "analytic physical trajectory; measurement noise generated with the recorded seed"
+      },
+      {
+        "name": "outlier_then_recovery",
+        "observations": 64,
+        "rejected_indices": [
+          24,
+          46
+        ],
+        "accepted_count": 62,
+        "raw_position_rmse_m": 0.09191743922989752,
+        "filtered_position_rmse_m": 0.06407897762777763,
+        "velocity_vector_rmse_mps": 0.3063937492157004,
+        "truth": "analytic physical trajectory; measurement noise generated with the recorded seed"
+      }
+    ],
+    "maximum_absolute_errors": {
+      "filter_state": 6.8833827526759706e-15,
+      "filter_covariance": 1.6653345369377348e-16,
+      "observed_path_length": 1.7763568394002505e-15,
+      "net_displacement": 1.7763568394002505e-15,
+      "velocity": 6.8833827526759706e-15,
+      "speed": 6.661338147750939e-15
+    },
+    "implementation_compared": true
+  },
+  "eth_hotel": {
+    "url": "https://data.vision.ee.ethz.ch/cvl/aem/ewap_dataset_full.tgz",
+    "bytes": 79753734,
+    "archive_sha256": "403f0afc64f2635a28dd7960ede97fde947c38335f3c0fb131a260b4d2ffd203",
+    "video": {
+      "width": 720,
+      "height": 576,
+      "frames": 19350,
+      "fps": 25.0,
+      "duration_s": 774.0,
+      "bytes": 50015466
+    },
+    "obsmat_sha256": "2b8577595204a6b780b80258fd50da35adb7293e3e06ad6f8e1b60965e7dde6e",
+    "sequence": "seq_hotel",
+    "annotation_rows": 6544,
+    "identities": 390,
+    "tracks_replayed": [
+      {
+        "track_id": 38,
+        "observations": 100,
+        "first_timestamp_us": "40000000",
+        "last_timestamp_us": "79600000",
+        "implementation_frames": 100
+      },
+      {
+        "track_id": 361,
+        "observations": 87,
+        "first_timestamp_us": "638000000",
+        "last_timestamp_us": "672400000",
+        "implementation_frames": 87
+      },
+      {
+        "track_id": 356,
+        "observations": 77,
+        "first_timestamp_us": "632800000",
+        "last_timestamp_us": "663200000",
+        "implementation_frames": 77
+      },
+      {
+        "track_id": 371,
+        "observations": 67,
+        "first_timestamp_us": "644800000",
+        "last_timestamp_us": "671200000",
+        "implementation_frames": 67
+      },
+      {
+        "track_id": 369,
+        "observations": 67,
+        "first_timestamp_us": "644800000",
+        "last_timestamp_us": "671200000",
+        "implementation_frames": 67
+      },
+      {
+        "track_id": 180,
+        "observations": 63,
+        "first_timestamp_us": "374800000",
+        "last_timestamp_us": "399600000",
+        "implementation_frames": 63
+      },
+      {
+        "track_id": 106,
+        "observations": 59,
+        "first_timestamp_us": "177200000",
+        "last_timestamp_us": "200400000",
+        "implementation_frames": 59
+      },
+      {
+        "track_id": 105,
+        "observations": 59,
+        "first_timestamp_us": "177200000",
+        "last_timestamp_us": "200400000",
+        "implementation_frames": 59
+      }
+    ],
+    "maximum_roundtrip_error_m": 4.440892098500626e-15,
+    "maximum_filter_absolute_errors": {
+      "eth_filter_state": 1.4710455076283324e-14,
+      "eth_filter_covariance": 9.159339953157541e-16
+    },
+    "implementation_status_counts": {
+      "initializing": 16,
+      "ready": 563
+    },
+    "pixel_noise_std": 2.0,
+    "implementation_compared": true,
+    "pixel_axis_conversion": "H_xy = original_H @ [[0,1,0],[1,0,0],[0,0,1]]; original Hotel H expects row,column",
+    "effective_xy_homography": [
+      0.000669589,
+      0.0110482,
+      -3.32953,
+      0.0116324,
+      -0.0015966,
+      -5.39514,
+      1.36174e-05,
+      0.000111907,
+      0.542766
+    ],
+    "validation_kind": "controlled-noise homography roundtrip on published real trajectories",
+    "independent_metric_ground_truth": false,
+    "limitations": "World annotations and velocities were obtained using the supplied homography. Inverting and reapplying it does not establish real calibration, position or speed accuracy. No raw pixel footpoint annotations are bundled. This replay does not run a detector or tracker.",
+    "terms": "ETH official dataset page specifies research use; archive remains external to the library package."
+  },
+  "elapsed_seconds": 2.4378659999999996,
+  "status": "passed"
+}

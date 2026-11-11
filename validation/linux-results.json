@@ -1,0 +1,655 @@
+{
+  "status": "passed",
+  "platform": "WSL Ubuntu-24.04 Linux x86_64",
+  "isolated_workspace": "/var/tmp/moonground-linux-20261111-tp1t8wy1",
+  "windows_shared_build_used": false,
+  "steps": [
+    {
+      "command": [
+        "curl",
+        "-fL",
+        "--connect-timeout",
+        "10",
+        "--max-time",
+        "90",
+        "-o",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/moonbit.tar.gz",
+        "https://cli.moonbitlang.com/binaries/0.10.18%2B6c83a7f62/moonbit-linux-x86_64.tar.gz"
+      ],
+      "exit_code": 0,
+      "seconds": 5.347444139000004,
+      "captured_output_sha256": "584595a93d6653eff8a722fa68e113fb033c8741afbb4b0395af44f0d8a6bcd3",
+      "summary": "download completed"
+    },
+    {
+      "command": [
+        "tar",
+        "xf",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/moonbit.tar.gz",
+        "-C",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain"
+      ],
+      "exit_code": 0,
+      "seconds": 1.4093151840000075,
+      "captured_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "summary": ""
+    },
+    {
+      "command": [
+        "curl",
+        "-fL",
+        "--connect-timeout",
+        "10",
+        "--max-time",
+        "40",
+        "-o",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/core.tar.gz",
+        "https://cli.moonbitlang.com/cores/core-0.10.18%2B6c83a7f62.tar.gz"
+      ],
+      "exit_code": 0,
+      "seconds": 0.9649793529999897,
+      "captured_output_sha256": "be36bd8a9b1b0ed641ff868eb92045ce7b51904128dfc59850c8344b4669b05f",
+      "summary": "download completed"
+    },
+    {
+      "command": [
+        "tar",
+        "xf",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/core.tar.gz",
+        "-C",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain/lib"
+      ],
+      "exit_code": 0,
+      "seconds": 0.06352237600000876,
+      "captured_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "summary": ""
+    },
+    {
+      "command": [
+        "moon",
+        "version",
+        "--all",
+        "--no-path"
+      ],
+      "exit_code": 0,
+      "seconds": 0.008967259000002059,
+      "captured_output_sha256": "781549d15e8da07a89e683398ec2e8d98d54be25a3bda3d078987efc634a7452",
+      "summary": "moonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\nFeature flags enabled: rr_moon_mod,rr_moon_pkg"
+    },
+    {
+      "command": [
+        "moon",
+        "-C",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain/lib/core",
+        "bundle",
+        "--warn-list",
+        "-a",
+        "--all"
+      ],
+      "exit_code": 0,
+      "seconds": 1.6600070609999875,
+      "captured_output_sha256": "aebe1197b8a07ff54e23f2fd07246a1e9126330d75bd162f3f30bcd3b2be1922",
+      "summary": "Finished. moon: ran 472 tasks, now up to date"
+    },
+    {
+      "command": [
+        "curl",
+        "-fL",
+        "--connect-timeout",
+        "10",
+        "--max-time",
+        "60",
+        "-o",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/node.tar.xz",
+        "https://nodejs.org/dist/v22.14.0/node-v22.14.0-linux-x64.tar.xz"
+      ],
+      "exit_code": 28,
+      "seconds": 60.998176314000034,
+      "captured_output_sha256": "5c91126a9294d075874a8e5860250d8fb41bbfa545ac359a6b9e0fee1bdbd304",
+      "summary": "bounded direct WSL download timed out; recovered using the same official archive downloaded by the Windows host"
+    },
+    {
+      "command": [
+        "tar",
+        "xf",
+        "/mnt/c/Users/px830/AppData/Local/Temp/moonground-node-v22.14.0-linux-x64.tar.xz",
+        "-C",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/node",
+        "--strip-components=1"
+      ],
+      "exit_code": 0,
+      "seconds": 2.750957193999966,
+      "captured_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "summary": ""
+    },
+    {
+      "command": [
+        "node",
+        "--version"
+      ],
+      "exit_code": 0,
+      "seconds": 0.00469111300003533,
+      "captured_output_sha256": "7703fd79909af9b17df6395137bee2b07c3f3b27b6e96e18c909f433cce84f19",
+      "summary": "v22.14.0"
+    },
+    {
+      "command": [
+        "moon",
+        "check",
+        "--target",
+        "all",
+        "--deny-warn"
+      ],
+      "exit_code": 0,
+      "seconds": 0.670827675,
+      "captured_output_sha256": "1f0d133059c2021a70e771379d31ccb7409548d68d38c5d6a31bdb7e12ea829f",
+      "summary": "Using cached python123-ops/moon-cv-geometry@0.2.2\nUsing cached moonbitlang/async@0.21.3\nFinished. moon: ran 81 tasks, now up to date"
+    },
+    {
+      "command": [
+        "moon",
+        "test",
+        "--target",
+        "all",
+        "--deny-warn"
+      ],
+      "exit_code": 0,
+      "seconds": 1.9969647139999998,
+      "captured_output_sha256": "c2e87cb4b8175e0750d0247122423dee35aecb4f80d18db43de68d67717f4dd6",
+      "summary": "Total tests: 46, passed: 46, failed: 0. [wasm]\nTotal tests: 46, passed: 46, failed: 0. [wasm-gc]\nTotal tests: 46, passed: 46, failed: 0. [js]\nTotal tests: 46, passed: 46, failed: 0. [native]"
+    },
+    {
+      "command": [
+        "moon",
+        "build",
+        "cmd/main",
+        "--target",
+        "native",
+        "--release"
+      ],
+      "exit_code": 0,
+      "seconds": 6.389836543,
+      "captured_output_sha256": "2bbf3452111c4f6423b9c522c33040501972ee8bd034e99784e7709d6a2b0954",
+      "summary": "Finished. moon: ran 78 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/cmd/main  native  /var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe"
+    },
+    {
+      "command": [
+        "python3",
+        "validation/verify.py",
+        "--binary",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe",
+        "--output",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/numerical.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.5197880799999997,
+      "captured_output_sha256": "9991797e5cfbd7bf279563ddc19768430628f9d7c0e522f8555071a4430eda77",
+      "summary": "{\"status\": \"passed\", \"output\": \"/var/tmp/moonground-linux-20261111-tp1t8wy1/numerical.json\", \"projection_cases\": 384, \"motion_cases\": 4, \"implementation_verified\": true}"
+    },
+    {
+      "command": [
+        "python3",
+        "validation/stream_test.py",
+        "--binary",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe",
+        "--output",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/stream.json",
+        "--protocol-only"
+      ],
+      "exit_code": 0,
+      "seconds": 0.05370630699999879,
+      "captured_output_sha256": "e2739d6d6c18d65608eda9e6540989dc0a0ab778df8bba80112dbf6370fab7a5",
+      "summary": "protocol: 23/23 passed\nsaved /var/tmp/moonground-linux-20261111-tp1t8wy1/stream.json"
+    }
+  ],
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg\n",
+  "toolchain_archive_sha256": "0e4cde1ace98e8ef00552a937738b59c6901c4b8a004ebad71ea0e63688f63f1",
+  "toolchain_url": "https://cli.moonbitlang.com/binaries/0.10.18%2B6c83a7f62/moonbit-linux-x86_64.tar.gz",
+  "core_url": "https://cli.moonbitlang.com/cores/core-0.10.18%2B6c83a7f62.tar.gz",
+  "node_archive_sha256": "69b09dba5c8dcb05c4e4273a4340db1005abeafe3927efda2bc5b249e80437ec",
+  "source_snapshot_sha256": "89a0688a0b627036d6c5e89ca54cb9d528c239ebff0266e2eea87ccea1fe2b0c",
+  "registry_sources": [
+    {
+      "module": "moonbitlang/async",
+      "version": "0.21.3",
+      "archive_sha256": "e949f1678bd2694a18c14be656b90174ae0a8d562542235822a5969510de3b87",
+      "matches_registry_index": true
+    },
+    {
+      "module": "python123-ops/moon-cv-geometry",
+      "version": "0.2.2",
+      "archive_sha256": "abac041f0d939fbd30cd33a0b21c33a4058dbf93624a98bfdd69d3a598de11eb",
+      "matches_registry_index": true
+    },
+    {
+      "module": "Lyllyl789/moon-kalman",
+      "version": "0.2.1",
+      "archive_sha256": "ccfbeb152c06bedde07a9dba30923450a7ce370412dd7fb255e1d84b7337bf13",
+      "matches_registry_index": true
+    }
+  ],
+  "registry_acquisition": "Offline original published ZIP archives checked against Mooncakes registry checksums; project .mooncakes and all build artifacts were excluded from the source copy.",
+  "isolated_environment": {
+    "MOON_HOME": "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain",
+    "PYTHONPATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/python",
+    "CPATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/include:/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/include/x86_64-linux-gnu",
+    "LIBRARY_PATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/lib/x86_64-linux-gnu"
+  },
+  "all_target_check": "passed",
+  "test_summaries": [
+    "Total tests: 46, passed: 46, failed: 0. [wasm]",
+    "Total tests: 46, passed: 46, failed: 0. [wasm-gc]",
+    "Total tests: 46, passed: 46, failed: 0. [js]",
+    "Total tests: 46, passed: 46, failed: 0. [native]"
+  ],
+  "numerical": {
+    "format_version": "1",
+    "seed": 20261111,
+    "tolerance": {
+      "absolute": 1e-08,
+      "relative": 1e-08
+    },
+    "command": "/usr/bin/python3 validation/verify.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/numerical.json",
+    "python": "3.12.3",
+    "numpy": "1.26.4",
+    "moonbit": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+    "implementation_verified": true,
+    "source_sha256": "b75b5c247dcd381154c8fcc1acac4d84c7eaa071df99ead03b82a9dc809bb769",
+    "binary_sha256": "6d7c2d35727dbc7207ab2d719529bfd6806af09e184662d378b989d6d1a03775",
+    "projection": {
+      "cases": 384,
+      "maximum_absolute_errors": {
+        "projection_position": 3.552713678800501e-15,
+        "projection_covariance": 3.469446951953614e-18,
+        "projection_jacobian": 1.0408340855860843e-17
+      },
+      "reference_finite_difference_maximum_error": 2.103310581258455e-12,
+      "implementation_compared": true
+    },
+    "monte_carlo_covariance": {
+      "status": "passed",
+      "samples": 10000,
+      "cli_batches": 10,
+      "seed": 20261111,
+      "center_pixel": [
+        320.0,
+        240.0
+      ],
+      "calibration": {
+        "matrix": [
+          0.025,
+          0.003,
+          -4.0,
+          -0.001,
+          0.018,
+          -2.0,
+          0.00015,
+          -0.0001,
+          1.0
+        ],
+        "roi": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            640.0,
+            0.0
+          ],
+          [
+            640.0,
+            480.0
+          ],
+          [
+            0.0,
+            480.0
+          ]
+        ],
+        "max_meters_per_pixel": 0.5,
+        "ground_noise_floor_m": 0.001
+      },
+      "pixel_covariance": [
+        [
+          4.0,
+          1.0
+        ],
+        [
+          1.0,
+          9.0
+        ]
+      ],
+      "independent_ground_noise_std_m": 0.001,
+      "analytic_covariance_m2": [
+        [
+          0.0025184090988002727,
+          0.00083814823301509
+        ],
+        [
+          0.00083814823301509,
+          0.002804096489515155
+        ]
+      ],
+      "empirical_covariance_m2": [
+        [
+          0.002546071324107892,
+          0.0008675263620268046
+        ],
+        [
+          0.0008675263620268046,
+          0.002813495385207477
+        ]
+      ],
+      "relative_frobenius_error": 0.012855160545857903,
+      "relative_frobenius_tolerance": 0.05,
+      "maximum_absolute_covariance_entry_error_m2": 2.937812901171455e-05,
+      "mean_bias_norm_m": 0.000428406758636137,
+      "implementation_compared": true,
+      "conditions": "Gaussian pixel noise near an interior point under a moderate projective map; independent Gaussian ground floor added after actual CLI projections. This tests the local linear covariance approximation under the specified conditions."
+    },
+    "motion": {
+      "cases": [
+        {
+          "name": "stationary",
+          "observations": 64,
+          "rejected_indices": [],
+          "accepted_count": 64,
+          "raw_position_rmse_m": 0.08754520709718158,
+          "filtered_position_rmse_m": 0.06928834056266646,
+          "velocity_vector_rmse_mps": 0.28882712163325,
+          "truth": "analytic physical trajectory; measurement noise generated with the recorded seed",
+          "observed_path_length_m": 4.229341246069854,
+          "true_path_length_m": 0.0,
+          "stationary_distance_bias_m": 4.229341246069854,
+          "distance_interpretation": "The accepted filtered-position polyline accumulates noise even for a stationary object. It is not true travelled distance."
+        },
+        {
+          "name": "constant_velocity",
+          "observations": 64,
+          "rejected_indices": [],
+          "accepted_count": 64,
+          "raw_position_rmse_m": 0.10019437054025036,
+          "filtered_position_rmse_m": 0.08188163859171291,
+          "velocity_vector_rmse_mps": 0.3451137650163139,
+          "truth": "analytic physical trajectory; measurement noise generated with the recorded seed"
+        },
+        {
+          "name": "accelerating",
+          "observations": 64,
+          "rejected_indices": [],
+          "accepted_count": 64,
+          "raw_position_rmse_m": 0.1002907063150607,
+          "filtered_position_rmse_m": 0.07991961285492072,
+          "velocity_vector_rmse_mps": 0.33630789142080214,
+          "truth": "analytic physical trajectory; measurement noise generated with the recorded seed"
+        },
+        {
+          "name": "outlier_then_recovery",
+          "observations": 64,
+          "rejected_indices": [
+            24,
+            46
+          ],
+          "accepted_count": 62,
+          "raw_position_rmse_m": 0.09191743922989752,
+          "filtered_position_rmse_m": 0.06407897762777763,
+          "velocity_vector_rmse_mps": 0.3063937492157004,
+          "truth": "analytic physical trajectory; measurement noise generated with the recorded seed"
+        }
+      ],
+      "maximum_absolute_errors": {
+        "filter_state": 6.8833827526759706e-15,
+        "filter_covariance": 1.6653345369377348e-16,
+        "observed_path_length": 1.7763568394002505e-15,
+        "net_displacement": 1.7763568394002505e-15,
+        "velocity": 6.8833827526759706e-15,
+        "speed": 6.661338147750939e-15
+      },
+      "implementation_compared": true
+    },
+    "elapsed_seconds": 0.31206654400000033,
+    "status": "passed"
+  },
+  "stream_protocol": {
+    "command": "/usr/bin/python3 /var/tmp/moonground-linux-20261111-tp1t8wy1/source/validation/stream_test.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/stream.json --protocol-only",
+    "python": "3.12.3",
+    "platform": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "binary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe",
+    "binary_sha256": "6d7c2d35727dbc7207ab2d719529bfd6806af09e184662d378b989d6d1a03775",
+    "protocol": [
+      {
+        "name": "valid_three_frame_prefix",
+        "passed": true,
+        "exit_code": 0,
+        "complete_output_frames": 3,
+        "stdout_bytes": 1449,
+        "stdout_sha256": "c3c6e79ab4e4d392c31dc004d5cb06df1fe644b797c31120c88100e47b73dc1c",
+        "stderr": ""
+      },
+      {
+        "name": "empty_input",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "missing configuration line"
+      },
+      {
+        "name": "blank_configuration",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "invalid_configuration",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: missing field session_id"
+      },
+      {
+        "name": "complete_prefix_before_bad_json",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 3,
+        "stdout_bytes": 1449,
+        "stdout_sha256": "c3c6e79ab4e4d392c31dc004d5cb06df1fe644b797c31120c88100e47b73dc1c",
+        "stderr": "line 5: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "complete_prefix_before_schema_error",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 3,
+        "stdout_bytes": 1449,
+        "stdout_sha256": "c3c6e79ab4e4d392c31dc004d5cb06df1fe644b797c31120c88100e47b73dc1c",
+        "stderr": "line 5: frame: unknown field extra"
+      },
+      {
+        "name": "invalid_utf8_after_success",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 1,
+        "stdout_bytes": 455,
+        "stdout_sha256": "58795f26e5957ee501213c0a2e8a72a3ddb158c7ccd23c3e341e44f1a8d17f5a",
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "invalid_utf8_at_eof",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 1,
+        "stdout_bytes": 455,
+        "stdout_sha256": "58795f26e5957ee501213c0a2e8a72a3ddb158c7ccd23c3e341e44f1a8d17f5a",
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "crlf_and_final_line_without_newline",
+        "passed": true,
+        "exit_code": 0,
+        "complete_output_frames": 3,
+        "stdout_bytes": 1449,
+        "stdout_sha256": "c3c6e79ab4e4d392c31dc004d5cb06df1fe644b797c31120c88100e47b73dc1c",
+        "stderr": ""
+      },
+      {
+        "name": "lf_and_final_line_without_newline",
+        "passed": true,
+        "exit_code": 0,
+        "complete_output_frames": 3,
+        "stdout_bytes": 1449,
+        "stdout_sha256": "c3c6e79ab4e4d392c31dc004d5cb06df1fe644b797c31120c88100e47b73dc1c",
+        "stderr": ""
+      },
+      {
+        "name": "physical_blank_line_is_counted",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 1,
+        "stdout_bytes": 455,
+        "stdout_sha256": "58795f26e5957ee501213c0a2e8a72a3ddb158c7ccd23c3e341e44f1a8d17f5a",
+        "stderr": "line 3: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "fractional_track_id",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "overflowing_track_id",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_json_key",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: invalid JSON: Duplicate key \"timestamp_us\" at line 1, column 38"
+      },
+      {
+        "name": "overflowing_timestamp",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: timestamp_us must be a nonnegative Int64 decimal string"
+      },
+      {
+        "name": "numeric_timestamp",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: timestamp_us must be a string"
+      },
+      {
+        "name": "noncanonical_timestamp",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: timestamp_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "nonfinite_coordinate",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: point must be a finite number"
+      },
+      {
+        "name": "duplicate_observation",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: duplicate, conflicting, or nonpositive track identity"
+      },
+      {
+        "name": "excessive_json_depth",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: invalid JSON: Depth limit exceeded, please increase the max_nesting_depth parameter"
+      },
+      {
+        "name": "line_byte_limit_exact",
+        "passed": true,
+        "line_bytes_excluding_lf": 512,
+        "exit_code": 0,
+        "complete_output_frames": 1,
+        "stdout_bytes": 452,
+        "stdout_sha256": "519496986bb6a1643b07749a1736d02a2b139afd042d096eed42d23c4164e34d",
+        "stderr": ""
+      },
+      {
+        "name": "line_byte_limit_one_less",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: line byte limit exceeded"
+      },
+      {
+        "name": "oversized_line_stops_before_complete_file",
+        "passed": true,
+        "exit_code": 2,
+        "input_file_bytes": 67108864,
+        "shared_file_read_offset_bytes": 4096,
+        "stderr": "line 2: line byte limit exceeded"
+      }
+    ]
+  },
+  "node_version": "v22.14.0",
+  "node_url": "https://nodejs.org/dist/v22.14.0/node-v22.14.0-linux-x64.tar.xz",
+  "numpy_wheel": {
+    "version": "1.26.4",
+    "filename": "numpy-1.26.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "sha256": "675d61ffbfa78604709862923189bad94014bef562cc35cf61d3a07bba02a7ed",
+    "verified_against": "https://pypi.org/pypi/numpy/1.26.4/json"
+  },
+  "private_openssl_headers": {
+    "version": "3.0.13-0ubuntu3.16",
+    "source": "https://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_3.0.13-0ubuntu3.16_amd64.deb",
+    "sha256": "2b4734df0475e305ac03abb0a2cc5659651ed37ef02d967a1c4033a154cf714b",
+    "installed_globally": false
+  },
+  "setup_recovery": "Direct WSL Node/pip/registry requests hit bounded timeouts. The same official Linux Node archive and checksum-verified PyPI wheel were transferred through the Windows host; original Mooncakes ZIPs were verified against their registry checksums before the Linux toolchain extracted them. All compilation and execution used the isolated Linux source tree.",
+  "upstream_native_c_warning": "moonbitlang/async@0.21.3 thread_pool.c ignores the return value of write; native builds completed. All MoonBit checks used --deny-warn.",
+  "os_release": "PRETTY_NAME=\"Ubuntu 24.04.4 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.4 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n",
+  "kernel": {
+    "system": "Linux",
+    "node": "localhost",
+    "release": "6.18.33.1-microsoft-standard-WSL2",
+    "version": "#1 SMP PREEMPT_DYNAMIC Fri Jun  5 01:12:21 UTC 2026",
+    "machine": "x86_64",
+    "processor": "x86_64"
+  },
+  "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "native_binary_magic": "7f454c46"
+}

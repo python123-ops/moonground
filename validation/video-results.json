@@ -1,0 +1,191 @@
+{
+  "schema_version": "0.1.0",
+  "completed": true,
+  "source": {
+    "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\seq_hotel.avi",
+    "sha256": "3681e9fe98e6fe4c6317349b05d1307d2bf729ef78da191ba99f600431bd00bb",
+    "homography_path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\H.txt",
+    "homography_sha256": "b62940ea5f69c89990673f91f88724937ed41387a39d8d68ad5bbc6d5ee5c8b7",
+    "provided_homography_input_order": "yx",
+    "provided_homography": [
+      0.0110482,
+      0.000669589,
+      -3.32953,
+      -0.0015966,
+      0.0116324,
+      -5.39514,
+      0.000111907,
+      1.36174e-05,
+      0.542766
+    ],
+    "dataset": "ETH Walking Pedestrians, seq_hotel",
+    "source_url": "https://data.vision.ee.ethz.ch/cvl/aem/ewap_dataset_full.tgz"
+  },
+  "video": {
+    "width": 720,
+    "height": 576,
+    "fps": 25.0,
+    "fps_fraction": "25",
+    "frames": 1500,
+    "interval_seconds": 60.0,
+    "first_timestamp_us": "0",
+    "last_timestamp_us": "59960000",
+    "detection_seconds": 82.56128729999999
+  },
+  "parameters": {
+    "confidence": 0.55,
+    "nms_threshold": 0.4,
+    "pixel_std": 2.0,
+    "workers": 4,
+    "configuration": {
+      "session_id": "eth-hotel-video-hog",
+      "mode": "pixel",
+      "calibration": {
+        "matrix": [
+          0.000669589,
+          0.0110482,
+          -3.32953,
+          0.0116324,
+          -0.0015966,
+          -5.39514,
+          1.36174e-05,
+          0.000111907,
+          0.542766
+        ],
+        "roi": [
+          [
+            10,
+            115
+          ],
+          [
+            710,
+            115
+          ],
+          [
+            710,
+            470
+          ],
+          [
+            10,
+            510
+          ]
+        ],
+        "max_meters_per_pixel": 0.5,
+        "ground_noise_floor_m": 0.001
+      },
+      "motion": {
+        "q": 1.0
+      }
+    }
+  },
+  "pipeline": {
+    "detector": "unmodified MBMOT HogPersonDetector / OpenCV built-in full-body HOG",
+    "opencv": "4.10.0",
+    "python": "3.8.7",
+    "driver_sha256": "7bcfffb4d3dae8dd82247e86b20665a12af98ce463a3117b8d8bbaeda493ce04",
+    "detector_source_sha256": "cdf8c7c31bc2203dfee5d45d1abcfe52075818e2750b3113ed1110670783dc46",
+    "mbmot_module": "python123-ops/mbmot@0.3.0",
+    "mbmot_registry_url": "https://download.mooncakes.io/user/python123-ops/mbmot/0.3.0.zip",
+    "mbmot_source_tree_sha256": "c941def2355b01493e379985d6debc3461ada5f600231715aa9e1587e9ebd10b",
+    "mbmot_binary_sha256": "9fb4b74a6b7af36194e767f95c5e167df5aba00f342b70ce2da30390116bd9ae",
+    "moonground_binary_sha256": "ebf84ce4651795b37407cda05ca3a3da9ffb5e2ba787d8d19f97e02843b2ac4e",
+    "tracker_run": {
+      "command": [
+        "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\_build\\mbmot-0.3.0\\_build\\native\\release\\build\\replay\\replay.exe"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0801648000000057,
+      "stderr": ""
+    },
+    "measurement_run": {
+      "command": [
+        "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\_build\\native\\release\\build\\cmd\\main\\main.exe",
+        "--stream"
+      ],
+      "exit_code": 0,
+      "seconds": 0.08628199999999997,
+      "stderr": ""
+    },
+    "stage_reuse": {
+      "detector_and_tracker_outputs": "reused saved actual-video outputs with unchanged recorded SHA-256; no annotation-generated observations",
+      "native_measurement": "re-executed using the recorded final native binary",
+      "render": "regenerated and reopened after native measurement"
+    }
+  },
+  "counts": {
+    "frames": 1500,
+    "detections": 775,
+    "visible_track_observations": 775,
+    "unique_track_ids": 104,
+    "ready_track_ids": 11,
+    "measurement_status": {
+      "initializing": 507,
+      "ready": 77,
+      "rejected_innovation": 36,
+      "rejected_projection": 155
+    },
+    "closed_segments": 184
+  },
+  "artifacts": {
+    "detections.ndjson": {
+      "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\detections.ndjson",
+      "sha256": "e32ad3bae433c3786514e92f5c599322341d08fc774507e424cd264599fa54b1",
+      "bytes": 102655
+    },
+    "tracks.ndjson": {
+      "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\tracks.ndjson",
+      "sha256": "9ac26e743e99be50a5b54e7f227da3fccab192c4667c05a4e9ed409c30443dec",
+      "bytes": 171500
+    },
+    "measurements-input.ndjson": {
+      "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\measurements-input.ndjson",
+      "sha256": "59edc6581a7abe81a1bae4c70fd93c575ce1047ec503a73142033557e426f6ff",
+      "bytes": 152419
+    },
+    "ground.ndjson": {
+      "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\ground.ndjson",
+      "sha256": "46ba5bfdc1eb628d180f8b5a859eec6f3e339d684ceda356536e42d5b3abce8f",
+      "bytes": 569466
+    }
+  },
+  "interpretation": {
+    "verified": "actual video detection -> native identity tracking -> native pixel-to-metre measurement",
+    "speed_accuracy_measured": false,
+    "distortion": "original EWAP image/H coordinates; independent lens calibration was not measured",
+    "anchor": "HOG bounding-box bottom centre, not annotated ground-truth contact points",
+    "detector_observation": "the inspected overhead scene produces oversized multi-person HOG boxes as well as missed people; identity counts are pipeline outputs, not tracking-quality scores",
+    "coordinates": "core H maps detector [x,y,1] to dataset [pos_x,pos_y,1]; original H input order is explicitly adapted before calling the core",
+    "uncertainty": "conditional on fixed homography and selected anchor; pixel noise is an explicit demonstration parameter"
+  },
+  "reproduce": [
+    "C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe",
+    "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\examples\\video_demo.py",
+    "--source",
+    "validation\\data\\seq_hotel.avi",
+    "--homography",
+    "validation\\data\\H.txt",
+    "--homography-order",
+    "yx",
+    "--roi",
+    "[[10,115],[710,115],[710,470],[10,510]]",
+    "--seconds",
+    "60",
+    "--workers",
+    "4"
+  ],
+  "rendered_video": {
+    "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\measurement.mp4",
+    "sha256": "29367211eaed6f4683b52b4c2120b5f8513894cf470ed1b5f49e304590fe48b7",
+    "bytes": 20588333,
+    "frames": 1500,
+    "first_frame_readable": true,
+    "audio": false,
+    "preview": {
+      "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\preview.png",
+      "sha256": "f27c1d84d09e720fac0d527d454e7295abeaa99521bc4126a347f802da45e98a"
+    },
+    "seconds": 3.3973212
+  },
+  "total_seconds": 86.12505529999999,
+  "timing_scope": "sum of measured detection, native tracking, native measurement and render stages; detector/tracker timings are from the actual-video run and their unchanged saved outputs were reused for final measurement verification; excludes builds and file hashing"
+}

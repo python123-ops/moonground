@@ -1,0 +1,19 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "local/consumer"
+
+import {
+  "python123-ops/mbmot",
+  "python123-ops/moonground",
+  "python123-ops/moonground/types",
+}
+
+// Values
+pub fn tracker_observations(@mbmot.FrameTracks, Double) -> Array[@moonground.PixelObservation] raise @types.GroundError
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
