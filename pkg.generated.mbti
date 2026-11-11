@@ -66,4 +66,8 @@ pub using @motion {type MotionEstimator}
 
 pub using @types {type Point2}
 
+pub using @calibration {type RobustCalibration}
+
+pub using @calibration {type RobustFitOptions}
+
 // Traits

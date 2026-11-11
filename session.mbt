@@ -8,7 +8,11 @@ pub using @types {
 }
 
 ///|
-pub using @calibration {type GroundCalibration}
+pub using @calibration {
+  type GroundCalibration,
+  type RobustFitOptions,
+  type RobustCalibration,
+}
 
 ///|
 pub using @camera {type CameraModel}

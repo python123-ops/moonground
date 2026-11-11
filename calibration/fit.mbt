@@ -148,6 +148,52 @@ pub fn GroundCalibration::fit(
   for point in control_pixels {
     require_domain_point(domain, point)
   }
+  require_independent_checks(
+    control_pixels, control_world, check_pixels, check_world, domain,
+  )
+  let imported = fit_control_model(
+    control_pixels,
+    control_world,
+    roi,
+    max_meters_per_pixel~,
+    ground_noise_floor_m~,
+  )
+  let (fit_rms, fit_max) = residual_summary(
+    imported, control_pixels, control_world,
+  )
+  let (check_rms, check_max) = residual_summary(
+    imported, check_pixels, check_world,
+  )
+  if fit_max > max_fit_error_m {
+    raise @types.GroundError::InvalidInput("control residual exceeds fit limit")
+  }
+  if check_max > max_check_error_m {
+    raise @types.GroundError::InvalidInput(
+      "hold-out residual exceeds check limit",
+    )
+  }
+  {
+    ..imported,
+    report_value: {
+      fit_count_value: control_pixels.length(),
+      check_count_value: check_pixels.length(),
+      fit_rms_value: Some(fit_rms),
+      fit_max_value: Some(fit_max),
+      check_rms_value: Some(check_rms),
+      check_max_value: Some(check_max),
+      roi_scale_bound_value: imported.report_value.roi_scale_bound_value,
+    },
+  }
+}
+
+///|
+fn require_independent_checks(
+  control_pixels : Array[@types.Point2],
+  control_world : Array[@types.Point2],
+  check_pixels : Array[@types.Point2],
+  check_world : Array[@types.Point2],
+  domain : ConvexRoi,
+) -> Unit raise @types.GroundError {
   for i in 0..<check_pixels.length() {
     require_domain_point(domain, check_pixels[i])
     check_world[i].validate()
@@ -180,6 +226,18 @@ pub fn GroundCalibration::fit(
       }
     }
   }
+}
+
+///|
+// Both strict and robust paths use the same published geometry solver and
+// the same complete calibration-domain validation.
+fn fit_control_model(
+  control_pixels : Array[@types.Point2],
+  control_world : Array[@types.Point2],
+  roi : Array[@types.Point2],
+  max_meters_per_pixel~ : Double,
+  ground_noise_floor_m~ : Double,
+) -> GroundCalibration raise @types.GroundError {
   let source = control_pixels.map(fn(point) {
     @geometry.Point2::new(x=point.x, y=point.y)
   })
@@ -190,36 +248,10 @@ pub fn GroundCalibration::fit(
     _ => raise @types.GroundError::InvalidInput("homography fitting failed")
   }
   let h = model.matrix
-  let imported = GroundCalibration::from_homography(
+  GroundCalibration::from_homography(
     [h.m00, h.m01, h.m02, h.m10, h.m11, h.m12, h.m20, h.m21, h.m22],
     roi,
     max_meters_per_pixel~,
     ground_noise_floor_m~,
   )
-  let (fit_rms, fit_max) = residual_summary(
-    imported, control_pixels, control_world,
-  )
-  let (check_rms, check_max) = residual_summary(
-    imported, check_pixels, check_world,
-  )
-  if fit_max > max_fit_error_m {
-    raise @types.GroundError::InvalidInput("control residual exceeds fit limit")
-  }
-  if check_max > max_check_error_m {
-    raise @types.GroundError::InvalidInput(
-      "hold-out residual exceeds check limit",
-    )
-  }
-  {
-    ..imported,
-    report_value: {
-      fit_count_value: control_pixels.length(),
-      check_count_value: check_pixels.length(),
-      fit_rms_value: Some(fit_rms),
-      fit_max_value: Some(fit_max),
-      check_rms_value: Some(check_rms),
-      check_max_value: Some(check_max),
-      roi_scale_bound_value: imported.report_value.roi_scale_bound_value,
-    },
-  }
 }

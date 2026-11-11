@@ -29,6 +29,7 @@ pub struct GroundCalibration {
   // private fields
 }
 pub fn GroundCalibration::fit(Array[@types.Point2], Array[@types.Point2], Array[@types.Point2], Array[@types.Point2], Array[@types.Point2], max_fit_error_m? : Double, max_check_error_m? : Double, max_meters_per_pixel? : Double, ground_noise_floor_m? : Double) -> Self raise @types.GroundError
+pub fn GroundCalibration::fit_robust(Array[@types.Point2], Array[@types.Point2], Array[@types.Point2], Array[@types.Point2], Array[@types.Point2], options? : RobustFitOptions, max_fit_error_m? : Double, max_check_error_m? : Double, max_meters_per_pixel? : Double, ground_noise_floor_m? : Double) -> RobustCalibration raise @types.GroundError
 pub fn GroundCalibration::from_homography(Array[Double], Array[@types.Point2], max_meters_per_pixel? : Double, ground_noise_floor_m? : Double) -> Self raise @types.GroundError
 pub fn GroundCalibration::jacobian(Self, @types.Point2) -> Array[Double] raise @types.GroundError
 pub fn GroundCalibration::map_point(Self, @types.Point2) -> @types.Point2 raise @types.GroundError
@@ -43,6 +44,26 @@ pub struct GroundPoint {
 pub fn GroundPoint::covariance(Self) -> @types.Covariance2
 pub fn GroundPoint::position(Self) -> @types.Point2
 pub fn GroundPoint::to_repr(Self) -> @debug.Repr
+
+pub struct RobustCalibration {
+  // private fields
+}
+pub fn RobustCalibration::calibration(Self) -> GroundCalibration
+pub fn RobustCalibration::control_errors_m(Self) -> Array[Double]
+pub fn RobustCalibration::inlier_count(Self) -> Int32
+pub fn RobustCalibration::inlier_mask(Self) -> Array[Bool]
+pub fn RobustCalibration::refinement_steps(Self) -> Int32
+pub fn RobustCalibration::trials_run(Self) -> Int32
+pub fn RobustCalibration::valid_hypotheses(Self) -> Int32
+
+pub struct RobustFitOptions {
+  inlier_threshold_m : Double
+  min_inlier_ratio : Double
+  max_trials : Int32
+  seed : Int32
+} derive(@debug.Debug)
+pub fn RobustFitOptions::new(inlier_threshold_m? : Double, min_inlier_ratio? : Double, max_trials? : Int32, seed? : Int32) -> Self raise @types.GroundError
+pub fn RobustFitOptions::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 
