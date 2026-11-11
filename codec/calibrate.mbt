@@ -12,6 +12,7 @@ fn points(
 
 ///|
 /// Fit manual ground correspondences and validate independent held-out points.
+/// Robust selection is explicit; an omitted option preserves strict fitting.
 pub fn calibrate_json(source : String) -> String raise @types.GroundError {
   let fields = object(parse_document(source), "calibration fit")
   allowed_fields(
@@ -19,6 +20,7 @@ pub fn calibrate_json(source : String) -> String raise @types.GroundError {
     [
       "control_pixels", "control_world", "check_pixels", "check_world", "roi", "max_fit_error_m",
       "max_check_error_m", "max_meters_per_pixel", "ground_noise_floor_m", "camera",
+      "robust",
     ],
     "calibration fit",
   )
@@ -29,8 +31,17 @@ pub fn calibrate_json(source : String) -> String raise @types.GroundError {
     fields, "ground_noise_floor_m", 0.001,
   )
   let camera = optional_camera(fields)
+  let robust = match fields.get("robust") {
+    Some(value) => Some(robust_fit_options(value))
+    None => None
+  }
   let controls = points(required(fields, "control_pixels"), "control_pixels")
   let checks = points(required(fields, "check_pixels"), "check_pixels")
+  let control_world = points(required(fields, "control_world"), "control_world")
+  let check_world = points(required(fields, "check_world"), "check_world")
+  let roi = points(required(fields, "roi"), "roi")
+  let max_fit_error_m = optional_number(fields, "max_fit_error_m", 0.1)
+  let max_check_error_m = optional_number(fields, "max_check_error_m", 0.2)
   match camera {
     Some(camera) => {
       for i in 0..<controls.length() {
@@ -42,17 +53,38 @@ pub fn calibrate_json(source : String) -> String raise @types.GroundError {
     }
     None => ()
   }
-  let calibration = @calibration.GroundCalibration::fit(
-    controls,
-    points(required(fields, "control_world"), "control_world"),
-    checks,
-    points(required(fields, "check_world"), "check_world"),
-    points(required(fields, "roi"), "roi"),
-    max_fit_error_m=optional_number(fields, "max_fit_error_m", 0.1),
-    max_check_error_m=optional_number(fields, "max_check_error_m", 0.2),
-    max_meters_per_pixel~,
-    ground_noise_floor_m~,
-  )
+  let (calibration, robust_report) = match robust {
+    None =>
+      (
+        @calibration.GroundCalibration::fit(
+          controls,
+          control_world,
+          checks,
+          check_world,
+          roi,
+          max_fit_error_m~,
+          max_check_error_m~,
+          max_meters_per_pixel~,
+          ground_noise_floor_m~,
+        ),
+        None,
+      )
+    Some(options) => {
+      let fitted = @calibration.GroundCalibration::fit_robust(
+        controls,
+        control_world,
+        checks,
+        check_world,
+        roi,
+        options~,
+        max_fit_error_m~,
+        max_check_error_m~,
+        max_meters_per_pixel~,
+        ground_noise_floor_m~,
+      )
+      (fitted.calibration(), Some(robust_fit_report_json(fitted, options)))
+    }
+  }
   let report = calibration.report()
   let output : Map[String, Json] = {
     "calibration": Json::object({
@@ -74,6 +106,9 @@ pub fn calibrate_json(source : String) -> String raise @types.GroundError {
   match camera {
     Some(camera) => output["camera"] = camera_json(camera)
     None => ()
+  }
+  if robust_report is Some(value) {
+    output["robust_report"] = value
   }
   Json::object(output).stringify()
 }
