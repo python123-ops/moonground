@@ -1,0 +1,29 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/codec"
+
+import {
+  "python123-ops/moonground",
+  "python123-ops/moonground/motion",
+  "python123-ops/moonground/types",
+}
+
+// Values
+pub fn calibrate_json(String) -> String raise @types.GroundError
+
+pub fn project_json(String) -> String raise @types.GroundError
+
+// Errors
+
+// Types and methods
+pub struct ReplaySession {
+  pixel : @moonground.MeasurementSession?
+  ground : @motion.MotionEstimator?
+  diagnostics : Bool
+  max_tracks : Int32
+}
+pub fn ReplaySession::new(String) -> Self raise @types.GroundError
+pub fn ReplaySession::process_line(Self, String) -> String raise @types.GroundError
+
+// Type aliases
+
+// Traits
