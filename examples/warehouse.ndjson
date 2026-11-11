@@ -1,0 +1,11 @@
+{"session_id":"warehouse-example","mode":"pixel","calibration":{"matrix":[0.02,0,-2,0,0.02,-1,0,0,1],"roi":[[0,0],[640,0],[640,480],[0,480]]}}
+{"timestamp_us":"0","observations":[{"track_id":1,"point":[120,240]}]}
+{"timestamp_us":"200000","observations":[{"track_id":1,"point":[135,240]}]}
+{"timestamp_us":"400000","observations":[{"track_id":1,"point":[150,240]}]}
+{"timestamp_us":"600000","observations":[{"track_id":1,"point":[165,240]}]}
+{"timestamp_us":"800000","observations":[{"track_id":1,"point":[180,240]}]}
+{"timestamp_us":"1000000","observations":[],"lost":[1]}
+{"timestamp_us":"1200000","observations":[{"track_id":1,"point":[210,240]}]}
+{"timestamp_us":"1400000","observations":[{"track_id":1,"point":[225,240]}]}
+{"timestamp_us":"1600000","observations":[{"track_id":1,"point":[240,240]}]}
+{"timestamp_us":"1800000","observations":[{"track_id":1,"point":[255,240]}]}
