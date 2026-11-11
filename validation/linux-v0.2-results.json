@@ -1,0 +1,1304 @@
+{
+  "status": "passed",
+  "platform": "WSL Ubuntu-24.04 Linux x86_64",
+  "isolated_workspace": "/var/tmp/moonground-linux-20261111-tp1t8wy1",
+  "source_directory": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2",
+  "windows_shared_build_used": false,
+  "project_build_cache_copied": false,
+  "project_dependencies_copied": false,
+  "reused_isolated_environment": {
+    "MOON_HOME": "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain",
+    "PYTHONPATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/python",
+    "CPATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/include:/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/include/x86_64-linux-gnu",
+    "LIBRARY_PATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/lib/x86_64-linux-gnu"
+  },
+  "environment_reuse": "Existing pinned Linux MoonBit/core, Node, NumPy, OpenSSL headers and checksum-verified registry ZIP cache are reused. This is not a fresh dependency download; project source, package extraction, compilation and execution use a new Linux directory.",
+  "registry_sources": [
+    {
+      "module": "moonbitlang/async",
+      "version": "0.21.3",
+      "archive_sha256": "e949f1678bd2694a18c14be656b90174ae0a8d562542235822a5969510de3b87",
+      "matches_registry_index": true
+    },
+    {
+      "module": "python123-ops/moon-cv-geometry",
+      "version": "0.2.2",
+      "archive_sha256": "abac041f0d939fbd30cd33a0b21c33a4058dbf93624a98bfdd69d3a598de11eb",
+      "matches_registry_index": true
+    },
+    {
+      "module": "Lyllyl789/moon-kalman",
+      "version": "0.2.1",
+      "archive_sha256": "ccfbeb152c06bedde07a9dba30923450a7ce370412dd7fb255e1d84b7337bf13",
+      "matches_registry_index": true
+    }
+  ],
+  "steps": [
+    {
+      "command": [
+        "moon",
+        "version",
+        "--all",
+        "--no-path"
+      ],
+      "exit_code": 0,
+      "seconds": 0.04049369400000025,
+      "captured_output_sha256": "781549d15e8da07a89e683398ec2e8d98d54be25a3bda3d078987efc634a7452",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/00.log",
+      "summary": "moonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\nFeature flags enabled: rr_moon_mod,rr_moon_pkg"
+    },
+    {
+      "command": [
+        "node",
+        "--version"
+      ],
+      "exit_code": 0,
+      "seconds": 0.04932230199999932,
+      "captured_output_sha256": "7703fd79909af9b17df6395137bee2b07c3f3b27b6e96e18c909f433cce84f19",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/01.log",
+      "summary": "v22.14.0"
+    },
+    {
+      "command": [
+        "python3",
+        "-c",
+        "import platform,numpy; print(platform.python_version()); print(numpy.__version__)"
+      ],
+      "exit_code": 0,
+      "seconds": 0.19203583800000068,
+      "captured_output_sha256": "047b7a5304db9f81e8705e53586b18b18ec3fac3708402131f1796d2e3bda715",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/02.log",
+      "summary": "3.12.3\n1.26.4"
+    },
+    {
+      "command": [
+        "gcc",
+        "--version"
+      ],
+      "exit_code": 0,
+      "seconds": 0.004508044999999683,
+      "captured_output_sha256": "8497f84b2b8334c413d9c6166bd39d009ba55d2ff60a8f23e66dfa5819c2b048",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/03.log",
+      "summary": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+    },
+    {
+      "command": [
+        "moon",
+        "update"
+      ],
+      "exit_code": 124,
+      "seconds": 90.027785949,
+      "captured_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/04.log",
+      "summary": ""
+    },
+    {
+      "command": [
+        "moon",
+        "fmt",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0589113269999757,
+      "captured_output_sha256": "873caeb08d5b168796e4a0c9d757efff02e0d4d50b50f8b450bdd438801ad94e",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/05.log",
+      "summary": "Finished. moon: ran 41 tasks, now up to date"
+    },
+    {
+      "command": [
+        "moon",
+        "info",
+        "--target",
+        "all"
+      ],
+      "exit_code": 0,
+      "seconds": 0.580377698999996,
+      "captured_output_sha256": "25f02f29642bb9cdf81317cb90ae6028d9d7ac1d2a284b2b9b10057e0923875a",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/06.log",
+      "summary": "Finished. moon: ran 84 tasks, now up to date\n+// Errors\n+// Errors"
+    },
+    {
+      "command": [
+        "moon",
+        "check",
+        "--target",
+        "all",
+        "--deny-warn"
+      ],
+      "exit_code": 0,
+      "seconds": 0.41180243799999516,
+      "captured_output_sha256": "8d6b1ae1dd4fb2fb024a69bba3a977660f6bdb8970dca0e78cf5dbbea479484c",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/07.log",
+      "summary": "Finished. moon: ran 88 tasks, now up to date"
+    },
+    {
+      "command": [
+        "moon",
+        "build",
+        "--target",
+        "all",
+        "--deny-warn"
+      ],
+      "exit_code": 0,
+      "seconds": 1.3185647459999927,
+      "captured_output_sha256": "be932f304a08f2e850d222e0ffc92d072e6429bfcc1d1962ac155a2bd9074295",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/08.log",
+      "summary": "Finished. moon: ran 111 tasks, now up to date"
+    },
+    {
+      "command": [
+        "moon",
+        "test",
+        "--target",
+        "all",
+        "--deny-warn"
+      ],
+      "exit_code": 0,
+      "seconds": 2.367560157000014,
+      "captured_output_sha256": "6d916ad582628dca33a78779f0c17ca226e627b2c1b0f4059332ccf1831ec098",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/09.log",
+      "summary": "Total tests: 75, passed: 75, failed: 0. [wasm]\nTotal tests: 75, passed: 75, failed: 0. [wasm-gc]\nTotal tests: 75, passed: 75, failed: 0. [js]\nTotal tests: 75, passed: 75, failed: 0. [native]"
+    },
+    {
+      "command": [
+        "moon",
+        "build",
+        "cmd/main",
+        "--target",
+        "native",
+        "--release",
+        "--deny-warn"
+      ],
+      "exit_code": 0,
+      "seconds": 6.578813233999995,
+      "captured_output_sha256": "fc0dc0ae7a7c8795ad89a8c400e205a0c4dcd502fde83f244628c578ae083452",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/10.log",
+      "summary": "Finished. moon: ran 79 tasks, now up to date"
+    },
+    {
+      "command": [
+        "node",
+        "web/build.mjs"
+      ],
+      "exit_code": 0,
+      "seconds": 0.5075967020000007,
+      "captured_output_sha256": "314b2bdc8a334abb06284c0b0f9dba5c6667a79daa0913016ac2d4eecb2979e7",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/11.log",
+      "summary": "Finished. moon: ran 12 tasks, now up to date"
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "web/parity.test.mjs"
+      ],
+      "exit_code": 0,
+      "seconds": 0.10501565100000221,
+      "captured_output_sha256": "d3deed8d664d0fee772ab20c3df872b2a03fac6638cc88fd427de9e7e9c77de7",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/12.log",
+      "summary": "# Subtest: failed browser frame preserves state and exact Int64 time\nok 2 - failed browser frame preserves state and exact Int64 time\n# tests 8\n# pass 8\n# fail 0"
+    },
+    {
+      "command": [
+        "python3",
+        "validation/verify.py",
+        "--binary",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/_build/native/release/build/cmd/main/main.exe",
+        "--output",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/numerical-v0.2.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.5505642870000145,
+      "captured_output_sha256": "3d0ec14c5ea41d74375d8ae8c4ae2fe579e5f06dab2c0d34317b42ad3b883e9b",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/13.log",
+      "summary": "{\"status\": \"passed\", \"output\": \"/var/tmp/moonground-linux-20261111-tp1t8wy1/numerical-v0.2.json\", \"projection_cases\": 384, \"motion_cases\": 4, \"implementation_verified\": true}"
+    },
+    {
+      "command": [
+        "python3",
+        "validation/camera_verify.py",
+        "--binary",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/_build/native/release/build/cmd/main/main.exe",
+        "--output",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/camera-v0.2.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.8026765220000129,
+      "captured_output_sha256": "21b95d9794195e127893cb13dcb675afb2b809c224b8ed6bdc124352247ff899",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/14.log",
+      "summary": "{\"status\": \"passed\", \"output\": \"/var/tmp/moonground-linux-20261111-tp1t8wy1/camera-v0.2.json\", \"dense_points\": 2350, \"motion_frames\": 80, \"uncertainty_frames\": 64}"
+    },
+    {
+      "command": [
+        "python3",
+        "validation/stream_test.py",
+        "--binary",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/_build/native/release/build/cmd/main/main.exe",
+        "--output",
+        "/var/tmp/moonground-linux-20261111-tp1t8wy1/stream-v0.2.json",
+        "--frames",
+        "3000",
+        "--targets",
+        "10",
+        "--latency-samples",
+        "100"
+      ],
+      "exit_code": 0,
+      "seconds": 0.5089111030000026,
+      "captured_output_sha256": "baf3352463bb4bf363338fa2fa302a5e44707910bb59c591a05b17db7a49df96",
+      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.2-logs/15.log",
+      "summary": "protocol: 23/23 passed\nthroughput: {\"frames\": 3000, \"targets_per_frame\": 10, \"target_observations\": 30000, \"wall_seconds\": 0.4137854009999842, \"frames_per_second\": 7250.1349558248785, \"target_observations_per_second\": 72501.34955824878, \"average_frame_ms\": 0.13792846699999473, \"stdout_bytes_hashed\": 13401185, \"stdout_sha256\": \"8185376f11414db17259b1b13a53cad2250e675838ade08689452cfd0ac89354\", \"output_storage\": \"No accumulated stdout; first and final frames only.\", \"measurement_scope\": \"Native subprocess + Python producer, pipes, line counting and SHA-256; not isolated kernel time.\", \"memory\": {\"samples\": 9, \"peak_working_set_bytes\": 3170304, \"sampled_peak_rss_bytes\": 3170304, \"first_rss_bytes\": 3022848, \"last_rss_bytes\": 3170304, \"late_min_rss_bytes\": 3170304, \"late_max_rss_bytes\": 3170304}}\nlatency: {\"samples\": 100, \"warmup_frames\": 100, \"targets_per_frame\": 10, \"average_ms\": 0.16827786, \"p50_ms\": 0.15669699999999998, \"p95_ms\": 0.20443735, \"min_ms\": 0.133847, \"max_ms\": 0.364507, \"stdout_sha256\": \"549a0b92133520aa261082016eef3fb40bc13f8e894f42c27feb6c2a0022c870\", \"measurement_scope\": \"One flushed frame write and one complete output line read, including subprocess pipes and scheduling.\"}\nsaved /var/tmp/moonground-linux-20261111-tp1t8wy1/stream-v0.2.json"
+    }
+  ],
+  "source_copy_excludes": [
+    "_build",
+    ".mooncakes",
+    ".git",
+    "__pycache__",
+    "node_modules",
+    "validation/data",
+    "validation/*results.json",
+    "moon.lock"
+  ],
+  "source_snapshot_sha256": "e0ab560ee646e96b7bc90cc9e707250bb664ec62715ba9b2700a179998101e7b",
+  "source_files": [
+    {
+      "path": ".gitattributes",
+      "sha256": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c",
+      "bytes": 19
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "8fa141f90171a4f94453dc9690a6b391c9b2f3ffd214c44024f0081d31dcd132",
+      "bytes": 3628
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "495686c723bd6ea3685806a1eaf235b18478dc63b979143c66f107c66c0d53cd",
+      "bytes": 89
+    },
+    {
+      "path": ".moonignore",
+      "sha256": "e4424e3ebb28349486a05d02b56665825fc54dfdd96d72bc1e7ca20693319b08",
+      "bytes": 108
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "4e6cf107ab56275ac96c66c0b3ba40241b7ccbcccf4f1f0621a5daea00691798",
+      "bytes": 920
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "d113382bfb69859d759dd1d096271de01608a8bf089684ea78b8151fa85b8a45",
+      "bytes": 1824
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "bytes": 11358
+    },
+    {
+      "path": "README.mbt.md",
+      "sha256": "48813c45830ea8b9b132137663100387b880d06ec6886c536c1331318deffa54",
+      "bytes": 16173
+    },
+    {
+      "path": "README.md",
+      "sha256": "1c349e98b81b4e6b6785a06bb1cf434b94b7111114bee15197727dba673ed7f1",
+      "bytes": 339
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "239c488b4acf3a7a881651f1e6bd30b873bf0ef490e3b4722d534321de03ed21",
+      "bytes": 3198
+    },
+    {
+      "path": "calibration/fit.mbt",
+      "sha256": "ea739c49aae40aef281e302825f6fbd044b3f5f5579d13ac1ce8034a915b7797",
+      "bytes": 6734
+    },
+    {
+      "path": "calibration/fit_test.mbt",
+      "sha256": "8cecc2cbc1cddb707c28e1ebd1d5538180ef6209be42d8cff6bf434bc0c0ef91",
+      "bytes": 5801
+    },
+    {
+      "path": "calibration/model.mbt",
+      "sha256": "a59a51461f6489399f78e8b4b4022068599c4341e9a8a5a8e500300c743ce579",
+      "bytes": 2770
+    },
+    {
+      "path": "calibration/moon.pkg",
+      "sha256": "e1cc88be6eeeb598592eee505487ebf53336d2715825bddf3288b698c7955b72",
+      "bytes": 172
+    },
+    {
+      "path": "calibration/pkg.generated.mbti",
+      "sha256": "7a3da6db53e69497217c287651b22bf13a42562a40a48bfc0648d73be0ad19c5",
+      "bytes": 2028
+    },
+    {
+      "path": "calibration/projection.mbt",
+      "sha256": "b5e168dbfbfb698412901291a0143ec29b10aa2b4fd183be59c879ff5f534b70",
+      "bytes": 8289
+    },
+    {
+      "path": "calibration/projection_test.mbt",
+      "sha256": "cf7ab2bca9df7c4189eb3be05be65558446f54eba89708dd9e0da6fe21329097",
+      "bytes": 8778
+    },
+    {
+      "path": "calibration/roi.mbt",
+      "sha256": "1a58cb4a67a6788747d2b73e8e37757d25cfdb3aefd0632a145a7c62e6ca848c",
+      "bytes": 2812
+    },
+    {
+      "path": "camera/camera_test.mbt",
+      "sha256": "2847ceef46fb712297f2e416467b487895dd953241e61cc9153e518da6141300",
+      "bytes": 10672
+    },
+    {
+      "path": "camera/inverse.mbt",
+      "sha256": "a71cf2238835e9539ff82b0431da28ecc0ba02029dc0eee6ec3ee66d72f5e048",
+      "bytes": 5515
+    },
+    {
+      "path": "camera/model.mbt",
+      "sha256": "442e896d141cc61d8bab8c7a3e76e0c9e1444dddad95f937930752166623a5ad",
+      "bytes": 2794
+    },
+    {
+      "path": "camera/moon.pkg",
+      "sha256": "70788c77173a6c789363a5a4285e44ca64df511239f4aa74fa4d74f5a09ca13b",
+      "bytes": 218
+    },
+    {
+      "path": "camera/pkg.generated.mbti",
+      "sha256": "8587653ba4c973918944bab6516f2c50860151f12dd280c6adeea305dbb3e0a2",
+      "bytes": 1319
+    },
+    {
+      "path": "camera/projection.mbt",
+      "sha256": "22e055462cd626d18dca76e7da17eec72571f07ff0702740b7eb44baeed03da1",
+      "bytes": 2534
+    },
+    {
+      "path": "cmd/main/main.mbt",
+      "sha256": "d12b95f8696b1a677c49078c6415fad2746a146a151a7e8b422a67953e7a204c",
+      "bytes": 4863
+    },
+    {
+      "path": "cmd/main/moon.pkg",
+      "sha256": "cd57f005a4ddb62748aedb31cbdff7b37c3ab4da8b8e5eb86cd61042f31de2bb",
+      "bytes": 250
+    },
+    {
+      "path": "codec/calibrate.mbt",
+      "sha256": "7ccf70db8e16b483d3e00a6f79addf4f639ffe4cd4ade7df73c59f5981f8449c",
+      "bytes": 2752
+    },
+    {
+      "path": "codec/calibrate_test.mbt",
+      "sha256": "5f692c6f021fb18166eebc9b1848d6f94da74c6daeab7f4fad15ae95b535dc50",
+      "bytes": 677
+    },
+    {
+      "path": "codec/camera.mbt",
+      "sha256": "c96ebc29aefc2beda2323baa8c4f6c4d81af7cc72e58ffbf6a425b34bf9695b7",
+      "bytes": 1540
+    },
+    {
+      "path": "codec/camera_test.mbt",
+      "sha256": "7100d80125cbd6dc325a22b1550736ea06f6e98bd20fd00912d77ad409f07299",
+      "bytes": 2022
+    },
+    {
+      "path": "codec/config.mbt",
+      "sha256": "cfd386a8356c34eb9e57d37875823b71790ef4b9e4240e2a8d4d071befd11498",
+      "bytes": 3963
+    },
+    {
+      "path": "codec/fields.mbt",
+      "sha256": "a4429dcf44e80e4bb6b7f43f0be53ab7e55ccca9f801306d0ffd61c72f455602",
+      "bytes": 4054
+    },
+    {
+      "path": "codec/moon.pkg",
+      "sha256": "8282e1171390c5bc7e1e8535afd3cd8af11775489241752f63e108540abf95e5",
+      "bytes": 249
+    },
+    {
+      "path": "codec/pkg.generated.mbti",
+      "sha256": "885f48c5e7dc84b6f840ede4761031383ce56493442782402ffdca13ad2e5a66",
+      "bytes": 703
+    },
+    {
+      "path": "codec/replay.mbt",
+      "sha256": "9a908fd505fb4bcddb61ce9b7322ee398dea6d2e3f516a6f840ef9cdd4781bb1",
+      "bytes": 6689
+    },
+    {
+      "path": "codec/replay_test.mbt",
+      "sha256": "c834856d91a319ed080be32e8a9dacfda23c68fbef43315c2a1bb41c916f4b57",
+      "bytes": 2691
+    },
+    {
+      "path": "examples/calibration.json",
+      "sha256": "86efdab4e4779240a9df8587efd8645083a780cfd6c0895fb23422fe0304192d",
+      "bytes": 259
+    },
+    {
+      "path": "examples/consumer/.gitignore",
+      "sha256": "bee5e7e4da8e335e17afe8c2a2721c88e402a81b156ccce400de90a5b2ac0c42",
+      "bytes": 46
+    },
+    {
+      "path": "examples/consumer/adapter.mbt",
+      "sha256": "8902b8e3cf026d0cc210575c77f7d1c82e57c7a8d51c5088b33473b9c87db682",
+      "bytes": 737
+    },
+    {
+      "path": "examples/consumer/archive_smoke.py",
+      "sha256": "110207832064725445d069a1669ac5da3cbf24ecc86d43968ada827ba8093351",
+      "bytes": 3422
+    },
+    {
+      "path": "examples/consumer/consumer_test.mbt",
+      "sha256": "41c6068094d27c90febf9bb12a735959bc492607f1c5e7d215c989991c32f5cc",
+      "bytes": 6103
+    },
+    {
+      "path": "examples/consumer/moon.mod",
+      "sha256": "1dc7a58f680dcd88147b046b9fd67fb0b429afee47e9a0ae47403021a6a1f125",
+      "bytes": 159
+    },
+    {
+      "path": "examples/consumer/moon.pkg",
+      "sha256": "8ca86a3450164ebe34c50aa624d47e442eb1af8ab94c3ada41f7d8b219f34ced",
+      "bytes": 157
+    },
+    {
+      "path": "examples/consumer/moon.work",
+      "sha256": "19a06394b2bc0e2fec15f2b3d4799b73dee9c474e6cb5706fc5846ad5bf1122d",
+      "bytes": 32
+    },
+    {
+      "path": "examples/consumer/pkg.generated.mbti",
+      "sha256": "622822b4b1b1db2a46f5771107e29df0dd17e529fd459372a35db9f09be52e9e",
+      "bytes": 366
+    },
+    {
+      "path": "examples/distorted-calibration.json",
+      "sha256": "218322b1ea84038fbfcac3a1d4c0c6ca2dcbe828c97ba33ce4ab7f8982170411",
+      "bytes": 672
+    },
+    {
+      "path": "examples/distorted-camera.ndjson",
+      "sha256": "8efaff7125aa1e4bb562ffa7acd6cab85ad5c05d5782a65e5cfd33008f74e4af",
+      "bytes": 2282
+    },
+    {
+      "path": "examples/video-requirements.txt",
+      "sha256": "36bc622b0e7e24f25f89f44613c78025dee8669a73f592a877c46a4847ef3b6f",
+      "bytes": 25
+    },
+    {
+      "path": "examples/video_demo.py",
+      "sha256": "7bcfffb4d3dae8dd82247e86b20665a12af98ce463a3117b8d8bbaeda493ce04",
+      "bytes": 22251
+    },
+    {
+      "path": "examples/warehouse.ndjson",
+      "sha256": "26018e98b1439f62847d1a31d3775a70107b470cde6cf425559bc0521d1aaa0d",
+      "bytes": 882
+    },
+    {
+      "path": "moon.mod",
+      "sha256": "89cc55703dcb6e3e7cc7d27629a59df226c9a703a0332d80db9153724fd686bd",
+      "bytes": 472
+    },
+    {
+      "path": "moon.pkg",
+      "sha256": "3960200d9f2a976d9dcb0efb01d11c33f970fadbc2b4bc11cf50873015ba0e79",
+      "bytes": 163
+    },
+    {
+      "path": "motion/estimator.mbt",
+      "sha256": "1ddb7cb167489397944fd13052d29fd453605db404567f835b78aa66b073b9c1",
+      "bytes": 10294
+    },
+    {
+      "path": "motion/filter.mbt",
+      "sha256": "fb9dff43fea55356b4915392dcf04cd0fbca4400608dd549b2df1f80420864b5",
+      "bytes": 2855
+    },
+    {
+      "path": "motion/moon.pkg",
+      "sha256": "5ab8f1a4a224639fe8a82e03ba5981a74ff997a4e740b4446f72b561828f0e7c",
+      "bytes": 110
+    },
+    {
+      "path": "motion/motion_test.mbt",
+      "sha256": "47df75dc1560cdb451069ca4ffa6151bd9a612e89d857a03aa6d344676890264",
+      "bytes": 10784
+    },
+    {
+      "path": "motion/pkg.generated.mbti",
+      "sha256": "3f8d9b7eefa2fbcf3ebb751efed2d38a4c6c0fd84e509afb18aa6ec40e022930",
+      "bytes": 2668
+    },
+    {
+      "path": "motion/types.mbt",
+      "sha256": "9951b794f0fd27b10d4043e10f5ad787b8cdf69cae1d01db4101ef3770f77afa",
+      "bytes": 4158
+    },
+    {
+      "path": "motion/uncertainty_test.mbt",
+      "sha256": "76bb8b8a49b44b2f3695e281b377ec4ba4080948a1c8695b4b4d6c733bbf4a1a",
+      "bytes": 9264
+    },
+    {
+      "path": "motion/uncertainty_wbtest.mbt",
+      "sha256": "ae4178880299bade06eb97e2dc2089547e00f70ca45f7cb92c18273fb3d11eca",
+      "bytes": 948
+    },
+    {
+      "path": "pkg.generated.mbti",
+      "sha256": "c8a9ecd4e640450e8765dcce4cc13137eafd03c0c6061a4e0c5f9de4cd1f7e67",
+      "bytes": 1624
+    },
+    {
+      "path": "session.mbt",
+      "sha256": "b9f029e639d0f2cb51b7a377070409dc6781a9eb16e68bf1857e212e9245dda2",
+      "bytes": 4606
+    },
+    {
+      "path": "session_test.mbt",
+      "sha256": "92e2581884e6a8374e9347617f5093ab317c863e071071a9f94a86c467455ab1",
+      "bytes": 8555
+    },
+    {
+      "path": "types/geometry.mbt",
+      "sha256": "a58d805a4a813d0a3addd4ab6cf8a3e38c7bf39a8a40920141f8a77054ad8bc0",
+      "bytes": 3634
+    },
+    {
+      "path": "types/geometry_test.mbt",
+      "sha256": "21cb6f662b7ff42b4ce031b1a5a081cf07d8d915540ed77aca8ba492ad221880",
+      "bytes": 1334
+    },
+    {
+      "path": "types/moon.pkg",
+      "sha256": "f55457e90e133b551bb83a9ac6b3f26b4d21e6678155f918c885105a723bf059",
+      "bytes": 39
+    },
+    {
+      "path": "types/pkg.generated.mbti",
+      "sha256": "572fe0a9e56f5936181448ea59ce50c9414477496bc2827701303f12e21b6af4",
+      "bytes": 1314
+    },
+    {
+      "path": "validation/camera_verify.py",
+      "sha256": "a2edef0a2bfb588ac1001e05b72fb53d5fdf18267d1fb6462510a17b2d047f7c",
+      "bytes": 28945
+    },
+    {
+      "path": "validation/requirements.txt",
+      "sha256": "105a25c9a24a53a42b52ccc93f930e1ea4a88b42372d440ae7c1b82c3a8b2c64",
+      "bytes": 15
+    },
+    {
+      "path": "validation/stream_test.py",
+      "sha256": "e84be11203a2e96fb1df4b84b78c38948fcf1229054601a0da5029e1c50ea3af",
+      "bytes": 16769
+    },
+    {
+      "path": "validation/verify.py",
+      "sha256": "b75b5c247dcd381154c8fcc1acac4d84c7eaa071df99ead03b82a9dc809bb769",
+      "bytes": 33166
+    },
+    {
+      "path": "web/app.mjs",
+      "sha256": "3a6c30dac6521524b7b9b722a27e644813107f172b2a60aa79ad871cec0afa80",
+      "bytes": 13252
+    },
+    {
+      "path": "web/build.mjs",
+      "sha256": "dc77e46da44976accd1c08fae3a83d477600be20f86c29d780bd7a5842839bfd",
+      "bytes": 1242
+    },
+    {
+      "path": "web/index.html",
+      "sha256": "6ea9d03469fc5def54b0a0bae7709bdbe796e54737e6eba9c38aa852a37eaa4f",
+      "bytes": 4571
+    },
+    {
+      "path": "web/parity.test.mjs",
+      "sha256": "fbcd2effbe9b4e5a7697e34c36326176aba784970c6dcd2b9e4ef0c4f139a594",
+      "bytes": 7840
+    },
+    {
+      "path": "web/serve.mjs",
+      "sha256": "ebdb323fd66e9df7d60740a231c3564afeaec118e1bf839b97134bc610647dd8",
+      "bytes": 2349
+    },
+    {
+      "path": "web/style.css",
+      "sha256": "d3b39f982b1a96f9fa5db704dd094a174c54dc431906c371b64ded5116dfd1e3",
+      "bytes": 4444
+    },
+    {
+      "path": "web/ui.test.cjs",
+      "sha256": "160267ae5e22b7ba040fd9d59bbda51964a35155ae0656f0f53ccd645b501bb5",
+      "bytes": 7379
+    },
+    {
+      "path": "web_bridge/bridge.mbt",
+      "sha256": "44a337c5f740d34e649fc56b9269d1c18a816c93456a41fc337e3bbf079733b9",
+      "bytes": 1504
+    },
+    {
+      "path": "web_bridge/calibrate.mbt",
+      "sha256": "739db2c821f759b5de8e701de80e4447804d79a8d4275a98c679326aaf7d1763",
+      "bytes": 215
+    },
+    {
+      "path": "web_bridge/moon.pkg",
+      "sha256": "16928d338cbba9dd149836d294fcbb325237a31d94aa8bb564bbd0b986d9836d",
+      "bytes": 352
+    }
+  ],
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg\n",
+  "node_version": "v22.14.0",
+  "python_numpy": "3.12.3\n1.26.4",
+  "gcc": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "kernel": {
+    "system": "Linux",
+    "node": "localhost",
+    "release": "6.18.33.1-microsoft-standard-WSL2",
+    "version": "#1 SMP PREEMPT_DYNAMIC Fri Jun  5 01:12:21 UTC 2026",
+    "machine": "x86_64",
+    "processor": "x86_64"
+  },
+  "registry_refresh_outcome": "moon update timed out after 90 seconds without output. All subsequent validation uses the existing isolated registry cache of exact checksum-verified module versions; no dependency refresh is claimed.",
+  "generated_interfaces_unchanged_after_line_ending_normalization": true,
+  "native_binary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/_build/native/release/build/cmd/main/main.exe",
+  "native_binary_sha256": "c15b3e9a254bed1662744501a01b3751e268aad7112f3357ce9ea3bfc8d3debe",
+  "native_binary_magic": "7f454c46",
+  "numerical": {
+    "format_version": "1",
+    "seed": 20261111,
+    "tolerance": {
+      "absolute": 1e-08,
+      "relative": 1e-08
+    },
+    "command": "/usr/bin/python3 validation/verify.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/numerical-v0.2.json",
+    "python": "3.12.3",
+    "numpy": "1.26.4",
+    "moonbit": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+    "implementation_verified": true,
+    "source_sha256": "b75b5c247dcd381154c8fcc1acac4d84c7eaa071df99ead03b82a9dc809bb769",
+    "binary_sha256": "c15b3e9a254bed1662744501a01b3751e268aad7112f3357ce9ea3bfc8d3debe",
+    "projection": {
+      "cases": 384,
+      "maximum_absolute_errors": {
+        "projection_position": 3.552713678800501e-15,
+        "projection_covariance": 3.469446951953614e-18,
+        "projection_jacobian": 1.0408340855860843e-17
+      },
+      "reference_finite_difference_maximum_error": 2.103310581258455e-12,
+      "implementation_compared": true
+    },
+    "monte_carlo_covariance": {
+      "status": "passed",
+      "samples": 10000,
+      "cli_batches": 10,
+      "seed": 20261111,
+      "center_pixel": [
+        320.0,
+        240.0
+      ],
+      "calibration": {
+        "matrix": [
+          0.025,
+          0.003,
+          -4.0,
+          -0.001,
+          0.018,
+          -2.0,
+          0.00015,
+          -0.0001,
+          1.0
+        ],
+        "roi": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            640.0,
+            0.0
+          ],
+          [
+            640.0,
+            480.0
+          ],
+          [
+            0.0,
+            480.0
+          ]
+        ],
+        "max_meters_per_pixel": 0.5,
+        "ground_noise_floor_m": 0.001
+      },
+      "pixel_covariance": [
+        [
+          4.0,
+          1.0
+        ],
+        [
+          1.0,
+          9.0
+        ]
+      ],
+      "independent_ground_noise_std_m": 0.001,
+      "analytic_covariance_m2": [
+        [
+          0.0025184090988002727,
+          0.00083814823301509
+        ],
+        [
+          0.00083814823301509,
+          0.002804096489515155
+        ]
+      ],
+      "empirical_covariance_m2": [
+        [
+          0.002546071324107892,
+          0.0008675263620268046
+        ],
+        [
+          0.0008675263620268046,
+          0.002813495385207477
+        ]
+      ],
+      "relative_frobenius_error": 0.012855160545857903,
+      "relative_frobenius_tolerance": 0.05,
+      "maximum_absolute_covariance_entry_error_m2": 2.937812901171455e-05,
+      "mean_bias_norm_m": 0.000428406758636137,
+      "implementation_compared": true,
+      "conditions": "Gaussian pixel noise near an interior point under a moderate projective map; independent Gaussian ground floor added after actual CLI projections. This tests the local linear covariance approximation under the specified conditions."
+    },
+    "motion": {
+      "cases": [
+        {
+          "name": "stationary",
+          "observations": 64,
+          "rejected_indices": [],
+          "accepted_count": 64,
+          "raw_position_rmse_m": 0.08754520709718158,
+          "filtered_position_rmse_m": 0.06928834056266646,
+          "velocity_vector_rmse_mps": 0.28882712163325,
+          "truth": "analytic physical trajectory; measurement noise generated with the recorded seed",
+          "observed_path_length_m": 4.229341246069854,
+          "true_path_length_m": 0.0,
+          "stationary_distance_bias_m": 4.229341246069854,
+          "distance_interpretation": "The accepted filtered-position polyline accumulates noise even for a stationary object. It is not true travelled distance."
+        },
+        {
+          "name": "constant_velocity",
+          "observations": 64,
+          "rejected_indices": [],
+          "accepted_count": 64,
+          "raw_position_rmse_m": 0.10019437054025036,
+          "filtered_position_rmse_m": 0.08188163859171291,
+          "velocity_vector_rmse_mps": 0.3451137650163139,
+          "truth": "analytic physical trajectory; measurement noise generated with the recorded seed"
+        },
+        {
+          "name": "accelerating",
+          "observations": 64,
+          "rejected_indices": [],
+          "accepted_count": 64,
+          "raw_position_rmse_m": 0.1002907063150607,
+          "filtered_position_rmse_m": 0.07991961285492072,
+          "velocity_vector_rmse_mps": 0.33630789142080214,
+          "truth": "analytic physical trajectory; measurement noise generated with the recorded seed"
+        },
+        {
+          "name": "outlier_then_recovery",
+          "observations": 64,
+          "rejected_indices": [
+            24,
+            46
+          ],
+          "accepted_count": 62,
+          "raw_position_rmse_m": 0.09191743922989752,
+          "filtered_position_rmse_m": 0.06407897762777763,
+          "velocity_vector_rmse_mps": 0.3063937492157004,
+          "truth": "analytic physical trajectory; measurement noise generated with the recorded seed"
+        }
+      ],
+      "maximum_absolute_errors": {
+        "filter_state": 6.8833827526759706e-15,
+        "filter_covariance": 1.6653345369377348e-16,
+        "observed_path_length": 1.7763568394002505e-15,
+        "net_displacement": 1.7763568394002505e-15,
+        "velocity": 6.8833827526759706e-15,
+        "speed": 6.661338147750939e-15
+      },
+      "implementation_compared": true
+    },
+    "elapsed_seconds": 0.3292297619999829,
+    "status": "passed"
+  },
+  "camera": {
+    "format_version": "1",
+    "seed": 20261112,
+    "tolerance": 2e-08,
+    "command": "/usr/bin/python3 validation/camera_verify.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/camera-v0.2.json",
+    "python": "3.12.3",
+    "numpy": "1.26.4",
+    "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+    "source_sha256": "a2edef0a2bfb588ac1001e05b72fb53d5fdf18267d1fb6462510a17b2d047f7c",
+    "v01_reference_sha256": "b75b5c247dcd381154c8fcc1acac4d84c7eaa071df99ead03b82a9dc809bb769",
+    "binary_sha256": "c15b3e9a254bed1662744501a01b3751e268aad7112f3357ce9ea3bfc8d3debe",
+    "camera_projection": {
+      "points": 2350,
+      "cameras": [
+        {
+          "fx": 850.0,
+          "fy": 610.0,
+          "cx": 640.0,
+          "cy": 360.0,
+          "k1": 0.035,
+          "k2": -0.006,
+          "p1": 0.002,
+          "p2": -0.0015,
+          "k3": 0.001,
+          "max_normalized_radius": 0.8
+        },
+        {
+          "fx": 920.0,
+          "fy": 680.0,
+          "cx": 640.0,
+          "cy": 360.0,
+          "k1": -0.07,
+          "k2": 0.012,
+          "p1": -0.001,
+          "p2": 0.002,
+          "k3": -0.0008,
+          "max_normalized_radius": 0.9
+        }
+      ],
+      "injectivity_bounds": [
+        0.09332300800000003,
+        0.2245168366784989
+      ],
+      "maximum_absolute_errors": {
+        "raw_to_world_position": 1.1276202194210327e-11,
+        "raw_to_world_covariance": 1.1939234323410375e-15,
+        "raw_to_world_jacobian": 4.3021142204224816e-15,
+        "single_ground_floor_increment": 5.421010862427522e-20
+      },
+      "reference_inverse_pixel_maximum_error": 1.5916157281026244e-12,
+      "composition_finite_difference_maximum_error": 3.686899743837735e-12,
+      "ground_floor_applied_once": true
+    },
+    "camera_defaults_and_radius": {
+      "zero_coefficient_defaults_match_v01_projection": true,
+      "default_max_normalized_radius": 1.0,
+      "inside_ideal_radius": 0.799999992,
+      "corresponding_raw_radius": 0.8132846340776341,
+      "configured_radius": 0.8,
+      "raw_outside_ideal_inside_accepted": true,
+      "tiny_radius": {
+        "configured_radius": 1e-15,
+        "inside_and_boundary_accepted": true,
+        "outside_rejections": [
+          {
+            "ideal_radius_multiple": 1.00000001,
+            "exit_code": 2,
+            "stderr": "line 1: pixel has no inverse within camera radius"
+          },
+          {
+            "ideal_radius_multiple": 2.0,
+            "exit_code": 2,
+            "stderr": "line 1: pixel has no inverse within camera radius"
+          }
+        ],
+        "domain_tolerance_scales_with_radius": true
+      },
+      "maximum_absolute_errors": {
+        "zero_camera_compatibility_position_m": 0.0,
+        "zero_camera_compatibility_covariance": 0.0,
+        "zero_camera_compatibility_jacobian": 0.0,
+        "ideal_radius_boundary_acceptance": 2.524647157997606e-13,
+        "tiny_radius_inside_and_boundary": 0.0
+      }
+    },
+    "raw_control_calibration": {
+      "control_points": 8,
+      "held_out_points": 28,
+      "maximum_absolute_errors": {
+        "fitted_rectified_homography": 3.1916691511924e-12,
+        "held_out_world_position": 6.24389429049188e-12
+      },
+      "report": {
+        "fit_count": 8,
+        "check_count": 28,
+        "fit_rms_m": 3.725738712939875e-12,
+        "fit_max_error_m": 7.354190310577788e-12,
+        "check_rms_m": 2.367247537980814e-12,
+        "check_max_error_m": 7.271535544456535e-12,
+        "roi_scale_bound_m_per_pixel": 0.02418486748144596
+      },
+      "camera_roundtrip_preserved": true,
+      "incorrect_held_out_rejected": {
+        "exit_code": 2,
+        "stderr": "line 1: hold-out residual exceeds check limit"
+      },
+      "truth": "independent synthetic correspondences from a known rectified homography and forward Brown camera"
+    },
+    "camera_motion": {
+      "frames": 80,
+      "rejected_indices": [
+        32
+      ],
+      "maximum_absolute_errors": {
+        "raw_stream_state": 2.342515070807849e-11,
+        "raw_stream_covariance": 4.274358644806853e-15,
+        "raw_stream_position_std": 1.0824674490095276e-15,
+        "raw_stream_velocity_std": 1.8041124150158794e-15
+      },
+      "old_kalman_reference_unchanged": true
+    },
+    "uncertainty_thresholds": {
+      "frames": 64,
+      "thresholds": {
+        "max_position_std_m": 0.07,
+        "max_velocity_std_mps": 0.35
+      },
+      "first_ready_frame": 3,
+      "first_uncertain_frame": 18,
+      "recovered_ready_frame": 32,
+      "status_counts": {
+        "initializing": 3,
+        "ready": 45,
+        "rejected_innovation": 2,
+        "uncertain": 14
+      },
+      "thresholds_leave_filter_and_lifecycle_unchanged": true,
+      "maximum_absolute_errors": {
+        "threshold_state": 3.1086244689504383e-15,
+        "threshold_covariance": 8.881784197001252e-16,
+        "threshold_position_std": 5.551115123125783e-17,
+        "threshold_velocity_std": 1.1102230246251565e-16,
+        "threshold_speed": 2.609024107869118e-15
+      },
+      "near_zero_velocity": {
+        "velocity_mps": [
+          0,
+          0
+        ],
+        "velocity_std_mps": 0.24274370064219483,
+        "speed_mps": null,
+        "interpretation": "Maximum vector-covariance principal standard deviation; not a scalar-speed confidence interval."
+      }
+    },
+    "rejections": [
+      {
+        "name": "nonpositive_focal",
+        "exit_code": 2,
+        "stderr": "line 1: camera focal lengths and radius must be positive"
+      },
+      {
+        "name": "noninjective_radius",
+        "exit_code": 2,
+        "stderr": "line 1: camera distortion cannot certify a unique inverse within radius"
+      },
+      {
+        "name": "nonpositive_radius",
+        "exit_code": 2,
+        "stderr": "line 1: camera focal lengths and radius must be positive"
+      },
+      {
+        "name": "inverse_outside_unique_domain",
+        "exit_code": 2,
+        "stderr": "line 1: camera inverse did not converge in 512 iterations"
+      },
+      {
+        "name": "max_position_std_m_not_positive",
+        "exit_code": 2,
+        "stderr": "line 1: uncertainty limits must be finite and positive"
+      },
+      {
+        "name": "max_velocity_std_mps_not_positive",
+        "exit_code": 2,
+        "stderr": "line 1: uncertainty limits must be finite and positive"
+      }
+    ],
+    "elapsed_seconds": 0.611656025000002,
+    "status": "passed"
+  },
+  "stream": {
+    "command": "/usr/bin/python3 /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/validation/stream_test.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/stream-v0.2.json --frames 3000 --targets 10 --latency-samples 100",
+    "python": "3.12.3",
+    "platform": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+    "binary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/_build/native/release/build/cmd/main/main.exe",
+    "binary_sha256": "c15b3e9a254bed1662744501a01b3751e268aad7112f3357ce9ea3bfc8d3debe",
+    "protocol": [
+      {
+        "name": "valid_three_frame_prefix",
+        "passed": true,
+        "exit_code": 0,
+        "complete_output_frames": 3,
+        "stdout_bytes": 1637,
+        "stdout_sha256": "e6267d7582d3da868e37004d0cad5a50b56567e5b9b4d97cdc0ac01fb333812d",
+        "stderr": ""
+      },
+      {
+        "name": "empty_input",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "missing configuration line"
+      },
+      {
+        "name": "blank_configuration",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "invalid_configuration",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: missing field session_id"
+      },
+      {
+        "name": "complete_prefix_before_bad_json",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 3,
+        "stdout_bytes": 1637,
+        "stdout_sha256": "e6267d7582d3da868e37004d0cad5a50b56567e5b9b4d97cdc0ac01fb333812d",
+        "stderr": "line 5: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "complete_prefix_before_schema_error",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 3,
+        "stdout_bytes": 1637,
+        "stdout_sha256": "e6267d7582d3da868e37004d0cad5a50b56567e5b9b4d97cdc0ac01fb333812d",
+        "stderr": "line 5: frame: unknown field extra"
+      },
+      {
+        "name": "invalid_utf8_after_success",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 1,
+        "stdout_bytes": 507,
+        "stdout_sha256": "1bf3a31651593db9acacea682ad3f55ba81e925825051211ddece4b3c0b97b3f",
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "invalid_utf8_at_eof",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 1,
+        "stdout_bytes": 507,
+        "stdout_sha256": "1bf3a31651593db9acacea682ad3f55ba81e925825051211ddece4b3c0b97b3f",
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "crlf_and_final_line_without_newline",
+        "passed": true,
+        "exit_code": 0,
+        "complete_output_frames": 3,
+        "stdout_bytes": 1637,
+        "stdout_sha256": "e6267d7582d3da868e37004d0cad5a50b56567e5b9b4d97cdc0ac01fb333812d",
+        "stderr": ""
+      },
+      {
+        "name": "lf_and_final_line_without_newline",
+        "passed": true,
+        "exit_code": 0,
+        "complete_output_frames": 3,
+        "stdout_bytes": 1637,
+        "stdout_sha256": "e6267d7582d3da868e37004d0cad5a50b56567e5b9b4d97cdc0ac01fb333812d",
+        "stderr": ""
+      },
+      {
+        "name": "physical_blank_line_is_counted",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 1,
+        "stdout_bytes": 507,
+        "stdout_sha256": "1bf3a31651593db9acacea682ad3f55ba81e925825051211ddece4b3c0b97b3f",
+        "stderr": "line 3: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "fractional_track_id",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "overflowing_track_id",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_json_key",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: invalid JSON: Duplicate key \"timestamp_us\" at line 1, column 38"
+      },
+      {
+        "name": "overflowing_timestamp",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: timestamp_us must be a nonnegative Int64 decimal string"
+      },
+      {
+        "name": "numeric_timestamp",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: timestamp_us must be a string"
+      },
+      {
+        "name": "noncanonical_timestamp",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: timestamp_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "nonfinite_coordinate",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: point must be a finite number"
+      },
+      {
+        "name": "duplicate_observation",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: duplicate, conflicting, or nonpositive track identity"
+      },
+      {
+        "name": "excessive_json_depth",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: invalid JSON: Depth limit exceeded, please increase the max_nesting_depth parameter"
+      },
+      {
+        "name": "line_byte_limit_exact",
+        "passed": true,
+        "line_bytes_excluding_lf": 512,
+        "exit_code": 0,
+        "complete_output_frames": 1,
+        "stdout_bytes": 504,
+        "stdout_sha256": "347ff04393bc4d776b81d0e473016604e086a5496ada212b3ae78cffe9b2903d",
+        "stderr": ""
+      },
+      {
+        "name": "line_byte_limit_one_less",
+        "passed": true,
+        "exit_code": 2,
+        "complete_output_frames": 0,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: line byte limit exceeded"
+      },
+      {
+        "name": "oversized_line_stops_before_complete_file",
+        "passed": true,
+        "exit_code": 2,
+        "input_file_bytes": 67108864,
+        "shared_file_read_offset_bytes": 4096,
+        "stderr": "line 2: line byte limit exceeded"
+      }
+    ],
+    "throughput": {
+      "frames": 3000,
+      "targets_per_frame": 10,
+      "target_observations": 30000,
+      "wall_seconds": 0.4137854009999842,
+      "frames_per_second": 7250.1349558248785,
+      "target_observations_per_second": 72501.34955824878,
+      "average_frame_ms": 0.13792846699999473,
+      "stdout_bytes_hashed": 13401185,
+      "stdout_sha256": "8185376f11414db17259b1b13a53cad2250e675838ade08689452cfd0ac89354",
+      "output_storage": "No accumulated stdout; first and final frames only.",
+      "measurement_scope": "Native subprocess + Python producer, pipes, line counting and SHA-256; not isolated kernel time.",
+      "memory": {
+        "samples": 9,
+        "peak_working_set_bytes": 3170304,
+        "sampled_peak_rss_bytes": 3170304,
+        "first_rss_bytes": 3022848,
+        "last_rss_bytes": 3170304,
+        "late_min_rss_bytes": 3170304,
+        "late_max_rss_bytes": 3170304
+      }
+    },
+    "latency": {
+      "samples": 100,
+      "warmup_frames": 100,
+      "targets_per_frame": 10,
+      "average_ms": 0.16827786,
+      "p50_ms": 0.15669699999999998,
+      "p95_ms": 0.20443735,
+      "min_ms": 0.133847,
+      "max_ms": 0.364507,
+      "stdout_sha256": "549a0b92133520aa261082016eef3fb40bc13f8e894f42c27feb6c2a0022c870",
+      "measurement_scope": "One flushed frame write and one complete output line read, including subprocess pipes and scheduling."
+    }
+  },
+  "source_snapshot_after_verification_sha256": "e0ab560ee646e96b7bc90cc9e707250bb664ec62715ba9b2700a179998101e7b",
+  "source_changes_during_verification": [],
+  "source_change_interpretation": "No files in the initial source manifest changed during validation.",
+  "functional_source_matches_windows_after_line_ending_normalization": true,
+  "functional_source_differences": [],
+  "native_c_warnings": [
+    "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]",
+    "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]",
+    "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.2/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]"
+  ]
+}

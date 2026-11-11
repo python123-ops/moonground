@@ -1,4 +1,48 @@
 ///|
+test "packaged camera projection and quality thresholds compose through root API" {
+  let camera = @moonground.CameraModel::new(
+    fx=100.0,
+    fy=80.0,
+    cx=50.0,
+    cy=50.0,
+    k1=-0.1,
+  )
+  let calibration = @moonground.GroundCalibration::from_homography(
+    [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 1.0],
+    [
+      @moonground.Point2::new(0.0, 0.0),
+      @moonground.Point2::new(100.0, 0.0),
+      @moonground.Point2::new(100.0, 100.0),
+      @moonground.Point2::new(0.0, 100.0),
+    ],
+  )
+  let session = @moonground.MeasurementSession::new(
+    "packaged-camera",
+    calibration,
+    @moonground.MotionConfig::new(
+      min_observations=2,
+      min_span_us=0L,
+      max_velocity_std_mps=0.000001,
+    ),
+    camera~,
+  )
+  let observation = @moonground.PixelObservation::new(
+    1,
+    @moonground.Point2::new(50.0, 50.0),
+    @moonground.Covariance2::isotropic(1.0),
+  )
+  ignore(session.update(0L, [observation]))
+  let frame = session.update(100000L, [observation])
+  assert_eq(frame.motion.tracks[0].status, @motion.Uncertain)
+  assert_true(frame.motion.tracks[0].speed_mps is None)
+  assert_true(
+    frame.motion.tracks[0].velocity_std_mps is Some(value) && value > 0.000001,
+  )
+  assert_true(frame.motion.tracks[0].velocity is Some(_))
+  assert_eq(frame.projection_failures.length(), 0)
+}
+
+///|
 test "independent consumer measures known contact points and restarts gaps" {
   let calibration = @moonground.GroundCalibration::from_homography(
     [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 1.0],
