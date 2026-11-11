@@ -1,0 +1,250 @@
+{
+  "command": "C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 1000 --targets 1000 --latency-samples 100 --output validation/capacity-v0.3-results.json",
+  "python": "3.8.7",
+  "platform": "Windows-10-10.0.26100-SP0",
+  "binary": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\_build\\native\\release\\build\\cmd\\main\\main.exe",
+  "binary_sha256": "43cb5da3673764f241c836d2c1baffdfc3213ef4764c27c58866fb6d2441191c",
+  "protocol": [
+    {
+      "name": "valid_three_frame_prefix",
+      "passed": true,
+      "exit_code": 0,
+      "complete_output_frames": 3,
+      "stdout_bytes": 1637,
+      "stdout_sha256": "e6267d7582d3da868e37004d0cad5a50b56567e5b9b4d97cdc0ac01fb333812d",
+      "stderr": ""
+    },
+    {
+      "name": "empty_input",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "missing configuration line"
+    },
+    {
+      "name": "blank_configuration",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 1: invalid checkpoint JSON: Unexpected end of file"
+    },
+    {
+      "name": "invalid_configuration",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 1: missing field session_id"
+    },
+    {
+      "name": "complete_prefix_before_bad_json",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 3,
+      "stdout_bytes": 1637,
+      "stdout_sha256": "e6267d7582d3da868e37004d0cad5a50b56567e5b9b4d97cdc0ac01fb333812d",
+      "stderr": "line 5: invalid JSON: Unexpected end of file"
+    },
+    {
+      "name": "complete_prefix_before_schema_error",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 3,
+      "stdout_bytes": 1637,
+      "stdout_sha256": "e6267d7582d3da868e37004d0cad5a50b56567e5b9b4d97cdc0ac01fb333812d",
+      "stderr": "line 5: frame: unknown field extra"
+    },
+    {
+      "name": "invalid_utf8_after_success",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 1,
+      "stdout_bytes": 507,
+      "stdout_sha256": "1bf3a31651593db9acacea682ad3f55ba81e925825051211ddece4b3c0b97b3f",
+      "stderr": "line 3: invalid UTF-8"
+    },
+    {
+      "name": "invalid_utf8_at_eof",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 1,
+      "stdout_bytes": 507,
+      "stdout_sha256": "1bf3a31651593db9acacea682ad3f55ba81e925825051211ddece4b3c0b97b3f",
+      "stderr": "line 3: invalid UTF-8"
+    },
+    {
+      "name": "crlf_and_final_line_without_newline",
+      "passed": true,
+      "exit_code": 0,
+      "complete_output_frames": 3,
+      "stdout_bytes": 1637,
+      "stdout_sha256": "e6267d7582d3da868e37004d0cad5a50b56567e5b9b4d97cdc0ac01fb333812d",
+      "stderr": ""
+    },
+    {
+      "name": "lf_and_final_line_without_newline",
+      "passed": true,
+      "exit_code": 0,
+      "complete_output_frames": 3,
+      "stdout_bytes": 1637,
+      "stdout_sha256": "e6267d7582d3da868e37004d0cad5a50b56567e5b9b4d97cdc0ac01fb333812d",
+      "stderr": ""
+    },
+    {
+      "name": "physical_blank_line_is_counted",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 1,
+      "stdout_bytes": 507,
+      "stdout_sha256": "1bf3a31651593db9acacea682ad3f55ba81e925825051211ddece4b3c0b97b3f",
+      "stderr": "line 3: invalid JSON: Unexpected end of file"
+    },
+    {
+      "name": "fractional_track_id",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: track_id must be a positive 32-bit integer"
+    },
+    {
+      "name": "overflowing_track_id",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: track_id must be a positive 32-bit integer"
+    },
+    {
+      "name": "duplicate_json_key",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: invalid JSON: Duplicate key \"timestamp_us\" at line 1, column 38"
+    },
+    {
+      "name": "overflowing_timestamp",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: timestamp_us must be a nonnegative Int64 decimal string"
+    },
+    {
+      "name": "numeric_timestamp",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: timestamp_us must be a string"
+    },
+    {
+      "name": "noncanonical_timestamp",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: timestamp_us must be a canonical nonnegative Int64 decimal string"
+    },
+    {
+      "name": "nonfinite_coordinate",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: point must be a finite number"
+    },
+    {
+      "name": "duplicate_observation",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: duplicate, conflicting, or nonpositive track identity"
+    },
+    {
+      "name": "excessive_json_depth",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: invalid JSON: Depth limit exceeded, please increase the max_nesting_depth parameter"
+    },
+    {
+      "name": "line_byte_limit_exact",
+      "passed": true,
+      "line_bytes_excluding_lf": 512,
+      "exit_code": 0,
+      "complete_output_frames": 1,
+      "stdout_bytes": 504,
+      "stdout_sha256": "347ff04393bc4d776b81d0e473016604e086a5496ada212b3ae78cffe9b2903d",
+      "stderr": ""
+    },
+    {
+      "name": "line_byte_limit_one_less",
+      "passed": true,
+      "exit_code": 2,
+      "complete_output_frames": 0,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: line byte limit exceeded"
+    },
+    {
+      "name": "oversized_line_stops_before_complete_file",
+      "passed": true,
+      "exit_code": 2,
+      "input_file_bytes": 67108864,
+      "shared_file_read_offset_bytes": 4096,
+      "stderr": "line 2: line byte limit exceeded"
+    }
+  ],
+  "throughput": {
+    "frames": 1000,
+    "targets_per_frame": 1000,
+    "target_observations": 1000000,
+    "wall_seconds": 33.0888658,
+    "frames_per_second": 30.221646340020516,
+    "target_observations_per_second": 30221.646340020514,
+    "average_frame_ms": 33.0888658,
+    "stdout_bytes_hashed": 431300885,
+    "stdout_sha256": "f7fbe4a84401d7f97a06602a0dcd363adbbee0b4bc4b82469d2c22aaa2234299",
+    "output_storage": "No accumulated stdout; first and final frames only.",
+    "measurement_scope": "Native subprocess + Python producer, pipes, line counting and SHA-256; not isolated kernel time.",
+    "memory": {
+      "samples": 529,
+      "peak_working_set_bytes": 17211392,
+      "sampled_peak_rss_bytes": 16584704,
+      "first_rss_bytes": 4313088,
+      "last_rss_bytes": 15458304,
+      "late_min_rss_bytes": 11272192,
+      "late_max_rss_bytes": 16568320
+    }
+  },
+  "latency": {
+    "samples": 100,
+    "warmup_frames": 100,
+    "targets_per_frame": 1000,
+    "average_ms": 31.950185000000015,
+    "p50_ms": 31.568550000000002,
+    "p95_ms": 34.235344999999995,
+    "min_ms": 30.0144,
+    "max_ms": 41.5301,
+    "stdout_sha256": "ab508f7cd084e26276625469a036ba4734ca32514f0e3c7685b3b1b65b44298c",
+    "measurement_scope": "One flushed frame write and one complete output line read, including subprocess pipes and scheduling."
+  }
+}

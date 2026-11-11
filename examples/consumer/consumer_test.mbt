@@ -174,3 +174,72 @@ test "the same detector bbox feeds measurement and MoonDetEval 0.2.1" {
   ])
   assert_eq(report.summary().ap50(), 1.0)
 }
+
+///|
+test "packaged typed checkpoint resumes measured motion and keeps independent state" {
+  let calibration = @moonground.GroundCalibration::from_homography(
+    [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 1.0],
+    [
+      @moonground.Point2::new(0.0, 0.0),
+      @moonground.Point2::new(640.0, 0.0),
+      @moonground.Point2::new(640.0, 480.0),
+      @moonground.Point2::new(0.0, 480.0),
+    ],
+  )
+  let session = @moonground.MeasurementSession::new(
+    "consumer-checkpoint",
+    calibration,
+    @moonground.MotionConfig::new(q=0.3),
+  )
+  let observation = (x : Double) => {
+    @moonground.PixelObservation::new(
+      7,
+      @moonground.Point2::new(x, 200.0),
+      @moonground.Covariance2::isotropic(0.25),
+    )
+  }
+  for index in 0..<3 {
+    ignore(
+      session.update(index.to_int64() * 200000L, [
+        observation(100.0 + index.to_double() * 10.0),
+      ]),
+    )
+  }
+  let checkpoint : @moonground.MeasurementCheckpoint = session.checkpoint()
+  assert_eq(checkpoint.motion.tracks[0].accepted_count, 3)
+  let saved_state = checkpoint.motion.tracks[0].state.copy()
+  let saved_covariance = checkpoint.motion.tracks[0].covariance.copy()
+  let restored = @moonground.MeasurementSession::from_checkpoint(checkpoint)
+  checkpoint.motion.tracks[0].state[0] = 1.0e30
+  checkpoint.motion.tracks[0].covariance[0] = 1.0e30
+  for independent in [session, restored] {
+    let unchanged = independent.checkpoint().motion.tracks[0]
+    assert_eq(unchanged.state, saved_state)
+    assert_eq(unchanged.covariance, saved_covariance)
+  }
+  for index in 3..<5 {
+    let timestamp = index.to_int64() * 200000L
+    let observations = [observation(100.0 + index.to_double() * 10.0)]
+    let expected = session.update(timestamp, observations)
+    let actual = restored.update(timestamp, observations)
+    // FrameResult includes vectors, complete P, uncertainty, path, counts,
+    // accepted timestamps and closed segment IDs.
+    assert_eq("\{Repr(actual.motion)}", "\{Repr(expected.motion)}")
+    assert_eq(actual.projection_failures.length(), 0)
+    assert_eq(actual.motion.tracks[0].accepted_count, index + 1)
+    assert_eq(actual.motion.tracks[0].status, @motion.Ready)
+    assert_eq(actual.motion.tracks[0].segment_id, "1")
+    assert_true(actual.motion.tracks[0].observed_path_length_m > 0.2)
+  }
+  let expected_closed = session.update(900000L, [], lost=[7])
+  let actual_closed = restored.update(900000L, [], lost=[7])
+  assert_eq("\{Repr(actual_closed.motion)}", "\{Repr(expected_closed.motion)}")
+  assert_eq(actual_closed.motion.closed_segment_ids, ["1"])
+  let expected_new = session.update(1000000L, [observation(150.0)])
+  let actual_new = restored.update(1000000L, [observation(150.0)])
+  assert_eq("\{Repr(actual_new.motion)}", "\{Repr(expected_new.motion)}")
+  assert_eq(actual_new.motion.tracks[0].segment_id, "2")
+  assert_eq(actual_new.motion.tracks[0].accepted_count, 1)
+  assert_eq(actual_new.motion.tracks[0].observed_path_length_m, 0.0)
+  assert_true(actual_new.motion.tracks[0].speed_mps is None)
+}

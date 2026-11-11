@@ -2,7 +2,7 @@
 
 MoonGround 把固定相机中的目标轨迹转换为米制地面位置、速度和观测路径，面向园区、仓储和其他近似平面的场地。输入是已有目标身份、地面接触锚点和真实时间戳；库负责标定有效域、投影协方差、运动估计和轨迹分段。
 
-当前开发版本为 `0.2.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
+当前开发版本为 `0.3.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
 
 ## 与现有项目的衔接
 
@@ -19,11 +19,11 @@ MoonGround 复用 `moon-cv-geometry@0.2.2` 的几何能力与 `moon-kalman@0.2.1
 
 | 入口 | 用途 |
 | --- | --- |
-| 根包 | `GroundCalibration`、`MeasurementSession`、像素观测和测量结果 |
+| 根包 | `GroundCalibration`、`MeasurementSession`、`MeasurementCheckpoint`、像素观测和测量结果 |
 | `calibration` | 控制点拟合、独立检查点、矩阵导入、有效域和协方差投影 |
 | `camera` | 有效域受限的 Brown–Conrady 镜头校正、像素协方差转换与地面投影组合 |
-| `motion` | 已有米制观测的时间处理、运动估计与分段 |
-| `codec` | 原生 CLI 与浏览器共用的严格 JSON 协议 |
+| `motion` | 已有米制观测的时间处理、运动估计、分段与 `MotionCheckpoint` |
+| `codec` | 原生 CLI 与浏览器共用的严格 JSON 协议、完整配置与检查点 |
 
 计算包支持 `wasm`、`wasm-gc`、`js`、`native`。流式命令使用 native，浏览器桥使用 JavaScript；图像解码、检测、跟踪及相机采集由调用方接入。
 
@@ -63,6 +63,23 @@ test "README: three contact observations produce a measured speed" {
     Some(speed) => assert_true(speed > 0.45 && speed < 0.55)
     None => fail("three accepted observations should produce a speed")
   }
+  let restored = @moonground.MeasurementSession::from_checkpoint(
+    session.checkpoint(),
+  )
+  let continued = session.update(600000L, [observe(130.0)])
+  let resumed = restored.update(600000L, [observe(130.0)])
+  assert_eq(
+    resumed.motion.tracks[0].filtered_state,
+    continued.motion.tracks[0].filtered_state,
+  )
+  assert_eq(
+    resumed.motion.tracks[0].filtered_covariance,
+    continued.motion.tracks[0].filtered_covariance,
+  )
+  assert_eq(
+    resumed.motion.tracks[0].observed_path_length_m,
+    continued.motion.tracks[0].observed_path_length_m,
+  )
 }
 ```
 
@@ -111,7 +128,19 @@ test "README: three contact observations produce a measured speed" {
 
 `position_std_m` 和 `velocity_std_mps` 是各自 2×2 协方差最大特征值的平方根，即最差方向的一倍标准差。速度初始化期间 `velocity_std_mps` 与速度向量均为 `null`。可在 `motion` 中设置有限正数门限，例如 `"max_velocity_std_mps":0.2`。满足预热条件后，任一标准差**大于**对应门限便返回 `uncertain`，`speed_mps=null`；位置、速度向量、协方差和路径仍保留。后续不确定性下降即可恢复 `ready`。该规则不拒绝观测、不改 Kalman 状态；初始化、创新拒绝与数值失败保留原有含义。这些标准差描述二维向量的不确定性，不能直接当作非负速率的置信区间，尤其是在接近静止时。
 
-新 JSON 输出的 `schema_version` 为 `0.2.0`，`uncertainty_scope` 为 `conditional_on_fixed_calibration_camera_and_anchor`。已有 NDJSON 输入无需修改；严格匹配输出版本或枚举的调用方需增加新版本、`uncertain` 状态和两个标准差字段。
+测量 JSON 的 `schema_version` 为 `0.2.0`，`uncertainty_scope` 为 `conditional_on_fixed_calibration_camera_and_anchor`。这是 v0.2.0 引入的结果格式，v0.3.0 继续使用；从 v0.1.0 接入的调用方需处理 `uncertain` 状态和两个标准差字段。
+
+### 保存与恢复测量状态
+
+`MeasurementSession::checkpoint()` 保存相机、标定与运动检查点；`MeasurementSession::from_checkpoint(...)` 验证后创建新会话。直接使用米制观测时，对应 API 为 `MotionEstimator::checkpoint()` 和 `MotionEstimator::from_checkpoint(...)`。检查点数组与运行中的滤波器相互独立，修改导出数组不会改变原会话，修改导入数组也不会改变已恢复会话。
+
+检查点包含完整有效运动配置、每条活跃轨迹的 `[x,y,vx,vy]` 与 16 项行优先协方差、首末滤波位置、累计观测折线长度、接受次数及首末接受时间。同时保存最后处理帧的时间和下一段号：空帧、投影或创新拒绝也会推进帧时间，全部轨迹关闭后仍要保留段号计数。恢复时不会预测或重置滤波，不用机器墙上时间淘汰轨迹；后续帧时间继续决定缺测与分段。
+
+恢复会检查状态形状与有限性、协方差的对称性和半正定性、位置与速度子块的正定性、身份唯一性、时间顺序、容量、段号和路径关系。协方差验证只使用诊断副本，保存的条目原样恢复。检查点可以验证结构与状态自洽性；它没有签名或身份认证。调用方仍需管理存储权限和来源。
+
+`codec.ReplaySession::checkpoint_json()` 导出一个版本独立的 JSON 文档，`ReplaySession::from_checkpoint_json(...)` 直接恢复它；`ReplaySession::open(...)` 接受普通配置或精确的 `{"resume":<检查点>}` 包装。检查点带有 `format:"moonground.session"`、`checkpoint_version:"1"`、`configuration` 和 `motion`。有效配置显式保存默认值，恢复只使用内嵌配置，不能覆盖标定、相机、诊断或运动参数。修改这些参数时应创建新会话。
+
+JSON 检查点最多包含 10,000 条活跃轨迹，文本最多 8,388,608 个 UTF-16 代码单元、32 层嵌套；超限导出报错，不会截断状态。恢复首行额外预留最短 `{"resume":...}` 包装的 11 个代码单元，整行最多 8,388,619 个；添加空白也占用这个上限。普通配置和帧仍各限 1,048,576 个代码单元。Int64 时间与段号使用规范十进制字符串。检查点保存继续计算所需的状态，已经输出的历史帧仍由调用方保存；恢复后的输出从后续帧开始。
 
 ## 命令行与浏览器
 
@@ -128,7 +157,7 @@ Get-Content -Raw -Encoding UTF8 examples/warehouse.ndjson |
   & .\_build\native\release\build\cmd\main\main.exe --stream
 ```
 
-`--stream` 接收 UTF-8 NDJSON：第一行为配置，后续每行为一个完整帧。
+`--stream` 接收 UTF-8 NDJSON：第一行为配置或 `{"resume":<检查点>}`，后续每行为一个完整帧。恢复后的帧时间必须大于检查点中的最后处理帧时间。
 
 ```jsonl
 {"session_id":"warehouse","mode":"ground","motion":{"q":1}}
@@ -141,9 +170,19 @@ Get-Content -Raw -Encoding UTF8 examples/warehouse.ndjson |
 
 结构错误、重复或冲突身份、时间错误和容量错误会拒绝整帧，保留之前的状态。ROI 外或投影不可用的目标返回 `rejected_projection`，同帧其他目标继续测量。创新门限拒绝及数值失败也按目标报告，不把旧位置当作当前测量。
 
-CLI 默认限制每物理行 1 MiB，可通过 `--max-line-bytes N` 调整，最大为 16 MiB；JSON 层另有 1,048,576 个 UTF-16 代码单元的文本上限，字节选项不会放宽这一限制。非法 UTF-8、坏 JSON 或协议错误写入 stderr 并以状态 2 退出；之前完成的结果行保留，失败帧不输出半行。CRLF 和最后一行没有换行符均可读取。
+CLI 默认限制每物理行 1 MiB，可通过 `--max-line-bytes N` 调整，最大为 16 MiB。该选项也用于包含大型检查点的首行，JSON 层的配置、帧和检查点上限分别保持原值。非法 UTF-8、坏 JSON 或协议错误写入 stderr 并以状态 2 退出；`--stream` 之前完成的结果行保留，失败帧不输出半行。CRLF 和最后一行没有换行符均可读取。
 
-JSON 文本另限 1048576 个 UTF-16 代码单元、最多 32 层嵌套，重复键和未知字段会被拒绝。目标身份必须是正的 32 位整数。
+重复键和未知字段会被拒绝。目标身份必须是正的 32 位整数；整数参数按原始十进制 token 验证，`4.0`、`4e0`、`40e-1` 均表示整数 4，`4.0000000000000000001` 会被拒绝。
+
+`--checkpoint` 使用同样的输入协议，成功读到 EOF 后只输出一行检查点；中途任一输入失败时以状态 2 退出且 stdout 为空。它适合为已持久化的观测前缀制作恢复点。下面的命令先保存完整示例的最终状态，再构造续接首行；实际续接时在首行后追加时间更晚的观测帧：
+
+```sh
+./_build/native/release/build/cmd/main/main.exe --checkpoint < examples/warehouse.ndjson > checkpoint.json
+python -c 'import json; print(json.dumps({"resume":json.load(open("checkpoint.json",encoding="utf-8"))}))' > resume.ndjson
+./_build/native/release/build/cmd/main/main.exe --stream --max-line-bytes 16777216 < resume.ndjson
+```
+
+带后续帧的完整示例见 [`examples/resume.ndjson`](examples/resume.ndjson)：它保存镜头校正示例前三帧的状态，再续接其余十二帧。CLI 负责完整计算和输出检查点；临时文件、原子替换、输出消费进度和观测日志由宿主应用协调，避免崩溃后重复处理已经交付的结果。
 
 `--project` 单独接收一行 `{ "calibration": ..., "points": [{ "point": [x,y], "covariance": [xx,xy,yy] }] }`，返回位置、协方差和 Jacobian。`--calibrate` 接收六对以上拟合点、两对以上独立检查点和 ROI，返回可用于配置的标定及残差报告；单行示例见 [`examples/calibration.json`](examples/calibration.json)。控制点拟合也可以直接调用 `GroundCalibration::fit`。
 
@@ -156,7 +195,11 @@ node web/build.mjs
 node web/serve.mjs
 ```
 
-浏览器页面可导入本地 NDJSON、逐帧查看测量、从控制点拟合标定、检查有效域并下载结果；计算沿用同一 MoonBit JSON 协议。页面显示位置、速度标准差和 `uncertain` 状态。原始像素 session 更换标定时，拟合请求也必须包含 `camera`，避免无意切换像素空间。页面输入改变后会清除旧结果。浏览器桥最多保留 64 个活跃 session，调用方用 `moonground_close` 释放。
+浏览器页面可导入本地 NDJSON、逐帧查看测量、从控制点拟合标定、检查有效域并下载结果；计算沿用同一 MoonBit JSON 协议。页面显示位置、速度标准差和 `uncertain` 状态。原始像素 session 更换标定时，拟合请求也必须包含 `camera`，避免无意切换像素空间。页面输入改变后会清除旧结果。
+
+“保存当前帧检查点”会重放到选定帧并下载完整状态，避免把未来帧状态误存为当前帧。导入检查点后，在输入区追加后续观测即可继续；格式或状态验证失败时保留原输入与结果。恢复流绑定原标定，修改标定需新建会话。“续接示例”可直接检查恢复流程；页面只展示恢复后本次处理的历史帧。
+
+浏览器桥最多保留 64 个活跃 session，调用方用 `moonground_close` 释放。`moonground_checkpoint(handle)` 返回原始检查点 JSON；`moonground_restore(source)` 验证成功后分配新句柄，失败时不改变原句柄。`moonground_create(source)` 支持普通配置或原始 resume 包装文本。桥方法失败时返回 `{"error":...}`，恢复不会原位替换其他会话。
 
 ## 验证与复现
 
@@ -170,21 +213,27 @@ moon build --target all --deny-warn
 moon test --target all --deny-warn
 node web/build.mjs
 node --test web/parity.test.mjs
+python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-results.json
 ```
 
-浏览器交互测试需要外部安装 Playwright 或 Playwright Core `1.62.1` 与浏览器。设置 `PLAYWRIGHT_MODULE` 为该包路径后，执行 `node --test web/ui.test.cjs`；默认使用配套 Chromium，设置 `MOONGROUND_BROWSER_CHANNEL=chrome` 可使用已安装的 Google Chrome。CI 使用 GitHub Ubuntu runner 预装的 Chrome，并从固定上游 blob 下载、校验 Noto Sans CJK SC 字体，记录实际浏览器版本与字体，避开系统软件源下载。交互用例覆盖桌面与 390 像素移动视口、本地导入、下载、旧结果失效和原始像素标定的相机配置检查。
+浏览器交互测试需要外部安装 Playwright 或 Playwright Core `1.62.1` 与浏览器。设置 `PLAYWRIGHT_MODULE` 为该包路径后，执行 `node --test web/ui.test.cjs`；默认使用配套 Chromium，设置 `MOONGROUND_BROWSER_CHANNEL=chrome` 可使用已安装的 Google Chrome。CI 使用 GitHub Ubuntu runner 预装的 Chrome，并从固定上游 blob 下载、校验 Noto Sans CJK SC 字体，记录实际浏览器版本与字体，避开系统软件源下载。交互用例覆盖桌面与 390 像素移动视口、本地导入、下载、旧结果失效、原始像素标定配置和选帧检查点的导出、失败导入与续接。
 
 安装 NumPy 后，可执行独立参考与长流检查。固定工具链在 Linux 和 Windows 上的原生产物均命名为 `main.exe`。
 
 ```sh
-python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe
-python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 100000 --targets 10 --latency-samples 500
+python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.3-results.json
+python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 100000 --targets 10 --latency-samples 500 --output validation/stream-v0.3-results.json
+python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 1000 --targets 1000 --latency-samples 100 --output validation/capacity-v0.3-results.json
 moon package
-python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.2.0.zip --output validation/package-v0.2-results.json
+python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.3-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.3.0.zip --output validation/package-v0.3-results.json
 ```
 
-本批 v0.2.0 的独立验证见 [`validation/camera-results.json`](validation/camera-results.json)：2,350 个畸变点、8 个拟合点与 28 个留出点、80 帧原始像素运动序列、64 帧门限对照。相机点的世界位置最大差约 `1.13e-11 m`，组合 Jacobian 最大差约 `4.30e-15`；门限开启和关闭时，完整状态、协方差、路径和生命周期逐帧相同。脚本采用独立 Newton 逆解，生产实现采用有界收缩迭代。微小有效半径的域外拒绝也由实际 CLI 检查。
+本批 v0.3.0 的恢复验证见 [`validation/checkpoint-results.json`](validation/checkpoint-results.json)：36 个原生切点的后续帧和最终检查点逐值一致；30 个切点在原生与 JavaScript 四种导出／恢复组合中完成 120 次续接。用手写完整状态执行独立 NumPy 更新，状态、路径和位移误差为 0，协方差最大绝对误差约 `8.67e-19`。38 项损坏输入和 5 项原始小数 token 被拒绝，9 种数学整数形式接受；3,000 条轨迹形成的 2,012,898 字节恢复流在显式放宽 CLI 字节上限后完整往返。极端混合尺度数值失败也保留可恢复的上次接受状态。
+
+四后端各 105 项库测试通过；包含 5 项消费者用例的独立归档检查见 [`validation/package-v0.3-results.json`](validation/package-v0.3-results.json)。[`validation/linux-v0.3-results.json`](validation/linux-v0.3-results.json) 记录隔离 Ubuntu 24.04 中从源码编译的四后端、数值参考和恢复验证，功能源码逐文件校验。当前 Windows 数值基线、相机回归和性能分别见 [`validation/regression-v0.3-results.json`](validation/regression-v0.3-results.json)、[`validation/camera-v0.3-results.json`](validation/camera-v0.3-results.json)、[`validation/stream-v0.3-results.json`](validation/stream-v0.3-results.json) 与 [`validation/capacity-v0.3-results.json`](validation/capacity-v0.3-results.json)。性能测量包含 Python 产流、管道、调度及输出哈希，具体参数和二进制哈希保存在各记录中。
+
+v0.2.0 的独立验证保留在 [`validation/camera-results.json`](validation/camera-results.json)：2,350 个畸变点、8 个拟合点与 28 个留出点、80 帧原始像素运动序列、64 帧门限对照。相机点的世界位置最大差约 `1.13e-11 m`，组合 Jacobian 最大差约 `4.30e-15`；门限开启和关闭时，完整状态、协方差、路径和生命周期逐帧相同。脚本采用独立 Newton 逆解，生产实现采用有界收缩迭代。微小有效半径的域外拒绝也由实际 CLI 检查。
 
 [`validation/regression-v0.2-results.json`](validation/regression-v0.2-results.json) 重新执行无相机配置的数值基线；[`validation/stream-v0.2-results.json`](validation/stream-v0.2-results.json) 记录 23 项进程协议检查和 3000 帧×10 目标运行。独立包验证记录在 [`validation/package-v0.2-results.json`](validation/package-v0.2-results.json)，隔离 Linux 记录在 [`validation/linux-v0.2-results.json`](validation/linux-v0.2-results.json)。验证记录保留各自脚本、二进制与归档哈希及命令。
 
