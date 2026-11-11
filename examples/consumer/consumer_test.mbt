@@ -1,4 +1,46 @@
 ///|
+test "packaged robust calibration rejects mislabeled controls and measures a reusable session" {
+  let controls : Array[@moonground.Point2] = [
+    { x: 0.0, y: 0.0, }, { x: 100.0, y: 0.0, },
+    { x: 100.0, y: 100.0, }, { x: 0.0, y: 100.0, },
+    { x: 25.0, y: 50.0, }, { x: 70.0, y: 30.0, },
+    { x: 40.0, y: 80.0, }, { x: 60.0, y: 10.0, },
+  ]
+  let world = controls.map(p => @moonground.Point2::{ x: 0.02 * p.x, y: 0.02 * p.y, })
+  world[6] = { x: 1.8, y: 0.6, }
+  world[7] = { x: 0.2, y: 2.2, }
+  let checks : Array[@moonground.Point2] = [{ x: 20.0, y: 30.0, }, { x: 80.0, y: 70.0, }]
+  let fitted : @moonground.RobustCalibration = @moonground.GroundCalibration::fit_robust(
+    controls,
+    world,
+    checks,
+    checks.map(p => @moonground.Point2::{ x: p.x * 0.02, y: p.y * 0.02, }),
+    controls[:4].to_owned(),
+    options=@moonground.RobustFitOptions::new(inlier_threshold_m=0.01, seed=17),
+    max_check_error_m=0.001,
+  )
+  assert_eq(fitted.inlier_mask(), [true, true, true, true, true, true, false, false])
+  assert_eq(fitted.inlier_count(), 6)
+  assert_eq(fitted.calibration().report().fit_count(), 6)
+  assert_eq(fitted.control_errors_m().length(), controls.length())
+  let session = @moonground.MeasurementSession::new(
+    "consumer-robust-fit", fitted.calibration(), @moonground.MotionConfig::new(),
+  )
+  let mut measured_speed = None
+  for index in 0..<3 {
+    let frame = session.update(index.to_int64() * 200000L, [
+      @moonground.PixelObservation::new(
+        7,
+        @moonground.Point2::new(20.0 + index.to_double() * 5.0, 30.0),
+        @moonground.Covariance2::isotropic(0.25),
+      ),
+    ])
+    measured_speed = frame.motion.tracks[0].speed_mps
+  }
+  assert_true(measured_speed is Some(speed) && speed > 0.45 && speed < 0.55)
+}
+
+///|
 test "packaged camera projection and quality thresholds compose through root API" {
   let camera = @moonground.CameraModel::new(
     fx=100.0,

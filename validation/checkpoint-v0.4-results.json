@@ -1,0 +1,518 @@
+{
+  "format_version": "1",
+  "seed": 20261113,
+  "tolerance": 2e-08,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.4-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "839fd5ab2dd317ec81f36aa17e7db71707eb52d44d4ab0fd165b502078acf719",
+  "v01_reference_sha256": "b75b5c247dcd381154c8fcc1acac4d84c7eaa071df99ead03b82a9dc809bb769",
+  "binary_sha256": "4f417bcc899d66b9d139af55f9aac62bd9ec21c6079d0bdf547e096f4a7e355d",
+  "native_restarts": {
+    "restart_points": 36,
+    "cases": [
+      {
+        "name": "identity_path_lifecycle",
+        "frames": 11,
+        "cut_points": 12,
+        "statuses": [
+          "initializing",
+          "rejected_innovation",
+          "uncertain"
+        ],
+        "same_runtime_outputs_and_final_state_exact": true
+      },
+      {
+        "name": "raw_camera_projection_rejection",
+        "frames": 10,
+        "cut_points": 11,
+        "statuses": [
+          "initializing",
+          "ready",
+          "rejected_projection"
+        ],
+        "same_runtime_outputs_and_final_state_exact": true
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 4,
+        "cut_points": 5,
+        "statuses": [
+          "initializing",
+          "uncertain"
+        ],
+        "same_runtime_outputs_and_final_state_exact": true
+      },
+      {
+        "name": "effective_defaults",
+        "frames": 4,
+        "cut_points": 5,
+        "statuses": [
+          "initializing",
+          "ready",
+          "rejected_innovation"
+        ],
+        "same_runtime_outputs_and_final_state_exact": true
+      },
+      {
+        "name": "extreme_scale_failure_retains_restorable_state",
+        "frames": 2,
+        "cut_points": 3,
+        "statuses": [
+          "initializing",
+          "numerical_failure"
+        ],
+        "same_runtime_outputs_and_final_state_exact": true
+      }
+    ]
+  },
+  "independent_authored_state": {
+    "authored_without_implementation_output": true,
+    "seed": 20261113,
+    "maximum_absolute_errors": {
+      "filter_state": 0.0,
+      "filter_covariance": 8.673617379884035e-19,
+      "observed_path_length_m": 0.0,
+      "net_displacement_m": 0.0
+    },
+    "interpretation": "Joseph-form NumPy update from a manually authored full session state, including historical path anchors."
+  },
+  "exact_counters_and_time": {
+    "next_segment_near_int64_limit": "9223372036854775807",
+    "counter_exhaustion_rejected_atomically": {
+      "exit_code": 2,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: segment identity counter exhausted"
+    },
+    "global_frame_time_preserved": {
+      "exit_code": 2,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 2: frame timestamps must strictly increase"
+    }
+  },
+  "strict_rejections": {
+    "rejected_cases": 38,
+    "cases": [
+      {
+        "name": "unknown_checkpoint_version",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: unsupported checkpoint version"
+      },
+      {
+        "name": "numeric_checkpoint_version",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: checkpoint_version must be a string"
+      },
+      {
+        "name": "wrong_format",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: unsupported checkpoint format"
+      },
+      {
+        "name": "unknown_envelope_field",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: checkpoint: unknown field ignored"
+      },
+      {
+        "name": "unknown_motion_field",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: checkpoint motion: unknown field ignored"
+      },
+      {
+        "name": "unknown_track_field",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: checkpoint track: unknown field ignored"
+      },
+      {
+        "name": "duplicate_identity",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: duplicate checkpoint track or segment identity"
+      },
+      {
+        "name": "duplicate_segment",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: duplicate checkpoint track or segment identity"
+      },
+      {
+        "name": "counter_not_after_segment",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid checkpoint track or segment identity"
+      },
+      {
+        "name": "counter_overflow",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: next_segment_id must be a nonnegative Int64 decimal string"
+      },
+      {
+        "name": "noncanonical_timestamp",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: last_timestamp_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "numeric_timestamp",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: last_timestamp_us must be a string"
+      },
+      {
+        "name": "first_time_after_last",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid checkpoint accepted timestamps"
+      },
+      {
+        "name": "track_time_after_global",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid checkpoint accepted timestamps"
+      },
+      {
+        "name": "expired_track",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: checkpoint contains an expired track"
+      },
+      {
+        "name": "null_global_with_tracks",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: unstarted checkpoint contains allocated state"
+      },
+      {
+        "name": "wrong_state_shape",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: state must contain exactly 4 numbers"
+      },
+      {
+        "name": "wrong_covariance_shape",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: covariance must contain exactly 16 numbers"
+      },
+      {
+        "name": "asymmetric_covariance",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid checkpoint state or covariance"
+      },
+      {
+        "name": "indefinite_covariance",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid checkpoint state or covariance"
+      },
+      {
+        "name": "zero_covariance",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid checkpoint state or covariance"
+      },
+      {
+        "name": "path_negative",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid checkpoint filtered path"
+      },
+      {
+        "name": "path_less_than_displacement",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: checkpoint displacement exceeds filtered path"
+      },
+      {
+        "name": "detached_last_filtered",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: checkpoint last filtered point differs from state"
+      },
+      {
+        "name": "accepted_count_zero",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: accepted_count must be a positive 32-bit integer"
+      },
+      {
+        "name": "accepted_count_overflow",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: accepted_count must be a positive 32-bit integer"
+      },
+      {
+        "name": "inconsistent_single_accept",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: inconsistent checkpoint observation count"
+      },
+      {
+        "name": "invalid_configuration_gate",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid motion noise or innovation gate"
+      },
+      {
+        "name": "missing_effective_gate",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: missing field gate"
+      },
+      {
+        "name": "missing_effective_q",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: missing field q"
+      },
+      {
+        "name": "missing_effective_diagnostics",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: missing field diagnostics"
+      },
+      {
+        "name": "ground_camera_conflict",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: ground mode does not accept pixel calibration or camera"
+      },
+      {
+        "name": "missing_configuration",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: missing field configuration"
+      },
+      {
+        "name": "duplicate_json_key",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"format\" at line 1, column 816"
+      },
+      {
+        "name": "truncated_checkpoint",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: invalid checkpoint JSON: Unexpected end of file"
+      },
+      {
+        "name": "nonfinite_covariance",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: covariance must be a finite number"
+      },
+      {
+        "name": "resume_configuration_override",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: resume envelope: unknown field diagnostics"
+      },
+      {
+        "name": "no_checkpoint_after_invalid_frame",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 3: frame: unknown field typo"
+      }
+    ]
+  },
+  "integer_tokens": {
+    "rounded_fraction_rejections": [
+      {
+        "name": "checkpoint_accepted_count_rounded_fraction",
+        "token": "4.0000000000000000001",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: accepted_count must be a positive 32-bit integer"
+      },
+      {
+        "name": "checkpoint_track_id_rounded_fraction",
+        "token": "1.0000000000000000001",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "checkpoint_max_tracks_rounded_fraction",
+        "token": "10.0000000000000000001",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      {
+        "name": "ordinary_frame_rounded_track_identity",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 2: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "ordinary_configuration_rounded_max_tracks",
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      }
+    ],
+    "mathematical_integer_forms_accepted": [
+      {
+        "field": "accepted_count",
+        "token": "4.0"
+      },
+      {
+        "field": "accepted_count",
+        "token": "4e0"
+      },
+      {
+        "field": "accepted_count",
+        "token": "40e-1"
+      },
+      {
+        "field": "track_id",
+        "token": "1.0"
+      },
+      {
+        "field": "track_id",
+        "token": "1e0"
+      },
+      {
+        "field": "track_id",
+        "token": "10e-1"
+      },
+      {
+        "field": "max_tracks",
+        "token": "10.0"
+      },
+      {
+        "field": "max_tracks",
+        "token": "1e1"
+      },
+      {
+        "field": "max_tracks",
+        "token": "100e-1"
+      }
+    ],
+    "validation_uses_raw_numeric_tokens": true
+  },
+  "bounded_transport": {
+    "tracks": 3000,
+    "resume_line_utf8_bytes": 2012898,
+    "explicit_cli_line_limit_bytes": 16777216,
+    "large_roundtrip_exact": true,
+    "default_cli_limit_rejection": {
+      "exit_code": 2,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 1: line byte limit exceeded"
+    },
+    "track_record_limit_rejection": {
+      "exit_code": 2,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 1: checkpoint tracks exceeds its record limit"
+    },
+    "bootstrap_text_limit_rejection": {
+      "exit_code": 2,
+      "stdout_bytes": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+    },
+    "exact_checkpoint_payload_boundary": {
+      "payload_utf16_units": 8388608,
+      "bootstrap_utf16_units": 8388619,
+      "roundtrip_exact": true,
+      "one_unit_payload_overflow_rejection": {
+        "exit_code": 2,
+        "stdout_bytes": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+      }
+    },
+    "checkpoint_sha256": "be2bd2c30f244ae78561a4db3cee1800e379d1086ab2d238106bf42ed93c8ea4"
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/checkpoint.test.mjs",
+    "binary_environment": {
+      "MOONGROUND_CLI": "C:\\Users\\px830\\Documents\\ChatGPT\\\u5f20\u666f\u607a11\u6708\u4efdmoonbit\\moonground\\_build\\native\\release\\build\\cmd\\main\\main.exe"
+    },
+    "test_script_sha256": "34cdac9701904c9efa936f8f7bed5e3c4a93feb68dbef4c3f8bcc79427c2caab",
+    "bridge_sha256": "30c50a42a7a04c949111c35a26f23920c636980a0983aba2daca28d7a24fad6d",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 30,
+      "directional_restarts": 120,
+      "directions": [
+        "native-native",
+        "native-javascript",
+        "javascript-native",
+        "javascript-javascript"
+      ],
+      "cross_runtime_tolerance": 2e-08,
+      "same_runtime_exact": true
+    },
+    "stdout_sha256": "d7b216526b2b241b71a89213d9be7949866edf189c556c7b31f4959f7452e44c",
+    "stderr": ""
+  },
+  "elapsed_seconds": 8.9542061,
+  "status": "passed"
+}
