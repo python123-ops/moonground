@@ -12,25 +12,25 @@ async fn main {
   let args = @env.args()
   if args.length() == 2 && (args[1] == "--help" || args[1] == "-h") {
     @stdio.stdout.write(
-      "moonground --stream [--max-line-bytes N] | --project | --calibrate\nRead configuration then frames from UTF-8 NDJSON. Projection mode reads one request.\n",
+      "moonground (--stream | --checkpoint) [--max-line-bytes N] | --project | --calibrate\nRead configuration or {resume: checkpoint}, then frames from UTF-8 NDJSON. --checkpoint writes only the final checkpoint at EOF.\n",
     )
     return
   }
   if args.length() < 2 ||
     (
       args[1] != "--stream" &&
+      args[1] != "--checkpoint" &&
       args[1] != "--project" &&
       args[1] != "--calibrate"
     ) {
     diagnostic(
-      "usage: moonground --stream [--max-line-bytes N] | --project | --calibrate",
+      "usage: moonground (--stream | --checkpoint) [--max-line-bytes N] | --project | --calibrate",
     )
     return
   }
   let mut max_bytes = 1048576
-  if args.length() == 4 &&
-    args[1] == "--stream" &&
-    args[2] == "--max-line-bytes" {
+  let stream_mode = args[1] == "--stream" || args[1] == "--checkpoint"
+  if args.length() == 4 && stream_mode && args[2] == "--max-line-bytes" {
     max_bytes = @string.parse_int(args[3], base=10) catch {
       _ => {
         diagnostic("max-line-bytes must be a positive integer")
@@ -43,7 +43,7 @@ async fn main {
     }
   } else if args.length() != 2 {
     diagnostic(
-      "usage: moonground --stream [--max-line-bytes N] | --project | --calibrate",
+      "usage: moonground (--stream | --checkpoint) [--max-line-bytes N] | --project | --calibrate",
     )
     return
   }
@@ -66,7 +66,7 @@ async fn main {
             return
           }
         }
-        if args[1] != "--stream" {
+        if !stream_mode {
           if projection_done {
             diagnostic("stateless mode accepts exactly one line")
             return
@@ -89,7 +89,7 @@ async fn main {
           match session {
             None =>
               session = Some(
-                @codec.ReplaySession::new(line) catch {
+                @codec.ReplaySession::open(line) catch {
                   error => {
                     diagnostic("line \{line_number}: " + error.message())
                     return
@@ -103,7 +103,9 @@ async fn main {
                   return
                 }
               }
-              @stdio.stdout.write(output + "\n")
+              if args[1] == "--stream" {
+                @stdio.stdout.write(output + "\n")
+              }
             }
           }
         }
@@ -125,7 +127,7 @@ async fn main {
         return
       }
     }
-    if args[1] != "--stream" {
+    if !stream_mode {
       if projection_done {
         diagnostic("stateless mode accepts exactly one line")
         return
@@ -148,7 +150,7 @@ async fn main {
       match session {
         None =>
           session = Some(
-            @codec.ReplaySession::new(line) catch {
+            @codec.ReplaySession::open(line) catch {
               error => {
                 diagnostic("line \{line_number}: " + error.message())
                 return
@@ -162,14 +164,25 @@ async fn main {
               return
             }
           }
-          @stdio.stdout.write(output + "\n")
+          if args[1] == "--stream" {
+            @stdio.stdout.write(output + "\n")
+          }
         }
       }
     }
   }
-  if args[1] == "--stream" && session is None {
+  if stream_mode && session is None {
     diagnostic("missing configuration line")
-  } else if args[1] != "--stream" && !projection_done {
+  } else if !stream_mode && !projection_done {
     diagnostic("missing stateless request")
+  }
+  if args[1] == "--checkpoint" && session is Some(replay) {
+    let checkpoint = replay.checkpoint_json() catch {
+      error => {
+        diagnostic("checkpoint: " + error.message())
+        return
+      }
+    }
+    @stdio.stdout.write(checkpoint + "\n")
   }
 }

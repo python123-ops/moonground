@@ -15,7 +15,7 @@ pub fn moonground_create(source : String) -> String {
   if sessions.length() >= 64 || next_handle.val == 2147483647 {
     return failure("browser session capacity exceeded")
   }
-  let session = @codec.ReplaySession::new(source) catch {
+  let session = @codec.ReplaySession::open(source) catch {
     error => return failure(error.message())
   }
   let handle = next_handle.val
