@@ -95,8 +95,11 @@ fn initial_track(
 
 ///|
 fn make_estimate(track : TrackState, status : MotionStatus) -> TrackEstimate {
-  let accepted = status is Initializing || status is Ready
+  let accepted = status is Initializing ||
+    status is Ready ||
+    status is Uncertain
   let ready = status is Ready
+  let observable = ready || status is Uncertain
   {
     track_id: track.track_id,
     segment_id: track.segment_id.to_string(),
@@ -111,13 +114,23 @@ fn make_estimate(track : TrackState, status : MotionStatus) -> TrackEstimate {
     } else {
       None
     },
-    velocity: if ready {
+    velocity: if observable {
       Some({ x: track.state[2], y: track.state[3], })
     } else {
       None
     },
-    velocity_covariance: if ready {
+    velocity_covariance: if observable {
       covariance_block(track.covariance, 2)
+    } else {
+      None
+    },
+    position_std_m: if accepted {
+      covariance_std(track.covariance, 0)
+    } else {
+      None
+    },
+    velocity_std_mps: if observable {
+      covariance_std(track.covariance, 2)
     } else {
       None
     },
@@ -150,6 +163,20 @@ fn make_estimate(track : TrackState, status : MotionStatus) -> TrackEstimate {
 fn readiness(track : TrackState, config : MotionConfig) -> MotionStatus {
   if track.accepted_count >= config.min_observations &&
     track.last_timestamp_us - track.first_timestamp_us >= config.min_span_us {
+    if config.max_position_std_m is Some(limit) {
+      match covariance_std(track.covariance, 0) {
+        None => return Uncertain
+        Some(deviation) if deviation > limit => return Uncertain
+        _ => ()
+      }
+    }
+    if config.max_velocity_std_mps is Some(limit) {
+      match covariance_std(track.covariance, 2) {
+        None => return Uncertain
+        Some(deviation) if deviation > limit => return Uncertain
+        _ => ()
+      }
+    }
     Ready
   } else {
     Initializing

@@ -35,6 +35,7 @@ fn track_json(track : @motion.TrackEstimate, diagnostics : Bool) -> Json {
   let status = match track.status {
     @motion.Initializing => "initializing"
     @motion.Ready => "ready"
+    @motion.Uncertain => "uncertain"
     @motion.RejectedInnovation => "rejected_innovation"
     @motion.NumericalFailure => "numerical_failure"
   }
@@ -46,6 +47,8 @@ fn track_json(track : @motion.TrackEstimate, diagnostics : Bool) -> Json {
     "position_covariance": optional_covariance(track.position_covariance),
     "velocity_mps": optional_point(track.velocity),
     "velocity_covariance": optional_covariance(track.velocity_covariance),
+    "position_std_m": optional_number_json(track.position_std_m),
+    "velocity_std_mps": optional_number_json(track.velocity_std_mps),
     "speed_mps": optional_number_json(track.speed_mps),
     "observed_path_length_m": Json(track.observed_path_length_m),
     "net_displacement_m": Json(track.net_displacement_m),
@@ -84,6 +87,8 @@ fn output_json(
           "position_covariance": Json::null(),
           "velocity_mps": Json::null(),
           "velocity_covariance": Json::null(),
+          "position_std_m": Json::null(),
+          "velocity_std_mps": Json::null(),
           "speed_mps": Json::null(),
         }),
       ),
@@ -91,12 +96,14 @@ fn output_json(
   }
   tracks.sort_by((a, b) => a.0.compare(b.0))
   Json::object({
-    "schema_version": Json("0.1.0"),
+    "schema_version": Json("0.2.0"),
     "session_id": Json(frame.session_id),
     "timestamp_us": Json(frame.timestamp_us.to_string()),
     "tracks": Json(tracks.map(pair => pair.1)),
     "closed_segment_ids": Json(frame.closed_segment_ids),
-    "uncertainty_scope": Json("conditional_on_fixed_calibration_and_anchor"),
+    "uncertainty_scope": Json(
+      "conditional_on_fixed_calibration_camera_and_anchor",
+    ),
   }).stringify()
 }
 
@@ -165,8 +172,13 @@ pub fn ReplaySession::process_line(
 /// Project a bounded batch independently of motion initialization or filtering.
 pub fn project_json(source : String) -> String raise @types.GroundError {
   let fields = object(parse_document(source), "projection request")
-  allowed_fields(fields, ["calibration", "points"], "projection request")
+  allowed_fields(
+    fields,
+    ["calibration", "points", "camera"],
+    "projection request",
+  )
   let calibration = calibration(required(fields, "calibration"))
+  let camera = optional_camera(fields)
   let output : Array[Json] = []
   for value in array(required(fields, "points"), "points", 1000) {
     let fields = object(value, "projection point")
@@ -176,12 +188,19 @@ pub fn project_json(source : String) -> String raise @types.GroundError {
       Some(value) => covariance(value)
       None => @types.Covariance2::isotropic(2.0)
     }
-    let projected = calibration.project(p, cov)
+    let (projected, jacobian) = match camera {
+      Some(camera) =>
+        (
+          camera.project(calibration, p, cov),
+          camera.project_jacobian(calibration, p),
+        )
+      None => (calibration.project(p, cov), calibration.jacobian(p))
+    }
     output.push(
       Json::object({
         "position_m": point_json(projected.position()),
         "covariance": covariance_json(projected.covariance()),
-        "jacobian": Json(calibration.jacobian(p)),
+        "jacobian": Json(jacobian),
       }),
     )
   }

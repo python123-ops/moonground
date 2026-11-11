@@ -170,6 +170,8 @@ test "unusable numerical update rejects only that target" {
     sample(2, 0.0, 0.0),
   ])
   assert_eq(result.tracks[0].status, @motion.NumericalFailure)
+  assert_eq(result.tracks[0].position_std_m, None)
+  assert_eq(result.tracks[0].velocity_std_mps, None)
   assert_eq(result.tracks[0].accepted_count, 1)
   assert_eq(result.tracks[1].accepted_count, 2)
 }

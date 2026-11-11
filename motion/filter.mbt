@@ -68,6 +68,27 @@ fn covariance_block(
 }
 
 ///|
+/// sqrt(lambda_max) without forming an overflowing eigenvalue or squaring an
+/// uncertainty limit. Normalized terms stay within a small bounded range.
+fn maximum_direction_std(covariance : @types.Covariance2) -> Double {
+  let scale = if covariance.xx > covariance.yy {
+    covariance.xx
+  } else {
+    covariance.yy
+  }
+  let xx = covariance.xx / scale
+  let yy = covariance.yy / scale
+  let xy = covariance.xy / scale
+  let eigenvalue = (xx + yy) / 2.0 + norm2((xx - yy) / 2.0, xy)
+  scale.sqrt() * eigenvalue.sqrt()
+}
+
+///|
+fn covariance_std(covariance : @kalman.Matrix, offset : Int32) -> Double? {
+  covariance_block(covariance, offset).map(maximum_direction_std)
+}
+
+///|
 fn flatten_covariance(covariance : @kalman.Matrix) -> Array[Double] {
   Array::makei(16, i => covariance.get(i / 4, i % 4))
 }

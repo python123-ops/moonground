@@ -28,7 +28,7 @@ fn motion_config(value : Json) -> @motion.MotionConfig raise @types.GroundError 
     fields,
     [
       "max_gap_us", "min_observations", "min_span_us", "q", "initial_velocity_std",
-      "gate", "max_tracks",
+      "gate", "max_tracks", "max_position_std_m", "max_velocity_std_mps",
     ],
     "motion",
   )
@@ -48,6 +48,8 @@ fn motion_config(value : Json) -> @motion.MotionConfig raise @types.GroundError 
     Some(value) => positive_int(value, "max_tracks")
     None => 1000
   }
+  let max_position_std_m = optional_limit(fields, "max_position_std_m")
+  let max_velocity_std_mps = optional_limit(fields, "max_velocity_std_mps")
   @motion.MotionConfig::new(
     max_gap_us~,
     min_span_us~,
@@ -56,6 +58,8 @@ fn motion_config(value : Json) -> @motion.MotionConfig raise @types.GroundError 
     q=optional_number(fields, "q", 1.0),
     initial_velocity_std=optional_number(fields, "initial_velocity_std", 5.0),
     gate=optional_number(fields, "gate", 9.21034),
+    max_position_std_m?,
+    max_velocity_std_mps?,
   )
 }
 
@@ -76,7 +80,7 @@ pub fn ReplaySession::new(
   let fields = object(parse_document(source), "configuration")
   allowed_fields(
     fields,
-    ["session_id", "mode", "diagnostics", "calibration", "motion"],
+    ["session_id", "mode", "diagnostics", "calibration", "motion", "camera"],
     "configuration",
   )
   let session_id = text(required(fields, "session_id"), "session_id")
@@ -96,6 +100,7 @@ pub fn ReplaySession::new(
       None => Json::empty_object()
     },
   )
+  let camera = optional_camera(fields)
   match mode {
     "pixel" =>
       {
@@ -104,6 +109,7 @@ pub fn ReplaySession::new(
             session_id,
             calibration(required(fields, "calibration")),
             config,
+            camera?,
           ),
         ),
         ground: None,
@@ -111,8 +117,8 @@ pub fn ReplaySession::new(
         max_tracks: config.max_tracks(),
       }
     "ground" => {
-      if fields.contains("calibration") {
-        raise invalid("ground mode does not accept pixel calibration")
+      if fields.contains("calibration") || fields.contains("camera") {
+        raise invalid("ground mode does not accept pixel calibration or camera")
       }
       {
         pixel: None,

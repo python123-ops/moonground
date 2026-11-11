@@ -18,7 +18,7 @@ pub fn calibrate_json(source : String) -> String raise @types.GroundError {
     fields,
     [
       "control_pixels", "control_world", "check_pixels", "check_world", "roi", "max_fit_error_m",
-      "max_check_error_m", "max_meters_per_pixel", "ground_noise_floor_m",
+      "max_check_error_m", "max_meters_per_pixel", "ground_noise_floor_m", "camera",
     ],
     "calibration fit",
   )
@@ -28,10 +28,24 @@ pub fn calibrate_json(source : String) -> String raise @types.GroundError {
   let ground_noise_floor_m = optional_number(
     fields, "ground_noise_floor_m", 0.001,
   )
+  let camera = optional_camera(fields)
+  let controls = points(required(fields, "control_pixels"), "control_pixels")
+  let checks = points(required(fields, "check_pixels"), "check_pixels")
+  match camera {
+    Some(camera) => {
+      for i in 0..<controls.length() {
+        controls[i] = camera.rectify(controls[i])
+      }
+      for i in 0..<checks.length() {
+        checks[i] = camera.rectify(checks[i])
+      }
+    }
+    None => ()
+  }
   let calibration = @calibration.GroundCalibration::fit(
-    points(required(fields, "control_pixels"), "control_pixels"),
+    controls,
     points(required(fields, "control_world"), "control_world"),
-    points(required(fields, "check_pixels"), "check_pixels"),
+    checks,
     points(required(fields, "check_world"), "check_world"),
     points(required(fields, "roi"), "roi"),
     max_fit_error_m=optional_number(fields, "max_fit_error_m", 0.1),
@@ -40,7 +54,7 @@ pub fn calibrate_json(source : String) -> String raise @types.GroundError {
     ground_noise_floor_m~,
   )
   let report = calibration.report()
-  Json::object({
+  let output : Map[String, Json] = {
     "calibration": Json::object({
       "matrix": Json(calibration.matrix()),
       "roi": Json(calibration.roi().map(p => [p.x, p.y])),
@@ -56,5 +70,10 @@ pub fn calibrate_json(source : String) -> String raise @types.GroundError {
       "check_max_error_m": optional_number_json(report.check_max_error_m()),
       "roi_scale_bound_m_per_pixel": Json(report.roi_scale_bound_m_per_pixel()),
     }),
-  }).stringify()
+  }
+  match camera {
+    Some(camera) => output["camera"] = camera_json(camera)
+    None => ()
+  }
+  Json::object(output).stringify()
 }
