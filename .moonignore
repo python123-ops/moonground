@@ -1,0 +1,6 @@
+_build/
+.github/
+.git/
+validation/data/
+web/node_modules/
+__pycache__/

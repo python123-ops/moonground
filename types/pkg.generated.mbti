@@ -1,0 +1,48 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/types"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn is_finite(Double) -> Bool
+
+// Errors
+pub(all) suberror GroundError {
+  InvalidInput(String)
+} derive(@debug.Debug)
+pub fn GroundError::message(Self) -> String
+pub fn GroundError::to_repr(Self) -> @debug.Repr
+
+// Types and methods
+pub(all) struct Covariance2 {
+  xx : Double
+  xy : Double
+  yy : Double
+} derive(@debug.Debug)
+pub fn Covariance2::isotropic(Double) -> Self raise GroundError
+pub fn Covariance2::new(Double, Double, Double) -> Self raise GroundError
+pub fn Covariance2::to_repr(Self) -> @debug.Repr
+pub fn Covariance2::validate(Self) -> Unit raise GroundError
+
+pub(all) struct GroundObservation {
+  track_id : Int32
+  position : Point2
+  covariance : Covariance2
+} derive(@debug.Debug)
+pub fn GroundObservation::new(Int32, Point2, Covariance2) -> Self raise GroundError
+pub fn GroundObservation::to_repr(Self) -> @debug.Repr
+pub fn GroundObservation::validate(Self) -> Unit raise GroundError
+
+pub(all) struct Point2 {
+  x : Double
+  y : Double
+} derive(@debug.Debug)
+pub fn Point2::new(Double, Double) -> Self raise GroundError
+pub fn Point2::to_repr(Self) -> @debug.Repr
+pub fn Point2::validate(Self) -> Unit raise GroundError
+
+// Type aliases
+
+// Traits
