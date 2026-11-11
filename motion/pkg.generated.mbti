@@ -19,6 +19,16 @@ pub(all) struct FrameResult {
 } derive(@debug.Debug)
 pub fn FrameResult::to_repr(Self) -> @debug.Repr
 
+pub(all) struct MotionCheckpoint {
+  version : Int32
+  session_id : String
+  config : MotionConfig
+  last_timestamp_us : Int64?
+  next_segment_id : Int64
+  tracks : Array[TrackCheckpoint]
+} derive(@debug.Debug)
+pub fn MotionCheckpoint::to_repr(Self) -> @debug.Repr
+
 pub struct MotionConfig {
   max_gap_us : Int64
   min_observations : Int32
@@ -44,6 +54,8 @@ pub struct MotionEstimator {
   mut next_segment : Int64
 }
 pub fn MotionEstimator::active_track_count(Self) -> Int32
+pub fn MotionEstimator::checkpoint(Self) -> MotionCheckpoint
+pub fn MotionEstimator::from_checkpoint(MotionCheckpoint) -> Self raise @types.GroundError
 pub fn MotionEstimator::last_timestamp_us(Self) -> Int64?
 pub fn MotionEstimator::new(String, MotionConfig) -> Self raise @types.GroundError
 pub fn MotionEstimator::update(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> FrameResult raise @types.GroundError
@@ -58,6 +70,20 @@ pub(all) enum MotionStatus {
 pub fn MotionStatus::equal(Self, Self) -> Bool
 pub fn MotionStatus::not_equal(Self, Self) -> Bool
 pub fn MotionStatus::to_repr(Self) -> @debug.Repr
+
+pub(all) struct TrackCheckpoint {
+  track_id : Int32
+  segment_id : Int64
+  first_timestamp_us : Int64
+  last_timestamp_us : Int64
+  accepted_count : Int32
+  state : Array[Double]
+  covariance : Array[Double]
+  first_filtered : @types.Point2
+  last_filtered : @types.Point2
+  observed_path_length_m : Double
+} derive(@debug.Debug)
+pub fn TrackCheckpoint::to_repr(Self) -> @debug.Repr
 
 pub(all) struct TrackEstimate {
   track_id : Int32

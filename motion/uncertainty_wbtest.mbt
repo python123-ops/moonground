@@ -18,7 +18,7 @@ test "enabled uncertainty limits fail closed when a covariance block is unavaila
     last_filtered: point,
     observed_path_length_m: 0.0,
   }
-  assert_true(healthy_state(track.state, track.covariance))
+  assert_false(healthy_state(track.state, track.covariance))
   assert_eq(covariance_std(track.covariance, 0), None)
   assert_eq(covariance_std(track.covariance, 2), None)
   assert_eq(

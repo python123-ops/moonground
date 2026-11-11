@@ -46,7 +46,41 @@ fn healthy_state(state : Array[Double], covariance : @kalman.Matrix) -> Bool {
     return false
   }
   let normalized = covariance.map(value => value / scale)
-  normalized.is_finite() && @kalman.covariance_is_psd(normalized, 0.000000001)
+  normalized.is_finite() &&
+  @kalman.covariance_is_psd(normalized, 0.000000001) &&
+  covariance_consistent(covariance)
+}
+
+///|
+/// Check each pair in its own diagonal scale: a large velocity prior must not
+/// hide asymmetric or indefinite position/cross covariance. Normalize only a
+/// diagnostic copy, leaving the filter's original covariance entries untouched.
+fn covariance_consistent(covariance : @kalman.Matrix) -> Bool {
+  let normalized = @kalman.Matrix::identity(4)
+  for row in 0..<4 {
+    if covariance.get(row, row) <= 0.0 {
+      return false
+    }
+    for col in (row + 1)..<4 {
+      let scale = covariance.get(row, row).sqrt() *
+        covariance.get(col, col).sqrt()
+      if !@types.is_finite(scale) || scale <= 0.0 {
+        return false
+      }
+      let upper = covariance.get(row, col) / scale
+      let lower = covariance.get(col, row) / scale
+      if !@types.is_finite(upper) ||
+        !@types.is_finite(lower) ||
+        upper.abs() > 1.000000001 ||
+        lower.abs() > 1.000000001 ||
+        (upper - lower).abs() > 0.000000001 {
+        return false
+      }
+      ignore(normalized.set(row, col, upper))
+      ignore(normalized.set(col, row, lower))
+    }
+  }
+  @kalman.covariance_is_psd(normalized, 0.000000001)
 }
 
 ///|
