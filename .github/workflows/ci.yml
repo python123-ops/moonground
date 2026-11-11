@@ -71,15 +71,16 @@ jobs:
           moon -C examples/consumer test --target all --deny-warn
           moon package
           python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.2.0.zip --output _build/ci-package.json
-      - name: Install browser test dependencies
+      - name: Prepare browser test driver
         if: runner.os == 'Linux'
         run: |
-          npm install --prefix _build/browser --no-save --package-lock=false playwright@1.62.1
-          node _build/browser/node_modules/playwright/cli.js install --with-deps chromium
+          google-chrome --version
+          npm install --prefix _build/browser --no-save --package-lock=false --no-audit --no-fund playwright-core@1.62.1
       - name: Exercise desktop, mobile and local-file browser flows
         if: runner.os == 'Linux'
         env:
-          PLAYWRIGHT_MODULE: ${{ github.workspace }}/_build/browser/node_modules/playwright
+          PLAYWRIGHT_MODULE: ${{ github.workspace }}/_build/browser/node_modules/playwright-core
+          MOONGROUND_BROWSER_CHANNEL: chrome
         run: node --test web/ui.test.cjs
       - name: Retain validation records
         if: always()
@@ -93,4 +94,5 @@ jobs:
             _build/ci-stream.json
             _build/ci-package.json
             _build/site/*preview.png
+            _build/site/browser-environment.json
             _build/publish/*.zip

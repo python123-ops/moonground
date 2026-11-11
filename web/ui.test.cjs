@@ -5,7 +5,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 
-test("desktop, mobile, local import and stale-result prevention", async () => {
+test("desktop, mobile, local import and stale-result prevention", async (t) => {
   const directory = path.resolve(__dirname, "..", "_build", "site");
   const server = http.createServer((request, response) => {
     const url = new URL(request.url, "http://localhost");
@@ -39,7 +39,20 @@ test("desktop, mobile, local import and stale-result prevention", async () => {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   let browser;
   try {
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({
+      headless: true,
+      channel: process.env.MOONGROUND_BROWSER_CHANNEL,
+    });
+    const environment = {
+      browser_version: browser.version(),
+      channel: process.env.MOONGROUND_BROWSER_CHANNEL || "bundled-chromium",
+      platform: process.platform,
+    };
+    t.diagnostic(JSON.stringify(environment));
+    fs.writeFileSync(
+      path.join(directory, "browser-environment.json"),
+      JSON.stringify(environment, null, 2) + "\n",
+    );
     const page = await browser.newPage({
       viewport: { width: 1440, height: 1050 },
     });
