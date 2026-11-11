@@ -29,8 +29,11 @@ test "warmup requires both accepted count and elapsed span" {
   assert_true((velocity.x - 1.0).abs() < 0.1)
   assert_true(velocity.y.abs() < 0.0000001)
   assert_eq(fourth.accepted_count, 4)
-  assert_true((fourth.observed_path_length_m - 0.3).abs() < 0.0000001)
-  assert_true((fourth.net_displacement_m - 0.3).abs() < 0.0000001)
+  assert_true((fourth.observed_path_length_m - 0.3).abs() < 0.01)
+  assert_true(
+    (fourth.net_displacement_m - fourth.observed_path_length_m).abs() <
+    0.0000001,
+  )
 }
 
 ///|
@@ -266,4 +269,57 @@ test "identity churn remains bounded without retaining lost tombstones" {
     assert_eq(closed.closed_segment_ids, [(i + 1).to_string()])
     assert_eq(engine.active_track_count(), 0)
   }
+}
+
+///|
+test "path and displacement use accepted filtered positions and skip rejections" {
+  let engine = @motion.MotionEstimator::new(
+    "filtered-path",
+    @motion.MotionConfig::new(),
+  )
+  let points = [
+    (0.0, 0.0),
+    (0.15, 0.2),
+    (0.23, -0.1),
+    (10000.0, 10000.0),
+    (0.4, 0.25),
+    (0.45, 0.0),
+  ]
+  let mut last_filtered : @types.Point2? = None
+  let mut last_raw : @types.Point2? = None
+  let mut filtered_path = 0.0
+  let mut raw_path = 0.0
+  for i, (x, y) in points {
+    let estimate = engine.update(Int64::from_int(i) * 100000L, [sample(1, x, y)]).tracks[0]
+    if i == 3 {
+      assert_eq(estimate.status, @motion.RejectedInnovation)
+      assert_true(estimate.position is None)
+      assert_true(
+        (estimate.observed_path_length_m - filtered_path).abs() < 1.0e-12,
+      )
+      assert_eq(estimate.accepted_count, 3)
+      continue
+    }
+    guard estimate.position is Some(position) else {
+      fail("expected accepted filtered position")
+    }
+    if last_filtered is Some(previous) {
+      let dx = position.x - previous.x
+      let dy = position.y - previous.y
+      filtered_path = filtered_path + (dx * dx + dy * dy).sqrt()
+    }
+    if last_raw is Some(previous) {
+      let dx = x - previous.x
+      let dy = y - previous.y
+      raw_path = raw_path + (dx * dx + dy * dy).sqrt()
+    }
+    assert_true(
+      (estimate.observed_path_length_m - filtered_path).abs() < 1.0e-12,
+    )
+    let net = (position.x * position.x + position.y * position.y).sqrt()
+    assert_true((estimate.net_displacement_m - net).abs() < 1.0e-12)
+    last_filtered = Some(position)
+    last_raw = Some({ x, y, })
+  }
+  assert_true((filtered_path - raw_path).abs() > 0.001)
 }

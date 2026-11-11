@@ -7,8 +7,8 @@ struct TrackState {
   accepted_count : Int32
   state : Array[Double]
   covariance : @kalman.Matrix
-  first_observed : @types.Point2
-  last_observed : @types.Point2
+  first_filtered : @types.Point2
+  last_filtered : @types.Point2
   observed_path_length_m : Double
 }
 
@@ -87,8 +87,8 @@ fn initial_track(
       [0.0, 0.0, vv, 0.0],
       [0.0, 0.0, 0.0, vv],
     ]),
-    first_observed: observation.position,
-    last_observed: observation.position,
+    first_filtered: observation.position,
+    last_filtered: observation.position,
     observed_path_length_m: 0.0,
   }
 }
@@ -128,8 +128,8 @@ fn make_estimate(track : TrackState, status : MotionStatus) -> TrackEstimate {
     },
     observed_path_length_m: track.observed_path_length_m,
     net_displacement_m: norm2(
-      track.last_observed.x - track.first_observed.x,
-      track.last_observed.y - track.first_observed.y,
+      track.last_filtered.x - track.first_filtered.x,
+      track.last_filtered.y - track.first_filtered.y,
     ),
     accepted_count: track.accepted_count,
     last_accepted_timestamp_us: track.last_timestamp_us,
@@ -196,13 +196,13 @@ fn advance_track(
       let state = candidate.state()
       let covariance = candidate.covariance()
       let step = norm2(
-        observation.position.x - previous.last_observed.x,
-        observation.position.y - previous.last_observed.y,
+        state[0] - previous.last_filtered.x,
+        state[1] - previous.last_filtered.y,
       )
       let path = previous.observed_path_length_m + step
       let displacement = norm2(
-        observation.position.x - previous.first_observed.x,
-        observation.position.y - previous.first_observed.y,
+        state[0] - previous.first_filtered.x,
+        state[1] - previous.first_filtered.y,
       )
       if !healthy_state(state, covariance) ||
         !@types.is_finite(path) ||
@@ -221,7 +221,7 @@ fn advance_track(
         accepted_count: previous.accepted_count + 1,
         state,
         covariance,
-        last_observed: observation.position,
+        last_filtered: { x: state[0], y: state[1], },
         observed_path_length_m: path,
       }
       (next, readiness(next, config))

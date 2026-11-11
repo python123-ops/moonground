@@ -73,7 +73,7 @@ pub extend MotionStatus with Eq::{equal, not_equal}
 
 ///|
 /// A result for an observation submitted in this frame. Rejections carry no
-/// stale position or velocity. Path length is the accepted measured polyline,
+/// stale position or velocity. Path length is the accepted filtered polyline,
 /// and does not claim the object's unobserved travelled distance.
 pub(all) struct TrackEstimate {
   track_id : Int32
