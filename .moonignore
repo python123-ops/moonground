@@ -4,3 +4,7 @@ _build/
 validation/data/
 web/node_modules/
 __pycache__/
+AGENTS.md
+examples/
+validation/
+web/

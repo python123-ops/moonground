@@ -4,7 +4,7 @@ import {spawnSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-import {moonground_create, moonground_update, moonground_close, moonground_project} from '../_build/site/moonground.mjs';
+import {moonground_create, moonground_update, moonground_close, moonground_project, moonground_calibrate} from '../_build/site/moonground.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const binary=path.join(root,'_build','native','release','build','cmd','main',process.platform==='win32'?'main.exe':'main');
@@ -34,6 +34,15 @@ test('projection bridge uses native schema',()=>{
 test('closed handles stay invalid when later sessions are allocated',()=>{
   const first=unpack(moonground_create('{"session_id":"first","mode":"ground"}')).handle;assert.equal(moonground_close(first),true);const second=unpack(moonground_create('{"session_id":"second","mode":"ground"}')).handle;
   try{assert.notEqual(first,second);assert.ok(JSON.parse(moonground_update(first,'{}')).error);assert.equal(moonground_close(first),false)}finally{moonground_close(second)}
+});
+
+test('manual fitting has the same held-out report in native and JavaScript',()=>{
+  const request=readFileSync(path.join(root,'examples','calibration.json'),'utf8');
+  const native=spawnSync(binary,['--calibrate'],{input:request,encoding:'utf8'});
+  assert.equal(native.status,0,native.stderr);
+  const result=unpack(moonground_calibrate(request));closeNumeric(result,JSON.parse(native.stdout));
+  assert.equal(result.report.fit_count,6);assert.equal(result.report.check_count,2);
+  assert.ok(result.report.check_max_error_m<1e-10);
 });
 
 test('browser session capacity is bounded and released',()=>{

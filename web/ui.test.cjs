@@ -52,6 +52,10 @@ test('desktop, mobile, local import and stale-result prevention',async()=>{
     await page.setViewportSize({width:390,height:844});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
     await page.screenshot({path:path.join(directory,'mobile-preview.png'),fullPage:true});
+    await page.locator('#source').fill('{"session_id":"large-coordinate","mode":"ground"}\n{"timestamp_us":"0","observations":[{"track_id":1,"point":[1e300,1e300]}]}');
+    await page.locator('#run').click();
+    await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('已完成 1 帧'));
+    assert.equal(await page.locator('#download').isDisabled(),false);
     assert.deepEqual(errors,[]);
   }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve))}
 });

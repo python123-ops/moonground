@@ -1,0 +1,97 @@
+name: MoonGround checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Set up Windows C compiler
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - uses: hustcer/setup-moonbit@v1.25
+        with:
+          version: 0.10.18+6c83a7f62
+          core-version: 0.10.18+6c83a7f62
+      - name: Show toolchain and update dependencies
+        run: |
+          moon version --all
+          moon update
+          python -m pip install numpy==1.26.4
+      - name: Verify source and public interfaces
+        run: |
+          moon fmt --check
+          moon info
+          git diff --exit-code -- '*.mbti'
+      - name: Check, build and test all four backends
+        run: |
+          moon check --target all --deny-warn
+          moon build --target all --deny-warn
+          moon test --target all --deny-warn
+      - name: Build release command and browser library
+        run: |
+          moon build cmd/main --target native --release --deny-warn
+          node web/build.mjs
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "MOONGROUND_CLI=_build/native/release/build/cmd/main/main.exe" >> "$GITHUB_ENV"
+          else
+            echo "MOONGROUND_CLI=_build/native/release/build/cmd/main/main" >> "$GITHUB_ENV"
+          fi
+      - name: Compare native and JavaScript protocols
+        run: node --test web/parity.test.mjs
+      - name: Compare independent numerical reference
+        run: python validation/verify.py --binary "$MOONGROUND_CLI" --output _build/ci-reference.json
+      - name: Exercise process protocol and bounded stream
+        run: python validation/stream_test.py --binary "$MOONGROUND_CLI" --frames 3000 --targets 10 --latency-samples 100 --output _build/ci-stream.json
+      - name: Check MBMOT consumer and package archive
+        run: |
+          moon -C examples/consumer update
+          moon -C examples/consumer check --target all --deny-warn
+          moon -C examples/consumer test --target all --deny-warn
+          moon package
+          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.1.0.zip --output _build/ci-package.json
+      - name: Install browser test dependencies
+        if: runner.os == 'Linux'
+        run: |
+          npm install --prefix _build/browser --no-save --package-lock=false playwright@1.62.1
+          node _build/browser/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Exercise desktop, mobile and local-file browser flows
+        if: runner.os == 'Linux'
+        env:
+          PLAYWRIGHT_MODULE: ${{ github.workspace }}/_build/browser/node_modules/playwright
+        run: node --test web/ui.test.cjs
+      - name: Retain validation records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-${{ matrix.os }}
+          if-no-files-found: warn
+          path: |
+            _build/ci-reference.json
+            _build/ci-stream.json
+            _build/ci-package.json
+            _build/site/*preview.png
+            _build/publish/*.zip
