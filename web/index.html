@@ -1,32 +1,109 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MoonGround · 地面轨迹测量</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <main>
-    <header><div><span class="eyebrow">MOONGROUND / FIXED CAMERA</span><h1>从目标轨迹，读取地面运动。</h1><p>在浏览器本地回放像素观测，查看米制位置、速度与连续测量片段。</p></div><span class="badge">MoonBit 核心 · 本地计算</span></header>
-    <section class="workspace">
-      <div class="panel input-panel">
-        <div class="panel-title"><h2>观测输入</h2><button id="example" class="quiet">加载合成仓储示例</button></div>
-        <p class="hint">首行为标定与会话配置，后续每行是一帧观测。像素须与标定使用同一已校正坐标空间。默认观测为合成数据。</p>
-        <label for="source" class="sr-only">配置和逐帧 NDJSON</label><textarea id="source" spellcheck="false"></textarea>
-        <div class="actions"><button id="run">计算与回放</button><label class="file-button">导入 NDJSON<input id="file" type="file" accept=".ndjson,.jsonl,.txt"></label><button id="download" class="quiet" disabled>导出结果</button></div>
-        <p id="message" role="status" aria-live="polite">正在加载示例…</p>
-        <details><summary>从地面控制点生成标定</summary><p class="hint">输入至少六对拟合点及两对独立核验点。地面点单位为米，像素点须已校正。</p><label for="calibration-input" class="sr-only">控制点与核验点 JSON</label><textarea id="calibration-input" spellcheck="false"></textarea><button id="calibrate" class="quiet">拟合并替换当前标定</button><p id="calibration-message" role="status" class="hint"></p></details>
-      </div>
-      <div class="panel view-panel">
-        <div class="panel-title"><h2>地面平面</h2><span id="time" class="mono">—</span></div>
-        <canvas id="ground" width="960" height="620" aria-label="地面轨迹平面"></canvas>
-        <div class="playback"><button id="play" disabled>播放</button><input id="frame" aria-label="回放帧" type="range" min="0" max="0" value="0" disabled><span id="counter" class="mono">0 / 0</span></div>
-        <div class="stats"><div><span>可测目标</span><strong id="ready">—</strong></div><div><span>最高当前速度</span><strong id="speed">—</strong></div><div><span>当前片段</span><strong id="segments">—</strong></div></div>
-      </div>
-    </section>
-    <section class="panel"><div class="panel-title"><h2>本帧测量</h2><span class="hint">初始化和拒绝观测不会显示零速度</span></div><div class="table-wrap"><table><thead><tr><th>目标 / 片段</th><th>状态</th><th>位置 x, y · m</th><th>速度 · m/s</th><th>观测折线 · m</th></tr></thead><tbody id="tracks"></tbody></table></div></section>
-    <footer>固定相机 · 单地平面。协方差以给定标定与足点为条件；观测折线连接已接受点，不补全未观测路径。数据不上传。</footer>
-  </main>
-  <script type="module" src="app.mjs"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MoonGround · 地面轨迹测量</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <span class="eyebrow">MOONGROUND / FIXED CAMERA</span>
+          <h1>从目标轨迹，读取地面运动。</h1>
+          <p>在浏览器本地回放像素观测，查看米制位置、速度与连续测量片段。</p>
+        </div>
+        <span class="badge">MoonBit 核心 · 本地计算</span>
+      </header>
+      <section class="workspace">
+        <div class="panel input-panel">
+          <div class="panel-title">
+            <h2>观测输入</h2>
+            <button id="example" class="quiet">加载合成仓储示例</button>
+          </div>
+          <p class="hint">
+            首行为标定与会话配置，后续每行是一帧观测。像素须与标定使用同一已校正坐标空间。默认观测为合成数据。
+          </p>
+          <label for="source" class="sr-only">配置和逐帧 NDJSON</label
+          ><textarea id="source" spellcheck="false"></textarea>
+          <div class="actions">
+            <button id="run">计算与回放</button
+            ><label class="file-button"
+              >导入 NDJSON<input
+                id="file"
+                type="file"
+                accept=".ndjson,.jsonl,.txt" /></label
+            ><button id="download" class="quiet" disabled>导出结果</button>
+          </div>
+          <p id="message" role="status" aria-live="polite">正在加载示例…</p>
+          <details>
+            <summary>从地面控制点生成标定</summary>
+            <p class="hint">
+              输入至少六对拟合点及两对独立核验点。地面点单位为米，像素点须已校正。
+            </p>
+            <label for="calibration-input" class="sr-only"
+              >控制点与核验点 JSON</label
+            ><textarea id="calibration-input" spellcheck="false"></textarea
+            ><button id="calibrate" class="quiet">拟合并替换当前标定</button>
+            <p id="calibration-message" role="status" class="hint"></p>
+          </details>
+        </div>
+        <div class="panel view-panel">
+          <div class="panel-title">
+            <h2>地面平面</h2>
+            <span id="time" class="mono">—</span>
+          </div>
+          <canvas
+            id="ground"
+            width="960"
+            height="620"
+            aria-label="地面轨迹平面"
+          ></canvas>
+          <div class="playback">
+            <button id="play" disabled>播放</button
+            ><input
+              id="frame"
+              aria-label="回放帧"
+              type="range"
+              min="0"
+              max="0"
+              value="0"
+              disabled
+            /><span id="counter" class="mono">0 / 0</span>
+          </div>
+          <div class="stats">
+            <div><span>可测目标</span><strong id="ready">—</strong></div>
+            <div><span>最高当前速度</span><strong id="speed">—</strong></div>
+            <div><span>当前片段</span><strong id="segments">—</strong></div>
+          </div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-title">
+          <h2>本帧测量</h2>
+          <span class="hint">初始化和拒绝观测不会显示零速度</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>目标 / 片段</th>
+                <th>状态</th>
+                <th>位置 x, y · m</th>
+                <th>速度 · m/s</th>
+                <th>观测折线 · m</th>
+              </tr>
+            </thead>
+            <tbody id="tracks"></tbody>
+          </table>
+        </div>
+      </section>
+      <footer>
+        固定相机 ·
+        单地平面。协方差以给定标定与足点为条件；观测折线连接已接受点，不补全未观测路径。数据不上传。
+      </footer>
+    </main>
+    <script type="module" src="app.mjs"></script>
+  </body>
 </html>
