@@ -10,6 +10,7 @@ import {
 
 const $ = (id) => document.getElementById(id);
 const source = $("source");
+const calibrationInput = $("calibration-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -20,6 +21,9 @@ let playing = null;
 let loadedSource = "";
 let checkpointBusy = false;
 let calibrationEdited = false;
+let calibrationRevision = 0;
+let calibrationResponse = null;
+let fittedCalibrationInput = "";
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -61,6 +65,48 @@ function unpack(text) {
   const value = JSON.parse(text);
   if (value.error) throw new Error(value.error);
   return value;
+}
+
+function clearCalibrationResult() {
+  calibrationResponse = null;
+  fittedCalibrationInput = "";
+  $("download-calibration").disabled = true;
+  $("calibration-message").textContent = "";
+  $("calibration-diagnostics").hidden = true;
+  $("calibration-residuals").replaceChildren();
+}
+
+function calibrationDiagnostics(fitted) {
+  const maximum = fitted.report.check_max_error_m.toExponential(2);
+  const rows = document.createDocumentFragment();
+  const report = fitted.robust_report;
+  if (!report) {
+    return {
+      message: `拟合 ${fitted.report.fit_count} 点，核验 ${fitted.report.check_count} 点；核验最大残差 ${maximum} m。`,
+      rows,
+      robust: false,
+    };
+  }
+  if (
+    report.control_count > 256 ||
+    report.inlier_mask.length !== report.control_count ||
+    report.control_errors_m.length !== report.control_count
+  ) {
+    throw new Error("稳健标定响应中的控制点诊断不完整。");
+  }
+  for (let index = 0; index < report.control_count; index++) {
+    const row = document.createElement("li");
+    row.textContent = `第 ${index + 1} 控制点 · ${report.inlier_mask[index] ? "保留" : "排除"} · 误差 ${report.control_errors_m[index].toExponential(3)} m`;
+    rows.append(row);
+  }
+  const excluded = report.outlier_indices.length
+    ? `排除控制点（从 1 编号）：${report.outlier_indices.map((index) => index + 1).join("、")}。`
+    : "未排除控制点。";
+  return {
+    message: `稳健拟合保留 ${report.inlier_count} / ${report.control_count} 个控制点，核验 ${fitted.report.check_count} 点；核验最大残差 ${maximum} m。${excluded}`,
+    rows,
+    robust: true,
+  };
 }
 
 function openSession(line) {
@@ -357,8 +403,11 @@ source.addEventListener("input", () => {
   invalidate();
   message("输入已修改，请重新计算。");
 });
-$("calibration-input").addEventListener("input", () => {
+calibrationInput.addEventListener("input", () => {
   calibrationEdited = true;
+  calibrationRevision++;
+  clearCalibrationResult();
+  $("calibration-message").textContent = "标定输入已修改，请重新拟合。";
 });
 $("run").addEventListener("click", run);
 slider.addEventListener("input", () => {
@@ -486,17 +535,41 @@ $("camera-example").addEventListener("click", () =>
   example("distorted-camera.ndjson"),
 );
 $("resume-example").addEventListener("click", () => example("resume.ndjson"));
-$("calibrate").addEventListener("click", () => {
+$("robust-calibration-example").addEventListener("click", async () => {
+  calibrationEdited = true;
+  const current = ++calibrationRevision;
+  clearCalibrationResult();
+  $("calibration-message").textContent = "正在载入稳健标定示例…";
   try {
-    const fitted = unpack(moonground_calibrate($("calibration-input").value));
+    const response = await fetch("./robust-calibration.json");
+    if (!response.ok) throw new Error("无法读取稳健标定示例");
+    const text = await response.text();
+    if (current !== calibrationRevision) return;
+    calibrationInput.value = text;
+    $("calibration-message").textContent =
+      "已载入含误标控制点的合成示例；点击拟合后才替换当前标定。";
+  } catch (error) {
+    if (current === calibrationRevision)
+      $("calibration-message").textContent = error.message;
+  }
+});
+$("calibrate").addEventListener("click", () => {
+  calibrationEdited = true;
+  calibrationRevision++;
+  clearCalibrationResult();
+  try {
+    const request = calibrationInput.value;
     const lines = source.value.trimEnd().split(/\r?\n/);
     const config = JSON.parse(lines[0]);
     if (Object.hasOwn(config, "resume"))
       throw new Error("检查点绑定原标定；修改标定时请新建会话配置。");
+    const response = moonground_calibrate(request);
+    const fitted = unpack(response);
     if (config.camera && !fitted.camera)
       throw new Error(
         "当前观测使用原始像素；拟合请求需提供 camera，或先改用已校正观测及配置。",
       );
+    const diagnostics = calibrationDiagnostics(fitted);
     config.mode = "pixel";
     config.calibration = fitted.calibration;
     if (fitted.camera) config.camera = fitted.camera;
@@ -506,23 +579,47 @@ $("calibrate").addEventListener("click", () => {
     message(
       `标定已替换，观测须使用${fitted.camera ? "原始" : "已校正"}像素；请重新计算。`,
     );
-    $("calibration-message").textContent =
-      `拟合 ${fitted.report.fit_count} 点，核验 ${fitted.report.check_count} 点；核验最大残差 ${fitted.report.check_max_error_m.toExponential(2)} m。`;
+    $("calibration-message").textContent = diagnostics.message;
+    $("calibration-residuals").replaceChildren(diagnostics.rows);
+    $("calibration-diagnostics").hidden = !diagnostics.robust;
+    calibrationResponse = response;
+    fittedCalibrationInput = request;
+    $("download-calibration").disabled = false;
   } catch (error) {
+    clearCalibrationResult();
     $("calibration-message").textContent = error.message;
   }
 });
+$("download-calibration").addEventListener("click", () => {
+  if (
+    calibrationResponse === null ||
+    calibrationInput.value !== fittedCalibrationInput
+  ) {
+    clearCalibrationResult();
+    return;
+  }
+  saveFile(calibrationResponse + "\n", "moonground-calibration.json");
+});
+const initialCalibrationRevision = calibrationRevision;
 fetch("./calibration.json")
   .then((response) => {
     if (!response.ok) throw new Error("无法读取标定示例");
     return response.text();
   })
   .then((text) => {
-    if (!calibrationEdited && $("calibration-input").value === "")
-      $("calibration-input").value = text;
+    if (
+      calibrationRevision === initialCalibrationRevision &&
+      !calibrationEdited &&
+      calibrationInput.value === ""
+    )
+      calibrationInput.value = text;
   })
   .catch((error) => {
-    $("calibration-message").textContent = error.message;
+    if (
+      calibrationRevision === initialCalibrationRevision &&
+      !calibrationEdited
+    )
+      $("calibration-message").textContent = error.message;
   });
 draw();
 example();

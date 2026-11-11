@@ -58,13 +58,32 @@
             <summary>从地面控制点生成标定</summary>
             <p class="hint">
               输入至少六对拟合点及两对独立核验点。地面点单位为米；包含 camera
-              时控制点为原始像素，ROI 仍为已校正像素。
+              时控制点为原始像素，ROI
+              仍为已校正像素。稳健拟合会标出被排除的控制点；核验点始终独立检查。
             </p>
+            <button id="robust-calibration-example" class="quiet">
+              稳健标定示例
+            </button>
             <label for="calibration-input" class="sr-only"
               >控制点与核验点 JSON</label
-            ><textarea id="calibration-input" spellcheck="false"></textarea
-            ><button id="calibrate" class="quiet">拟合并替换当前标定</button>
+            ><textarea id="calibration-input" spellcheck="false"></textarea>
+            <div class="actions">
+              <button id="calibrate" class="quiet">拟合并替换当前标定</button>
+              <button id="download-calibration" class="quiet" disabled>
+                下载标定结果
+              </button>
+            </div>
             <p id="calibration-message" role="status" class="hint"></p>
+            <div id="calibration-diagnostics" hidden>
+              <p class="hint">
+                下列编号从 1
+                开始，对应输入控制点的顺序。误差为投影地面点与给定地面点的距离，单位为米。
+              </p>
+              <ul
+                id="calibration-residuals"
+                aria-label="稳健标定控制点残差"
+              ></ul>
+            </div>
           </details>
         </div>
         <div class="panel view-panel">

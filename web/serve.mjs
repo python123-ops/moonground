@@ -23,6 +23,7 @@ const assets = new Map([
   ["distorted-camera.ndjson", "application/x-ndjson; charset=utf-8"],
   ["resume.ndjson", "application/x-ndjson; charset=utf-8"],
   ["calibration.json", "application/json; charset=utf-8"],
+  ["robust-calibration.json", "application/json; charset=utf-8"],
 ]);
 const server = http.createServer((request, response) => {
   if (!["GET", "HEAD"].includes(request.method)) {

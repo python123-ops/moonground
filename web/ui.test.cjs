@@ -30,6 +30,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       ".mjs": "text/javascript; charset=utf-8",
       ".css": "text/css; charset=utf-8",
       ".ndjson": "application/x-ndjson",
+      ".json": "application/json; charset=utf-8",
     };
     response.writeHead(200, {
       "Content-Type": types[path.extname(target)] || "application/octet-stream",
@@ -96,6 +97,53 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
         await draftPage.locator("#calibration-input").inputValue(),
         draft,
       );
+      // An explicitly requested example must also yield to a later user edit.
+      let releaseRobust;
+      const robustGate = new Promise((resolve) => {
+        releaseRobust = resolve;
+      });
+      let robustRequested;
+      const pendingRobust = new Promise((resolve) => {
+        robustRequested = resolve;
+      });
+      try {
+        await draftPage.route("**/robust-calibration.json", async (route) => {
+          robustRequested();
+          await robustGate;
+          await route.fulfill({
+            contentType: "application/json",
+            body: fs.readFileSync(
+              path.resolve(
+                __dirname,
+                "..",
+                "examples",
+                "robust-calibration.json",
+              ),
+              "utf8",
+            ),
+          });
+        });
+        await draftPage.locator("#robust-calibration-example").click();
+        await pendingRobust;
+        const newerDraft = '{"control_pixels":[[33,44]],"user_draft":"newer"}';
+        await draftPage.locator("#calibration-input").fill(newerDraft);
+        const robustResponse = draftPage.waitForResponse((value) =>
+          value.url().endsWith("/robust-calibration.json"),
+        );
+        releaseRobust();
+        await (await robustResponse).finished();
+        await draftPage.waitForLoadState("networkidle");
+        assert.equal(
+          await draftPage.locator("#calibration-input").inputValue(),
+          newerDraft,
+        );
+        assert.equal(
+          await draftPage.locator("#download-calibration").isDisabled(),
+          true,
+        );
+      } finally {
+        releaseRobust();
+      }
     } finally {
       releaseCalibration();
       await draftPage.close();
@@ -105,6 +153,13 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     });
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
+    const exportJson = async (selector, filename) => {
+      const pending = page.waitForEvent("download");
+      await page.locator(selector).click();
+      const download = await pending;
+      assert.equal(download.suggestedFilename(), filename);
+      return JSON.parse(fs.readFileSync(await download.path(), "utf8"));
+    };
     await page.goto(`http://127.0.0.1:${server.address().port}/moonground/`);
     await page.waitForFunction(() =>
       document.querySelector("#message").textContent.includes("已完成 10 帧"),
@@ -179,6 +234,166 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       path: path.join(directory, "mobile-preview.png"),
       fullPage: true,
     });
+    // Compare the polluted request through strict and robust calibration, then
+    // verify the displayed per-point decisions against the reusable response.
+    await page.locator("details").evaluate((details) => {
+      details.open = true;
+    });
+    const beforeRobust = await page.locator("#source").inputValue();
+    const robustRequest = JSON.parse(
+      fs.readFileSync(
+        path.resolve(__dirname, "..", "examples", "robust-calibration.json"),
+        "utf8",
+      ),
+    );
+    await page.locator("#robust-calibration-example").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#calibration-input").value.includes('"robust"'),
+    );
+    assert.deepEqual(
+      JSON.parse(await page.locator("#calibration-input").inputValue()),
+      robustRequest,
+    );
+    assert.equal(
+      await page.locator("#source").inputValue(),
+      beforeRobust,
+      "loading controls replaced measurement calibration",
+    );
+    const strictRequest = structuredClone(robustRequest);
+    delete strictRequest.robust;
+    await page
+      .locator("#calibration-input")
+      .fill(JSON.stringify(strictRequest));
+    await page.locator("#calibrate").click();
+    assert.match(
+      await page.locator("#calibration-message").textContent(),
+      /residual|fitting|核验|拟合失败/i,
+    );
+    assert.equal(await page.locator("#source").inputValue(), beforeRobust);
+    assert.equal(
+      await page.locator("#download-calibration").isDisabled(),
+      true,
+    );
+    assert.equal(await page.locator("#calibration-residuals li").count(), 0);
+    await page.locator("#robust-calibration-example").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#calibration-input").value.includes('"robust"'),
+    );
+    await page.locator("#calibrate").click();
+    assert.match(
+      await page.locator("#calibration-message").textContent(),
+      /保留 8 \/ 10 个控制点/,
+    );
+    assert.match(
+      await page.locator("#calibration-message").textContent(),
+      /从 1 编号.*2、8/,
+    );
+    assert.equal(
+      await page.locator("#calibration-diagnostics").isVisible(),
+      true,
+    );
+    const fittedResponse = await exportJson(
+      "#download-calibration",
+      "moonground-calibration.json",
+    );
+    assert.equal(fittedResponse.report.fit_count, 8);
+    assert.equal(fittedResponse.report.check_count, 3);
+    assert.ok(
+      fittedResponse.report.check_max_error_m <=
+        robustRequest.max_check_error_m,
+    );
+    assert.deepEqual(fittedResponse.robust_report.outlier_indices, [1, 7]);
+    assert.deepEqual(
+      fittedResponse.robust_report.options,
+      robustRequest.robust,
+    );
+    assert.deepEqual(fittedResponse.camera, robustRequest.camera);
+    assert.equal(await page.locator("#calibration-residuals li").count(), 10);
+    for (let index = 0; index < 10; index++) {
+      const report = fittedResponse.robust_report;
+      assert.equal(
+        await page
+          .locator("#calibration-residuals li")
+          .nth(index)
+          .textContent(),
+        `第 ${index + 1} 控制点 · ${report.inlier_mask[index] ? "保留" : "排除"} · 误差 ${report.control_errors_m[index].toExponential(3)} m`,
+      );
+      assert.equal(report.inlier_mask[index], ![1, 7].includes(index));
+    }
+    const fittedSource = await page.locator("#source").inputValue();
+    assert.deepEqual(
+      JSON.parse(fittedSource.split("\n")[0]).calibration,
+      fittedResponse.calibration,
+    );
+    assert.equal(
+      fittedSource.slice(fittedSource.indexOf("\n")),
+      beforeRobust.slice(beforeRobust.indexOf("\n")),
+    );
+    // A measurement edit does not invalidate a fit bound to unchanged controls.
+    await page.locator("#source").fill(fittedSource + " ");
+    assert.equal(
+      await page.locator("#download-calibration").isDisabled(),
+      false,
+    );
+    assert.deepEqual(
+      await exportJson("#download-calibration", "moonground-calibration.json"),
+      fittedResponse,
+    );
+    await page.locator("#source").fill(fittedSource);
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.screenshot({
+      path: path.join(directory, "robust-mobile-preview.png"),
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.screenshot({
+      path: path.join(directory, "robust-desktop-preview.png"),
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    const badChecks = structuredClone(robustRequest);
+    badChecks.check_world[0][0] += 5;
+    await page.locator("#calibration-input").fill(JSON.stringify(badChecks));
+    assert.equal(
+      await page.locator("#download-calibration").isDisabled(),
+      true,
+    );
+    assert.equal(await page.locator("#calibration-residuals li").count(), 0);
+    await page.locator("#calibrate").click();
+    assert.match(
+      await page.locator("#calibration-message").textContent(),
+      /hold.?out|check|核验/i,
+    );
+    assert.equal(await page.locator("#source").inputValue(), fittedSource);
+    assert.equal(
+      await page.locator("#calibration-diagnostics").isVisible(),
+      false,
+    );
+    assert.equal(
+      await page.locator("#download-calibration").isDisabled(),
+      true,
+    );
+    await page
+      .locator("#calibration-input")
+      .fill(JSON.stringify(robustRequest));
+    await page.locator("#calibrate").click();
+    assert.equal(
+      await page.locator("#download-calibration").isDisabled(),
+      false,
+    );
+    await page
+      .locator("#calibration-input")
+      .fill(JSON.stringify(robustRequest) + " ");
+    assert.equal(
+      await page.locator("#download-calibration").isDisabled(),
+      true,
+    );
+    assert.equal(await page.locator("#calibration-residuals li").count(), 0);
     await page.locator("#camera-example").click();
     await page.waitForFunction(() =>
       document.querySelector("#message").textContent.includes("已完成 15 帧"),
@@ -247,13 +462,6 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     // Save the selected prefix, then restore in a fresh handle and continue.
     const activeSource = await page.locator("#source").inputValue();
     const [, ...activeFrames] = activeSource.trimEnd().split(/\r?\n/);
-    const exportJson = async (selector, filename) => {
-      const pending = page.waitForEvent("download");
-      await page.locator(selector).click();
-      const download = await pending;
-      assert.equal(download.suggestedFilename(), filename);
-      return JSON.parse(fs.readFileSync(await download.path(), "utf8"));
-    };
     const baseline = await exportJson("#download", "moonground-results.json");
     await page.locator("#frame").evaluate((input) => {
       input.value = "2";
