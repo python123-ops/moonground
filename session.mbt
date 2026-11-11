@@ -11,10 +11,14 @@ pub using @types {
 pub using @calibration {type GroundCalibration}
 
 ///|
+pub using @camera {type CameraModel}
+
+///|
 pub using @motion {type MotionConfig, type MotionEstimator}
 
 ///|
-/// A finite, measured point in the same corrected pixel space as calibration.
+/// A finite measured pixel. With a camera model this uses raw image pixels;
+/// otherwise it uses the same rectified pixel space as calibration.
 pub(all) struct PixelObservation {
   track_id : Int32
   position : @types.Point2
@@ -52,6 +56,7 @@ pub struct MeasurementSession {
   calibration : @calibration.GroundCalibration
   estimator : @motion.MotionEstimator
   max_tracks : Int32
+  priv camera_model : @camera.CameraModel?
 }
 
 ///|
@@ -60,11 +65,30 @@ pub fn MeasurementSession::new(
   session_id : String,
   calibration : @calibration.GroundCalibration,
   config : @motion.MotionConfig,
+  camera? : @camera.CameraModel,
 ) -> MeasurementSession raise @types.GroundError {
   {
     calibration,
     estimator: @motion.MotionEstimator::new(session_id, config),
     max_tracks: config.max_tracks(),
+    camera_model: camera,
+  }
+}
+
+///|
+fn MeasurementSession::project_observation(
+  self : MeasurementSession,
+  observation : PixelObservation,
+) -> @calibration.GroundPoint raise @types.GroundError {
+  match self.camera_model {
+    Some(camera) =>
+      camera.project(
+        self.calibration,
+        observation.position,
+        observation.covariance,
+      )
+    None =>
+      self.calibration.project(observation.position, observation.covariance)
   }
 }
 
@@ -115,10 +139,7 @@ pub fn MeasurementSession::update(
   let projected : Array[@types.GroundObservation] = []
   let failures : Array[ProjectionFailure] = []
   for observation in observations {
-    let ground = self.calibration.project(
-      observation.position,
-      observation.covariance,
-    ) catch {
+    let ground = self.project_observation(observation) catch {
       error => {
         failures.push({
           track_id: observation.track_id,

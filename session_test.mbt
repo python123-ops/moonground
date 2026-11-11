@@ -1,6 +1,7 @@
 ///|
 fn make_test_session(
   max_tracks~ : Int32 = 1000,
+  camera? : @moonground.CameraModel,
 ) -> @moonground.MeasurementSession raise @types.GroundError {
   let roi : Array[@moonground.Point2] = [
     { x: -10.0, y: -10.0, },
@@ -17,6 +18,7 @@ fn make_test_session(
     "public-api",
     calibration,
     @moonground.MotionConfig::new(max_tracks~),
+    camera?,
   )
 }
 
@@ -171,4 +173,77 @@ test "projection-only frames still enforce global frame time" {
   }
   let valid = session.update(300000L, [pixel(1, 0.0, 0.0)])
   assert_eq(valid.motion.tracks[0].segment_id, "1")
+}
+
+///|
+test "camera correction precedes the fixed rectified ROI in a measurement session" {
+  let camera = @moonground.CameraModel::new(
+    fx=10.0,
+    fy=10.0,
+    cx=0.0,
+    cy=0.0,
+    k1=0.1,
+  )
+  let session = make_test_session(camera~)
+  let frame = session.update(0L, [
+    pixel(1, 10.870299, 0.0),
+    pixel(2, 100.0, 0.0),
+  ])
+  assert_eq(frame.motion.tracks.length(), 1)
+  assert_eq(frame.motion.tracks[0].track_id, 1)
+  guard frame.motion.tracks[0].position is Some(point) else {
+    fail("initial corrected position is absent")
+  }
+  assert_true((point.x - 9.9).abs() < 1.0e-8)
+  assert_eq(frame.projection_failures.length(), 1)
+  assert_eq(frame.projection_failures[0].track_id, 2)
+  assert_eq(session.active_track_count(), 1)
+}
+
+///|
+test "camera rejections cannot conceal duplicate identities or advance a failed frame" {
+  let camera = @moonground.CameraModel::new(
+    fx=10.0,
+    fy=20.0,
+    cx=0.0,
+    cy=0.0,
+    k1=0.1,
+  )
+  let session = make_test_session(camera~)
+  try session.update(0L, [pixel(1, 1000.0, 0.0), pixel(1, 1001.0, 0.0)]) catch {
+    _ => ()
+  } noraise {
+    _ => fail("camera failures concealed duplicate identities")
+  }
+  let first = session.update(0L, [pixel(1, 0.0, 0.0)])
+  assert_eq(first.motion.tracks[0].segment_id, "1")
+  let invalid_covariance : @moonground.PixelObservation = {
+    track_id: 2,
+    position: { x: 1000.0, y: 0.0, },
+    covariance: { xx: 1.0, xy: 2.0, yy: 1.0, },
+  }
+  try session.update(100000L, [pixel(1, 0.1, 0.0), invalid_covariance]) catch {
+    _ => ()
+  } noraise {
+    _ => fail("camera rejection concealed malformed covariance")
+  }
+  let retried = session.update(100000L, [pixel(1, 0.1, 0.0)])
+  assert_eq(retried.motion.tracks[0].accepted_count, 2)
+  assert_eq(session.active_track_count(), 1)
+}
+
+///|
+test "a committed camera-only rejection still consumes global frame time" {
+  let camera = @moonground.CameraModel::new(fx=10.0, fy=10.0, cx=0.0, cy=0.0)
+  let session = make_test_session(camera~)
+  let rejected = session.update(200000L, [pixel(1, 1000.0, 0.0)])
+  assert_eq(rejected.projection_failures.length(), 1)
+  assert_eq(rejected.motion.tracks.length(), 0)
+  try session.update(200000L, [pixel(1, 0.0, 0.0)]) catch {
+    _ => ()
+  } noraise {
+    _ => fail("camera-only rejection did not commit time")
+  }
+  let accepted = session.update(300000L, [pixel(1, 0.0, 0.0)])
+  assert_eq(accepted.motion.tracks[0].segment_id, "1")
 }

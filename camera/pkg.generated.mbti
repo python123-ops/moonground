@@ -1,0 +1,30 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/camera"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground/calibration",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct CameraModel {
+  // private fields
+} derive(@debug.Debug)
+pub fn CameraModel::jacobian(Self, @types.Point2) -> Array[Double] raise @types.GroundError
+pub fn CameraModel::max_normalized_radius(Self) -> Double
+pub fn CameraModel::new(fx~ : Double, fy~ : Double, cx~ : Double, cy~ : Double, k1? : Double, k2? : Double, p1? : Double, p2? : Double, k3? : Double, max_normalized_radius? : Double) -> Self raise @types.GroundError
+pub fn CameraModel::parameters(Self) -> Array[Double]
+pub fn CameraModel::project(Self, @calibration.GroundCalibration, @types.Point2, @types.Covariance2) -> @calibration.GroundPoint raise @types.GroundError
+pub fn CameraModel::project_jacobian(Self, @calibration.GroundCalibration, @types.Point2) -> Array[Double] raise @types.GroundError
+pub fn CameraModel::rectify(Self, @types.Point2) -> @types.Point2 raise @types.GroundError
+pub fn CameraModel::rectify_covariance(Self, @types.Point2, @types.Covariance2) -> @types.Covariance2 raise @types.GroundError
+pub fn CameraModel::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
