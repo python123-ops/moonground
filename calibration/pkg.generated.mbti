@@ -1,0 +1,49 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/calibration"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct CalibrationReport {
+  // private fields
+} derive(@debug.Debug)
+pub fn CalibrationReport::check_count(Self) -> Int32
+pub fn CalibrationReport::check_max_error_m(Self) -> Double?
+pub fn CalibrationReport::check_rms_m(Self) -> Double?
+pub fn CalibrationReport::fit_count(Self) -> Int32
+pub fn CalibrationReport::fit_max_error_m(Self) -> Double?
+pub fn CalibrationReport::fit_rms_m(Self) -> Double?
+pub fn CalibrationReport::roi_scale_bound_m_per_pixel(Self) -> Double
+pub fn CalibrationReport::to_repr(Self) -> @debug.Repr
+
+type ConvexRoi
+
+pub struct GroundCalibration {
+  // private fields
+}
+pub fn GroundCalibration::fit(Array[@types.Point2], Array[@types.Point2], Array[@types.Point2], Array[@types.Point2], Array[@types.Point2], max_fit_error_m? : Double, max_check_error_m? : Double, max_meters_per_pixel? : Double, ground_noise_floor_m? : Double) -> Self raise @types.GroundError
+pub fn GroundCalibration::from_homography(Array[Double], Array[@types.Point2], max_meters_per_pixel? : Double, ground_noise_floor_m? : Double) -> Self raise @types.GroundError
+pub fn GroundCalibration::jacobian(Self, @types.Point2) -> Array[Double] raise @types.GroundError
+pub fn GroundCalibration::map_point(Self, @types.Point2) -> @types.Point2 raise @types.GroundError
+pub fn GroundCalibration::matrix(Self) -> Array[Double]
+pub fn GroundCalibration::project(Self, @types.Point2, @types.Covariance2) -> GroundPoint raise @types.GroundError
+pub fn GroundCalibration::report(Self) -> CalibrationReport
+pub fn GroundCalibration::roi(Self) -> Array[@types.Point2]
+
+pub struct GroundPoint {
+  // private fields
+} derive(@debug.Debug)
+pub fn GroundPoint::covariance(Self) -> @types.Covariance2
+pub fn GroundPoint::position(Self) -> @types.Point2
+pub fn GroundPoint::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
