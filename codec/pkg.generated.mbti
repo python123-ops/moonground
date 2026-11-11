@@ -20,8 +20,12 @@ pub struct ReplaySession {
   ground : @motion.MotionEstimator?
   diagnostics : Bool
   max_tracks : Int32
+  // private fields
 }
+pub fn ReplaySession::checkpoint_json(Self) -> String raise @types.GroundError
+pub fn ReplaySession::from_checkpoint_json(String) -> Self raise @types.GroundError
 pub fn ReplaySession::new(String) -> Self raise @types.GroundError
+pub fn ReplaySession::open(String) -> Self raise @types.GroundError
 pub fn ReplaySession::process_line(Self, String) -> String raise @types.GroundError
 
 // Type aliases

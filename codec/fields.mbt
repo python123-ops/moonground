@@ -8,7 +8,12 @@ fn parse_document(source : String) -> Json raise @types.GroundError {
   if source.length() > 1048576 {
     raise invalid("JSON text exceeds 1048576 UTF-16 code units")
   }
-  @json.parse(source, max_nesting_depth=32, reject_duplicate_keys=true) catch {
+  @json.parse(
+    source,
+    max_nesting_depth=32,
+    reject_duplicate_keys=true,
+    preserve_number_repr=true,
+  ) catch {
     error => raise invalid("invalid JSON: " + error.to_string())
   }
 }
@@ -66,11 +71,18 @@ fn number(value : Json, label : String) -> Double raise @types.GroundError {
 
 ///|
 fn positive_int(value : Json, label : String) -> Int32 raise @types.GroundError {
-  let value = number(value, label)
-  if value < 1.0 || value > 2147483647.0 || value.to_int().to_double() != value {
+  let numeric = number(value, label)
+  if numeric < 1.0 ||
+    numeric > 2147483647.0 ||
+    numeric.to_int().to_double() != numeric {
     raise invalid(label + " must be a positive 32-bit integer")
   }
-  value.to_int()
+  let result = numeric.to_int()
+  if value is Number(_, repr=Some(source)) &&
+    !integer_token_equals(source, result) {
+    raise invalid(label + " must be a positive 32-bit integer")
+  }
+  result
 }
 
 ///|
