@@ -15,7 +15,8 @@ MoonBit 标准库和工具链由 MoonBit 安装环境提供，遵循其各自上
 - 独立消费者使用 `python123-ops/mbmot@0.3.0`（MIT，[上游](https://github.com/python123-ops/mbmot)）验证目标身份轨迹接入。它不是 MoonGround 核心测量包的运行依赖。
 - 同一消费者使用 `python123-ops/moondeteval@0.2.1`（Apache-2.0，[上游](https://github.com/python123-ops/moondeteval)）核对检测框与类别映射；它不参与物理运动估计。
 - `validation/verify.py` 使用外部安装的 NumPy 构建独立参考。NumPy 采用 BSD-3-Clause，[上游许可](https://github.com/numpy/numpy/blob/main/LICENSE.txt)。参考计算通过数组和线性代数独立实现，没有调用 MoonGround、moon-cv-geometry 或 moon-kalman。
-- 浏览器测试使用外部安装的 Playwright `1.62.1` 及其 Chromium。Playwright 采用 Apache-2.0，[上游](https://github.com/microsoft/playwright)；浏览器本身遵循其随附许可。测试依赖和浏览器二进制不进入库包。
+- 浏览器测试使用外部安装的 Playwright `1.62.1`，本地配套 Chromium 或 CI 预装 Google Chrome；浏览器版本随运行记录。Playwright 采用 Apache-2.0，[上游](https://github.com/microsoft/playwright)；浏览器本身遵循其随附许可。测试依赖和浏览器二进制不进入库包。
+- CI 中文截图使用 [Noto Sans CJK SC Regular](https://github.com/notofonts/noto-cjk/blob/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf)，遵循 [SIL Open Font License 1.1](https://github.com/notofonts/noto-cjk/blob/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/LICENSE)。工作流固定 blob `dc15562470b4f842321894787a0d066879ccff8b`，并校验 SHA-256 `2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b`；字体只安装在 CI runner，不放入源码仓库或库 ZIP。
 - `examples/video_demo.py` 运行时导入调用方指定 MBMOT 源目录中的 `tools/video_demo/detector.py`，使用其中未经修改的 `HogPersonDetector`；身份跟踪使用已发布 MBMOT `0.3.0` 的原生命令。检测器和预训练参数没有复制到 MoonGround 源码。OpenCV 通过外部 `opencv-python==4.10.0.84` 安装，OpenCV 4.10 采用 Apache-2.0，[许可说明](https://opencv.org/license/)；wheel 随附组件遵循其各自声明。
 
 ## ETH Walking Pedestrians 数据

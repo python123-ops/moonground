@@ -76,6 +76,18 @@ jobs:
         run: |
           google-chrome --version
           npm install --prefix _build/browser --no-save --package-lock=false --no-audit --no-fund playwright-core@1.62.1
+      - name: Install pinned Chinese font for browser previews
+        if: runner.os == 'Linux'
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          font_dir="$HOME/.local/share/fonts/moonground"
+          mkdir -p "$font_dir"
+          gh api repos/notofonts/noto-cjk/git/blobs/dc15562470b4f842321894787a0d066879ccff8b --jq .content | base64 --decode > "$font_dir/NotoSansCJKsc-Regular.otf"
+          printf '%s  %s\n' '2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b' "$font_dir/NotoSansCJKsc-Regular.otf" | sha256sum --check
+          fc-cache -f "$font_dir"
+          fc-match ':lang=zh' > _build/site/browser-font.txt
       - name: Exercise desktop, mobile and local-file browser flows
         if: runner.os == 'Linux'
         env:
@@ -95,4 +107,5 @@ jobs:
             _build/ci-package.json
             _build/site/*preview.png
             _build/site/browser-environment.json
+            _build/site/browser-font.txt
             _build/publish/*.zip
