@@ -1,0 +1,108 @@
+///|
+/// Runtime limits and continuous white-acceleration model parameters.
+pub struct MotionConfig {
+  max_gap_us : Int64
+  min_observations : Int32
+  min_span_us : Int64
+  acceleration_spectral_density : Double
+  initial_velocity_std : Double
+  innovation_gate : Double
+  max_tracks : Int32
+} derive(Debug)
+
+///|
+pub extend MotionConfig with @debug.Debug::{to_repr}
+
+///|
+/// Configure SI-unit filtering. q has units m²/s³; timestamps use microseconds.
+pub fn MotionConfig::new(
+  max_gap_us~ : Int64 = 500000L,
+  min_observations~ : Int32 = 3,
+  min_span_us~ : Int64 = 300000L,
+  q~ : Double = 1.0,
+  initial_velocity_std~ : Double = 5.0,
+  gate~ : Double = 9.210340371976184,
+  max_tracks~ : Int32 = 1000,
+) -> MotionConfig raise @types.GroundError {
+  if max_gap_us <= 0L ||
+    min_observations < 2 ||
+    min_span_us < 0L ||
+    max_tracks <= 0 {
+    raise @types.InvalidInput("invalid motion limits")
+  }
+  if !@types.is_finite(q) ||
+    q < 0.0 ||
+    !@types.is_finite(initial_velocity_std) ||
+    initial_velocity_std <= 0.0 ||
+    !@types.is_finite(initial_velocity_std * initial_velocity_std) ||
+    initial_velocity_std * initial_velocity_std <= 0.0 ||
+    !@types.is_finite(gate) ||
+    gate <= 0.0 {
+    raise @types.InvalidInput("invalid motion noise or innovation gate")
+  }
+  {
+    max_gap_us,
+    min_observations,
+    min_span_us,
+    acceleration_spectral_density: q,
+    initial_velocity_std,
+    innovation_gate: gate,
+    max_tracks,
+  }
+}
+
+///|
+pub fn MotionConfig::max_tracks(self : MotionConfig) -> Int32 {
+  self.max_tracks
+}
+
+///|
+/// Readiness refers to motion measurement, not availability of a filtered point.
+pub(all) enum MotionStatus {
+  Initializing
+  Ready
+  RejectedInnovation
+  NumericalFailure
+} derive(Debug, Eq)
+
+///|
+pub extend MotionStatus with @debug.Debug::{to_repr}
+
+///|
+pub extend MotionStatus with Eq::{equal, not_equal}
+
+///|
+/// A result for an observation submitted in this frame. Rejections carry no
+/// stale position or velocity. Path length is the accepted measured polyline,
+/// and does not claim the object's unobserved travelled distance.
+pub(all) struct TrackEstimate {
+  track_id : Int32
+  segment_id : String
+  status : MotionStatus
+  position : @types.Point2?
+  position_covariance : @types.Covariance2?
+  velocity : @types.Point2?
+  velocity_covariance : @types.Covariance2?
+  speed_mps : Double?
+  observed_path_length_m : Double
+  net_displacement_m : Double
+  accepted_count : Int32
+  last_accepted_timestamp_us : Int64
+  filtered_state : Array[Double]?
+  filtered_covariance : Array[Double]?
+} derive(Debug)
+
+///|
+pub extend TrackEstimate with @debug.Debug::{to_repr}
+
+///|
+/// Segment identifiers are exact Int64 decimal strings within session_id.
+pub(all) struct FrameResult {
+  session_id : String
+  timestamp_us : Int64
+  tracks : Array[TrackEstimate]
+  closed_segment_ids : Array[String]
+} derive(Debug)
+
+///|
+pub extend FrameResult with @debug.Debug::{to_repr}

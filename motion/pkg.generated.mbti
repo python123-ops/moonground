@@ -1,0 +1,79 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/motion"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct FrameResult {
+  session_id : String
+  timestamp_us : Int64
+  tracks : Array[TrackEstimate]
+  closed_segment_ids : Array[String]
+} derive(@debug.Debug)
+pub fn FrameResult::to_repr(Self) -> @debug.Repr
+
+pub struct MotionConfig {
+  max_gap_us : Int64
+  min_observations : Int32
+  min_span_us : Int64
+  acceleration_spectral_density : Double
+  initial_velocity_std : Double
+  innovation_gate : Double
+  max_tracks : Int32
+} derive(@debug.Debug)
+pub fn MotionConfig::max_tracks(Self) -> Int32
+pub fn MotionConfig::new(max_gap_us? : Int64, min_observations? : Int32, min_span_us? : Int64, q? : Double, initial_velocity_std? : Double, gate? : Double, max_tracks? : Int32) -> Self raise @types.GroundError
+pub fn MotionConfig::to_repr(Self) -> @debug.Repr
+
+pub struct MotionEstimator {
+  session_id : String
+  config : MotionConfig
+  mut tracks : Map[Int32, TrackState]
+  mut last_timestamp : Int64?
+  mut next_segment : Int64
+}
+pub fn MotionEstimator::active_track_count(Self) -> Int32
+pub fn MotionEstimator::last_timestamp_us(Self) -> Int64?
+pub fn MotionEstimator::new(String, MotionConfig) -> Self raise @types.GroundError
+pub fn MotionEstimator::update(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> FrameResult raise @types.GroundError
+
+pub(all) enum MotionStatus {
+  Initializing
+  Ready
+  RejectedInnovation
+  NumericalFailure
+} derive(Eq, @debug.Debug)
+pub fn MotionStatus::equal(Self, Self) -> Bool
+pub fn MotionStatus::not_equal(Self, Self) -> Bool
+pub fn MotionStatus::to_repr(Self) -> @debug.Repr
+
+pub(all) struct TrackEstimate {
+  track_id : Int32
+  segment_id : String
+  status : MotionStatus
+  position : @types.Point2?
+  position_covariance : @types.Covariance2?
+  velocity : @types.Point2?
+  velocity_covariance : @types.Covariance2?
+  speed_mps : Double?
+  observed_path_length_m : Double
+  net_displacement_m : Double
+  accepted_count : Int32
+  last_accepted_timestamp_us : Int64
+  filtered_state : Array[Double]?
+  filtered_covariance : Array[Double]?
+} derive(@debug.Debug)
+pub fn TrackEstimate::to_repr(Self) -> @debug.Repr
+
+type TrackState
+
+// Type aliases
+
+// Traits

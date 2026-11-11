@@ -1,0 +1,57 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground"
+
+import {
+  "python123-ops/moonground/calibration",
+  "python123-ops/moonground/motion",
+  "python123-ops/moonground/types",
+}
+
+// Values
+pub fn is_finite(Double) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct MeasurementFrame {
+  motion : @motion.FrameResult
+  projection_failures : Array[ProjectionFailure]
+}
+
+pub struct MeasurementSession {
+  calibration : @calibration.GroundCalibration
+  estimator : @motion.MotionEstimator
+  max_tracks : Int32
+}
+pub fn MeasurementSession::active_track_count(Self) -> Int32
+pub fn MeasurementSession::new(String, @calibration.GroundCalibration, @motion.MotionConfig) -> Self raise @types.GroundError
+pub fn MeasurementSession::update(Self, Int64, Array[PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> MeasurementFrame raise @types.GroundError
+
+pub(all) struct PixelObservation {
+  track_id : Int32
+  position : @types.Point2
+  covariance : @types.Covariance2
+}
+pub fn PixelObservation::new(Int32, @types.Point2, @types.Covariance2) -> Self raise @types.GroundError
+
+pub(all) struct ProjectionFailure {
+  track_id : Int32
+  reason : String
+}
+
+// Type aliases
+pub using @types {type Covariance2}
+
+pub using @calibration {type GroundCalibration}
+
+pub using @types {type GroundError}
+
+pub using @types {type GroundObservation}
+
+pub using @motion {type MotionConfig}
+
+pub using @motion {type MotionEstimator}
+
+pub using @types {type Point2}
+
+// Traits
