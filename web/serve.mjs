@@ -22,6 +22,7 @@ const assets = new Map([
   ["warehouse.ndjson", "application/x-ndjson; charset=utf-8"],
   ["distorted-camera.ndjson", "application/x-ndjson; charset=utf-8"],
   ["resume.ndjson", "application/x-ndjson; charset=utf-8"],
+  ["reframe.ndjson", "application/x-ndjson; charset=utf-8"],
   ["calibration.json", "application/json; charset=utf-8"],
   ["robust-calibration.json", "application/json; charset=utf-8"],
 ]);

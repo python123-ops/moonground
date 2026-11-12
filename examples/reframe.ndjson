@@ -1,0 +1,16 @@
+{"session_id":"synthetic-lens","mode":"pixel","diagnostics":false,"motion":{"max_gap_us":"500000","min_observations":3,"min_span_us":"200000","q":0.05,"initial_velocity_std":5,"gate":9.21034,"max_tracks":1000,"max_velocity_std_mps":0.2},"camera":{"fx":300,"fy":435,"cx":120,"cy":196,"k1":-0.12,"k2":0.015,"p1":0.001,"p2":-0.002,"k3":0.001,"max_normalized_radius":0.8},"calibration":{"matrix":[0.024999999999999998,0,1,0,0.016666666666666666,-0.26666666666666666,0,0,0.625],"roi":[[-40,16],[280,16],[280,376],[-40,376]],"max_meters_per_pixel":1,"ground_noise_floor_m":0.001}}
+{"timestamp_us":"0","observations":[{"track_id":7,"point":[50.4023927166367,166.2134293540696],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"100000","observations":[{"track_id":7,"point":[52.86080277806667,166.19921596212066],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"200000","observations":[{"track_id":7,"point":[55.32226201078373,166.1855432248466],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"300000","observations":[{"track_id":7,"point":[57.786653280247464,166.17241254622905],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"400000","observations":[{"track_id":7,"point":[60.25385887476543,166.15982527567047],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"500000","observations":[{"track_id":7,"point":[62.723760528587846,166.14778270817868],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"600000","observations":[{"track_id":7,"point":[65.19623944489717,166.1362860845441],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"700000","observations":[{"track_id":7,"point":[67.67117631869598,166.1253365915098],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"800000","observations":[{"track_id":7,"point":[70.14845135959811,166.11493536193404],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"900000","observations":[{"track_id":7,"point":[72.62794431452684,166.10508347494604],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"1000000","observations":[{"track_id":7,"point":[75.1095344903244,166.09578195609419],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"1100000","observations":[{"track_id":7,"point":[77.59310077627731,166.08703177748703],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"1200000","observations":[{"track_id":7,"point":[80.07852166656116,166.0788338579272],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"1300000","observations":[{"track_id":7,"point":[82.56567528260987,166.07118906303796],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}
+{"timestamp_us":"1400000","observations":[{"track_id":7,"point":[85.05443939541291,166.0640982053825],"covariance":[1,0.1875,1.6875]}],"lost":[],"removed":[]}

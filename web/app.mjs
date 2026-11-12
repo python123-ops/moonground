@@ -6,6 +6,7 @@ import {
   moonground_calibrate,
   moonground_checkpoint,
   moonground_restore,
+  moonground_reframe,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -24,6 +25,7 @@ let calibrationEdited = false;
 let calibrationRevision = 0;
 let calibrationResponse = null;
 let fittedCalibrationInput = "";
+let calibrationNeedsCoordinates = false;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -405,6 +407,7 @@ source.addEventListener("input", () => {
 });
 calibrationInput.addEventListener("input", () => {
   calibrationEdited = true;
+  calibrationNeedsCoordinates = false;
   calibrationRevision++;
   clearCalibrationResult();
   $("calibration-message").textContent = "标定输入已修改，请重新拟合。";
@@ -535,6 +538,58 @@ $("camera-example").addEventListener("click", () =>
   example("distorted-camera.ndjson"),
 );
 $("resume-example").addEventListener("click", () => example("resume.ndjson"));
+$("reframe-example").addEventListener("click", () => example("reframe.ndjson"));
+const transformFields = ["scale-x", "scale-y", "offset-x", "offset-y"];
+for (const id of transformFields) {
+  $(id).addEventListener("input", () => {
+    // Parameter edits do not change the loaded observations or their results.
+    // They do cancel older reads that could otherwise replace this draft.
+    revision++;
+  });
+}
+$("reframe").addEventListener("click", () => {
+  const current = ++revision;
+  try {
+    const values = transformFields.map((id) => $(id).valueAsNumber);
+    if (values.some((value) => !Number.isFinite(value)))
+      throw new Error("请填写有限的缩放倍率与偏移像素数。");
+    if (values[0] <= 0 || values[1] <= 0)
+      throw new Error("水平和垂直缩放倍率须大于 0。");
+    if (new TextEncoder().encode(source.value).length > 8 * 1024 * 1024)
+      throw new Error("浏览器输入上限为 8 MiB；更大的流请使用原生命令。");
+    const transformed = unpack(
+      moonground_reframe(
+        JSON.stringify({
+          ndjson: source.value,
+          transform: {
+            scale_x: values[0],
+            scale_y: values[1],
+            offset_x: values[2],
+            offset_y: values[3],
+          },
+        }),
+      ),
+    );
+    if (new TextEncoder().encode(transformed.ndjson).length > 8 * 1024 * 1024)
+      throw new Error(
+        "变换后的观测超过浏览器 8 MiB 输入上限，请使用原生命令。",
+      );
+    if (current !== revision) return;
+    invalidate();
+    source.value = transformed.ndjson;
+    calibrationEdited = true;
+    calibrationRevision++;
+    calibrationNeedsCoordinates = true;
+    clearCalibrationResult();
+    $("calibration-message").textContent =
+      "观测坐标已变换。原控制点保留为草稿；请先按新坐标编辑控制点与核验点，再拟合。";
+    message(
+      `已变换 ${transformed.frame_count} 帧观测及其相机、标定与像素协方差；请重新计算。地面测量状态与检查点历史保持。`,
+    );
+  } catch (error) {
+    if (current === revision) message(error.message, true);
+  }
+});
 $("robust-calibration-example").addEventListener("click", async () => {
   calibrationEdited = true;
   const current = ++calibrationRevision;
@@ -546,6 +601,7 @@ $("robust-calibration-example").addEventListener("click", async () => {
     const text = await response.text();
     if (current !== calibrationRevision) return;
     calibrationInput.value = text;
+    calibrationNeedsCoordinates = false;
     $("calibration-message").textContent =
       "已载入含误标控制点的合成示例；点击拟合后才替换当前标定。";
   } catch (error) {
@@ -558,6 +614,10 @@ $("calibrate").addEventListener("click", () => {
   calibrationRevision++;
   clearCalibrationResult();
   try {
+    if (calibrationNeedsCoordinates)
+      throw new Error(
+        "观测坐标已变换；请先按新坐标编辑控制点与核验点，再拟合。",
+      );
     const request = calibrationInput.value;
     const lines = source.value.trimEnd().split(/\r?\n/);
     const config = JSON.parse(lines[0]);

@@ -5,6 +5,26 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 
+function closeMeasurement(actual, expected, label = "measurement") {
+  if (typeof expected === "number") {
+    assert.ok(
+      Math.abs(actual - expected) <= 1e-8 * Math.max(1, Math.abs(expected)),
+      `${label}: ${actual} != ${expected}`,
+    );
+  } else if (Array.isArray(expected)) {
+    assert.equal(actual.length, expected.length, label);
+    expected.forEach((value, index) =>
+      closeMeasurement(actual[index], value, `${label}[${index}]`),
+    );
+  } else if (expected !== null && typeof expected === "object") {
+    assert.deepEqual(Object.keys(actual).sort(), Object.keys(expected).sort());
+    for (const [key, value] of Object.entries(expected))
+      closeMeasurement(actual[key], value, `${label}.${key}`);
+  } else {
+    assert.equal(actual, expected, label);
+  }
+}
+
 test("desktop, mobile, local import and stale-result prevention", async (t) => {
   const directory = path.resolve(__dirname, "..", "_build", "site");
   const server = http.createServer((request, response) => {
@@ -552,6 +572,193 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       "moonground-checkpoint.json",
     );
     assert.equal(continued.motion.tracks[0].accepted_count, 4);
+    // Transform a raw-camera sequence containing both explicit correlated
+    // covariance and the implicit two-pixel standard deviation.
+    const reframeLines = activeSource.trimEnd().split(/\r?\n/).map(JSON.parse);
+    delete reframeLines[1].observations[0].covariance;
+    const reframeSource = reframeLines.map(JSON.stringify).join("\n") + "\n";
+    await page.locator("#source").fill(reframeSource);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 15 帧"),
+    );
+    const reframeBaseline = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "2";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const reframeCheckpoint = await exportJson(
+      "#save-checkpoint",
+      "moonground-checkpoint.json",
+    );
+    await page.locator("#scale-x").fill("0");
+    assert.equal(await page.locator("#download").isDisabled(), false);
+    assert.equal(await page.locator("#counter").textContent(), "3 / 15");
+    await page.locator("#reframe").click();
+    assert.match(await page.locator("#message").textContent(), /须大于 0/);
+    assert.equal(await page.locator("#source").inputValue(), reframeSource);
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      reframeBaseline,
+    );
+    await page.locator("#scale-x").fill("0.5");
+    await page.locator("#scale-y").fill("0.75");
+    await page.locator("#offset-x").fill("-40");
+    await page.locator("#offset-y").fill("16");
+    const oldControls = await page.locator("#calibration-input").inputValue();
+    await page.locator("#reframe").click();
+    assert.match(await page.locator("#message").textContent(), /已变换 15 帧/);
+    assert.equal(await page.locator("#counter").textContent(), "0 / 0");
+    assert.equal(await page.locator("#download").isDisabled(), true);
+    const reframedSource = await page.locator("#source").inputValue();
+    const reframedLines = reframedSource
+      .trimEnd()
+      .split(/\r?\n/)
+      .map(JSON.parse);
+    assert.deepEqual(reframedLines[1].observations[0].covariance, [1, 0, 2.25]);
+    closeMeasurement(reframedLines[1].observations[0].point, [
+      reframeLines[1].observations[0].point[0] * 0.5 - 40,
+      reframeLines[1].observations[0].point[1] * 0.75 + 16,
+    ]);
+    assert.equal(reframedLines[0].camera.fx, reframeLines[0].camera.fx * 0.5);
+    assert.equal(reframedLines[0].camera.fy, reframeLines[0].camera.fy * 0.75);
+    assert.equal(
+      await page.locator("#calibration-input").inputValue(),
+      oldControls,
+    );
+    assert.equal(
+      await page.locator("#download-calibration").isDisabled(),
+      true,
+    );
+    assert.equal(await page.locator("#calibration-residuals li").count(), 0);
+    await page.locator("#calibrate").click();
+    assert.match(
+      await page.locator("#calibration-message").textContent(),
+      /按新坐标编辑/,
+    );
+    assert.equal(await page.locator("#source").inputValue(), reframedSource);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 15 帧"),
+    );
+    closeMeasurement(
+      (await exportJson("#download", "moonground-results.json")).frames,
+      reframeBaseline.frames,
+    );
+    // A checkpoint header changes coordinates while its accepted metric state,
+    // watermark, lifecycle counters and path remain byte-for-byte equivalent.
+    const resumeReframeSource =
+      JSON.stringify({ resume: reframeCheckpoint }) +
+      "\n" +
+      reframeLines.slice(4).map(JSON.stringify).join("\n") +
+      "\n";
+    await page.locator("#source").fill(resumeReframeSource);
+    await page.locator("#reframe").click();
+    assert.match(await page.locator("#message").textContent(), /已变换 12 帧/);
+    const reframedResume = await page.locator("#source").inputValue();
+    assert.deepEqual(
+      JSON.parse(reframedResume.split("\n")[0]).resume.motion,
+      reframeCheckpoint.motion,
+    );
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 12 帧"),
+    );
+    const reframedResumeResults = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    closeMeasurement(
+      reframedResumeResults.frames,
+      reframeBaseline.frames.slice(3),
+    );
+    // Finite but overflowing coordinates fail in the bridge before replacing
+    // the source, valid displayed results or their download.
+    await page.locator("#scale-x").fill("1e308");
+    await page.locator("#reframe").click();
+    assert.equal(await page.locator("#source").inputValue(), reframedResume);
+    assert.equal(await page.locator("#download").isDisabled(), false);
+    assert.equal(await page.locator("#message.error").count(), 1);
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      reframedResumeResults,
+    );
+    await page.locator("#scale-x").fill("0.5");
+    // A requested example that finishes after a parameter edit must yield to
+    // that newer edit. It must also yield to a newer observation draft.
+    for (const edit of ["parameter", "source"]) {
+      let releaseExample;
+      const gate = new Promise((resolve) => {
+        releaseExample = resolve;
+      });
+      let requested;
+      const pending = new Promise((resolve) => {
+        requested = resolve;
+      });
+      await page.route("**/reframe.ndjson", async (route) => {
+        requested();
+        await gate;
+        await route.fulfill({
+          contentType: "application/x-ndjson",
+          body: fs.readFileSync(
+            path.resolve(__dirname, "..", "examples", "reframe.ndjson"),
+            "utf8",
+          ),
+        });
+      });
+      try {
+        await page.locator("#reframe-example").click();
+        await pending;
+        const newerSource = edit === "source" ? reframeSource : reframedResume;
+        if (edit === "source") await page.locator("#source").fill(newerSource);
+        else await page.locator("#offset-y").fill("17");
+        const response = page.waitForResponse((value) =>
+          value.url().endsWith("/reframe.ndjson"),
+        );
+        releaseExample();
+        await (await response).finished();
+        await page.waitForLoadState("networkidle");
+        assert.equal(await page.locator("#source").inputValue(), newerSource);
+      } finally {
+        releaseExample();
+        await page.unroute("**/reframe.ndjson");
+      }
+    }
+    await page.locator("#reframe-example").click();
+    const exampleFrames =
+      fs
+        .readFileSync(
+          path.resolve(__dirname, "..", "examples", "reframe.ndjson"),
+          "utf8",
+        )
+        .trimEnd()
+        .split(/\r?\n/).length - 1;
+    await page.waitForFunction(
+      (count) =>
+        document
+          .querySelector("#message")
+          .textContent.includes(`已完成 ${count} 帧`),
+      exampleFrames,
+    );
+    assert.equal(await page.locator("#download").isDisabled(), false);
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.screenshot({
+      path: path.join(directory, "reframe-mobile-preview.png"),
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.screenshot({
+      path: path.join(directory, "reframe-desktop-preview.png"),
+      fullPage: true,
+    });
     await page
       .locator("#source")
       .fill(

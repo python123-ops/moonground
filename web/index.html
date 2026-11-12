@@ -24,6 +24,7 @@
               <button id="example" class="quiet">仓储示例</button>
               <button id="camera-example" class="quiet">镜头校正示例</button>
               <button id="resume-example" class="quiet">续接示例</button>
+              <button id="reframe-example" class="quiet">缩放裁剪示例</button>
             </div>
           </div>
           <p class="hint">
@@ -54,6 +55,49 @@
           <p class="hint">
             检查点保留测量状态；载入后在下一行添加更晚的观测继续计算。历史画面需保留原始观测。
           </p>
+          <p class="hint">
+            缩放或裁剪后，以 x′ = 水平倍率 × x + 水平偏移、y′ = 垂直倍率 × y +
+            垂直偏移换算像素坐标。相机、标定与观测噪声同步换算；不裁掉区域外的点。
+          </p>
+          <div class="actions" aria-label="像素坐标变换参数">
+            <label
+              >水平倍率
+              <input
+                id="scale-x"
+                type="number"
+                value="1"
+                step="any"
+                style="width: 6.5em"
+            /></label>
+            <label
+              >垂直倍率
+              <input
+                id="scale-y"
+                type="number"
+                value="1"
+                step="any"
+                style="width: 6.5em"
+            /></label>
+            <label
+              >水平偏移
+              <input
+                id="offset-x"
+                type="number"
+                value="0"
+                step="any"
+                style="width: 6.5em"
+            /></label>
+            <label
+              >垂直偏移
+              <input
+                id="offset-y"
+                type="number"
+                value="0"
+                step="any"
+                style="width: 6.5em"
+            /></label>
+            <button id="reframe" class="quiet">变换观测坐标</button>
+          </div>
           <details>
             <summary>从地面控制点生成标定</summary>
             <p class="hint">

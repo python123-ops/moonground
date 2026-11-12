@@ -19,6 +19,10 @@ copyFileSync(
   path.join(output, "resume.ndjson"),
 );
 copyFileSync(
+  path.join(root, "examples", "reframe.ndjson"),
+  path.join(output, "reframe.ndjson"),
+);
+copyFileSync(
   path.join(root, "examples", "distorted-camera.ndjson"),
   path.join(output, "distorted-camera.ndjson"),
 );
