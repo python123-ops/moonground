@@ -979,6 +979,358 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       await page.locator("#gate-events").textContent(),
       /负侧 → 正侧/,
     );
+    // Joint replay agrees with both existing consumers. Its selected-frame
+    // checkpoint must not silently use the batch-final counting state.
+    await page.locator("#source").fill(gateSource);
+    await page.locator("#gate-input").fill(JSON.stringify(gateConfiguration));
+    await page.locator("#analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#message")
+        .textContent.includes("已测量并统计 4 帧"),
+    );
+    const analysis = await exportJson(
+      "#download-analysis",
+      "moonground-analysis-results.json",
+    );
+    assert.deepEqual(
+      analysis.frames.map((f) => f.measurement),
+      gateBase.frames,
+    );
+    assert.deepEqual(
+      analysis.frames.map((f) => f.counting),
+      gateBundle.frames,
+    );
+    assert.deepEqual(analysis.checkpoint.counting, gateBundle.checkpoint);
+    assert.equal(analysis.checkpoint.format, "moonground.analysis");
+    assert.equal(
+      analysis.checkpoint.measurement.motion.last_timestamp_us,
+      "300000",
+    );
+    assert.equal(
+      analysis.checkpoint.counting.state.last_timestamp_us,
+      "300000",
+    );
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "1";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const jointCheckpoint = await exportJson(
+      "#save-analysis-checkpoint",
+      "moonground-analysis-checkpoint.json",
+    );
+    assert.equal(
+      jointCheckpoint.measurement.motion.last_timestamp_us,
+      "100000",
+    );
+    assert.equal(jointCheckpoint.counting.state.last_timestamp_us, "100000");
+    assert.equal(
+      jointCheckpoint.measurement.motion.tracks[0].accepted_count,
+      2,
+    );
+    assert.deepEqual(
+      jointCheckpoint.counting.state.counts,
+      gateBundle.frames[1].counts,
+    );
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "0";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const earlierJointCheckpoint = await exportJson(
+      "#save-analysis-checkpoint",
+      "moonground-analysis-checkpoint.json",
+    );
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "1";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.screenshot({
+      path: path.join(directory, "analysis-mobile-preview.png"),
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.screenshot({
+      path: path.join(directory, "analysis-desktop-preview.png"),
+      fullPage: true,
+    });
+    // Complete validation precedes either editor replacement, including a
+    // mismatch that is individually valid as two independent checkpoints.
+    const originalAnalysisSource = await page.locator("#source").inputValue();
+    const originalAnalysisGates = await page
+      .locator("#gate-input")
+      .inputValue();
+    for (const bad of [
+      { ...jointCheckpoint, checkpoint_version: "999" },
+      {
+        ...jointCheckpoint,
+        counting: {
+          ...jointCheckpoint.counting,
+          state: { ...jointCheckpoint.counting.state, last_timestamp_us: "0" },
+        },
+      },
+    ]) {
+      await page.locator("#analysis-checkpoint-file").setInputFiles({
+        name: "invalid-analysis.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(bad)),
+      });
+      await page.waitForFunction(() =>
+        document.querySelector("#analysis-message").classList.contains("error"),
+      );
+      assert.equal(
+        await page.locator("#source").inputValue(),
+        originalAnalysisSource,
+      );
+      assert.equal(
+        await page.locator("#gate-input").inputValue(),
+        originalAnalysisGates,
+      );
+      assert.deepEqual(
+        await exportJson(
+          "#download-analysis",
+          "moonground-analysis-results.json",
+        ),
+        analysis,
+      );
+      assert.deepEqual(
+        (await exportJson("#download", "moonground-results.json")).frames,
+        gateBase.frames,
+      );
+    }
+    await page.locator("#analysis-checkpoint-file").setInputFiles({
+      name: "analysis.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(jointCheckpoint)),
+    });
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#message")
+        .textContent.includes("已载入完整分析检查点"),
+    );
+    assert.equal(await page.locator("#download-analysis").isDisabled(), true);
+    assert.equal(await page.locator("#counter").textContent(), "0 / 0");
+    const laterGateFrames =
+      gateSource.trimEnd().split(/\r?\n/).slice(3).join("\n") + "\n";
+    await page
+      .locator("#source")
+      .fill((await page.locator("#source").inputValue()) + laterGateFrames);
+    await page.locator("#analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#message")
+        .textContent.includes("已测量并统计 2 帧"),
+    );
+    const resumedAnalysis = await exportJson(
+      "#download-analysis",
+      "moonground-analysis-results.json",
+    );
+    assert.deepEqual(resumedAnalysis.frames, analysis.frames.slice(2));
+    assert.deepEqual(resumedAnalysis.checkpoint, analysis.checkpoint);
+    // Independent consumers can run from different initial watermarks. The
+    // joint entry rejects that pairing and preserves both displayed reports.
+    await page
+      .locator("#gate-input")
+      .fill(JSON.stringify({ resume: earlierJointCheckpoint.counting }));
+    await page.locator("#analyze-gates").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#gate-message")
+        .textContent.includes("已统计 2 帧"),
+    );
+    const independentBase = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    const independentGates = await exportJson(
+      "#download-gates",
+      "moonground-gate-results.json",
+    );
+    await page.locator("#analyze").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#analysis-message").classList.contains("error"),
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      independentBase,
+    );
+    assert.deepEqual(
+      await exportJson("#download-gates", "moonground-gate-results.json"),
+      independentGates,
+    );
+    // Both configuration and frame tokens remain raw until MoonBit sees them.
+    const resumedBase = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    const fractionalGate = JSON.stringify(gateConfiguration).replace(
+      '"max_tracks":10',
+      '"max_tracks":10.0000000000000001',
+    );
+    await page.locator("#gate-input").fill(fractionalGate);
+    assert.equal(await page.locator("#download-analysis").isDisabled(), true);
+    assert.equal(await page.locator("#download").isDisabled(), false);
+    await page.locator("#analyze").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#analysis-message").classList.contains("error"),
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      resumedBase,
+    );
+    await page
+      .locator("#source")
+      .fill(
+        gateSource.replace('"track_id":1', '"track_id":1.0000000000000001'),
+      );
+    await page.locator("#gate-input").fill(JSON.stringify(gateConfiguration));
+    await page.locator("#analyze").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#analysis-message").classList.contains("error"),
+    );
+    assert.equal(await page.locator("#counter").textContent(), "0 / 0");
+    assert.equal(await page.locator("#download-analysis").isDisabled(), true);
+    // Counter overflow fails the joint operation without replacing an already
+    // successful measurement-only replay of exactly the same source.
+    const overflowing = structuredClone(jointCheckpoint);
+    overflowing.counting.state.counts[0].positive_to_negative =
+      "9223372036854775807";
+    const overflowSource =
+      JSON.stringify({ resume: overflowing.measurement }) +
+      "\n" +
+      laterGateFrames;
+    await page.locator("#source").fill(overflowSource);
+    await page
+      .locator("#gate-input")
+      .fill(JSON.stringify({ resume: overflowing.counting }));
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 2 帧"),
+    );
+    const overflowBase = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    await page.locator("#analyze").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#analysis-message").classList.contains("error"),
+    );
+    assert.match(
+      await page.locator("#analysis-message").textContent(),
+      /counter exhausted/,
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      overflowBase,
+    );
+    assert.equal(await page.locator("#download-analysis").isDisabled(), true);
+    const extremeSource =
+      '{"session_id":"geometry-failure","mode":"ground"}\n{"timestamp_us":"0","observations":[{"track_id":1,"point":[-1e308,0],"covariance":[1,0,1]}]}\n';
+    await page.locator("#source").fill(extremeSource);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 1 帧"),
+    );
+    const extremeBase = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    await page.locator("#gate-input").fill(
+      JSON.stringify({
+        session_id: "geometry-failure",
+        gates: [
+          {
+            gate_id: "far",
+            start_m: [1e308, 0],
+            end_m: [1e308, 1],
+            deadband_m: 0,
+          },
+        ],
+      }),
+    );
+    await page.locator("#analyze").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#analysis-message").classList.contains("error"),
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      extremeBase,
+    );
+    // Preparation yields to either editor, cancelling the old pending result.
+    for (const edit of ["source", "gate"]) {
+      await page.locator("#source").fill(gateSource);
+      await page.locator("#gate-input").fill(JSON.stringify(gateConfiguration));
+      await page.locator("#analyze").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#message")
+          .textContent.includes("已测量并统计 4 帧"),
+      );
+      await page.evaluate(() => {
+        const original = window.setTimeout;
+        window.setTimeout = function (callback, delay, ...args) {
+          if (delay === 0) {
+            window.setTimeout = original;
+            window.releaseAnalysisPreparation = () => callback(...args);
+            return -1;
+          }
+          return original.call(window, callback, delay, ...args);
+        };
+      });
+      await page.locator("#analyze").click();
+      await page.waitForFunction(
+        () => typeof window.releaseAnalysisPreparation === "function",
+      );
+      if (edit === "source")
+        await page.locator("#source").fill(gateSource + " ");
+      else
+        await page
+          .locator("#gate-input")
+          .fill(JSON.stringify(gateConfiguration, null, 2));
+      await page.evaluate(() => {
+        window.releaseAnalysisPreparation();
+        delete window.releaseAnalysisPreparation;
+      });
+      await page.waitForFunction(
+        () => !document.querySelector("#analyze").disabled,
+      );
+      assert.equal(await page.locator("#download-analysis").isDisabled(), true);
+      assert.equal(
+        await page.locator("#save-analysis-checkpoint").isDisabled(),
+        true,
+      );
+      assert.equal(
+        await page.locator("#download").isDisabled(),
+        edit === "source",
+      );
+    }
+    await page.locator("#source").fill(activeSource);
+    await page.locator("#gate-input").fill(
+      JSON.stringify({
+        ...gateConfiguration,
+        session_id: JSON.parse(activeSource.split("\n")[0]).session_id,
+      }),
+    );
+    await page.locator("#analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#message")
+        .textContent.includes("已测量并统计 15 帧"),
+    );
+    const pixelAnalysis = await exportJson(
+      "#download-analysis",
+      "moonground-analysis-results.json",
+    );
+    assert.deepEqual(
+      pixelAnalysis.frames.map((f) => f.measurement),
+      baseline.frames,
+    );
     await page
       .locator("#source")
       .fill(

@@ -8,6 +8,7 @@ import {
   moonground_restore,
   moonground_reframe,
   moonground_gates,
+  moonground_analysis,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -35,6 +36,11 @@ let gateReport = null;
 let gateResponse = null;
 let gateDefinitions = [];
 let gatesBusy = false;
+let analysisBusy = false;
+let analysisCheckpointBusy = false;
+let analysisResponse = null;
+let analysisHeader = null;
+let analysisGateInput = "";
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -81,6 +87,7 @@ function gateMessage(text, error = false) {
 
 function clearGateResult() {
   gateRevision++;
+  clearAnalysisResult();
   gateReport = null;
   gateResponse = null;
   gateDefinitions = [];
@@ -93,6 +100,55 @@ function clearGateResult() {
       ? "通道配置已修改，请重新统计。"
       : "先计算观测，再统计过线。",
   );
+}
+
+function analysisMessage(text, error = false) {
+  $("analysis-message").textContent = text;
+  $("analysis-message").classList.toggle("error", error);
+}
+
+function clearAnalysisResult() {
+  analysisResponse = null;
+  analysisHeader = null;
+  analysisGateInput = "";
+  $("download-analysis").disabled = true;
+  $("save-analysis-checkpoint").disabled = true;
+  analysisMessage("一次计算测量与过线，保存同一帧的完整检查点。");
+}
+
+function analysisIsCurrent() {
+  return (
+    analysisResponse !== null &&
+    source.value === loadedSource &&
+    gateInput.value === analysisGateInput
+  );
+}
+
+function observationLines(input) {
+  const lines = input.split("\n");
+  if (lines.at(-1) === "") lines.pop();
+  return lines;
+}
+
+function analysisRequest(header, observations) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(header).length + encoder.encode(observations).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器联合输入上限为 8 MiB；更大的流请使用原生命令。");
+  const request = JSON.stringify({ source: header, observations });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("联合请求超过 16 Mi 字符上限，请使用原生命令。");
+  return request;
+}
+
+function analysisReport(request) {
+  const response = moonground_analysis(request);
+  const report = unpack(response);
+  if (new TextEncoder().encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器联合结果超过 8 MiB；请使用原生命令保存。");
+  return { response, report };
 }
 
 function renderGates(index) {
@@ -513,6 +569,156 @@ gateInput.addEventListener("input", () => {
   gateEdited = true;
   clearGateResult();
   draw();
+});
+$("analyze").addEventListener("click", async () => {
+  if (analysisBusy) return;
+  const current = ++revision,
+    currentGate = ++gateRevision,
+    input = source.value,
+    gates = gateInput.value;
+  analysisBusy = true;
+  $("analyze").disabled = true;
+  analysisMessage("正在测量并统计过线…");
+  try {
+    const lines = observationLines(input);
+    if (lines.length < 2 || lines.length > 5001)
+      throw new Error("请输入配置及 1—5000 帧观测。");
+    // Both source documents remain strings until MoonBit validates their raw
+    // numeric tokens, duplicate keys and checkpoint relationship.
+    const header = JSON.stringify({ measurement: lines[0], counting: gates });
+    const request = analysisRequest(header, lines.slice(1).join("\n") + "\n");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (current !== revision || currentGate !== gateRevision) return;
+    const { response, report } = analysisReport(request);
+    if (current !== revision || currentGate !== gateRevision) return;
+    stop();
+    configuration = report.checkpoint.measurement.configuration;
+    results = report.frames.map((frame) => frame.measurement);
+    measurementLines = results.map((frame) => JSON.stringify(frame));
+    gateReport = {
+      frames: report.frames.map((frame) => frame.counting),
+      checkpoint: report.checkpoint.counting,
+    };
+    gateDefinitions = report.checkpoint.counting.configuration.gates;
+    gateResponse = JSON.stringify(gateReport);
+    loadedSource = input;
+    analysisHeader = header;
+    analysisGateInput = gates;
+    analysisResponse = response;
+    slider.max = String(results.length - 1);
+    slider.value = "0";
+    slider.disabled = false;
+    $("play").disabled = false;
+    $("download").disabled = false;
+    $("save-checkpoint").disabled = checkpointBusy;
+    $("analyze-gates").disabled = gatesBusy;
+    $("download-gates").disabled = false;
+    $("download-analysis").disabled = false;
+    $("save-analysis-checkpoint").disabled = analysisCheckpointBusy;
+    const events = gateReport.frames.reduce(
+      (total, frame) => total + frame.crossings.length,
+      0,
+    );
+    message(`已测量并统计 ${results.length} 帧。测量与过线在同一帧提交。`);
+    gateMessage(`已统计 ${results.length} 帧、${events} 次过线。`);
+    analysisMessage(
+      `联合状态已同步至 ${report.checkpoint.measurement.motion.last_timestamp_us} μs。完整结果含末帧检查点；当前帧检查点随回放选择保存。`,
+    );
+    render();
+  } catch (error) {
+    if (current === revision && currentGate === gateRevision)
+      analysisMessage(error.message, true);
+  } finally {
+    analysisBusy = false;
+    $("analyze").disabled = false;
+  }
+});
+$("download-analysis").addEventListener("click", () => {
+  if (!analysisIsCurrent()) return;
+  saveFile(analysisResponse + "\n", "moonground-analysis-results.json");
+});
+$("save-analysis-checkpoint").addEventListener("click", async () => {
+  if (analysisCheckpointBusy || !analysisIsCurrent()) return;
+  const current = revision,
+    currentGate = gateRevision,
+    selected = slider.value;
+  analysisCheckpointBusy = true;
+  $("save-analysis-checkpoint").disabled = true;
+  stop();
+  try {
+    const lines = observationLines(loadedSource);
+    const observations = lines.slice(1, Number(selected) + 2).join("\n") + "\n";
+    const request = analysisRequest(analysisHeader, observations);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (current !== revision || currentGate !== gateRevision) return;
+    const { report } = analysisReport(request);
+    if (
+      current !== revision ||
+      currentGate !== gateRevision ||
+      slider.value !== selected
+    )
+      return;
+    saveFile(
+      JSON.stringify(report.checkpoint) + "\n",
+      "moonground-analysis-checkpoint.json",
+    );
+    analysisMessage(
+      `已保存第 ${Number(selected) + 1} 帧的完整检查点，测量与过线时间均为 ${report.checkpoint.measurement.motion.last_timestamp_us} μs。`,
+    );
+  } catch (error) {
+    if (current === revision && currentGate === gateRevision)
+      analysisMessage(error.message, true);
+  } finally {
+    analysisCheckpointBusy = false;
+    $("save-analysis-checkpoint").disabled = !analysisIsCurrent();
+  }
+});
+$("analysis-checkpoint-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const current = ++revision,
+    currentGate = ++gateRevision;
+  try {
+    if (file.size > 8 * 1024 * 1024)
+      throw new Error("浏览器完整检查点文件上限为 8 MiB。");
+    const text = await file.text();
+    if (current !== revision || currentGate !== gateRevision) return;
+    // Validate the complete raw checkpoint before deriving either old-format
+    // resume input. No partial import can replace the displayed state.
+    const { report } = analysisReport(
+      analysisRequest('{"resume":' + text + "}", ""),
+    );
+    const checkpoint = report.checkpoint;
+    const nextInput = JSON.stringify({ resume: checkpoint.measurement }) + "\n";
+    const nextGates = JSON.stringify({ resume: checkpoint.counting }, null, 2);
+    analysisRequest(
+      JSON.stringify({
+        measurement: nextInput.slice(0, -1),
+        counting: nextGates,
+      }),
+      "",
+    );
+    if (current !== revision || currentGate !== gateRevision) return;
+    invalidate();
+    source.value = nextInput;
+    gateInput.value = nextGates;
+    gateEdited = true;
+    configuration = checkpoint.measurement.configuration;
+    gateDefinitions = checkpoint.counting.configuration.gates;
+    draw();
+    const last = checkpoint.measurement.motion.last_timestamp_us;
+    message(
+      `已载入完整分析检查点。在下一行添加晚于 ${last ?? "起点"} μs 的观测。`,
+    );
+    analysisMessage(
+      `测量与过线已共同恢复至 ${last ?? "尚无观测"} μs；点击“测量并统计”继续。`,
+    );
+  } catch (error) {
+    if (current === revision && currentGate === gateRevision)
+      analysisMessage(error.message, true);
+  } finally {
+    event.target.value = "";
+  }
 });
 $("analyze-gates").addEventListener("click", async () => {
   if (gatesBusy || !results.length || source.value !== loadedSource) return;

@@ -155,7 +155,8 @@ button:disabled {
 #message.error {
   color: #ad4335;
 }
-#gate-message.error {
+#gate-message.error,
+#analysis-message.error {
   color: #ad4335;
 }
 .gate-layout {

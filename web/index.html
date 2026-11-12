@@ -46,10 +46,13 @@
           <p id="message" role="status" aria-live="polite">正在加载示例…</p>
           <div class="actions">
             <button id="save-checkpoint" class="quiet" disabled>
-              保存当前帧检查点
+              保存当前帧测量检查点
             </button>
             <label class="file-button"
-              >载入检查点<input id="checkpoint-file" type="file" accept=".json"
+              >载入测量检查点<input
+                id="checkpoint-file"
+                type="file"
+                accept=".json"
             /></label>
           </div>
           <p class="hint">
@@ -169,7 +172,8 @@
           通道由米制端点 A→B
           定义，左侧为正侧。死区内保留参考点；最近的同侧带外点与新的异侧带外点连线穿过有限通道时计数。缺测、拒绝或片段中断会清除参考点。
           时间保留为两个观测时刻及区间比例，不补全未观测路径。
-          下载保存整批末帧的通道检查点；配对恢复时，请先把回放移至末帧，再保存测量检查点并核对两者的最后帧时间一致。
+          “测量并统计”同步处理原始观测与通道，任一侧失败时均不提交该帧。
+          完整检查点保存所选帧的两侧状态，可直接导入继续。原有“统计过线”仍可单独处理已计算的测量。
         </p>
         <div class="gate-layout">
           <div>
@@ -178,13 +182,36 @@
             >
             <textarea id="gate-input" spellcheck="false"></textarea>
             <div class="actions">
+              <button id="analyze">测量并统计</button>
               <button id="analyze-gates" disabled>统计过线</button>
               <button id="download-gates" class="quiet" disabled>
-                下载过线结果与检查点
+                下载过线结果与末帧通道检查点
               </button>
             </div>
             <p id="gate-message" role="status" aria-live="polite" class="hint">
               先计算观测，再统计过线。
+            </p>
+            <div class="actions">
+              <button id="download-analysis" class="quiet" disabled>
+                下载完整分析结果
+              </button>
+              <button id="save-analysis-checkpoint" class="quiet" disabled>
+                保存当前帧完整检查点
+              </button>
+              <label class="file-button"
+                >载入完整检查点<input
+                  id="analysis-checkpoint-file"
+                  type="file"
+                  accept=".json"
+              /></label>
+            </div>
+            <p
+              id="analysis-message"
+              role="status"
+              aria-live="polite"
+              class="hint"
+            >
+              一次计算测量与过线，保存同一帧的完整检查点。
             </p>
           </div>
           <div>
