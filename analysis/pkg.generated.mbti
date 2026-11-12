@@ -1,0 +1,50 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/analysis"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground",
+  "python123-ops/moonground/events",
+  "python123-ops/moonground/motion",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct AnalysisCheckpoint {
+  version : Int32
+  measurement : AnalysisMeasurement
+  counting : @events.GateCheckpoint
+} derive(@debug.Debug)
+pub fn AnalysisCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct AnalysisFrame {
+  measurement : @moonground.MeasurementFrame
+  counting : @events.GateFrame
+} derive(@debug.Debug)
+pub fn AnalysisFrame::to_repr(Self) -> @debug.Repr
+
+pub(all) enum AnalysisMeasurement {
+  Pixel(@moonground.MeasurementCheckpoint)
+  Ground(@motion.MotionCheckpoint)
+} derive(@debug.Debug)
+pub fn AnalysisMeasurement::to_repr(Self) -> @debug.Repr
+
+pub struct AnalysisSession {
+  // private fields
+}
+pub fn AnalysisSession::checkpoint(Self) -> AnalysisCheckpoint
+pub fn AnalysisSession::fork(Self) -> Self
+pub fn AnalysisSession::from_checkpoint(AnalysisCheckpoint) -> Self raise @types.GroundError
+pub fn AnalysisSession::from_ground(@motion.MotionEstimator, @events.GateCounter) -> Self raise @types.GroundError
+pub fn AnalysisSession::from_pixel(@moonground.MeasurementSession, @events.GateCounter) -> Self raise @types.GroundError
+pub fn AnalysisSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn AnalysisSession::update_ground(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> AnalysisFrame raise @types.GroundError
+pub fn AnalysisSession::update_pixel(Self, Int64, Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> AnalysisFrame raise @types.GroundError
+
+// Type aliases
+
+// Traits

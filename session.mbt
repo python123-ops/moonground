@@ -46,14 +46,20 @@ pub fn PixelObservation::new(
 pub(all) struct ProjectionFailure {
   track_id : Int32
   reason : String
-}
+} derive(Debug)
+
+///|
+pub extend ProjectionFailure with @debug.Debug::{to_repr}
 
 ///|
 /// Motion results and per-target projection rejections for a committed frame.
 pub(all) struct MeasurementFrame {
   motion : @motion.FrameResult
   projection_failures : Array[ProjectionFailure]
-}
+} derive(Debug)
+
+///|
+pub extend MeasurementFrame with @debug.Debug::{to_repr}
 
 ///|
 /// One fixed calibration and one independently named object-measurement stream.

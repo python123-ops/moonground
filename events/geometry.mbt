@@ -55,7 +55,9 @@ fn LineGate::distance(
 }
 
 ///|
-fn LineGate::side(
+/// Classify a metric point: -1 on the right, 1 on the left, and 0 inside
+/// the closed deadband. Unrepresentable geometry raises a typed error.
+pub fn LineGate::side(
   self : LineGate,
   point : @types.Point2,
 ) -> Int32 raise @types.GroundError {

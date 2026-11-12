@@ -55,6 +55,7 @@ pub struct MotionEstimator {
 }
 pub fn MotionEstimator::active_track_count(Self) -> Int32
 pub fn MotionEstimator::checkpoint(Self) -> MotionCheckpoint
+pub fn MotionEstimator::fork(Self) -> Self
 pub fn MotionEstimator::from_checkpoint(MotionCheckpoint) -> Self raise @types.GroundError
 pub fn MotionEstimator::last_timestamp_us(Self) -> Int64?
 pub fn MotionEstimator::new(String, MotionConfig) -> Self raise @types.GroundError

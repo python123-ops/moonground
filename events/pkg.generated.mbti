@@ -56,6 +56,7 @@ pub struct GateCounter {
   // private fields
 }
 pub fn GateCounter::checkpoint(Self) -> GateCheckpoint
+pub fn GateCounter::fork(Self) -> Self
 pub fn GateCounter::from_checkpoint(GateCheckpoint) -> Self raise @types.GroundError
 pub fn GateCounter::new(String, Array[LineGate], GateConfig) -> Self raise @types.GroundError
 pub fn GateCounter::update(Self, @motion.FrameResult) -> GateFrame raise @types.GroundError
@@ -97,6 +98,7 @@ pub struct LineGate {
   // private fields
 } derive(@debug.Debug)
 pub fn LineGate::new(String, @types.Point2, @types.Point2, deadband_m? : Double) -> Self raise @types.GroundError
+pub fn LineGate::side(Self, @types.Point2) -> Int32 raise @types.GroundError
 pub fn LineGate::to_repr(Self) -> @debug.Repr
 
 // Type aliases

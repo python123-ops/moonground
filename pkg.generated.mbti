@@ -2,6 +2,7 @@
 package "python123-ops/moonground"
 
 import {
+  "moonbitlang/core/debug",
   "python123-ops/moonground/calibration",
   "python123-ops/moonground/camera",
   "python123-ops/moonground/motion",
@@ -19,11 +20,14 @@ pub(all) struct MeasurementCheckpoint {
   camera : @camera.CameraModel?
   motion : @motion.MotionCheckpoint
 }
+pub fn MeasurementCheckpoint::to_repr(Self) -> @debug.Repr
+pub impl @debug.Debug for MeasurementCheckpoint
 
 pub(all) struct MeasurementFrame {
   motion : @motion.FrameResult
   projection_failures : Array[ProjectionFailure]
-}
+} derive(@debug.Debug)
+pub fn MeasurementFrame::to_repr(Self) -> @debug.Repr
 
 pub struct MeasurementSession {
   calibration : @calibration.GroundCalibration
@@ -33,6 +37,7 @@ pub struct MeasurementSession {
 }
 pub fn MeasurementSession::active_track_count(Self) -> Int32
 pub fn MeasurementSession::checkpoint(Self) -> MeasurementCheckpoint
+pub fn MeasurementSession::fork(Self) -> Self
 pub fn MeasurementSession::from_checkpoint(MeasurementCheckpoint) -> Self raise @types.GroundError
 pub fn MeasurementSession::new(String, @calibration.GroundCalibration, @motion.MotionConfig, camera? : @camera.CameraModel) -> Self raise @types.GroundError
 pub fn MeasurementSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
@@ -49,7 +54,8 @@ pub fn PixelObservation::reframed(Self, @types.PixelTransform) -> Self raise @ty
 pub(all) struct ProjectionFailure {
   track_id : Int32
   reason : String
-}
+} derive(@debug.Debug)
+pub fn ProjectionFailure::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 pub using @camera {type CameraModel}

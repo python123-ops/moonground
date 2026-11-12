@@ -8,6 +8,22 @@ pub(all) struct MeasurementCheckpoint {
 }
 
 ///|
+pub impl @debug.Debug for MeasurementCheckpoint with fn to_repr(self) {
+  @debug.Repr::Repr(
+    (
+      self.calibration.matrix(),
+      self.calibration.roi(),
+      self.calibration.report(),
+      self.camera,
+      self.motion,
+    ),
+  )
+}
+
+///|
+pub extend MeasurementCheckpoint with @debug.Debug::{to_repr}
+
+///|
 /// Capture the exact calibration, camera and accepted motion state.
 pub fn MeasurementSession::checkpoint(
   self : MeasurementSession,
