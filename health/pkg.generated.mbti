@@ -1,0 +1,118 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/health"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground/calibration",
+  "python123-ops/moonground/camera",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) enum CalibrationEvidence {
+  Insufficient
+  WithinTolerance
+  BeyondTolerance
+} derive(Eq, @debug.Debug)
+pub fn CalibrationEvidence::equal(Self, Self) -> Bool
+pub fn CalibrationEvidence::not_equal(Self, Self) -> Bool
+pub fn CalibrationEvidence::to_repr(Self) -> @debug.Repr
+
+pub struct CalibrationMonitor {
+  // private fields
+}
+pub fn CalibrationMonitor::checkpoint(Self) -> HealthCheckpoint
+pub fn CalibrationMonitor::fork(Self) -> Self
+pub fn CalibrationMonitor::from_checkpoint(HealthCheckpoint) -> Self raise @types.GroundError
+pub fn CalibrationMonitor::new(@calibration.GroundCalibration, Array[KnownLandmark], HealthConfig, camera? : @camera.CameraModel) -> Self raise @types.GroundError
+pub fn CalibrationMonitor::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn CalibrationMonitor::update(Self, Int64, Array[LandmarkObservation]) -> HealthReport raise @types.GroundError
+
+pub(all) struct HealthCheckpoint {
+  version : Int32
+  calibration : @calibration.GroundCalibration
+  camera : @camera.CameraModel?
+  landmarks : Array[KnownLandmark]
+  config : HealthConfig
+  last_timestamp_us : Int64?
+  streak : HealthStreak?
+}
+pub fn HealthCheckpoint::to_repr(Self) -> @debug.Repr
+pub impl @debug.Debug for HealthCheckpoint
+
+pub struct HealthConfig {
+  min_landmarks : Int32
+  rms_limit_m : Double
+  max_error_m : Double
+  confirmation_us : Int64
+  min_observations : Int32
+  max_gap_us : Int64
+  max_position_std_m : Double?
+} derive(@debug.Debug)
+pub fn HealthConfig::new(min_landmarks? : Int32, rms_limit_m? : Double, max_error_m? : Double, confirmation_us? : Int64, min_observations? : Int32, max_gap_us? : Int64, max_position_std_m? : Double) -> Self raise @types.GroundError
+pub fn HealthConfig::to_repr(Self) -> @debug.Repr
+
+pub(all) struct HealthReport {
+  timestamp_us : Int64
+  landmarks : Array[LandmarkResult]
+  usable_count : Int32
+  rms_error_m : Double?
+  max_error_m : Double?
+  evidence : CalibrationEvidence
+  status : HealthStatus
+  streak_since_us : Int64?
+  streak_observations : Int32
+} derive(@debug.Debug)
+pub fn HealthReport::to_repr(Self) -> @debug.Repr
+
+pub(all) enum HealthStatus {
+  Insufficient
+  Pending
+  Healthy
+  Drift
+} derive(Eq, @debug.Debug)
+pub fn HealthStatus::equal(Self, Self) -> Bool
+pub fn HealthStatus::not_equal(Self, Self) -> Bool
+pub fn HealthStatus::to_repr(Self) -> @debug.Repr
+
+pub(all) struct HealthStreak {
+  evidence : CalibrationEvidence
+  since_us : Int64
+  observations : Int32
+} derive(@debug.Debug)
+pub fn HealthStreak::to_repr(Self) -> @debug.Repr
+
+pub struct KnownLandmark {
+  landmark_id : String
+  ground_m : @types.Point2
+} derive(@debug.Debug)
+pub fn KnownLandmark::new(String, @types.Point2) -> Self raise @types.GroundError
+pub fn KnownLandmark::to_repr(Self) -> @debug.Repr
+
+pub(all) struct LandmarkObservation {
+  landmark_id : String
+  pixel : @types.Point2
+  covariance : @types.Covariance2
+} derive(@debug.Debug)
+pub fn LandmarkObservation::new(String, @types.Point2, @types.Covariance2) -> Self raise @types.GroundError
+pub fn LandmarkObservation::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn LandmarkObservation::to_repr(Self) -> @debug.Repr
+
+pub(all) struct LandmarkResult {
+  landmark_id : String
+  projected_position_m : @types.Point2?
+  projected_covariance : @types.Covariance2?
+  residual_m : @types.Point2?
+  error_m : Double?
+  position_std_m : Double?
+  rejection_reason : String?
+} derive(@debug.Debug)
+pub fn LandmarkResult::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
