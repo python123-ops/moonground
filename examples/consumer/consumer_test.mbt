@@ -1,15 +1,140 @@
 ///|
+test "packaged pixel coordinate adaptation continues warm metric state through root API" {
+  let calibration = @moonground.GroundCalibration::from_homography(
+    [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 1.0],
+    [
+      @moonground.Point2::new(0.0, 0.0),
+      @moonground.Point2::new(640.0, 0.0),
+      @moonground.Point2::new(640.0, 480.0),
+      @moonground.Point2::new(0.0, 480.0),
+    ],
+    ground_noise_floor_m=0.002,
+  )
+  let original = @moonground.MeasurementSession::new(
+    "consumer-pixel-coordinates",
+    calibration,
+    @moonground.MotionConfig::new(q=0.3),
+    camera=@moonground.CameraModel::new(
+      fx=600.0,
+      fy=580.0,
+      cx=320.0,
+      cy=240.0,
+      k1=-0.1,
+      p1=0.001,
+      p2=-0.002,
+      max_normalized_radius=0.8,
+    ),
+  )
+  let observation = (index : Int32) => {
+    @moonground.PixelObservation::new(
+      7,
+      @moonground.Point2::new(100.0 + index.to_double() * 10.0, 200.0),
+      @moonground.Covariance2::new(0.25, 0.05, 0.5),
+    )
+  }
+  for index in 0..<3 {
+    ignore(original.update(index.to_int64() * 200000L, [observation(index)]))
+  }
+  let transform = @moonground.PixelTransform::new(
+    scale_x=0.5,
+    scale_y=2.0,
+    offset_x=-40.0,
+    offset_y=16.0,
+  )
+  let reframed = original.reframed(transform)
+  let before = original.checkpoint().motion
+  let after = reframed.checkpoint().motion
+  assert_eq(after.last_timestamp_us, before.last_timestamp_us)
+  assert_eq(after.next_segment_id, before.next_segment_id)
+  assert_eq(after.tracks[0].state, before.tracks[0].state)
+  assert_eq(after.tracks[0].covariance, before.tracks[0].covariance)
+  assert_eq(after.tracks[0].accepted_count, 3)
+  assert_eq(
+    after.tracks[0].observed_path_length_m,
+    before.tracks[0].observed_path_length_m,
+  )
+  after.tracks[0].state[0] = 999.0
+  after.tracks[0].covariance[0] = 999.0
+  assert_eq(
+    reframed.checkpoint().motion.tracks[0].state,
+    before.tracks[0].state,
+  )
+  assert_eq(
+    original.checkpoint().motion.tracks[0].state,
+    before.tracks[0].state,
+  )
+  for index in 3..<6 {
+    let time = index.to_int64() * 200000L
+    let expected = original.update(time, [observation(index)])
+    let actual = reframed.update(time, [observation(index).reframed(transform)])
+    let expected_track = expected.motion.tracks[0]
+    let actual_track = actual.motion.tracks[0]
+    assert_eq(actual.projection_failures.length(), 0)
+    assert_eq(actual_track.status, @motion.Ready)
+    assert_eq(actual_track.status, expected_track.status)
+    assert_eq(actual_track.segment_id, expected_track.segment_id)
+    assert_eq(actual_track.accepted_count, index + 1)
+    assert_eq(
+      actual_track.last_accepted_timestamp_us,
+      expected_track.last_accepted_timestamp_us,
+    )
+    let expected_state = original.checkpoint().motion.tracks[0]
+    let actual_state = reframed.checkpoint().motion.tracks[0]
+    for
+      (a, b) in [
+        (actual_state.state, expected_state.state),
+        (actual_state.covariance, expected_state.covariance),
+      ] {
+      assert_eq(a.length(), b.length())
+      for i in 0..<a.length() {
+        assert_true((a[i] - b[i]).abs() <= 1.0e-10 * b[i].abs().max(1.0))
+      }
+    }
+    assert_true(
+      (actual_track.observed_path_length_m -
+      expected_track.observed_path_length_m).abs() <=
+      1.0e-10,
+    )
+    match (actual_track.speed_mps, expected_track.speed_mps) {
+      (Some(a), Some(b)) => assert_true((a - b).abs() <= 1.0e-10)
+      _ => fail("warm coordinate adaptation lost measured speed")
+    }
+  }
+  let original_closed = original.update(1100000L, [], lost=[7])
+  let reframed_closed = reframed.update(1100000L, [], lost=[7])
+  assert_eq(reframed_closed.motion.closed_segment_ids, ["1"])
+  assert_eq(
+    reframed_closed.motion.closed_segment_ids,
+    original_closed.motion.closed_segment_ids,
+  )
+  let restarted = reframed.update(1200000L, [observation(6).reframed(transform)])
+  assert_eq(restarted.motion.tracks[0].segment_id, "2")
+  assert_eq(restarted.motion.tracks[0].accepted_count, 1)
+  assert_true(restarted.motion.tracks[0].speed_mps is None)
+}
+
+///|
 test "packaged robust calibration rejects mislabeled controls and measures a reusable session" {
   let controls : Array[@moonground.Point2] = [
-    { x: 0.0, y: 0.0, }, { x: 100.0, y: 0.0, },
-    { x: 100.0, y: 100.0, }, { x: 0.0, y: 100.0, },
-    { x: 25.0, y: 50.0, }, { x: 70.0, y: 30.0, },
-    { x: 40.0, y: 80.0, }, { x: 60.0, y: 10.0, },
+    { x: 0.0, y: 0.0, },
+    { x: 100.0, y: 0.0, },
+    { x: 100.0, y: 100.0, },
+    { x: 0.0, y: 100.0, },
+    { x: 25.0, y: 50.0, },
+    { x: 70.0, y: 30.0, },
+    { x: 40.0, y: 80.0, },
+    { x: 60.0, y: 10.0, },
   ]
-  let world = controls.map(p => @moonground.Point2::{ x: 0.02 * p.x, y: 0.02 * p.y, })
+  let world = controls.map(p => @moonground.Point2::{
+    x: 0.02 * p.x,
+    y: 0.02 * p.y,
+  })
   world[6] = { x: 1.8, y: 0.6, }
   world[7] = { x: 0.2, y: 2.2, }
-  let checks : Array[@moonground.Point2] = [{ x: 20.0, y: 30.0, }, { x: 80.0, y: 70.0, }]
+  let checks : Array[@moonground.Point2] = [
+    { x: 20.0, y: 30.0, },
+    { x: 80.0, y: 70.0, },
+  ]
   let fitted : @moonground.RobustCalibration = @moonground.GroundCalibration::fit_robust(
     controls,
     world,
@@ -19,12 +144,16 @@ test "packaged robust calibration rejects mislabeled controls and measures a reu
     options=@moonground.RobustFitOptions::new(inlier_threshold_m=0.01, seed=17),
     max_check_error_m=0.001,
   )
-  assert_eq(fitted.inlier_mask(), [true, true, true, true, true, true, false, false])
+  assert_eq(fitted.inlier_mask(), [
+    true, true, true, true, true, true, false, false,
+  ])
   assert_eq(fitted.inlier_count(), 6)
   assert_eq(fitted.calibration().report().fit_count(), 6)
   assert_eq(fitted.control_errors_m().length(), controls.length())
   let session = @moonground.MeasurementSession::new(
-    "consumer-robust-fit", fitted.calibration(), @moonground.MotionConfig::new(),
+    "consumer-robust-fit",
+    fitted.calibration(),
+    @moonground.MotionConfig::new(),
   )
   let mut measured_speed = None
   for index in 0..<3 {
