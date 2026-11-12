@@ -6,6 +6,7 @@ import {
   "python123-ops/moonground/types",
   "python123-ops/moonground/events",
   "python123-ops/moonground/analysis",
+  "python123-ops/moonground/health",
   "moonbitlang/core/json",
   "moonbitlang/core/string",
 }
