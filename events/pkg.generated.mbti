@@ -1,0 +1,104 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/events"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground/motion",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) enum CrossingDirection {
+  NegativeToPositive
+  PositiveToNegative
+} derive(Eq, @debug.Debug)
+pub fn CrossingDirection::equal(Self, Self) -> Bool
+pub fn CrossingDirection::not_equal(Self, Self) -> Bool
+pub fn CrossingDirection::to_repr(Self) -> @debug.Repr
+
+pub(all) struct GateAnchor {
+  timestamp_us : Int64
+  point_m : @types.Point2
+} derive(@debug.Debug)
+pub fn GateAnchor::to_repr(Self) -> @debug.Repr
+
+pub(all) struct GateCheckpoint {
+  version : Int32
+  session_id : String
+  gates : Array[LineGate]
+  config : GateConfig
+  last_timestamp_us : Int64?
+  counts : Array[GateCount]
+  tracks : Array[GateTrackCheckpoint]
+} derive(@debug.Debug)
+pub fn GateCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub struct GateConfig {
+  max_gap_us : Int64
+  max_tracks : Int32
+  max_position_std_m : Double?
+} derive(@debug.Debug)
+pub fn GateConfig::new(max_gap_us? : Int64, max_tracks? : Int32, max_position_std_m? : Double) -> Self raise @types.GroundError
+pub fn GateConfig::to_repr(Self) -> @debug.Repr
+
+pub(all) struct GateCount {
+  gate_id : String
+  negative_to_positive : Int64
+  positive_to_negative : Int64
+} derive(@debug.Debug)
+pub fn GateCount::to_repr(Self) -> @debug.Repr
+
+pub struct GateCounter {
+  // private fields
+}
+pub fn GateCounter::checkpoint(Self) -> GateCheckpoint
+pub fn GateCounter::from_checkpoint(GateCheckpoint) -> Self raise @types.GroundError
+pub fn GateCounter::new(String, Array[LineGate], GateConfig) -> Self raise @types.GroundError
+pub fn GateCounter::update(Self, @motion.FrameResult) -> GateFrame raise @types.GroundError
+
+pub(all) struct GateCrossing {
+  gate_id : String
+  track_id : Int32
+  segment_id : String
+  direction : CrossingDirection
+  from_timestamp_us : Int64
+  to_timestamp_us : Int64
+  from_position_m : @types.Point2
+  to_position_m : @types.Point2
+  position_m : @types.Point2
+  crossing_fraction : Double
+} derive(@debug.Debug)
+pub fn GateCrossing::to_repr(Self) -> @debug.Repr
+
+pub(all) struct GateFrame {
+  session_id : String
+  timestamp_us : Int64
+  crossings : Array[GateCrossing]
+  counts : Array[GateCount]
+} derive(@debug.Debug)
+pub fn GateFrame::to_repr(Self) -> @debug.Repr
+
+pub(all) struct GateTrackCheckpoint {
+  track_id : Int32
+  segment_id : String
+  anchors : Array[GateAnchor?]
+} derive(@debug.Debug)
+pub fn GateTrackCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub struct LineGate {
+  gate_id : String
+  start_m : @types.Point2
+  end_m : @types.Point2
+  deadband_m : Double
+  // private fields
+} derive(@debug.Debug)
+pub fn LineGate::new(String, @types.Point2, @types.Point2, deadband_m? : Double) -> Self raise @types.GroundError
+pub fn LineGate::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
