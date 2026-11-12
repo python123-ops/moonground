@@ -931,7 +931,14 @@ test "packaged metric motion feeds transit and resumes both independent watermar
 }
 
 ///|
-test "packaged Brown guarded interruption cancels pending transit before checkpoint recovery" {
+fn consumer_brown_guarded() -> (
+  @guarded.GuardedSession,
+  @events.GateCounter,
+  Array[@health.LandmarkObservation],
+  @moonground.PixelObservation,
+  @moonground.PixelObservation,
+  @moonground.PixelObservation,
+) raise @moonground.GroundError {
   let calibration = @moonground.GroundCalibration::from_homography(
     [0.02, 0.0, 0.0, 0.0, 0.02, 0.0, 0.0, 0.0, 1.0],
     [
@@ -982,15 +989,6 @@ test "packaged Brown guarded interruption cancels pending transit before checkpo
     camera~,
   )
   let guarded = @guarded.GuardedSession::new(analysis, monitor)
-  let transit = @transit.TransitCounter::new(gates, [
-    @transit.Section::new(
-      "aisle",
-      "entry",
-      @events.PositiveToNegative,
-      "exit",
-      @events.PositiveToNegative,
-    ),
-  ])
   let covariance = @moonground.Covariance2::isotropic(2.0)
   let landmarks = [
     @health.LandmarkObservation::new(
@@ -1024,6 +1022,21 @@ test "packaged Brown guarded interruption cancels pending transit before checkpo
     { x: 359.90687103365474, y: 299.8963540072135, },
     covariance,
   )
+  (guarded, gates, landmarks, left, middle, right)
+}
+
+///|
+test "packaged Brown guarded interruption cancels pending transit before checkpoint recovery" {
+  let (guarded, gates, landmarks, left, middle, right) = consumer_brown_guarded()
+  let transit = @transit.TransitCounter::new(gates, [
+    @transit.Section::new(
+      "aisle",
+      "entry",
+      @events.PositiveToNegative,
+      "exit",
+      @events.PositiveToNegative,
+    ),
+  ])
   ignore(
     transit.update(
       guarded.update(0L, landmarks, [left]).analysis.measurement.motion,
@@ -1078,5 +1091,194 @@ test "packaged Brown guarded interruption cancels pending transit before checkpo
   assert_eq(completed.counts[0].completed, 1L)
   assert_eq(completed.passages[0].segment_id, "2")
   assert_true(completed.passages[0].estimated_elapsed_us > 0.0)
+  assert_eq(transit.checkpoint().pending.length(), 1)
+}
+
+///|
+test "packaged Brown projection replacement resumes before and after the barrier with retained counts" {
+  let (session, _, landmarks, left, middle, right) = consumer_brown_guarded()
+  ignore(session.update(0L, landmarks, [left]))
+  ignore(session.update(100000L, landmarks, [middle]))
+  ignore(session.update(150000L, landmarks, [right]))
+  let before = session.checkpoint()
+  let resumed_before = @guarded.GuardedSession::from_checkpoint(before)
+  let projection = @moonground.GroundCalibration::from_homography(
+    [0.025, 0.0, 0.0, 0.0, 0.025, 0.0, 0.0, 0.0, 1.0],
+    [
+      { x: 0.0, y: 0.0, },
+      { x: 640.0, y: 0.0, },
+      { x: 640.0, y: 480.0, },
+      { x: 0.0, y: 480.0, },
+    ],
+    ground_noise_floor_m=0.015,
+  )
+  let camera = @moonground.CameraModel::new(
+    fx=700.0,
+    fy=650.0,
+    cx=300.0,
+    cy=210.0,
+    k1=0.05,
+    k2=-0.01,
+    p1=-0.002,
+    p2=0.001,
+    k3=0.001,
+    max_normalized_radius=0.8,
+  )
+  let barrier = session.replace_projection(
+    200000L,
+    projection,
+    camera=Some(camera),
+  )
+  let resumed_barrier = resumed_before.replace_projection(
+    200000L,
+    projection,
+    camera=Some(camera),
+  )
+  assert_eq(barrier.analysis.measurement.motion.closed_segment_ids, ["1"])
+  assert_eq(resumed_barrier.analysis.measurement.motion.closed_segment_ids, [
+    "1",
+  ])
+  assert_eq(barrier.health.status, @health.Insufficient)
+  assert_eq(barrier.analysis.counting.counts[0].positive_to_negative, 1L)
+  assert_eq(barrier.analysis.counting.counts[1].positive_to_negative, 1L)
+  let after = session.checkpoint()
+  guard after.analysis.measurement is Pixel(pixel) else {
+    fail("pixel state missing")
+  }
+  assert_true(pixel.calibration.same_projection(projection))
+  assert_true(after.health.calibration.same_projection(projection))
+  assert_eq(pixel.camera.unwrap().parameters(), camera.parameters())
+  assert_eq(pixel.motion.next_segment_id, 2L)
+  assert_eq(after.health.landmarks[2].ground_m.x, 9.6)
+  let resumed_after = @guarded.GuardedSession::from_checkpoint(after)
+  let covariance = @moonground.Covariance2::isotropic(2.0)
+  // Independently forward-distorted pixels for the same physical metre points.
+  let new_landmarks = [
+    @health.LandmarkObservation::new(
+      "A",
+      { x: 127.40497286300703, y: 127.59168720694474, },
+      covariance,
+    ),
+    @health.LandmarkObservation::new(
+      "B",
+      { x: 255.92312584950486, y: 95.6927493062198, },
+      covariance,
+    ),
+    @health.LandmarkObservation::new(
+      "C",
+      { x: 384.0911663318292, y: 256.01725380837144, },
+      covariance,
+    ),
+  ]
+  let observations = [
+    @moonground.PixelObservation::new(
+      7,
+      { x: 223.98753504908808, y: 239.99067280749694, },
+      covariance,
+    ),
+    @moonground.PixelObservation::new(
+      7,
+      { x: 256.004548970341, y: 239.99189526193092, },
+      covariance,
+    ),
+    @moonground.PixelObservation::new(
+      7,
+      { x: 288.0028699236476, y: 239.99391601566055, },
+      covariance,
+    ),
+  ]
+  for index in 0..<3 {
+    let time = 250000L + Int64::from_int(index) * 100000L
+    let result = session.update(time, new_landmarks, [observations[index]])
+    let prefix_restored = resumed_before.update(time, new_landmarks, [
+      observations[index],
+    ])
+    let barrier_restored = resumed_after.update(time, new_landmarks, [
+      observations[index],
+    ])
+    assert_eq(result.decision, @guarded.Allowed)
+    assert_eq(
+      result.analysis.counting.counts[0].positive_to_negative,
+      prefix_restored.analysis.counting.counts[0].positive_to_negative,
+    )
+    assert_eq(
+      result.analysis.counting.counts[1].positive_to_negative,
+      barrier_restored.analysis.counting.counts[1].positive_to_negative,
+    )
+    if index == 0 {
+      let object = result.analysis.measurement.motion.tracks[0]
+      assert_eq(object.segment_id, "2")
+      assert_eq(object.accepted_count, 1)
+      assert_eq(object.speed_mps, None)
+      assert_true((object.position.unwrap().x - 5.6).abs() < 1.0e-8)
+      assert_eq(result.analysis.counting.crossings.length(), 0)
+    }
+  }
+  assert_eq(
+    session.checkpoint().analysis.counting.counts[0].positive_to_negative,
+    2L,
+  )
+  assert_eq(
+    session.checkpoint().analysis.counting.counts[1].positive_to_negative,
+    2L,
+  )
+  assert_eq(before.health.last_timestamp_us, Some(150000L))
+}
+
+///|
+test "packaged replacement barrier clears restored transit entry before a new segment exit" {
+  let (session, gates, landmarks, left, middle, right) = consumer_brown_guarded()
+  let transit = @transit.TransitCounter::new(gates, [
+    @transit.Section::new(
+      "aisle",
+      "entry",
+      @events.PositiveToNegative,
+      "exit",
+      @events.PositiveToNegative,
+    ),
+  ])
+  ignore(
+    transit.update(
+      session.update(0L, landmarks, [left]).analysis.measurement.motion,
+    ),
+  )
+  assert_eq(
+    transit.update(
+      session.update(100000L, landmarks, [middle]).analysis.measurement.motion,
+    ).pending_count,
+    1,
+  )
+  let restored = @guarded.GuardedSession::from_checkpoint(session.checkpoint())
+  let downstream = @transit.TransitCounter::from_checkpoint(
+    transit.checkpoint(),
+  )
+  guard restored.checkpoint().analysis.measurement is Pixel(pixel) else {
+    fail("pixel state missing")
+  }
+  let barrier = restored.replace_projection(
+    150000L,
+    pixel.calibration,
+    camera=pixel.camera,
+  )
+  let cancelled = downstream.update(barrier.analysis.measurement.motion)
+  assert_eq(cancelled.cancellations[0].reason, @transit.Discontinuity)
+  assert_eq(cancelled.pending_count, 0)
+  assert_eq(cancelled.counting.counts[0].positive_to_negative, 1L)
+  assert_eq(
+    downstream.checkpoint().counting.last_timestamp_us,
+    restored.checkpoint().health.last_timestamp_us,
+  )
+  let resumed = @guarded.GuardedSession::from_checkpoint(restored.checkpoint())
+  let resumed_downstream = @transit.TransitCounter::from_checkpoint(
+    downstream.checkpoint(),
+  )
+  let first = resumed.update(200000L, landmarks, [middle])
+  assert_eq(first.analysis.measurement.motion.tracks[0].segment_id, "2")
+  ignore(resumed_downstream.update(first.analysis.measurement.motion))
+  let exit_only = resumed_downstream.update(
+    resumed.update(300000L, landmarks, [right]).analysis.measurement.motion,
+  )
+  assert_eq(exit_only.passages.length(), 0)
+  assert_eq(exit_only.counts[0].completed, 0L)
   assert_eq(transit.checkpoint().pending.length(), 1)
 }

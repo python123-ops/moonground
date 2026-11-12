@@ -2,7 +2,7 @@
 
 MoonGround 把固定相机中的目标轨迹转换为米制地面位置、速度和观测路径，面向园区、仓储和其他近似平面的场地。输入是已有目标身份、地面接触锚点和真实时间戳；库负责标定有效域、投影协方差、运动估计、轨迹分段和双向通道过线统计，并支持两侧原子更新与完整状态恢复。固定地标检查持续核对原标定的米制残差；需要按检查结果决定是否计算对象测量时，可显式使用 `guarded` 入口。
 
-当前开发版本为 `0.10.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
+当前开发版本为 `0.11.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
 
 ## 与现有项目的衔接
 
@@ -26,7 +26,7 @@ MoonGround 复用 `moon-cv-geometry@0.2.2` 的几何能力与 `moon-kalman@0.2.1
 | `events` | 消费 `motion.FrameResult` 的有向有限通道、双向计数与独立 `GateCheckpoint` |
 | `analysis` | 像素／米制测量与通道计数的原子更新、完整 `AnalysisCheckpoint`、独立分支与像素换算 |
 | `health` | 独立固定地标的逐点残差、连续采样证据确认、完整 `HealthCheckpoint` 与像素换算 |
-| `guarded` | 仅当前地标确认健康时计算对象测量与过线，阻断时结束全部片段，保存完整 `GuardedCheckpoint` |
+| `guarded` | 当前地标确认健康后计算对象，阻断时结束片段；显式切换固定投影并重新确认，保存完整 `GuardedCheckpoint` |
 | `transit` | 同目标同片段的有向入口／出口配对、通行时间界与插值估计、取消原因及独立 `TransitCheckpoint` |
 | `codec` | 原生 CLI 与浏览器共用的严格 JSON 协议、检查点、`ReplayReframer`、`GateReplay`、`AnalysisReplay`、`HealthReplay`、`GuardedReplay` 与 `TransitReplay` |
 
@@ -191,7 +191,7 @@ test "README: three contact observations produce a measured speed" {
 
 `position_std_m` 和 `velocity_std_mps` 是各自 2×2 协方差最大特征值的平方根，即最差方向的一倍标准差。速度初始化期间 `velocity_std_mps` 与速度向量均为 `null`。可在 `motion` 中设置有限正数门限，例如 `"max_velocity_std_mps":0.2`。满足预热条件后，任一标准差**大于**对应门限便返回 `uncertain`，`speed_mps=null`；位置、速度向量、协方差和路径仍保留。后续不确定性下降即可恢复 `ready`。该规则不拒绝观测、不改 Kalman 状态；初始化、创新拒绝与数值失败保留原有含义。这些标准差描述二维向量的不确定性，不能直接当作非负速率的置信区间，尤其是在接近静止时。
 
-测量 JSON 的 `schema_version` 为 `0.2.0`，`uncertainty_scope` 为 `conditional_on_fixed_calibration_camera_and_anchor`。这是 v0.2.0 引入的结果格式，v0.10.0 继续使用；从 v0.1.0 接入的调用方需处理 `uncertain` 状态和两个标准差字段。
+测量 JSON 的 `schema_version` 为 `0.2.0`，`uncertainty_scope` 为 `conditional_on_fixed_calibration_camera_and_anchor`。这是 v0.2.0 引入的结果格式，v0.11.0 继续使用；从 v0.1.0 接入的调用方需处理 `uncertain` 状态和两个标准差字段。
 
 ### 缩放、裁剪与补边后的像素坐标
 
@@ -448,6 +448,12 @@ test "README: explicit landmark policy ends blocked paths and starts a fresh seg
   assert_eq(resumed.analysis.measurement.motion.tracks[0].segment_id, "2")
   assert_eq(resumed.analysis.measurement.motion.tracks[0].accepted_count, 1)
   assert_eq(resumed.analysis.measurement.motion.tracks[0].speed_mps, None)
+  let barrier = restored.replace_projection(300000L, calibration, camera=None)
+  assert_eq(barrier.health.status, @health.Insufficient)
+  assert_eq(barrier.analysis.measurement.motion.closed_segment_ids, ["2"])
+  let reconfirmed = restored.update(400000L, landmarks, [object])
+  assert_eq(reconfirmed.analysis.measurement.motion.tracks[0].segment_id, "3")
+  assert_eq(reconfirmed.analysis.measurement.motion.tracks[0].accepted_count, 1)
 }
 ```
 
@@ -460,6 +466,12 @@ test "README: explicit landmark policy ends blocked paths and starts a fresh seg
 `GuardedCheckpoint` 版本 1 同时保存完整分析和健康检查点。恢复先验证原有状态，再检查共同配置与水位：非健康状态不得带有活跃运动轨迹或过线参考点；健康状态中的片段首时间不得早于该证据序列可能达到确认跨度和最小样本数的时刻。这些是状态自洽检查，检查点不证明过去每次地标观测的真实性。`fork()` 创建独立分支，`reframed(transform)` 同时换算两侧固定像素配置，保持米制地标、路径、计数、证据和时间；未来对象与地标观测都须应用同一变换。
 
 `AnalysisSession::interrupt(timestamp_us)` 也可由宿主显式调用，使用普通原子更新结束全部活跃段。`CalibrationMonitor::status()` 读取最后已提交地标帧的状态，不增加样本数或按墙上时间推断新证据。原有独立分析和健康检查继续分别工作；门控入口的放行含义仍受固定地标覆盖与原有测量条件限制，不认证未观测区域，也不自动重标定。
+
+`GuardedSession::replace_projection(timestamp_us, calibration, camera~)` 显式安装宿主提供的新标定与相机。`camera` 是必填命名选项：`Some(model)` 安装模型，`None` 撤除校正；后续像素须遵循新配置的约定。新标定仍须使用原米制地面坐标系，因为会话身份、全部地标身份及真值、通道定义、测量／健康配置、双向累计和下一段号继续保留。地面坐标系或这些物理定义改变时，新建相应会话。
+
+切换消耗一个空帧，时间严格晚于共同水位，未开始时可从非负时间切换。它关闭全部活跃段，包括最近一帧未输出的滤波器，清除过线参考点与健康证据，返回 `Blocked`、`Insufficient`、空对象和完整关闭段，`suppressed_track_ids=[]`。后续时间必须更晚，并重新采样确认健康、分配新段及预热；本例即使使用等值标定也执行完整重置，零确认跨度／一个样本仍需下一观测帧才可放行。候选全部成功后才替换运行状态，失败保留旧投影、滤波状态、证据和计数，可修正后用同一时间重试。
+
+切换后的完整检查点保存两侧新的相同投影和共同水位，沿用原恢复约束与版本，不保存历史标定日志。切换帧也应送到下游 `TransitCounter`，正常取消待入口；分别保存上游和区间状态时仍须协调共同水位。像素缩放、裁剪和补边继续使用 `reframed`，保留同一物理投影及米制历史；显式替换用于改变标定或相机模型并重新开始证据。
 
 ### 两个通道之间的通行时间
 
@@ -658,7 +670,18 @@ python -c 'import json; print(json.dumps({"resume":json.load(open("guarded-check
 
 `codec.GuardedReplay::open(source)`、`process_line(...)` 和 `checkpoint_json()` 使用同一协议。原始首行限 8,388,619 个 UTF-16 代码单元，完整检查点限 8,388,608；内嵌入口沿用各自的配置与恢复上限。每个成对观测的**外层原文**限 1,048,576 个代码单元，内嵌两帧也分别受原有 1,048,576 上限约束；转义后的包装可能先达到外层限制。JSON 嵌套限 32，CLI 的物理行字节限制继续生效。
 
-纯函数 `codec.guarded_json(...)` 与 JavaScript `moonground_guarded(...)` 接收 `{"source":<原始门控首行JSON字符串>,"observations":<原始成对观测NDJSON字符串>}`，返回 `{"frames":[...],"checkpoint":...}`。不分配会话句柄；原始观测总文本限 8,388,608 个 UTF-16 代码单元、5,000 帧，外层请求限 16,777,216，整个返回 JSON 连同最终检查点限 8,388,608。批量失败不返回部分结果。
+纯函数 `codec.guarded_json(...)` 与 JavaScript `moonground_guarded(...)` 接收 `{"source":<原始门控首行JSON字符串>,"observations":<原始门控后续行NDJSON字符串>}`，返回 `{"frames":[...],"checkpoint":...}`。不分配会话句柄；后续行总文本限 8,388,608 个 UTF-16 代码单元、5,000 帧，外层请求限 16,777,216，整个返回 JSON 连同最终检查点限 8,388,608。批量失败不返回部分结果。
+
+门控流可插入 `{"replace_projection":<原始切换请求JSON字符串>}`，内层只接受 `timestamp_us`、`calibration`、必填 `camera`；`camera:null` 显式撤除校正，对象则安装完整模型。这一行不同时携带对象、地标或其他配置覆盖。原始控制行及其内层请求各限 1,048,576 个 UTF-16 代码单元，沿用严格重复键、未知字段与整数 token 检查；控制行也计入批量 5,000 帧和总文本预算。
+
+完整 Brown 切换输入见 [`examples/projection-replace.ndjson`](examples/projection-replace.ndjson)，继续使用原有命令与 JavaScript 入口：
+
+```sh
+./_build/native/release/build/cmd/main/main.exe --guarded < examples/projection-replace.ndjson > projection-replace-results.ndjson
+./_build/native/release/build/cmd/main/main.exe --guarded-checkpoint < examples/projection-replace.ndjson > projection-replace-checkpoint.json
+```
+
+成功控制行输出 `kind:"guarded_projection_replaced"`，仍为 `schema_version:"0.1.0"`，内嵌阻断空帧、健康重置及原计数；后续普通帧继续使用 `guarded_analysis_frame`。完整检查点仍是 `moonground.guarded` 版本 1，两侧有效配置均改为最新标定及相机。解析或切换失败保留旧状态和配置；流式完整前缀、检查点失败无 stdout、批量失败无部分结果等规则保持。恢复后的首个观测或切换时间须晚于保存水位。
 
 `--project` 单独接收一行 `{ "calibration": ..., "points": [{ "point": [x,y], "covariance": [xx,xy,yy] }] }`，返回位置、协方差和 Jacobian。`--calibrate` 接收六对以上拟合点、两对以上独立检查点和 ROI，返回可用于配置的标定及残差报告；单行示例见 [`examples/calibration.json`](examples/calibration.json)。控制点拟合也可以直接调用 `GroundCalibration::fit`。
 
@@ -675,7 +698,7 @@ node web/serve.mjs
 
 标定面板的“稳健标定示例”载入含误标点的原始像素请求；点击拟合后显示保留数量、被排除的控制点编号和逐点米制残差。页面编号从 1 开始，并支持下载完整标定结果。更改控制点输入或拟合失败时，旧诊断与下载立即失效；失败不改变观测输入，迟到的示例也不会覆盖已编辑内容。
 
-“保存当前帧检查点”会重放到选定帧并下载完整状态，避免把未来帧状态误存为当前帧。导入检查点后，在输入区追加后续观测即可继续；格式或状态验证失败时保留原输入与结果。恢复流绑定原标定，修改标定需新建会话。“续接示例”可直接检查恢复流程；页面只展示恢复后本次处理的历史帧。
+“保存当前帧检查点”会重放到选定帧并下载完整状态，避免把未来帧状态误存为当前帧。导入检查点后，在输入区追加后续观测即可继续；格式或状态验证失败时保留原输入与结果。普通测量恢复流绑定原标定，修改标定需新建会话；下方门控流另有显式切换入口。“续接示例”可直接检查恢复流程；页面只展示恢复后本次处理的历史帧。
 
 “变换观测坐标”使用水平／垂直倍率和偏移，一次换算输入中的配置、恢复头与全部后续观测，成功后清除旧显示并提示重新计算；错误时保留原输入、测量结果及下载。修改四个参数本身保留现有测量，迟到的示例不会覆盖新参数或输入草稿。“缩放裁剪示例”可直接回放已变换数据。浏览器额外按 UTF-8 字节限制输入与输出各为 8 MiB；更大的流使用 CLI。
 
@@ -697,6 +720,8 @@ node web/serve.mjs
 
 该面板与原有独立分析、地标检查分别操作。输入编辑使自身旧结果和下载失效；导入或计算失败保留已有输入与显示，迟到操作不会覆盖新编辑。浏览器额外限制门控首行与观测合计 8 MiB UTF-8、返回 JSON 为 8 MiB。
 
+“标定切换示例”在同一门控流中展示原标定的持续偏移、显式切换、重新确认和新段过线。时间线上用紫线标记控制帧，当前帧显示“切换标定”、证据不足和保留累计；结果及末帧检查点沿用原下载／恢复按钮。需切换时在输入中显式提供控制行，不从地标超限自动推算或替换标定。下游区间统计读取相同完整帧序列，包含切换空帧。
+
 “两通道之间的区间通行时间”使用独立通道与区间配置。生成上游结果后，显式选择“使用普通测量结果”或“使用健康门控结果”；后者保留阻断空帧，正常取消待入口。视图跟随所选来源的回放滑块，显示入口／出口括号、时长界、插值估计、取消原因和累计完成数；结果下载包含全批帧和最终检查点，“保存末帧区间检查点”始终保存整批末帧。
 
 “载入区间检查点”先由核心验证，再写入恢复首行；它不恢复上游，须先将上游恢复至同一水位，再选择更晚的测量结果。配置编辑或所选来源更新使旧区间结果失效，另一来源的编辑不替换当前显示；失败保留原结果，迟到操作不会覆盖新编辑。浏览器额外限制区间配置与测量合计 8 MiB UTF-8、返回 JSON 为 8 MiB。
@@ -715,27 +740,34 @@ moon build --target all --deny-warn
 moon test --target all --deny-warn
 node web/build.mjs
 node --test web/parity.test.mjs
-python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.10-results.json
-python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.10-results.json
-python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.10-results.json
-python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.10-results.json
-python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.10-results.json
-python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.10-results.json
-python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.10-results.json
-python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-results.json
+python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.11-results.json
+python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.11-results.json
+python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.11-results.json
+python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.11-results.json
+python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.11-results.json
+python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.11-results.json
+python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.11-results.json
+python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.11-results.json
+python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-results.json
 ```
 
-浏览器交互测试需要外部安装 Playwright 或 Playwright Core `1.62.1` 与浏览器。设置 `PLAYWRIGHT_MODULE` 为该包路径后，执行 `node --test web/ui.test.cjs`；默认使用配套 Chromium，设置 `MOONGROUND_BROWSER_CHANNEL=chrome` 可使用已安装的 Google Chrome。CI 使用 GitHub Ubuntu runner 预装的 Chrome，并从固定上游 blob 下载、校验 Noto Sans CJK SC 字体，记录实际浏览器版本与字体，避开系统软件源下载。交互用例覆盖桌面与 390 像素移动视口、本地导入、下载、旧结果失效、原始像素标定配置、选帧检查点的导出与续接、坐标变换、双向过线与死区、独立配对恢复和完整联合恢复、固定地标状态、门控阻断与末帧完整检查点、区间统计来源选择和下游恢复、整数 token 保留、控制点草稿保护和异步操作取消。
+浏览器交互测试需要外部安装 Playwright 或 Playwright Core `1.62.1` 与浏览器。设置 `PLAYWRIGHT_MODULE` 为该包路径后，执行 `node --test web/ui.test.cjs`；默认使用配套 Chromium，设置 `MOONGROUND_BROWSER_CHANNEL=chrome` 可使用已安装的 Google Chrome。CI 使用 GitHub Ubuntu runner 预装的 Chrome，并从固定上游 blob 下载、校验 Noto Sans CJK SC 字体，记录实际浏览器版本与字体，避开系统软件源下载。交互用例覆盖桌面与 390 像素移动视口、本地导入、下载、旧结果失效、原始像素标定配置、选帧检查点的导出与续接、坐标变换、双向过线与死区、独立配对恢复和完整联合恢复、固定地标状态、门控阻断、标定切换与末帧完整检查点、区间统计来源选择和下游恢复、整数 token 保留、控制点草稿保护和异步操作取消。
 
 安装 NumPy 后，可执行独立参考与长流检查。固定工具链在 Linux 和 Windows 上的原生产物均命名为 `main.exe`。
 
 ```sh
-python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.10-results.json
-python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.10-results.json
+python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.11-results.json
+python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.11-results.json
 moon package
-python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.10-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.10.0.zip --output validation/package-v0.10-results.json
+python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.11-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.11.0.zip --output validation/package-v0.11-results.json
 ```
+
+v0.11.0 的标定切换验证见 [`validation/projection-replace-results.json`](validation/projection-replace-results.json)：5 个场景、98 帧含 16 次切换，完整运动状态、协方差、路径、计数、参考点及投影配置与原有独立组件构造的宿主参考一致。103 个原生切点分别从完整检查点、两侧旧检查点重组后续接；28 项非法输入被拒绝，支持从保存状态按原时间修正。独立 NumPy 地标残差范数最大绝对差约 `4.20e-11 m`，通道交点差约 `2.22e-16 m`。
+
+同一记录包含 7 项 Node 测试，30 个切点在原生与 JavaScript 四种方向完成 120 次续接；实际验证 1 MiB 控制行边界，放宽 CLI 字节限制后仍受 JSON UTF-16 上限约束。下游区间统计在切换帧取消 2 条待入口，未产生跨切换通行。库在四后端各 277 项测试通过；工作区消费者连库各 292 项通过，其中 15 项为消费者用例。新增两个消费者场景使用两套 Brown 模型生成的像素与米制标定，核对切换前后检查点续接、保留累计及新段预热，并将空切换帧交给已恢复的区间计数器，确认旧入口取消而孤立出口不会补配。独立 ZIP 消费者记录见 [`validation/package-v0.11-results.json`](validation/package-v0.11-results.json)。
+
+v0.11 回归记录见 [`regression`](validation/regression-v0.11-results.json)、[`camera`](validation/camera-v0.11-results.json)、[`checkpoint`](validation/checkpoint-v0.11-results.json)、[`robust-fit`](validation/robust-fit-v0.11-results.json)、[`reframe`](validation/reframe-v0.11-results.json)、[`gates`](validation/gates-v0.11-results.json)、[`analysis`](validation/analysis-v0.11-results.json)、[`health`](validation/health-v0.11-results.json)、[`guarded`](validation/guarded-v0.11-results.json)、[`transit`](validation/transit-v0.11-results.json) 和 [`stream`](validation/stream-v0.11-results.json)。此前各版记录继续保留。
 
 v0.10.0 的区间验证见 [`validation/transit-results.json`](validation/transit-results.json)：21 个场景、87 帧、12 次完成通行，108 个检查点切点续接一致，覆盖全部五类取消。参考使用原有过线命令、独立 NumPy 交点及 Python `Fraction` 相对时间计算，最大位置差约 `2.22e-16 m`、插值时长绝对差约 `7.28e-12 μs`；42 项非法输入被拒绝，并实际验证累计溢出的完整前缀及修正重试。
 
