@@ -67,10 +67,9 @@ fn health_report_json(
 }
 
 ///|
-fn HealthReplay::health_process_frame(
-  self : HealthReplay,
+fn health_observation_frame(
   source : String,
-) -> Json raise @types.GroundError {
+) -> (Int64, Array[@health.LandmarkObservation]) raise @types.GroundError {
   let fields = object(parse_document(source), "health observation frame")
   allowed_fields(
     fields,
@@ -101,13 +100,16 @@ fn HealthReplay::health_process_frame(
       ),
     )
   }
-  health_report_json(
-    self.monitor_id,
-    self.monitor.update(
-      timestamp(required(fields, "timestamp_us"), "timestamp_us"),
-      observations,
-    ),
-  )
+  (timestamp(required(fields, "timestamp_us"), "timestamp_us"), observations)
+}
+
+///|
+fn HealthReplay::health_process_frame(
+  self : HealthReplay,
+  source : String,
+) -> Json raise @types.GroundError {
+  let (time, observations) = health_observation_frame(source)
+  health_report_json(self.monitor_id, self.monitor.update(time, observations))
 }
 
 ///|

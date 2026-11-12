@@ -246,14 +246,14 @@ pub fn HealthReplay::open(
 
 ///|
 /// Complete effective calibration and fixed references with the evidence state.
-pub fn HealthReplay::checkpoint_json(
-  self : HealthReplay,
-) -> String raise @types.GroundError {
-  let saved = self.monitor.checkpoint()
-  let result = Json::object({
+fn health_checkpoint_value(
+  saved : @health.HealthCheckpoint,
+  configuration : Json,
+) -> Json {
+  Json::object({
     "format": Json("moonground.health"),
     "checkpoint_version": Json("1"),
-    "configuration": self.configuration,
+    "configuration": configuration,
     "state": Json::object({
       "last_timestamp_us": match saved.last_timestamp_us {
         None => Json::null()
@@ -269,7 +269,18 @@ pub fn HealthReplay::checkpoint_json(
           })
       },
     }),
-  }).stringify()
+  })
+}
+
+///|
+/// Complete effective calibration and fixed references with the evidence state.
+pub fn HealthReplay::checkpoint_json(
+  self : HealthReplay,
+) -> String raise @types.GroundError {
+  let result = health_checkpoint_value(
+    self.monitor.checkpoint(),
+    self.configuration,
+  ).stringify()
   if result.length() > 8388608 {
     raise invalid("health checkpoint exceeds 8388608 UTF-16 code units")
   }

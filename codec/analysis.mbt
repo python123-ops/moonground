@@ -95,13 +95,21 @@ fn AnalysisReplay::analysis_process_frame(
   } else {
     self.session.update_ground(time, observations, lost~, removed~)
   }
+  analysis_frame_json(result, self.diagnostics)
+}
+
+///|
+fn analysis_frame_json(
+  result : @analysis.AnalysisFrame,
+  diagnostics : Bool,
+) -> Json {
   Json::object({
     "schema_version": Json("0.1.0"),
     "kind": Json("analysis_frame"),
     "measurement": measurement_json(
       result.measurement.motion,
       result.measurement.projection_failures,
-      self.diagnostics,
+      diagnostics,
     ),
     "counting": gate_frame_json(result.counting),
   })
@@ -118,10 +126,10 @@ pub fn AnalysisReplay::process_line(
 
 ///|
 /// Export both validated states at the same processed frame watermark.
-pub fn AnalysisReplay::checkpoint_json(
-  self : AnalysisReplay,
-) -> String raise @types.GroundError {
-  let saved = self.session.checkpoint()
+fn analysis_checkpoint_value(
+  saved : @analysis.AnalysisCheckpoint,
+  configuration : Json,
+) -> Json raise @types.GroundError {
   let motion = match saved.measurement {
     @analysis.Pixel(pixel) => pixel.motion
     @analysis.Ground(ground) => ground
@@ -129,17 +137,28 @@ pub fn AnalysisReplay::checkpoint_json(
   if motion.tracks.length() > 10000 {
     raise invalid("measurement checkpoint exceeds 10000 active tracks")
   }
-  let result = Json::object({
+  Json::object({
     "format": Json("moonground.analysis"),
     "checkpoint_version": Json("1"),
     "measurement": Json::object({
       "format": Json("moonground.session"),
       "checkpoint_version": Json("1"),
-      "configuration": self.configuration,
+      "configuration": configuration,
       "motion": motion_checkpoint_json(motion),
     }),
     "counting": gate_checkpoint_value(saved.counting),
-  }).stringify()
+  })
+}
+
+///|
+/// Export both validated states at the same processed frame watermark.
+pub fn AnalysisReplay::checkpoint_json(
+  self : AnalysisReplay,
+) -> String raise @types.GroundError {
+  let result = analysis_checkpoint_value(
+    self.session.checkpoint(),
+    self.configuration,
+  ).stringify()
   if result.length() > 8388608 {
     raise invalid("analysis checkpoint exceeds 8388608 UTF-16 code units")
   }

@@ -21,6 +21,7 @@ options(
         "moonground_gates",
         "moonground_analysis",
         "moonground_health",
+        "moonground_guarded",
       ],
       "format": "esm",
     },
