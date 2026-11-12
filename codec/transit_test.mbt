@@ -239,28 +239,42 @@ test "transit restores a pending real entry and an empty frame cancels it withou
   let session = @codec.ReplaySession::new(measurement_source)
   let frames : Array[String] = []
   for index, x in [-1.0, 0.0, 1.0] {
-    frames.push(session.process_line(Json::object({
-      "timestamp_us": Json((index * 100000).to_string()),
-      "observations": Json([Json::object({
-        "track_id": Json(7), "point": Json([x, 0.0]),
-        "covariance": Json([0.00000001, 0.0, 0.00000001]),
-      })]),
-    }).stringify()))
+    frames.push(
+      session.process_line(
+        Json::object({
+          "timestamp_us": Json((index * 100000).to_string()),
+          "observations": Json([
+            Json::object({
+              "track_id": Json(7),
+              "point": Json([x, 0.0]),
+              "covariance": Json([0.00000001, 0.0, 0.00000001]),
+            }),
+          ]),
+        }).stringify(),
+      ),
+    )
   }
   let replay = @codec.TransitReplay::open(transit_test_source())
   ignore(replay.process_line(frames[0]))
-  assert_true(@json.parse(replay.process_line(frames[1])) is {
-    "pending_count": Number(1, ..), "passages": [], ..
-  })
+  assert_true(
+    @json.parse(replay.process_line(frames[1]))
+    is { "pending_count": Number(1, ..), "passages": [], .. },
+  )
   let saved = replay.checkpoint_json()
   let restored = @codec.TransitReplay::open("{\"resume\":" + saved + "}")
   assert_eq(replay.process_line(frames[2]), restored.process_line(frames[2]))
   let interrupted = @codec.TransitReplay::open("{\"resume\":" + saved + "}")
   let empty =
     #|{"schema_version":"0.2.0","uncertainty_scope":"conditional_on_fixed_calibration_camera_and_anchor","session_id":"transit-test","timestamp_us":"150000","tracks":[],"closed_segment_ids":[]}
-  assert_true(@json.parse(interrupted.process_line(empty)) is {
-    "cancellations": [{ "reason": String("discontinuity"), .. }],
-    "pending_count": Number(0, ..), ..
-  })
-  assert_true(@json.parse(interrupted.process_line(frames[2])) is { "passages": [], .. })
+  assert_true(
+    @json.parse(interrupted.process_line(empty))
+    is {
+      "cancellations": [{ "reason": String("discontinuity"), .. }],
+      "pending_count": Number(0, ..),
+      ..
+    },
+  )
+  assert_true(
+    @json.parse(interrupted.process_line(frames[2])) is { "passages": [], .. },
+  )
 }

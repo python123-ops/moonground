@@ -866,3 +866,217 @@ test "packaged Brown guarded analysis closes hidden active state and recovers wi
   assert_eq(recrossed.analysis.counting.counts[0].negative_to_positive, 0L)
   assert_eq(restored.checkpoint().health.last_timestamp_us, Some(350000L))
 }
+
+///|
+test "packaged metric motion feeds transit and resumes both independent watermarks" {
+  let motion = @motion.MotionEstimator::new(
+    "consumer-transit",
+    @moonground.MotionConfig::new(q=1000000.0, gate=1.0e12, max_tracks=10),
+  )
+  let transit = @transit.TransitCounter::new(
+    @events.GateCounter::new(
+      "consumer-transit",
+      [
+        @events.LineGate::new("entry", { x: 0.0, y: 0.0, }, { x: 10.0, y: 0.0, }),
+        @events.LineGate::new("exit", { x: 0.0, y: 2.0, }, { x: 10.0, y: 2.0, }),
+      ],
+      @events.GateConfig::new(max_tracks=10),
+    ),
+    [
+      @transit.Section::new(
+        "aisle",
+        "entry",
+        @events.NegativeToPositive,
+        "exit",
+        @events.NegativeToPositive,
+      ),
+    ],
+  )
+  let observation = (y : Double) => {
+    @moonground.GroundObservation::new(
+      7,
+      { x: 5.0, y, },
+      @moonground.Covariance2::isotropic(0.01),
+    )
+  }
+  ignore(transit.update(motion.update(0L, [observation(-1.0)])))
+  assert_eq(
+    transit.update(motion.update(100000L, [observation(1.0)])).pending_count,
+    1,
+  )
+  let motion_snapshot = motion.checkpoint()
+  let transit_snapshot = transit.checkpoint()
+  assert_eq(
+    motion_snapshot.last_timestamp_us,
+    transit_snapshot.counting.last_timestamp_us,
+  )
+  let resumed_motion = @motion.MotionEstimator::from_checkpoint(motion_snapshot)
+  let resumed_transit = @transit.TransitCounter::from_checkpoint(
+    transit_snapshot,
+  )
+  transit_snapshot.pending.clear()
+  let result = resumed_transit.update(
+    resumed_motion.update(200000L, [observation(3.0)]),
+  )
+  let original = transit.update(motion.update(200000L, [observation(3.0)]))
+  assert_eq(result.passages.length(), 1)
+  assert_eq(result.counts[0].completed, original.counts[0].completed)
+  assert_eq(
+    result.passages[0].estimated_elapsed_us,
+    original.passages[0].estimated_elapsed_us,
+  )
+  assert_eq(result.passages[0].elapsed_upper_us, 200000L)
+  assert_true(result.passages[0].estimated_elapsed_us > 0.0)
+  assert_eq(result.pending_count, 0)
+}
+
+///|
+test "packaged Brown guarded interruption cancels pending transit before checkpoint recovery" {
+  let calibration = @moonground.GroundCalibration::from_homography(
+    [0.02, 0.0, 0.0, 0.0, 0.02, 0.0, 0.0, 0.0, 1.0],
+    [
+      { x: 0.0, y: 0.0, },
+      { x: 640.0, y: 0.0, },
+      { x: 640.0, y: 480.0, },
+      { x: 0.0, y: 480.0, },
+    ],
+    ground_noise_floor_m=0.01,
+  )
+  let camera = @moonground.CameraModel::new(
+    fx=600.0,
+    fy=580.0,
+    cx=320.0,
+    cy=240.0,
+    k1=-0.12,
+    k2=0.015,
+    p1=0.001,
+    p2=-0.002,
+    k3=0.001,
+    max_normalized_radius=0.8,
+  )
+  let gates = @events.GateCounter::new(
+    "guarded-transit",
+    [
+      @events.LineGate::new("entry", { x: 6.0, y: 0.0, }, { x: 6.0, y: 9.0, }),
+      @events.LineGate::new("exit", { x: 7.0, y: 0.0, }, { x: 7.0, y: 9.0, }),
+    ],
+    @events.GateConfig::new(max_tracks=10),
+  )
+  let analysis = @analysis.AnalysisSession::from_pixel(
+    @moonground.MeasurementSession::new(
+      "guarded-transit",
+      calibration,
+      @moonground.MotionConfig::new(q=1000000.0, gate=1.0e12, max_tracks=10),
+      camera~,
+    ),
+    gates,
+  )
+  let monitor = @health.CalibrationMonitor::new(
+    calibration,
+    [
+      @health.KnownLandmark::new("A", { x: 3.2, y: 3.2, }),
+      @health.KnownLandmark::new("B", { x: 6.4, y: 2.4, }),
+      @health.KnownLandmark::new("C", { x: 9.6, y: 6.4, }),
+    ],
+    @health.HealthConfig::new(confirmation_us=0L, min_observations=1),
+    camera~,
+  )
+  let guarded = @guarded.GuardedSession::new(analysis, monitor)
+  let transit = @transit.TransitCounter::new(gates, [
+    @transit.Section::new(
+      "aisle",
+      "entry",
+      @events.PositiveToNegative,
+      "exit",
+      @events.PositiveToNegative,
+    ),
+  ])
+  let covariance = @moonground.Covariance2::isotropic(2.0)
+  let landmarks = [
+    @health.LandmarkObservation::new(
+      "A",
+      { x: 161.47630472780403, y: 160.84451293993584, },
+      covariance,
+    ),
+    @health.LandmarkObservation::new(
+      "B",
+      { x: 319.9486325802616, y: 120.68758411830997, },
+      covariance,
+    ),
+    @health.LandmarkObservation::new(
+      "C",
+      { x: 478.05431120560854, y: 319.13351617883814, },
+      covariance,
+    ),
+  ]
+  let left = @moonground.PixelObservation::new(
+    7,
+    { x: 280.035445256476, y: 299.92835400721356, },
+    covariance,
+  )
+  let middle = @moonground.PixelObservation::new(
+    7,
+    { x: 319.9871581450654, y: 299.9416727043558, },
+    covariance,
+  )
+  let right = @moonground.PixelObservation::new(
+    7,
+    { x: 359.90687103365474, y: 299.8963540072135, },
+    covariance,
+  )
+  ignore(
+    transit.update(
+      guarded.update(0L, landmarks, [left]).analysis.measurement.motion,
+    ),
+  )
+  assert_eq(
+    transit.update(
+      guarded.update(100000L, landmarks, [middle]).analysis.measurement.motion,
+    ).pending_count,
+    1,
+  )
+  let recovered_guarded = @guarded.GuardedSession::from_checkpoint(
+    guarded.checkpoint(),
+  )
+  let recovered_transit = @transit.TransitCounter::from_checkpoint(
+    transit.checkpoint(),
+  )
+  let blocked = recovered_guarded.update(200000L, [], [])
+  assert_eq(blocked.decision, @guarded.Blocked)
+  let cancelled = recovered_transit.update(blocked.analysis.measurement.motion)
+  assert_eq(cancelled.cancellations[0].reason, @transit.Discontinuity)
+  assert_eq(cancelled.pending_count, 0)
+  let continued_guarded = @guarded.GuardedSession::from_checkpoint(
+    recovered_guarded.checkpoint(),
+  )
+  let continued_transit = @transit.TransitCounter::from_checkpoint(
+    recovered_transit.checkpoint(),
+  )
+  ignore(
+    continued_transit.update(
+      continued_guarded.update(300000L, landmarks, [middle]).analysis.measurement.motion,
+    ),
+  )
+  let exit_only = continued_transit.update(
+    continued_guarded.update(400000L, landmarks, [right]).analysis.measurement.motion,
+  )
+  assert_eq(exit_only.passages.length(), 0)
+  assert_eq(exit_only.counts[0].completed, 0L)
+  ignore(
+    continued_transit.update(
+      continued_guarded.update(500000L, landmarks, [left]).analysis.measurement.motion,
+    ),
+  )
+  ignore(
+    continued_transit.update(
+      continued_guarded.update(600000L, landmarks, [middle]).analysis.measurement.motion,
+    ),
+  )
+  let completed = continued_transit.update(
+    continued_guarded.update(700000L, landmarks, [right]).analysis.measurement.motion,
+  )
+  assert_eq(completed.counts[0].completed, 1L)
+  assert_eq(completed.passages[0].segment_id, "2")
+  assert_true(completed.passages[0].estimated_elapsed_us > 0.0)
+  assert_eq(transit.checkpoint().pending.length(), 1)
+}
