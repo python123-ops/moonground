@@ -85,6 +85,14 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     const pendingCalibration = new Promise((resolve) => {
       calibrationRequested = resolve;
     });
+    let releaseGates;
+    const gatesGate = new Promise((resolve) => {
+      releaseGates = resolve;
+    });
+    let gatesRequested;
+    const pendingGates = new Promise((resolve) => {
+      gatesRequested = resolve;
+    });
     try {
       await draftPage.route("**/calibration.json", async (route) => {
         calibrationRequested();
@@ -97,11 +105,34 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
           ),
         });
       });
+      await draftPage.route("**/gates.json", async (route) => {
+        gatesRequested();
+        await gatesGate;
+        await route.fulfill({
+          contentType: "application/json",
+          body: fs.readFileSync(
+            path.resolve(__dirname, "..", "examples", "gates.json"),
+            "utf8",
+          ),
+        });
+      });
       await draftPage.goto(
         `http://127.0.0.1:${server.address().port}/moonground/`,
         { waitUntil: "domcontentloaded" },
       );
       await pendingCalibration;
+      await pendingGates;
+      const gateDraft = '{"session_id":"user-gate-draft","gates":[]}';
+      await draftPage.locator("#gate-input").fill(gateDraft);
+      const gatesResponse = draftPage.waitForResponse((value) =>
+        value.url().endsWith("/gates.json"),
+      );
+      releaseGates();
+      await (await gatesResponse).finished();
+      assert.equal(
+        await draftPage.locator("#gate-input").inputValue(),
+        gateDraft,
+      );
       await draftPage.locator("details").evaluate((details) => {
         details.open = true;
       });
@@ -166,6 +197,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       }
     } finally {
       releaseCalibration();
+      releaseGates();
       await draftPage.close();
     }
     const page = await browser.newPage({
@@ -192,6 +224,37 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     });
     assert.equal(await page.locator("#ready").textContent(), "1");
     assert.match(await page.locator("#speed").textContent(), /m\/s/);
+    await page.waitForFunction(
+      () => document.querySelector("#gate-input").value.length > 0,
+    );
+    await page.locator("#analyze-gates").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#gate-message")
+        .textContent.includes("已统计 10 帧、1 次过线"),
+    );
+    const warehouseGates = await exportJson(
+      "#download-gates",
+      "moonground-gate-results.json",
+    );
+    assert.equal(warehouseGates.frames.length, 10);
+    assert.equal(warehouseGates.checkpoint.format, "moonground.gates");
+    assert.deepEqual(warehouseGates.frames.at(-1).counts, [
+      {
+        gate_id: "aisle",
+        negative_to_positive: "0",
+        positive_to_negative: "1",
+      },
+    ]);
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "3";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.match(
+      await page.locator("#gate-events").textContent(),
+      /正侧 → 负侧/,
+    );
+    assert.match(await page.locator("#gate-events").textContent(), /时间区间/);
     await page.locator("details").evaluate((details) => {
       details.open = true;
     });
@@ -204,6 +267,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       /拟合 6 点，核验 2 点/,
     );
     assert.equal(await page.locator("#download").isDisabled(), true);
+    assert.equal(await page.locator("#download-gates").isDisabled(), true);
     await page.locator("#run").click();
     await page.waitForFunction(() =>
       document.querySelector("#message").textContent.includes("已完成 10 帧"),
@@ -759,6 +823,162 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       path: path.join(directory, "reframe-desktop-preview.png"),
       fullPage: true,
     });
+    // Two-way crossings include initializing/uncertain accepted positions.
+    // Positions inside the closed deadband retain the last outside anchor.
+    const gateConfiguration = {
+      session_id: "ui-gates",
+      gates: [
+        { gate_id: "door", start_m: [0, -2], end_m: [0, 2], deadband_m: 0.05 },
+      ],
+      max_gap_us: "500000",
+      max_tracks: 10,
+    };
+    const gateObservation = (track_id, x) => ({
+      track_id,
+      point: [x, 0],
+      covariance: [1e-6, 0, 1e-6],
+    });
+    const gateSource =
+      [
+        {
+          session_id: "ui-gates",
+          mode: "ground",
+          motion: { q: 1e6, gate: 1e12, max_velocity_std_mps: 1e-6 },
+        },
+        {
+          timestamp_us: "0",
+          observations: [
+            gateObservation(1, -1),
+            gateObservation(2, 1),
+            gateObservation(3, -1),
+          ],
+        },
+        {
+          timestamp_us: "100000",
+          observations: [
+            gateObservation(1, 1),
+            gateObservation(2, -1),
+            gateObservation(3, -0.02),
+          ],
+        },
+        { timestamp_us: "200000", observations: [gateObservation(3, 0.02)] },
+        { timestamp_us: "300000", observations: [gateObservation(3, 1)] },
+      ]
+        .map(JSON.stringify)
+        .join("\n") + "\n";
+    await page.locator("#source").fill(gateSource);
+    assert.equal(await page.locator("#download-gates").isDisabled(), true);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 4 帧"),
+    );
+    const gateBase = await exportJson("#download", "moonground-results.json");
+    await page.locator("#gate-input").fill(JSON.stringify(gateConfiguration));
+    assert.equal(await page.locator("#download").isDisabled(), false);
+    await page.locator("#analyze-gates").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#gate-message")
+        .textContent.includes("已统计 4 帧、3 次过线"),
+    );
+    const gateBundle = await exportJson(
+      "#download-gates",
+      "moonground-gate-results.json",
+    );
+    assert.deepEqual(
+      gateBundle.frames.map((frame) => frame.crossings.length),
+      [0, 2, 0, 1],
+    );
+    assert.deepEqual(gateBundle.frames.at(-1).counts, [
+      { gate_id: "door", negative_to_positive: "1", positive_to_negative: "2" },
+    ]);
+    assert.equal(gateBundle.frames.at(-1).crossings[0].from_timestamp_us, "0");
+    assert.equal(
+      gateBundle.frames.at(-1).crossings[0].to_timestamp_us,
+      "300000",
+    );
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "3";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.match(await page.locator("#gate-counts").textContent(), /door12/);
+    assert.match(await page.locator("#gate-events").textContent(), /目标 3/);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.screenshot({
+      path: path.join(directory, "gates-mobile-preview.png"),
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.screenshot({
+      path: path.join(directory, "gates-desktop-preview.png"),
+      fullPage: true,
+    });
+    const gateMotionCheckpoint = await exportJson(
+      "#save-checkpoint",
+      "moonground-checkpoint.json",
+    );
+    // Editing only the gates invalidates their result, while an invalid raw
+    // numeric token fails in MoonBit and leaves base measurements exportable.
+    const rawInvalidGate = JSON.stringify(gateConfiguration).replace(
+      '"max_tracks":10',
+      '"max_tracks":10.0000000000000001',
+    );
+    await page.locator("#gate-input").fill(rawInvalidGate);
+    assert.equal(await page.locator("#download-gates").isDisabled(), true);
+    assert.equal(await page.locator("#gate-counts tr").count(), 0);
+    await page.locator("#analyze-gates").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#gate-message").classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#gate-input").inputValue(),
+      rawInvalidGate,
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      gateBase,
+    );
+    // Resume both consumers from matching checkpoints and process only the
+    // later measurement frame. The cumulative counters continue exactly.
+    const gateResumeSource =
+      JSON.stringify({ resume: gateMotionCheckpoint }) +
+      "\n" +
+      JSON.stringify({
+        timestamp_us: "400000",
+        observations: [gateObservation(3, -1)],
+      }) +
+      "\n";
+    await page.locator("#source").fill(gateResumeSource);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 1 帧"),
+    );
+    await page
+      .locator("#gate-input")
+      .fill(JSON.stringify({ resume: gateBundle.checkpoint }));
+    await page.locator("#analyze-gates").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#gate-message")
+        .textContent.includes("已统计 1 帧、1 次过线"),
+    );
+    const resumedGates = await exportJson(
+      "#download-gates",
+      "moonground-gate-results.json",
+    );
+    assert.deepEqual(resumedGates.frames[0].counts, [
+      { gate_id: "door", negative_to_positive: "2", positive_to_negative: "2" },
+    ]);
+    assert.match(
+      await page.locator("#gate-events").textContent(),
+      /负侧 → 正侧/,
+    );
     await page
       .locator("#source")
       .fill(

@@ -155,6 +155,25 @@ button:disabled {
 #message.error {
   color: #ad4335;
 }
+#gate-message.error {
+  color: #ad4335;
+}
+.gate-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+}
+#gate-input {
+  height: 180px;
+}
+.gate-table {
+  min-width: 280px;
+}
+#gate-events {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  padding-left: 18px;
+}
 canvas {
   display: block;
   width: 100%;
@@ -240,6 +259,10 @@ footer {
   left: -10000px;
 }
 @media (max-width: 960px) {
+  .gate-layout {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
   .workspace {
     grid-template-columns: 1fr;
   }

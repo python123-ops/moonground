@@ -160,6 +160,51 @@
           </div>
         </div>
       </section>
+      <section class="panel" aria-labelledby="gate-heading">
+        <div class="panel-title">
+          <h2 id="gate-heading">通道过线统计</h2>
+          <span class="hint">基于已接受的滤波地面位置</span>
+        </div>
+        <p class="hint">
+          通道由米制端点 A→B
+          定义，左侧为正侧。死区内保留参考点；最近的同侧带外点与新的异侧带外点连线穿过有限通道时计数。缺测、拒绝或片段中断会清除参考点。
+          时间保留为两个观测时刻及区间比例，不补全未观测路径。
+          下载保存整批末帧的通道检查点；配对恢复时，请先把回放移至末帧，再保存测量检查点并核对两者的最后帧时间一致。
+        </p>
+        <div class="gate-layout">
+          <div>
+            <label for="gate-input" class="hint"
+              >通道配置或恢复起点 JSON · session_id 须与测量一致</label
+            >
+            <textarea id="gate-input" spellcheck="false"></textarea>
+            <div class="actions">
+              <button id="analyze-gates" disabled>统计过线</button>
+              <button id="download-gates" class="quiet" disabled>
+                下载过线结果与检查点
+              </button>
+            </div>
+            <p id="gate-message" role="status" aria-live="polite" class="hint">
+              先计算观测，再统计过线。
+            </p>
+          </div>
+          <div>
+            <p class="hint">所选帧的累计次数 · 负侧 → 正侧 / 正侧 → 负侧</p>
+            <div class="table-wrap">
+              <table class="gate-table">
+                <thead>
+                  <tr>
+                    <th>通道</th>
+                    <th>负 → 正</th>
+                    <th>正 → 负</th>
+                  </tr>
+                </thead>
+                <tbody id="gate-counts"></tbody>
+              </table>
+            </div>
+            <ul id="gate-events" aria-label="所选帧过线事件"></ul>
+          </div>
+        </div>
+      </section>
       <section class="panel">
         <div class="panel-title">
           <h2>本帧测量</h2>

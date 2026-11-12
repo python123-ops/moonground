@@ -12,6 +12,10 @@ const built = spawnSync(
 if (built.status !== 0) process.exit(built.status ?? 1);
 const output = path.join(root, "_build", "site");
 mkdirSync(output, { recursive: true });
+copyFileSync(
+  path.join(root, "examples", "gates.json"),
+  path.join(output, "gates.json"),
+);
 for (const file of ["index.html", "app.mjs", "style.css"])
   copyFileSync(path.join(root, "web", file), path.join(output, file));
 copyFileSync(

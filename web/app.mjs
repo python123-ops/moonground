@@ -7,11 +7,13 @@ import {
   moonground_checkpoint,
   moonground_restore,
   moonground_reframe,
+  moonground_gates,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
 const source = $("source");
 const calibrationInput = $("calibration-input");
+const gateInput = $("gate-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -26,6 +28,13 @@ let calibrationRevision = 0;
 let calibrationResponse = null;
 let fittedCalibrationInput = "";
 let calibrationNeedsCoordinates = false;
+let measurementLines = [];
+let gateRevision = 0;
+let gateEdited = false;
+let gateReport = null;
+let gateResponse = null;
+let gateDefinitions = [];
+let gatesBusy = false;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -50,6 +59,8 @@ function invalidate() {
   revision++;
   stop();
   results = [];
+  measurementLines = [];
+  clearGateResult();
   configuration = null;
   loadedSource = "";
   $("download").disabled = true;
@@ -61,6 +72,61 @@ function invalidate() {
   for (const id of ["ready", "speed", "segments"]) $(id).textContent = "—";
   $("tracks").replaceChildren();
   draw();
+}
+
+function gateMessage(text, error = false) {
+  $("gate-message").textContent = text;
+  $("gate-message").classList.toggle("error", error);
+}
+
+function clearGateResult() {
+  gateRevision++;
+  gateReport = null;
+  gateResponse = null;
+  gateDefinitions = [];
+  $("download-gates").disabled = true;
+  $("analyze-gates").disabled = !results.length || gatesBusy;
+  $("gate-counts").replaceChildren();
+  $("gate-events").replaceChildren();
+  gateMessage(
+    results.length
+      ? "通道配置已修改，请重新统计。"
+      : "先计算观测，再统计过线。",
+  );
+}
+
+function renderGates(index) {
+  const frame = gateReport?.frames[index];
+  $("gate-counts").replaceChildren();
+  $("gate-events").replaceChildren();
+  if (!frame) return;
+  for (const count of frame.counts) {
+    const row = document.createElement("tr");
+    for (const value of [
+      count.gate_id,
+      count.negative_to_positive,
+      count.positive_to_negative,
+    ]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    $("gate-counts").append(row);
+  }
+  for (const crossing of frame.crossings) {
+    const item = document.createElement("li");
+    const direction =
+      crossing.direction === "negative_to_positive"
+        ? "负侧 → 正侧"
+        : "正侧 → 负侧";
+    item.textContent = `${crossing.gate_id} · 目标 ${crossing.track_id} / 片段 ${crossing.segment_id} · ${direction} · 交点 (${crossing.position_m.map((n) => n.toFixed(3)).join(", ")}) m；时间区间 [${crossing.from_timestamp_us}, ${crossing.to_timestamp_us}] μs，区间比例 ${crossing.crossing_fraction.toFixed(6)}`;
+    $("gate-events").append(item);
+  }
+  if (!frame.crossings.length) {
+    const item = document.createElement("li");
+    item.textContent = "本帧无过线事件。";
+    $("gate-events").append(item);
+  }
 }
 
 function unpack(text) {
@@ -193,6 +259,7 @@ function draw() {
       points.push(track.position_m);
     }
   }
+  for (const gate of gateDefinitions) points.push(gate.start_m, gate.end_m);
   if (points.length === 0) {
     context.fillStyle = "#8d9b8c";
     context.font = "22px system-ui";
@@ -273,6 +340,31 @@ function draw() {
     context.stroke();
     context.setLineDash([]);
   }
+  for (const gate of gateDefinitions) {
+    const [ax, ay] = project(gate.start_m);
+    const [bx, by] = project(gate.end_m);
+    context.strokeStyle = "#b26025";
+    context.lineWidth = 3;
+    context.setLineDash([10, 5]);
+    context.beginPath();
+    context.moveTo(ax, ay);
+    context.lineTo(bx, by);
+    context.stroke();
+    context.setLineDash([]);
+    context.font = "bold 15px system-ui";
+    context.fillStyle = "#8d451b";
+    context.fillText(`${gate.gate_id} · A→B`, ax + 9, ay - 10);
+    const length = Math.hypot(bx - ax, by - ay);
+    if (length > 0) {
+      const ux = (bx - ax) / length,
+        uy = (by - ay) / length;
+      context.beginPath();
+      context.moveTo(bx - 11 * ux + 5 * uy, by - 11 * uy - 5 * ux);
+      context.lineTo(bx, by);
+      context.lineTo(bx - 11 * ux - 5 * uy, by - 11 * uy + 5 * ux);
+      context.stroke();
+    }
+  }
   for (const [key, path] of histories) {
     const hue = (Number(key.split(":")[0]) * 83 + 135) % 360;
     context.strokeStyle = `hsl(${hue} 38% 39%)`;
@@ -290,6 +382,16 @@ function draw() {
     context.fill();
     context.font = "bold 16px system-ui";
     context.fillText(`#${key}`, x + 12, y - 10);
+  }
+  for (const crossing of gateReport?.frames[index]?.crossings ?? []) {
+    const [x, y] = project(crossing.position_m);
+    context.fillStyle = "#d67c29";
+    context.strokeStyle = "#ffffff";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.arc(x, y, 8, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
   }
 }
 
@@ -348,6 +450,7 @@ function render() {
     rows.push(tr);
   }
   $("tracks").replaceChildren(...rows);
+  renderGates(index);
   draw();
 }
 
@@ -366,12 +469,15 @@ async function run() {
     const config = opened.configuration;
     handle = opened.handle;
     const computed = [];
+    const rawMeasurements = [];
     for (let i = 1; i < lines.length; i++) {
       if (currentRevision !== revision) return;
       if (new TextEncoder().encode(lines[i]).length > 1048576)
         throw new Error(`第 ${i + 1} 行超过 1 MiB。`);
       try {
-        computed.push(unpack(moonground_update(handle, lines[i])));
+        const raw = moonground_update(handle, lines[i]);
+        computed.push(unpack(raw));
+        rawMeasurements.push(raw);
       } catch (error) {
         throw new Error(`第 ${i + 1} 行：${error.message}`);
       }
@@ -383,6 +489,8 @@ async function run() {
     if (currentRevision !== revision) return;
     configuration = config;
     results = computed;
+    measurementLines = rawMeasurements;
+    $("analyze-gates").disabled = gatesBusy;
     loadedSource = input;
     slider.max = String(results.length - 1);
     slider.value = "0";
@@ -400,6 +508,64 @@ async function run() {
     if (handle !== undefined) moonground_close(handle);
   }
 }
+
+gateInput.addEventListener("input", () => {
+  gateEdited = true;
+  clearGateResult();
+  draw();
+});
+$("analyze-gates").addEventListener("click", async () => {
+  if (gatesBusy || !results.length || source.value !== loadedSource) return;
+  const current = revision,
+    currentGate = gateRevision;
+  gatesBusy = true;
+  $("analyze-gates").disabled = true;
+  gateMessage("正在统计过线…");
+  try {
+    const measurements = measurementLines.join("\n") + "\n";
+    const encoder = new TextEncoder();
+    if (
+      encoder.encode(gateInput.value).length > 8 * 1024 * 1024 ||
+      encoder.encode(measurements).length > 8 * 1024 * 1024
+    )
+      throw new Error(
+        "浏览器过线输入上限为 8 MiB；更长的测量流请使用原生命令。",
+      );
+    const request = JSON.stringify({ source: gateInput.value, measurements });
+    if (request.length > 16 * 1024 * 1024)
+      throw new Error("过线请求超过 16 Mi 字符上限，请使用原生命令。");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (current !== revision || currentGate !== gateRevision) return;
+    const response = moonground_gates(request);
+    const report = unpack(response);
+    if (encoder.encode(response).length > 8 * 1024 * 1024)
+      throw new Error("浏览器过线结果超过 8 MiB；请使用原生命令保存。");
+    if (current !== revision || currentGate !== gateRevision) return;
+    gateDefinitions = report.checkpoint.configuration.gates;
+    gateReport = report;
+    gateResponse = response;
+    $("download-gates").disabled = false;
+    const events = report.frames.reduce(
+      (total, frame) => total + frame.crossings.length,
+      0,
+    );
+    gateMessage(
+      `已统计 ${report.frames.length} 帧、${events} 次过线。下方显示所选帧的累计计数；下载含最终检查点。`,
+    );
+    render();
+  } catch (error) {
+    if (current === revision && currentGate === gateRevision)
+      gateMessage(error.message, true);
+  } finally {
+    gatesBusy = false;
+    $("analyze-gates").disabled =
+      !results.length || source.value !== loadedSource;
+  }
+});
+$("download-gates").addEventListener("click", () => {
+  if (gateResponse === null || source.value !== loadedSource) return;
+  saveFile(gateResponse + "\n", "moonground-gate-results.json");
+});
 
 source.addEventListener("input", () => {
   invalidate();
@@ -680,6 +846,19 @@ fetch("./calibration.json")
       !calibrationEdited
     )
       $("calibration-message").textContent = error.message;
+  });
+const initialGateRevision = gateRevision;
+fetch("./gates.json")
+  .then((response) => {
+    if (!response.ok) throw new Error("无法读取通道示例");
+    return response.text();
+  })
+  .then((text) => {
+    if (!gateEdited && gateInput.value === "") gateInput.value = text;
+  })
+  .catch((error) => {
+    if (gateRevision === initialGateRevision && !gateEdited)
+      gateMessage(error.message, true);
   });
 draw();
 example();
