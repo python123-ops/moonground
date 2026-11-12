@@ -174,6 +174,63 @@ test "health configuration and restored streak preserve strict integer and state
 }
 
 ///|
+test "health checkpoint requires every effective calibration camera and health parameter" {
+  let source = health_test_source().replace(
+    old="\"landmarks\":",
+    new="\"camera\":{\"fx\":600,\"fy\":580,\"cx\":320,\"cy\":240},\"landmarks\":",
+  )
+  let saved = @codec.HealthReplay::open(source).checkpoint_json()
+  for
+    item in [
+      ("health", "min_landmarks"),
+      ("health", "rms_limit_m"),
+      ("health", "max_error_m"),
+      ("health", "confirmation_us"),
+      ("health", "min_observations"),
+      ("health", "max_gap_us"),
+      ("calibration", "matrix"),
+      ("calibration", "roi"),
+      ("calibration", "max_meters_per_pixel"),
+      ("calibration", "ground_noise_floor_m"),
+      ("camera", "fx"),
+      ("camera", "fy"),
+      ("camera", "cx"),
+      ("camera", "cy"),
+      ("camera", "k1"),
+      ("camera", "k2"),
+      ("camera", "k3"),
+      ("camera", "p1"),
+      ("camera", "p2"),
+      ("camera", "max_normalized_radius"),
+    ] {
+    let (section, name) = item
+    guard @json.parse(saved) is { "configuration": Object(configuration), .. } else {
+      fail("health checkpoint configuration missing")
+    }
+    guard configuration.get(section) is Some(Object(fields)) else {
+      fail("effective health checkpoint section missing")
+    }
+    fields.remove(name)
+    let changed = Json::object({
+      "format": Json("moonground.health"),
+      "checkpoint_version": Json("1"),
+      "configuration": Json::object(configuration),
+      "state": Json::object({
+        "last_timestamp_us": Json::null(),
+        "streak": Json::null(),
+      }),
+    })
+    try
+      @codec.HealthReplay::open("{\"resume\":" + changed.stringify() + "}")
+    catch {
+      _ => ()
+    } noraise {
+      _ => fail("incomplete historical configuration used current defaults")
+    }
+  }
+}
+
+///|
 test "health pure batches preserve raw CRLF documents and fail without partial responses" {
   let lines = [health_test_frame(0L), health_test_frame(100000L)]
   let response = @json.parse(

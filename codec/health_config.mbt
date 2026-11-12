@@ -140,6 +140,42 @@ fn health_evidence(
 }
 
 ///|
+// A checkpoint carries effective values, rather than relying on the defaults
+// of whichever version restores it.
+fn validate_health_checkpoint_configuration(
+  value : Json,
+) -> Unit raise @types.GroundError {
+  let fields = object(value, "health checkpoint configuration")
+  for name in ["monitor_id", "calibration", "landmarks", "health"] {
+    ignore(required(fields, name))
+  }
+  let limits = object(required(fields, "health"), "health checkpoint limits")
+  for
+    name in [
+      "min_landmarks", "rms_limit_m", "max_error_m", "confirmation_us", "min_observations",
+      "max_gap_us",
+    ] {
+    ignore(required(limits, name))
+  }
+  let calibration = object(
+    required(fields, "calibration"),
+    "health checkpoint calibration",
+  )
+  for name in ["matrix", "roi", "max_meters_per_pixel", "ground_noise_floor_m"] {
+    ignore(required(calibration, name))
+  }
+  if fields.get("camera") is Some(value) {
+    let camera = object(value, "health checkpoint camera")
+    for
+      name in [
+        "fx", "fy", "cx", "cy", "k1", "k2", "p1", "p2", "k3", "max_normalized_radius",
+      ] {
+      ignore(required(camera, name))
+    }
+  }
+}
+
+///|
 fn restore_health(value : Json) -> HealthReplay raise @types.GroundError {
   let fields = object(value, "health checkpoint")
   allowed_fields(
@@ -151,7 +187,9 @@ fn restore_health(value : Json) -> HealthReplay raise @types.GroundError {
     text(required(fields, "checkpoint_version"), "checkpoint_version") != "1" {
     raise invalid("unsupported health checkpoint format or version")
   }
-  let initial = health_configuration(required(fields, "configuration"))
+  let configuration = required(fields, "configuration")
+  validate_health_checkpoint_configuration(configuration)
+  let initial = health_configuration(configuration)
   let state = object(required(fields, "state"), "health state")
   allowed_fields(state, ["last_timestamp_us", "streak"], "health state")
   let last_timestamp_us = match required(state, "last_timestamp_us") {
