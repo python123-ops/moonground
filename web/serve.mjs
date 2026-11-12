@@ -26,6 +26,7 @@ const assets = new Map([
   ["calibration.json", "application/json; charset=utf-8"],
   ["gates.json", "application/json; charset=utf-8"],
   ["health.ndjson", "application/x-ndjson; charset=utf-8"],
+  ["guarded.ndjson", "application/x-ndjson; charset=utf-8"],
   ["robust-calibration.json", "application/json; charset=utf-8"],
 ]);
 const server = http.createServer((request, response) => {

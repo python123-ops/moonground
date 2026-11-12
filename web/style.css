@@ -157,7 +157,8 @@ button:disabled {
 }
 #gate-message.error,
 #analysis-message.error,
-#health-message.error {
+#health-message.error,
+#guarded-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -165,17 +166,22 @@ button:disabled {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
 }
-.health-layout {
+.health-layout,
+.guarded-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
   margin-bottom: 18px;
 }
-#health-input {
+#health-input,
+#guarded-input {
   height: 230px;
 }
 #health-timeline {
   aspect-ratio: 960/42;
+}
+#guarded-timeline {
+  aspect-ratio: 960/56;
 }
 .health-legend {
   display: flex;
@@ -204,7 +210,8 @@ button:disabled {
 .health-insufficient {
   --health-color: #b5c0b3;
 }
-.stats.health-stats strong {
+.stats.health-stats strong,
+.stats.guarded-stats strong {
   font-size: 16px;
   overflow-wrap: anywhere;
 }
@@ -214,7 +221,9 @@ button:disabled {
 .gate-table {
   min-width: 280px;
 }
-#gate-events {
+#gate-events,
+#guarded-events,
+#guarded-interruptions {
   font-size: 12px;
   overflow-wrap: anywhere;
   padding-left: 18px;
@@ -308,7 +317,8 @@ footer {
     grid-template-columns: 1fr;
     gap: 10px;
   }
-  .health-layout {
+  .health-layout,
+  .guarded-layout {
     grid-template-columns: 1fr;
     gap: 18px;
   }

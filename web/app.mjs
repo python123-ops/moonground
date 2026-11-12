@@ -10,6 +10,7 @@ import {
   moonground_gates,
   moonground_analysis,
   moonground_health,
+  moonground_guarded,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -17,6 +18,7 @@ const source = $("source");
 const calibrationInput = $("calibration-input");
 const gateInput = $("gate-input");
 const healthInput = $("health-input");
+const guardedInput = $("guarded-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -48,6 +50,11 @@ let healthReport = null;
 let healthResponse = null;
 let healthLoadedSource = "";
 let healthRunToken = 0;
+let guardedRevision = 0;
+let guardedRunToken = 0;
+let guardedReport = null;
+let guardedResponse = null;
+let guardedLoadedSource = "";
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -1316,6 +1323,271 @@ $("health-checkpoint-file").addEventListener("change", async (event) => {
   }
 });
 
+function guardedMessage(text, error = false) {
+  $("guarded-message").textContent = text;
+  $("guarded-message").classList.toggle("error", error);
+}
+
+function clearGuardedResult() {
+  guardedRevision++;
+  guardedReport = null;
+  guardedResponse = null;
+  guardedLoadedSource = "";
+  $("download-guarded").disabled = true;
+  $("save-guarded-checkpoint").disabled = true;
+  $("guarded-frame").disabled = true;
+  $("guarded-counter").textContent = "0 / 0";
+  $("guarded-time").textContent = "—";
+  for (const id of [
+    "guarded-decision",
+    "guarded-health",
+    "guarded-usable",
+    "guarded-rms",
+    "guarded-observed",
+    "guarded-crossings",
+  ])
+    $(id).textContent = "—";
+  $("guarded-evidence").textContent = "尚无门控分析结果。";
+  $("guarded-interruptions").textContent = "";
+  $("guarded-tracks").replaceChildren();
+  $("guarded-counts").replaceChildren();
+  $("guarded-events").replaceChildren();
+  drawGuardedTimeline();
+}
+
+function drawGuardedTimeline() {
+  const timeline = $("guarded-timeline"),
+    drawing = timeline.getContext("2d");
+  drawing.fillStyle = "#eef3e9";
+  drawing.fillRect(0, 0, timeline.width, timeline.height);
+  if (!guardedReport?.frames.length) return;
+  const width = timeline.width / guardedReport.frames.length;
+  guardedReport.frames.forEach((frame, index) => {
+    drawing.fillStyle = healthColors[frame.health.status];
+    drawing.fillRect(index * width, 0, Math.max(width, 1), 36);
+    drawing.fillStyle = frame.decision === "allowed" ? "#24674d" : "#a56c61";
+    drawing.fillRect(index * width, 40, Math.max(width, 1), 16);
+  });
+  drawing.strokeStyle = "#20342f";
+  drawing.lineWidth = 3;
+  drawing.strokeRect(
+    Number($("guarded-frame").value) * width + 1.5,
+    1.5,
+    Math.max(width - 3, 1),
+    timeline.height - 3,
+  );
+}
+
+function renderGuarded() {
+  const index = Number($("guarded-frame").value),
+    frame = guardedReport?.frames[index];
+  if (!frame) return;
+  const health = frame.health,
+    measurement = frame.analysis.measurement,
+    counting = frame.analysis.counting;
+  $("guarded-counter").textContent =
+    `${index + 1} / ${guardedReport.frames.length}`;
+  $("guarded-time").textContent = `${health.timestamp_us} μs`;
+  $("guarded-decision").textContent =
+    frame.decision === "allowed" ? "已放行" : "已阻断";
+  $("guarded-health").textContent = healthStates[health.status];
+  $("guarded-usable").textContent =
+    `${health.usable_count} / ${health.landmarks.length}`;
+  $("guarded-rms").textContent =
+    health.rms_error_m == null
+      ? "—"
+      : `${health.rms_error_m.toExponential(3)} m`;
+  $("guarded-observed").textContent = String(measurement.tracks.length);
+  $("guarded-crossings").textContent = String(counting.crossings.length);
+  $("guarded-evidence").textContent =
+    `${healthEvidence[health.evidence]}；${frame.decision === "allowed" ? "当前健康已确认，处理本帧目标。" : "当前帧未满足健康放行条件，未处理本帧目标；已有测量片段与过线参考点已中断。"}`;
+  $("guarded-interruptions").textContent =
+    `本帧被抑制的目标：${frame.suppressed_track_ids.join("、") || "无"}；关闭的测量片段：${measurement.closed_segment_ids.join("、") || "无"}。`;
+  const rows = measurement.tracks.map((track) => {
+    const row = document.createElement("tr");
+    for (const value of [
+      `${track.track_id} / ${track.segment_id ?? "—"}`,
+      states[track.status] ?? track.status,
+      track.position_m?.map((n) => n.toFixed(3)).join(", ") ?? "—",
+      track.speed_mps == null ? "—" : track.speed_mps.toFixed(3),
+    ]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    return row;
+  });
+  if (!rows.length) {
+    const row = document.createElement("tr"),
+      cell = document.createElement("td");
+    cell.colSpan = 4;
+    cell.textContent =
+      frame.decision === "blocked"
+        ? "本帧被健康状态阻断，未生成目标测量。"
+        : "本帧无目标观测。";
+    row.append(cell);
+    rows.push(row);
+  }
+  $("guarded-tracks").replaceChildren(...rows);
+  $("guarded-counts").replaceChildren(
+    ...counting.counts.map((count) => {
+      const row = document.createElement("tr");
+      for (const value of [
+        count.gate_id,
+        count.negative_to_positive,
+        count.positive_to_negative,
+      ]) {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.append(cell);
+      }
+      return row;
+    }),
+  );
+  $("guarded-events").replaceChildren(
+    ...counting.crossings.map((crossing) => {
+      const item = document.createElement("li");
+      item.textContent = `${crossing.gate_id} · 目标 ${crossing.track_id} / 片段 ${crossing.segment_id} · ${crossing.direction === "negative_to_positive" ? "负侧 → 正侧" : "正侧 → 负侧"} · 时间区间 [${crossing.from_timestamp_us}, ${crossing.to_timestamp_us}] μs`;
+      return item;
+    }),
+  );
+  drawGuardedTimeline();
+}
+
+function requestGuarded(header, observations) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(header).length + encoder.encode(observations).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器门控分析输入上限为 8 MiB；更大的流请使用原生命令。");
+  const request = JSON.stringify({ source: header, observations });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("门控分析请求超过 16 Mi 字符上限，请使用原生命令。");
+  const response = moonground_guarded(request),
+    report = unpack(response);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器门控分析结果超过 8 MiB；请使用原生命令保存。");
+  return { response, report };
+}
+
+async function runGuarded(
+  input = guardedInput.value,
+  current = ++guardedRevision,
+) {
+  const runToken = ++guardedRunToken;
+  $("run-guarded").disabled = true;
+  guardedMessage("正在按地标健康状态分析…");
+  try {
+    const lines = observationLines(input);
+    if (lines.length < 2 || lines.length > 5001)
+      throw new Error("请输入门控分析配置及 1—5000 帧联合观测。");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (current !== guardedRevision) return;
+    const { response, report } = requestGuarded(
+      lines[0],
+      lines.slice(1).join("\n") + "\n",
+    );
+    if (current !== guardedRevision) return;
+    guardedInput.value = input;
+    guardedLoadedSource = input;
+    guardedReport = report;
+    guardedResponse = response;
+    $("guarded-frame").max = String(report.frames.length - 1);
+    $("guarded-frame").value = String(report.frames.length - 1);
+    $("guarded-frame").disabled = false;
+    $("download-guarded").disabled = false;
+    $("save-guarded-checkpoint").disabled = false;
+    const blocked = report.frames.filter(
+      (frame) => frame.decision === "blocked",
+    ).length;
+    guardedMessage(
+      `已完成 ${report.frames.length} 帧门控分析，阻断 ${blocked} 帧。下载包含全部帧及同一末帧的完整检查点。`,
+    );
+    renderGuarded();
+  } catch (error) {
+    if (current === guardedRevision) guardedMessage(error.message, true);
+  } finally {
+    if (runToken === guardedRunToken) $("run-guarded").disabled = false;
+  }
+}
+
+guardedInput.addEventListener("input", () => {
+  clearGuardedResult();
+  guardedMessage("门控分析输入已修改，请重新计算。");
+});
+$("run-guarded").addEventListener("click", () => runGuarded());
+$("guarded-frame").addEventListener("input", renderGuarded);
+$("download-guarded").addEventListener("click", () => {
+  if (guardedResponse === null || guardedInput.value !== guardedLoadedSource)
+    return;
+  saveFile(guardedResponse + "\n", "moonground-guarded-results.json");
+});
+$("save-guarded-checkpoint").addEventListener("click", () => {
+  if (!guardedReport || guardedInput.value !== guardedLoadedSource) return;
+  saveFile(
+    JSON.stringify(guardedReport.checkpoint) + "\n",
+    "moonground-guarded-checkpoint.json",
+  );
+  guardedMessage(
+    `已保存整批末帧 ${guardedReport.checkpoint.health.state.last_timestamp_us} μs 的完整门控检查点。`,
+  );
+});
+$("guarded-example").addEventListener("click", async () => {
+  const current = ++guardedRevision;
+  try {
+    const response = await fetch("./guarded.ndjson");
+    if (!response.ok) throw new Error("门控分析示例读取失败。");
+    const text = await response.text();
+    if (current !== guardedRevision) return;
+    await runGuarded(text, current);
+  } catch (error) {
+    if (current === guardedRevision) guardedMessage(error.message, true);
+  }
+});
+$("guarded-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const current = ++guardedRevision;
+  try {
+    if (file.size > 8 * 1024 * 1024)
+      throw new Error("浏览器门控分析输入文件上限为 8 MiB。");
+    const text = await file.text();
+    if (current !== guardedRevision) return;
+    await runGuarded(text, current);
+  } catch (error) {
+    if (current === guardedRevision) guardedMessage(error.message, true);
+  } finally {
+    event.target.value = "";
+  }
+});
+$("guarded-checkpoint-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const current = ++guardedRevision;
+  try {
+    if (file.size > 8 * 1024 * 1024)
+      throw new Error("浏览器门控分析检查点文件上限为 8 MiB。");
+    const text = await file.text();
+    if (current !== guardedRevision) return;
+    const { report } = requestGuarded('{"resume":' + text + "}", "");
+    const nextInput = JSON.stringify({ resume: report.checkpoint }) + "\n";
+    if (new TextEncoder().encode(nextInput).length > 8 * 1024 * 1024)
+      throw new Error("恢复起点超过浏览器 8 MiB 输入上限，请使用原生命令。");
+    if (current !== guardedRevision) return;
+    clearGuardedResult();
+    guardedInput.value = nextInput;
+    guardedMessage(
+      `已载入完整门控检查点（末帧 ${report.checkpoint.health.state.last_timestamp_us ?? "尚无观测"} μs）。添加更晚的联合观测后继续。`,
+    );
+  } catch (error) {
+    if (current === guardedRevision) guardedMessage(error.message, true);
+  } finally {
+    event.target.value = "";
+  }
+});
+
+drawGuardedTimeline();
 drawHealthTimeline();
 draw();
 example();

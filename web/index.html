@@ -364,6 +364,134 @@
           </table>
         </div>
       </section>
+      <section class="panel" aria-labelledby="guarded-heading">
+        <div class="panel-title">
+          <h2 id="guarded-heading">按地标健康状态分析</h2>
+          <span id="guarded-time" class="mono">—</span>
+        </div>
+        <p class="hint">
+          这个独立入口显式启用健康门控：同帧固定地标确认健康后，才处理目标观测与过线统计。
+          等待确认、残差超限或地标不足时，当前目标被阻断，已有测量片段和过线参考点中断，累计计数保留。
+          恢复健康后建立新片段并重新预热；不跨阻断区间补路径或补计数。上方独立检查与分析入口的行为保持原样。
+        </p>
+        <div class="guarded-layout">
+          <div>
+            <label for="guarded-input" class="hint"
+              >首行为门控配置或完整恢复起点；每帧包含同时间的 measurement 与
+              health 原始 JSON 字符串</label
+            >
+            <textarea id="guarded-input" spellcheck="false"></textarea>
+            <div class="actions">
+              <button id="run-guarded">按健康状态分析</button>
+              <button id="guarded-example" class="quiet">门控示例</button>
+              <label class="file-button"
+                >导入联合 NDJSON<input
+                  id="guarded-file"
+                  type="file"
+                  accept=".ndjson,.jsonl,.txt"
+              /></label>
+              <button id="download-guarded" class="quiet" disabled>
+                下载门控分析结果
+              </button>
+            </div>
+            <div class="actions">
+              <button id="save-guarded-checkpoint" class="quiet" disabled>
+                保存末帧完整门控检查点
+              </button>
+              <label class="file-button"
+                >载入完整门控检查点<input
+                  id="guarded-checkpoint-file"
+                  type="file"
+                  accept=".json"
+              /></label>
+            </div>
+            <p
+              id="guarded-message"
+              role="status"
+              aria-live="polite"
+              class="hint"
+            >
+              载入门控示例，查看阻断、恢复与计数保留。
+            </p>
+          </div>
+          <div>
+            <canvas
+              id="guarded-timeline"
+              width="960"
+              height="56"
+              aria-label="逐帧健康状态及测量放行情况"
+            ></canvas>
+            <p class="hint health-legend">
+              <span class="health-healthy">符合阈值</span
+              ><span class="health-drift">持续超限</span
+              ><span class="health-pending">等待证据</span
+              ><span class="health-insufficient">地标不足</span>
+            </p>
+            <p class="hint">状态条下排：绿色为已放行，棕色为已阻断。</p>
+            <div class="playback">
+              <input
+                id="guarded-frame"
+                aria-label="门控分析回放帧"
+                type="range"
+                min="0"
+                max="0"
+                value="0"
+                disabled
+              /><span id="guarded-counter" class="mono">0 / 0</span>
+            </div>
+            <div class="stats guarded-stats">
+              <div>
+                <span>本帧处理</span><strong id="guarded-decision">—</strong>
+              </div>
+              <div>
+                <span>地标健康</span><strong id="guarded-health">—</strong>
+              </div>
+              <div>
+                <span>可用地标</span><strong id="guarded-usable">—</strong>
+              </div>
+              <div>
+                <span>地标 RMS 残差</span><strong id="guarded-rms">—</strong>
+              </div>
+              <div>
+                <span>本帧测量目标</span
+                ><strong id="guarded-observed">—</strong>
+              </div>
+              <div>
+                <span>本帧过线事件</span
+                ><strong id="guarded-crossings">—</strong>
+              </div>
+            </div>
+            <p id="guarded-evidence" class="hint">尚无门控分析结果。</p>
+            <p id="guarded-interruptions" class="hint"></p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>目标 / 片段</th>
+                <th>测量状态</th>
+                <th>位置 x, y · m</th>
+                <th>速度 · m/s</th>
+              </tr>
+            </thead>
+            <tbody id="guarded-tracks"></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table class="gate-table">
+            <thead>
+              <tr>
+                <th>通道</th>
+                <th>累计负 → 正</th>
+                <th>累计正 → 负</th>
+              </tr>
+            </thead>
+            <tbody id="guarded-counts"></tbody>
+          </table>
+        </div>
+        <ul id="guarded-events" aria-label="所选帧门控过线事件"></ul>
+      </section>
       <footer>
         固定相机 ·
         单地平面。协方差以给定标定与足点为条件；观测折线连接已接受点，不补全未观测路径。数据不上传。

@@ -1745,6 +1745,439 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       await exportJson("#download", "moonground-results.json"),
       motionResultBeforeHealth,
     );
+    // Guarded analysis is a separate opt-in flow. Its pending/drift frames
+    // terminate active metric segments while preserving cumulative gate counts.
+    const healthBeforeGuarded = await page
+      .locator("#health-input")
+      .inputValue();
+    const healthCounterBeforeGuarded = await page
+      .locator("#health-counter")
+      .textContent();
+    const healthResultBeforeGuarded = await exportJson(
+      "#download-health",
+      "moonground-health-results.json",
+    );
+    const guardedSource = fs.readFileSync(
+      path.resolve(__dirname, "..", "examples", "guarded.ndjson"),
+      "utf8",
+    );
+    const guardedLines = guardedSource.trimEnd().split(/\r?\n/);
+    await page.locator("#guarded-example").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("已完成 16 帧门控分析"),
+    );
+    const guarded = await exportJson(
+      "#download-guarded",
+      "moonground-guarded-results.json",
+    );
+    assert.equal(guarded.checkpoint.format, "moonground.guarded");
+    assert.deepEqual(
+      guarded.frames.map((f) => f.decision),
+      [
+        "blocked",
+        "blocked",
+        "allowed",
+        "allowed",
+        "blocked",
+        "blocked",
+        "blocked",
+        "blocked",
+        "blocked",
+        "blocked",
+        "allowed",
+        "allowed",
+        "blocked",
+        "blocked",
+        "allowed",
+        "allowed",
+      ],
+    );
+    assert.deepEqual(
+      guarded.frames.map((f) => f.analysis.counting.crossings.length),
+      [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+    );
+    assert.deepEqual(guarded.frames[4].suppressed_track_ids, [1]);
+    assert.deepEqual(guarded.frames[4].analysis.measurement.tracks, []);
+    assert.deepEqual(
+      guarded.frames[4].analysis.measurement.closed_segment_ids,
+      ["1"],
+    );
+    assert.equal(
+      guarded.frames[4].analysis.counting.counts[0].positive_to_negative,
+      "1",
+    );
+    assert.equal(
+      guarded.frames[10].analysis.measurement.tracks[0].segment_id,
+      "2",
+    );
+    assert.equal(
+      guarded.frames[10].analysis.measurement.tracks[0].status,
+      "initializing",
+    );
+    assert.equal(
+      guarded.frames[10].analysis.measurement.tracks[0].speed_mps,
+      null,
+    );
+    assert.equal(
+      guarded.frames[14].analysis.measurement.tracks[0].segment_id,
+      "3",
+    );
+    assert.deepEqual(guarded.frames.at(-1).analysis.counting.counts, [
+      {
+        gate_id: "aisle",
+        negative_to_positive: "0",
+        positive_to_negative: "3",
+      },
+    ]);
+    const selectGuardedFrame = async (index) =>
+      page.locator("#guarded-frame").evaluate((input, value) => {
+        input.value = String(value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }, index);
+    await selectGuardedFrame(4);
+    assert.equal(
+      await page.locator("#guarded-decision").textContent(),
+      "已阻断",
+    );
+    assert.match(
+      await page.locator("#guarded-tracks").textContent(),
+      /未生成目标测量/,
+    );
+    assert.match(
+      await page.locator("#guarded-interruptions").textContent(),
+      /关闭的测量片段：1/,
+    );
+    assert.match(
+      await page.locator("#guarded-counts").textContent(),
+      /aisle01/,
+    );
+    const guardedCheckpoint = await exportJson(
+      "#save-guarded-checkpoint",
+      "moonground-guarded-checkpoint.json",
+    );
+    assert.equal(guardedCheckpoint.health.state.last_timestamp_us, "2250000");
+    assert.equal(
+      guardedCheckpoint.analysis.measurement.motion.last_timestamp_us,
+      "2250000",
+    );
+    assert.equal(
+      guardedCheckpoint.analysis.counting.state.last_timestamp_us,
+      "2250000",
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page
+      .locator('section[aria-labelledby="guarded-heading"]')
+      .screenshot({ path: path.join(directory, "guarded-mobile-preview.png") });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page
+      .locator('section[aria-labelledby="guarded-heading"]')
+      .screenshot({
+        path: path.join(directory, "guarded-desktop-preview.png"),
+      });
+    const mismatchCamera = structuredClone(guardedCheckpoint);
+    mismatchCamera.health.configuration.camera.fx += 1;
+    for (const invalid of [
+      { ...guardedCheckpoint, checkpoint_version: "999" },
+      {
+        ...guardedCheckpoint,
+        health: {
+          ...guardedCheckpoint.health,
+          state: { ...guardedCheckpoint.health.state, last_timestamp_us: "0" },
+        },
+      },
+      mismatchCamera,
+    ]) {
+      await page.locator("#guarded-checkpoint-file").setInputFiles({
+        name: "invalid-guarded.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(invalid)),
+      });
+      await page.waitForFunction(
+        () => document.querySelector("#guarded-checkpoint-file").value === "",
+      );
+      assert.equal(await page.locator("#guarded-message.error").count(), 1);
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        guardedSource,
+      );
+      assert.deepEqual(
+        await exportJson(
+          "#download-guarded",
+          "moonground-guarded-results.json",
+        ),
+        guarded,
+      );
+    }
+    const firstWrapper = JSON.parse(guardedLines[1]);
+    const wrongTime = {
+      ...firstWrapper,
+      health: JSON.stringify({
+        ...JSON.parse(firstWrapper.health),
+        timestamp_us: "1",
+      }),
+    };
+    const duplicateMeasurement = JSON.parse(
+      JSON.parse(guardedLines[3]).measurement,
+    );
+    duplicateMeasurement.observations.push({
+      ...duplicateMeasurement.observations[0],
+    });
+    const duplicateObjectWrapper = {
+      ...JSON.parse(guardedLines[3]),
+      measurement: JSON.stringify(duplicateMeasurement),
+    };
+    const unknownHealth = JSON.parse(firstWrapper.health);
+    unknownHealth.observations[0].landmark_id = "unknown";
+    const duplicateOuter =
+      '{"measurement":' +
+      JSON.stringify(firstWrapper.measurement) +
+      ',"health":' +
+      JSON.stringify(firstWrapper.health) +
+      ',"health":' +
+      JSON.stringify(firstWrapper.health) +
+      "}";
+    const badStreams = [
+      [
+        guardedLines[0],
+        JSON.stringify({ ...firstWrapper, unknown: true }),
+      ].join("\n") + "\n",
+      [guardedLines[0], duplicateOuter].join("\n") + "\n",
+      [guardedLines[0], JSON.stringify(wrongTime)].join("\n") + "\n",
+      [
+        guardedLines[0],
+        ...guardedLines.slice(1, 3),
+        JSON.stringify(duplicateObjectWrapper),
+      ].join("\n") + "\n",
+      [
+        guardedLines[0],
+        JSON.stringify({
+          ...firstWrapper,
+          health: JSON.stringify(unknownHealth),
+        }),
+      ].join("\n") + "\n",
+    ];
+    for (const input of badStreams) {
+      await page.locator("#guarded-file").setInputFiles({
+        name: "invalid-guarded.ndjson",
+        mimeType: "application/x-ndjson",
+        buffer: Buffer.from(input),
+      });
+      await page.waitForFunction(
+        () => document.querySelector("#guarded-file").value === "",
+      );
+      assert.equal(await page.locator("#guarded-message.error").count(), 1);
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        guardedSource,
+      );
+      assert.deepEqual(
+        await exportJson(
+          "#download-guarded",
+          "moonground-guarded-results.json",
+        ),
+        guarded,
+      );
+    }
+    const lastWrapper = JSON.parse(guardedLines.at(-1));
+    const nextGuardedFrame = {
+      measurement: JSON.stringify({
+        ...JSON.parse(lastWrapper.measurement),
+        timestamp_us: "2400000",
+      }),
+      health: JSON.stringify({
+        ...JSON.parse(lastWrapper.health),
+        timestamp_us: "2400000",
+      }),
+    };
+    await page
+      .locator("#guarded-input")
+      .fill(guardedSource + JSON.stringify(nextGuardedFrame) + "\n");
+    assert.equal(await page.locator("#download-guarded").isDisabled(), true);
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("已完成 17 帧门控分析"),
+    );
+    const continuedGuarded = await exportJson(
+      "#download-guarded",
+      "moonground-guarded-results.json",
+    );
+    await page.locator("#guarded-checkpoint-file").setInputFiles({
+      name: "guarded.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(guardedCheckpoint)),
+    });
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("已载入完整门控检查点"),
+    );
+    assert.equal(await page.locator("#guarded-counter").textContent(), "0 / 0");
+    assert.equal(await page.locator("#download-guarded").isDisabled(), true);
+    await page
+      .locator("#guarded-input")
+      .fill(
+        (await page.locator("#guarded-input").inputValue()) +
+          JSON.stringify(nextGuardedFrame) +
+          "\n",
+      );
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("已完成 1 帧门控分析"),
+    );
+    const resumedGuarded = await exportJson(
+      "#download-guarded",
+      "moonground-guarded-results.json",
+    );
+    assert.deepEqual(resumedGuarded.frames[0], continuedGuarded.frames.at(-1));
+    assert.deepEqual(resumedGuarded.checkpoint, continuedGuarded.checkpoint);
+    // Nested JSON remains raw: an ID which JS would round to 1 is invalid even
+    // when the health decision would otherwise suppress the object's frame.
+    const fractionalObject = {
+      ...firstWrapper,
+      measurement: firstWrapper.measurement.replace(
+        '"track_id":1',
+        '"track_id":1.0000000000000001',
+      ),
+    };
+    await page
+      .locator("#guarded-input")
+      .fill(guardedLines[0] + "\n" + JSON.stringify(fractionalObject) + "\n");
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#guarded-message").classList.contains("error"),
+    );
+    assert.equal(await page.locator("#download-guarded").isDisabled(), true);
+    const fractionalHeader = JSON.parse(guardedLines[0]),
+      fractionalAnalysis = JSON.parse(fractionalHeader.analysis);
+    fractionalAnalysis.counting = fractionalAnalysis.counting.replace(
+      '"max_tracks":10',
+      '"max_tracks":10.0000000000000001',
+    );
+    fractionalHeader.analysis = JSON.stringify(fractionalAnalysis);
+    await page
+      .locator("#guarded-input")
+      .fill(JSON.stringify(fractionalHeader) + "\n" + guardedLines[1] + "\n");
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#guarded-message").classList.contains("error"),
+    );
+    assert.equal(await page.locator("#download-guarded").isDisabled(), true);
+    // A newer draft cancels old preparation. A newer valid file or example is
+    // allowed to supersede it and keeps the button busy until that run finishes.
+    await page.locator("#guarded-input").fill(guardedSource);
+    await page.evaluate(() => {
+      const original = window.setTimeout;
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 0) {
+          window.setTimeout = original;
+          window.releaseGuardedPreparation = () => callback(...args);
+          return -1;
+        }
+        return original.call(window, callback, delay, ...args);
+      };
+    });
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseGuardedPreparation === "function",
+    );
+    await page.locator("#guarded-input").fill(guardedLines[0] + "\n");
+    await page.evaluate(() => {
+      window.releaseGuardedPreparation();
+      delete window.releaseGuardedPreparation;
+    });
+    await page.waitForFunction(
+      () => !document.querySelector("#run-guarded").disabled,
+    );
+    assert.equal(await page.locator("#guarded-counter").textContent(), "0 / 0");
+    for (const replacement of ["file", "example"]) {
+      await page
+        .locator("#guarded-input")
+        .fill(guardedSource.replace("warehouse-landmarks", "older-monitor"));
+      await page.evaluate(() => {
+        const original = window.setTimeout;
+        window.guardedPreparationQueue = [];
+        window.setTimeout = function (callback, delay, ...args) {
+          if (delay === 0) {
+            window.guardedPreparationQueue.push(() => callback(...args));
+            if (window.guardedPreparationQueue.length === 2)
+              window.setTimeout = original;
+            return -1;
+          }
+          return original.call(window, callback, delay, ...args);
+        };
+      });
+      await page.locator("#run-guarded").click();
+      await page.waitForFunction(
+        () => window.guardedPreparationQueue.length === 1,
+      );
+      const replacementSource =
+        replacement === "file"
+          ? guardedSource.replace("warehouse-landmarks", "replacement-monitor")
+          : guardedSource;
+      if (replacement === "file")
+        await page.locator("#guarded-file").setInputFiles({
+          name: "replacement-guarded.ndjson",
+          mimeType: "application/x-ndjson",
+          buffer: Buffer.from(replacementSource),
+        });
+      else await page.locator("#guarded-example").click();
+      await page.waitForFunction(
+        () => window.guardedPreparationQueue.length === 2,
+      );
+      await page.evaluate(() => window.guardedPreparationQueue[0]());
+      assert.equal(await page.locator("#run-guarded").isDisabled(), true);
+      await page.evaluate(() => window.guardedPreparationQueue[1]());
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#guarded-message")
+          .textContent.includes("已完成 16 帧门控分析"),
+      );
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        replacementSource,
+      );
+      assert.equal(await page.locator("#download-guarded").isDisabled(), false);
+    }
+    assert.equal(
+      await page.locator("#source").inputValue(),
+      motionBeforeHealth,
+    );
+    assert.equal(
+      await page.locator("#gate-input").inputValue(),
+      gatesBeforeHealth,
+    );
+    assert.equal(
+      await page.locator("#health-input").inputValue(),
+      healthBeforeGuarded,
+    );
+    assert.equal(
+      await page.locator("#counter").textContent(),
+      motionCounterBeforeHealth,
+    );
+    assert.equal(
+      await page.locator("#health-counter").textContent(),
+      healthCounterBeforeGuarded,
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      motionResultBeforeHealth,
+    );
+    assert.deepEqual(
+      await exportJson("#download-health", "moonground-health-results.json"),
+      healthResultBeforeGuarded,
+    );
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();
