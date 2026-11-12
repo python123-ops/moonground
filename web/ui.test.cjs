@@ -133,7 +133,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
         await draftPage.locator("#gate-input").inputValue(),
         gateDraft,
       );
-      await draftPage.locator("details").evaluate((details) => {
+      await draftPage.locator("#calibration-section").evaluate((details) => {
         details.open = true;
       });
       const draft = '{"control_pixels":[[11,22]],"user_draft":"preserve"}';
@@ -268,7 +268,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       /正侧 → 负侧/,
     );
     assert.match(await page.locator("#gate-events").textContent(), /时间区间/);
-    await page.locator("details").evaluate((details) => {
+    await page.locator("#calibration-section").evaluate((details) => {
       details.open = true;
     });
     await page.waitForFunction(
@@ -289,7 +289,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       input.value = "2";
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    await page.locator("details").evaluate((details) => {
+    await page.locator("#calibration-section").evaluate((details) => {
       details.open = false;
     });
     await page.screenshot({
@@ -328,7 +328,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     });
     // Compare the polluted request through strict and robust calibration, then
     // verify the displayed per-point decisions against the reusable response.
-    await page.locator("details").evaluate((details) => {
+    await page.locator("#calibration-section").evaluate((details) => {
       details.open = true;
     });
     const beforeRobust = await page.locator("#source").inputValue();
@@ -503,7 +503,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     });
     assert.equal(await page.locator("#ready").textContent(), "1");
     assert.match(await page.locator("#speed").textContent(), /m\/s/);
-    await page.locator("details").evaluate((details) => {
+    await page.locator("#calibration-section").evaluate((details) => {
       details.open = true;
     });
     await page
@@ -2178,6 +2178,351 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       await exportJson("#download-health", "moonground-health-results.json"),
       healthResultBeforeGuarded,
     );
+    // Transit consumes already validated measurements, with an explicit source
+    // choice and the corresponding upstream replay cursor.
+    await page.locator("#transit-section").evaluate((details) => {
+      details.open = true;
+    });
+    const transitConfiguration = fs.readFileSync(
+      path.resolve(__dirname, "..", "examples", "transit.json"),
+      "utf8",
+    );
+    await page.locator("#transit-input").fill(transitConfiguration);
+    await page.locator("#example").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已处理 10 帧"),
+    );
+    const transit = await exportJson(
+      "#download-transit",
+      "moonground-transit-results.json",
+    );
+    // A different valid upstream session fails inside the bridge and keeps the
+    // currently displayed ordinary transit result intact.
+    await page.locator("#transit-guarded").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#transit-message").classList.contains("error"),
+    );
+    assert.deepEqual(
+      await exportJson("#download-transit", "moonground-transit-results.json"),
+      transit,
+    );
+    // A newer explicit source choice supersedes older preparation, even while
+    // the earlier zero-delay callback has not been released.
+    await page.evaluate(() => {
+      const original = window.setTimeout;
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 0) {
+          window.setTimeout = original;
+          window.releaseTransitSourceChoice = () => callback(...args);
+          return -1;
+        }
+        return original.call(window, callback, delay, ...args);
+      };
+    });
+    await page.locator("#transit-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseTransitSourceChoice === "function",
+    );
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已处理 10 帧"),
+    );
+    await page.evaluate(() => {
+      window.releaseTransitSourceChoice();
+      delete window.releaseTransitSourceChoice;
+    });
+    assert.equal(await page.locator("#transit-message.error").count(), 0);
+    assert.deepEqual(
+      await exportJson("#download-transit", "moonground-transit-results.json"),
+      transit,
+    );
+    assert.equal(transit.checkpoint.format, "moonground.transit");
+    assert.deepEqual(transit.frames.at(-1).counts, [
+      { section_id: "aisle", completed: "1" },
+    ]);
+    const passageIndex = transit.frames.findIndex(
+      (frame) => frame.passages.length > 0,
+    );
+    assert.ok(passageIndex >= 0);
+    const passage = transit.frames[passageIndex].passages[0];
+    assert.ok(
+      BigInt(passage.elapsed_upper_us) >= BigInt(passage.elapsed_lower_us),
+    );
+    assert.ok(passage.estimated_elapsed_us >= Number(passage.elapsed_lower_us));
+    assert.ok(passage.estimated_elapsed_us <= Number(passage.elapsed_upper_us));
+    assert.equal(Object.hasOwn(passage, "speed_mps"), false);
+    await page.locator("#frame").evaluate((input, value) => {
+      input.value = String(value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }, passageIndex);
+    assert.match(
+      await page.locator("#transit-source").textContent(),
+      /普通测量/,
+    );
+    assert.match(
+      await page.locator("#transit-passages").textContent(),
+      /aisle/,
+    );
+    assert.match(await page.locator("#transit-counts").textContent(), /aisle1/);
+    const transitCheckpoint = await exportJson(
+      "#save-transit-checkpoint",
+      "moonground-transit-checkpoint.json",
+    );
+    assert.equal(transitCheckpoint.counting.state.last_timestamp_us, "1800000");
+    await page.locator("#transit-input").evaluate((input) => {
+      input.scrollTop = 0;
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page
+      .locator("#transit-section")
+      .screenshot({ path: path.join(directory, "transit-mobile-preview.png") });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator("#transit-section").screenshot({
+      path: path.join(directory, "transit-desktop-preview.png"),
+    });
+    const ordinaryAtTransit = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    await page
+      .locator("#gate-input")
+      .fill((await page.locator("#gate-input").inputValue()) + " ");
+    assert.equal(await page.locator("#download-transit").isDisabled(), false);
+    assert.deepEqual(
+      await exportJson("#download-transit", "moonground-transit-results.json"),
+      transit,
+    );
+    for (const invalid of [
+      { ...transitCheckpoint, checkpoint_version: "999" },
+      {
+        ...transitCheckpoint,
+        counts: [{ section_id: "aisle", completed: "-1" }],
+      },
+    ]) {
+      await page.locator("#transit-checkpoint-file").setInputFiles({
+        name: "invalid-transit.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(invalid)),
+      });
+      await page.waitForFunction(
+        () => document.querySelector("#transit-checkpoint-file").value === "",
+      );
+      assert.equal(await page.locator("#transit-message.error").count(), 1);
+      assert.equal(
+        await page.locator("#transit-input").inputValue(),
+        transitConfiguration,
+      );
+      assert.deepEqual(
+        await exportJson(
+          "#download-transit",
+          "moonground-transit-results.json",
+        ),
+        transit,
+      );
+    }
+    // Save the matching upstream final watermark before restoring the separate
+    // downstream checkpoint and supplying only a later measurement frame.
+    await page.locator("#frame").evaluate((input) => {
+      input.value = input.max;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const transitMotionCheckpoint = await exportJson(
+      "#save-checkpoint",
+      "moonground-checkpoint.json",
+    );
+    const warehouseInput = await page.locator("#source").inputValue();
+    const nextTransitObservation = {
+      timestamp_us: "2000000",
+      observations: [{ track_id: 1, point: [270, 240] }],
+    };
+    await page
+      .locator("#source")
+      .fill(warehouseInput + JSON.stringify(nextTransitObservation) + "\n");
+    assert.equal(await page.locator("#download-transit").isDisabled(), true);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 11 帧"),
+    );
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已处理 11 帧"),
+    );
+    const extendedTransit = await exportJson(
+      "#download-transit",
+      "moonground-transit-results.json",
+    );
+    await page
+      .locator("#source")
+      .fill(
+        JSON.stringify({ resume: transitMotionCheckpoint }) +
+          "\n" +
+          JSON.stringify(nextTransitObservation) +
+          "\n",
+      );
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 1 帧"),
+    );
+    await page.locator("#transit-checkpoint-file").setInputFiles({
+      name: "transit.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(transitCheckpoint)),
+    });
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已载入区间检查点"),
+    );
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已处理 1 帧"),
+    );
+    const resumedTransit = await exportJson(
+      "#download-transit",
+      "moonground-transit-results.json",
+    );
+    assert.deepEqual(resumedTransit.frames[0], extendedTransit.frames.at(-1));
+    assert.deepEqual(resumedTransit.checkpoint, extendedTransit.checkpoint);
+    const rawTransit = JSON.parse(transitConfiguration);
+    rawTransit.counting = rawTransit.counting.replace(
+      '"max_tracks":1000',
+      '"max_tracks":1000.0000000000000001',
+    );
+    await page.locator("#transit-input").fill(JSON.stringify(rawTransit));
+    assert.equal(await page.locator("#download-transit").isDisabled(), true);
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#transit-message").classList.contains("error"),
+    );
+    assert.equal(await page.locator("#download").isDisabled(), false);
+    // Healthy blocking propagates as empty measurement frames, cancelling
+    // pending entries. It cannot complete a passage across a blocked interval.
+    const guardedTransitConfiguration = JSON.parse(transitConfiguration);
+    const guardedTransitGates = JSON.parse(
+      guardedTransitConfiguration.counting,
+    );
+    guardedTransitGates.session_id = "guarded-warehouse";
+    guardedTransitGates.gates[0].start_m[0] = 5.8;
+    guardedTransitGates.gates[0].end_m[0] = 5.8;
+    guardedTransitGates.gates[1].start_m[0] = 6.6;
+    guardedTransitGates.gates[1].end_m[0] = 6.6;
+    guardedTransitConfiguration.counting = JSON.stringify(guardedTransitGates);
+    await page
+      .locator("#transit-input")
+      .fill(JSON.stringify(guardedTransitConfiguration));
+    await page.locator("#transit-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已处理 16 帧"),
+    );
+    const guardedTransit = await exportJson(
+      "#download-transit",
+      "moonground-transit-results.json",
+    );
+    assert.deepEqual(guardedTransit.frames.at(-1).counts, [
+      { section_id: "aisle", completed: "0" },
+    ]);
+    assert.equal(guardedTransit.frames[3].pending_count, 1);
+    assert.equal(guardedTransit.frames[4].pending_count, 0);
+    assert.equal(
+      guardedTransit.frames[4].cancellations[0].reason,
+      "discontinuity",
+    );
+    await page.locator("#guarded-frame").evaluate((input) => {
+      input.value = "4";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.match(
+      await page.locator("#transit-source").textContent(),
+      /健康门控测量.*5 \/ 16/,
+    );
+    assert.match(
+      await page.locator("#transit-cancellations").textContent(),
+      /观测中断/,
+    );
+    await page
+      .locator("#source")
+      .fill((await page.locator("#source").inputValue()) + " ");
+    assert.equal(await page.locator("#download-transit").isDisabled(), false);
+    await page
+      .locator("#guarded-input")
+      .fill((await page.locator("#guarded-input").inputValue()) + " ");
+    assert.equal(await page.locator("#download-transit").isDisabled(), true);
+    // A configuration edit cancels in-flight preparation without changing the
+    // upstream results.
+    await page.locator("#example").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    await page.locator("#transit-input").fill(transitConfiguration);
+    await page.evaluate(() => {
+      const original = window.setTimeout;
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 0) {
+          window.setTimeout = original;
+          window.releaseTransitPreparation = () => callback(...args);
+          return -1;
+        }
+        return original.call(window, callback, delay, ...args);
+      };
+    });
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(
+      () => typeof window.releaseTransitPreparation === "function",
+    );
+    await page.locator("#transit-input").fill(transitConfiguration + " ");
+    await page.evaluate(() => {
+      window.releaseTransitPreparation();
+      delete window.releaseTransitPreparation;
+    });
+    assert.equal(await page.locator("#download-transit").isDisabled(), true);
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      ordinaryAtTransit,
+    );
+    // Changing the selected upstream draft while preparing also prevents a
+    // stale transit result from becoming available.
+    await page.evaluate(() => {
+      const original = window.setTimeout;
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 0) {
+          window.setTimeout = original;
+          window.releaseTransitUpstream = () => callback(...args);
+          return -1;
+        }
+        return original.call(window, callback, delay, ...args);
+      };
+    });
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(
+      () => typeof window.releaseTransitUpstream === "function",
+    );
+    await page.locator("#source").fill(warehouseInput + " ");
+    await page.evaluate(() => {
+      window.releaseTransitUpstream();
+      delete window.releaseTransitUpstream;
+    });
+    assert.equal(await page.locator("#download-transit").isDisabled(), true);
+    assert.equal(await page.locator("#transit-ordinary").isDisabled(), true);
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

@@ -11,6 +11,7 @@ import {
   moonground_analysis,
   moonground_health,
   moonground_guarded,
+  moonground_transit,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -19,6 +20,7 @@ const calibrationInput = $("calibration-input");
 const gateInput = $("gate-input");
 const healthInput = $("health-input");
 const guardedInput = $("guarded-input");
+const transitInput = $("transit-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -55,6 +57,15 @@ let guardedRunToken = 0;
 let guardedReport = null;
 let guardedResponse = null;
 let guardedLoadedSource = "";
+let transitRevision = 0;
+let transitRunToken = 0;
+let transitEdited = false;
+let transitReport = null;
+let transitResponse = null;
+let transitOrigin = null;
+let transitPendingOrigin = null;
+let transitSourceReference = null;
+let transitLoadedConfiguration = "";
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -80,6 +91,7 @@ function invalidate() {
   stop();
   results = [];
   measurementLines = [];
+  invalidateTransitSource("ordinary");
   clearGateResult();
   configuration = null;
   loadedSource = "";
@@ -521,6 +533,7 @@ function render() {
   }
   $("tracks").replaceChildren(...rows);
   renderGates(index);
+  renderTransit("ordinary");
   draw();
 }
 
@@ -562,6 +575,7 @@ async function run() {
     measurementLines = rawMeasurements;
     $("analyze-gates").disabled = gatesBusy;
     loadedSource = input;
+    refreshTransitSources();
     slider.max = String(results.length - 1);
     slider.value = "0";
     slider.disabled = false;
@@ -609,6 +623,7 @@ $("analyze").addEventListener("click", async () => {
     configuration = report.checkpoint.measurement.configuration;
     results = report.frames.map((frame) => frame.measurement);
     measurementLines = results.map((frame) => JSON.stringify(frame));
+    invalidateTransitSource("ordinary");
     gateReport = {
       frames: report.frames.map((frame) => frame.counting),
       checkpoint: report.checkpoint.counting,
@@ -616,6 +631,7 @@ $("analyze").addEventListener("click", async () => {
     gateDefinitions = report.checkpoint.counting.configuration.gates;
     gateResponse = JSON.stringify(gateReport);
     loadedSource = input;
+    refreshTransitSources();
     analysisHeader = header;
     analysisGateInput = gates;
     analysisResponse = response;
@@ -1333,6 +1349,7 @@ function clearGuardedResult() {
   guardedReport = null;
   guardedResponse = null;
   guardedLoadedSource = "";
+  invalidateTransitSource("guarded");
   $("download-guarded").disabled = true;
   $("save-guarded-checkpoint").disabled = true;
   $("guarded-frame").disabled = true;
@@ -1452,6 +1469,7 @@ function renderGuarded() {
     }),
   );
   drawGuardedTimeline();
+  renderTransit("guarded");
 }
 
 function requestGuarded(header, observations) {
@@ -1490,9 +1508,11 @@ async function runGuarded(
     );
     if (current !== guardedRevision) return;
     guardedInput.value = input;
+    invalidateTransitSource("guarded");
     guardedLoadedSource = input;
     guardedReport = report;
     guardedResponse = response;
+    refreshTransitSources();
     $("guarded-frame").max = String(report.frames.length - 1);
     $("guarded-frame").value = String(report.frames.length - 1);
     $("guarded-frame").disabled = false;
@@ -1586,6 +1606,266 @@ $("guarded-checkpoint-file").addEventListener("change", async (event) => {
     event.target.value = "";
   }
 });
+
+function transitMessage(text, error = false) {
+  $("transit-message").textContent = text;
+  $("transit-message").classList.toggle("error", error);
+}
+
+function refreshTransitSources() {
+  $("transit-ordinary").disabled =
+    !results.length || source.value !== loadedSource;
+  $("transit-guarded").disabled =
+    !guardedReport?.frames.length || guardedInput.value !== guardedLoadedSource;
+}
+
+function clearTransitResult() {
+  transitRevision++;
+  transitReport = null;
+  transitResponse = null;
+  transitOrigin = null;
+  transitSourceReference = null;
+  transitLoadedConfiguration = "";
+  $("download-transit").disabled = true;
+  $("save-transit-checkpoint").disabled = true;
+  $("transit-source").textContent = "尚未选择测量来源";
+  $("transit-counts").replaceChildren();
+  $("transit-passages").replaceChildren();
+  $("transit-cancellations").replaceChildren();
+  $("transit-pending").textContent = "—";
+}
+
+function invalidateTransitSource(origin) {
+  if (transitOrigin === origin) {
+    clearTransitResult();
+    transitMessage("所选来源的测量结果已更新，请重新统计区间通行。");
+  } else if (transitPendingOrigin === origin) transitRevision++;
+  refreshTransitSources();
+}
+
+function transitReference(origin) {
+  return origin === "ordinary" ? measurementLines : guardedReport;
+}
+
+function transitSourceCurrent(origin, reference) {
+  return (
+    transitReference(origin) === reference &&
+    (origin === "ordinary"
+      ? results.length > 0 && source.value === loadedSource
+      : !!guardedReport?.frames.length &&
+        guardedInput.value === guardedLoadedSource)
+  );
+}
+
+function renderTransit(changedOrigin = transitOrigin) {
+  if (!transitReport || changedOrigin !== transitOrigin) return;
+  if (!transitSourceCurrent(transitOrigin, transitSourceReference)) {
+    clearTransitResult();
+    return;
+  }
+  const index = Number(
+    $(transitOrigin === "ordinary" ? "frame" : "guarded-frame").value,
+  );
+  const frame = transitReport.frames[index];
+  if (!frame) return;
+  const label = transitOrigin === "ordinary" ? "普通测量" : "健康门控测量";
+  $("transit-source").textContent =
+    `${label} · ${index + 1} / ${transitReport.frames.length} · ${frame.counting.timestamp_us} μs`;
+  $("transit-pending").textContent = String(frame.pending_count);
+  $("transit-counts").replaceChildren(
+    ...frame.counts.map((count) => {
+      const row = document.createElement("tr");
+      for (const value of [count.section_id, count.completed]) {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.append(cell);
+      }
+      return row;
+    }),
+  );
+  const bracket = (event) =>
+    `[${event.from_timestamp_us}, ${event.to_timestamp_us}]`;
+  const rows = frame.passages.map((passage) => {
+    const row = document.createElement("tr");
+    for (const value of [
+      passage.section_id,
+      `${passage.track_id} / ${passage.segment_id}`,
+      bracket(passage.entry),
+      bracket(passage.exit),
+      `[${passage.elapsed_lower_us}, ${passage.elapsed_upper_us}]`,
+      passage.estimated_elapsed_us.toFixed(3),
+    ]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    return row;
+  });
+  if (!rows.length) {
+    const row = document.createElement("tr"),
+      cell = document.createElement("td");
+    cell.colSpan = 6;
+    cell.textContent = "本帧无完成通行。";
+    row.append(cell);
+    rows.push(row);
+  }
+  $("transit-passages").replaceChildren(...rows);
+  const reasons = {
+    discontinuity: "观测中断或片段变化",
+    expired: "入口确认期限到达",
+    reentered: "重复入口",
+    reversed: "反向通过",
+    ambiguous_order: "过线先后不明确",
+  };
+  $("transit-cancellations").replaceChildren(
+    ...frame.cancellations.map((cancellation) => {
+      const item = document.createElement("li");
+      item.textContent = `${cancellation.section_id} · 目标 ${cancellation.track_id} / 片段 ${cancellation.segment_id} · ${reasons[cancellation.reason] ?? cancellation.reason}`;
+      return item;
+    }),
+  );
+}
+
+function requestTransit(configuration, measurements) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(configuration).length + encoder.encode(measurements).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器区间统计输入上限为 8 MiB；更大的流请使用原生命令。");
+  const request = JSON.stringify({ source: configuration, measurements });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("区间统计请求超过 16 Mi 字符上限。");
+  const response = moonground_transit(request),
+    report = unpack(response);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器区间统计结果超过 8 MiB；请使用原生命令保存。");
+  return { response, report };
+}
+
+async function runTransit(origin) {
+  const reference = transitReference(origin);
+  if (!transitSourceCurrent(origin, reference)) return;
+  const current = ++transitRevision,
+    runToken = ++transitRunToken,
+    configuration = transitInput.value;
+  transitPendingOrigin = origin;
+  transitMessage("正在配对同目标、同片段的入口与出口…");
+  try {
+    // Upstream outputs have already passed MoonBit validation; exact timestamps
+    // and segment IDs are strings. The user-provided configuration stays raw.
+    const lines =
+      origin === "ordinary"
+        ? reference
+        : reference.frames.map((frame) =>
+            JSON.stringify(frame.analysis.measurement),
+          );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (current !== transitRevision || !transitSourceCurrent(origin, reference))
+      return;
+    const { response, report } = requestTransit(
+      configuration,
+      lines.join("\n") + "\n",
+    );
+    if (current !== transitRevision || !transitSourceCurrent(origin, reference))
+      return;
+    transitReport = report;
+    transitResponse = response;
+    transitOrigin = origin;
+    transitSourceReference = reference;
+    transitLoadedConfiguration = configuration;
+    $("download-transit").disabled = false;
+    $("save-transit-checkpoint").disabled = false;
+    const completed = report.frames.reduce(
+      (total, frame) => total + frame.passages.length,
+      0,
+    );
+    transitMessage(
+      `已处理 ${report.frames.length} 帧，完成 ${completed} 次区间通行。下方随所选来源的回放滑块显示本帧结果。`,
+    );
+    renderTransit();
+  } catch (error) {
+    if (current === transitRevision) transitMessage(error.message, true);
+  } finally {
+    if (runToken === transitRunToken) transitPendingOrigin = null;
+  }
+}
+
+transitInput.addEventListener("input", () => {
+  transitEdited = true;
+  clearTransitResult();
+  transitMessage("区间配置已修改，请选择测量来源重新统计。");
+});
+$("transit-ordinary").addEventListener("click", () => runTransit("ordinary"));
+$("transit-guarded").addEventListener("click", () => runTransit("guarded"));
+$("download-transit").addEventListener("click", () => {
+  if (
+    !transitReport ||
+    transitInput.value !== transitLoadedConfiguration ||
+    !transitSourceCurrent(transitOrigin, transitSourceReference)
+  )
+    return;
+  saveFile(transitResponse + "\n", "moonground-transit-results.json");
+});
+$("save-transit-checkpoint").addEventListener("click", () => {
+  if (
+    !transitReport ||
+    transitInput.value !== transitLoadedConfiguration ||
+    !transitSourceCurrent(transitOrigin, transitSourceReference)
+  )
+    return;
+  saveFile(
+    JSON.stringify(transitReport.checkpoint) + "\n",
+    "moonground-transit-checkpoint.json",
+  );
+  transitMessage(
+    `已保存整批末帧 ${transitReport.checkpoint.counting.state.last_timestamp_us} μs 的区间统计检查点。它不包含上游测量状态。`,
+  );
+});
+$("transit-checkpoint-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const current = ++transitRevision;
+  try {
+    if (file.size > 8 * 1024 * 1024)
+      throw new Error("浏览器区间检查点文件上限为 8 MiB。");
+    const text = await file.text();
+    if (current !== transitRevision) return;
+    const { report } = requestTransit('{"resume":' + text + "}", "");
+    const nextInput = JSON.stringify({ resume: report.checkpoint });
+    if (new TextEncoder().encode(nextInput).length > 8 * 1024 * 1024)
+      throw new Error("区间恢复起点超过浏览器 8 MiB 输入上限。");
+    if (current !== transitRevision) return;
+    clearTransitResult();
+    transitEdited = true;
+    transitInput.value = nextInput;
+    transitMessage(
+      `已载入区间检查点（末帧 ${report.checkpoint.counting.state.last_timestamp_us ?? "尚无观测"} μs）。先将上游恢复至同一水位，再选择更晚的测量结果。`,
+    );
+  } catch (error) {
+    if (current === transitRevision) transitMessage(error.message, true);
+  } finally {
+    event.target.value = "";
+  }
+});
+const initialTransitRevision = transitRevision;
+fetch("./transit.json")
+  .then((response) => {
+    if (!response.ok) throw new Error("区间示例读取失败。");
+    return response.text();
+  })
+  .then((text) => {
+    if (
+      !transitEdited &&
+      transitRevision === initialTransitRevision &&
+      transitInput.value === ""
+    )
+      transitInput.value = text;
+  })
+  .catch((error) => {
+    if (!transitEdited && transitRevision === initialTransitRevision)
+      transitMessage(error.message, true);
+  });
 
 drawGuardedTimeline();
 drawHealthTimeline();

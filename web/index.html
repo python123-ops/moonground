@@ -101,7 +101,7 @@
             /></label>
             <button id="reframe" class="quiet">变换观测坐标</button>
           </div>
-          <details>
+          <details id="calibration-section">
             <summary>从地面控制点生成标定</summary>
             <p class="hint">
               输入至少六对拟合点及两对独立核验点。地面点单位为米；包含 camera
@@ -231,6 +231,71 @@
             <ul id="gate-events" aria-label="所选帧过线事件"></ul>
           </div>
         </div>
+        <details id="transit-section">
+          <summary>两通道之间的区间通行时间</summary>
+          <p class="hint">
+            配置独立的入口、出口及通过方向，配对同一目标、同一连续片段的过线记录。
+            这里的门定义不随上方通道输入联动；默认区间示例对应仓储测量。
+            时间范围保留两次过线的观测区间，插值估计单独列出；不换算速度。
+          </p>
+          <label for="transit-input" class="hint"
+            >区间配置或区间统计恢复起点 JSON</label
+          >
+          <textarea id="transit-input" spellcheck="false"></textarea>
+          <div class="actions">
+            <button id="transit-ordinary" disabled>使用普通测量结果</button>
+            <button id="transit-guarded" disabled>使用健康门控结果</button>
+            <button id="download-transit" class="quiet" disabled>
+              下载区间结果
+            </button>
+            <button id="save-transit-checkpoint" class="quiet" disabled>
+              保存末帧区间检查点
+            </button>
+            <label class="file-button"
+              >载入区间检查点<input
+                id="transit-checkpoint-file"
+                type="file"
+                accept=".json"
+            /></label>
+          </div>
+          <p id="transit-message" role="status" aria-live="polite" class="hint">
+            先生成普通测量或健康门控测量，再显式选择来源。
+          </p>
+          <p class="hint">
+            区间检查点不包含上游状态；恢复时，先将上游恢复至同一水位，再处理更晚的测量。
+          </p>
+          <p class="hint">
+            <span id="transit-source">尚未选择测量来源</span
+            >；待出口确认：<strong id="transit-pending">—</strong>
+          </p>
+          <div class="table-wrap">
+            <table class="gate-table">
+              <thead>
+                <tr>
+                  <th>区间</th>
+                  <th>累计完成</th>
+                </tr>
+              </thead>
+              <tbody id="transit-counts"></tbody>
+            </table>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>区间</th>
+                  <th>目标 / 片段</th>
+                  <th>入口观测区间 · μs</th>
+                  <th>出口观测区间 · μs</th>
+                  <th>通行时长范围 · μs</th>
+                  <th>插值估计 · μs</th>
+                </tr>
+              </thead>
+              <tbody id="transit-passages"></tbody>
+            </table>
+          </div>
+          <ul id="transit-cancellations" aria-label="所选帧取消的入口记录"></ul>
+        </details>
       </section>
       <section class="panel">
         <div class="panel-title">

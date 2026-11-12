@@ -158,7 +158,8 @@ button:disabled {
 #gate-message.error,
 #analysis-message.error,
 #health-message.error,
-#guarded-message.error {
+#guarded-message.error,
+#transit-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -218,12 +219,16 @@ button:disabled {
 #gate-input {
   height: 180px;
 }
+#transit-input {
+  height: 180px;
+}
 .gate-table {
   min-width: 280px;
 }
 #gate-events,
 #guarded-events,
-#guarded-interruptions {
+#guarded-interruptions,
+#transit-cancellations {
   font-size: 12px;
   overflow-wrap: anywhere;
   padding-left: 18px;
