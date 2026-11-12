@@ -27,6 +27,7 @@ const assets = new Map([
   ["gates.json", "application/json; charset=utf-8"],
   ["health.ndjson", "application/x-ndjson; charset=utf-8"],
   ["guarded.ndjson", "application/x-ndjson; charset=utf-8"],
+  ["projection-replace.ndjson", "application/x-ndjson; charset=utf-8"],
   ["transit.json", "application/json; charset=utf-8"],
   ["robust-calibration.json", "application/json; charset=utf-8"],
 ]);

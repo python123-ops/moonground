@@ -439,16 +439,25 @@
           等待确认、残差超限或地标不足时，当前目标被阻断，已有测量片段和过线参考点中断，累计计数保留。
           恢复健康后建立新片段并重新预热；不跨阻断区间补路径或补计数。上方独立检查与分析入口的行为保持原样。
         </p>
+        <p class="hint">
+          重新标定时，可在流中插入 replace_projection 行，值为包含
+          timestamp_us、calibration 和显式 camera（对象或 null）的原始 JSON
+          字符串。它占用一个更晚的时刻，关闭旧片段并重新确认健康；
+          适用于地标及通道仍处于同一米制坐标系的相机或标定替换。像素缩放裁剪请使用坐标变换。
+        </p>
         <div class="guarded-layout">
           <div>
             <label for="guarded-input" class="hint"
-              >首行为门控配置或完整恢复起点；每帧包含同时间的 measurement 与
-              health 原始 JSON 字符串</label
+              >首行为门控配置或完整恢复起点；后续为同时间的 measurement 与
+              health 原始 JSON 字符串，或显式标定切换行</label
             >
             <textarea id="guarded-input" spellcheck="false"></textarea>
             <div class="actions">
               <button id="run-guarded">按健康状态分析</button>
               <button id="guarded-example" class="quiet">门控示例</button>
+              <button id="guarded-projection-example" class="quiet">
+                标定切换示例
+              </button>
               <label class="file-button"
                 >导入联合 NDJSON<input
                   id="guarded-file"
@@ -492,7 +501,9 @@
               ><span class="health-pending">等待证据</span
               ><span class="health-insufficient">地标不足</span>
             </p>
-            <p class="hint">状态条下排：绿色为已放行，棕色为已阻断。</p>
+            <p class="hint">
+              状态条下排：绿色为已放行，棕色为已阻断；紫色竖线为标定切换。
+            </p>
             <div class="playback">
               <input
                 id="guarded-frame"
@@ -527,6 +538,7 @@
               </div>
             </div>
             <p id="guarded-evidence" class="hint">尚无门控分析结果。</p>
+            <p id="guarded-projection" class="hint"></p>
             <p id="guarded-interruptions" class="hint"></p>
           </div>
         </div>

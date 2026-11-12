@@ -1365,6 +1365,7 @@ function clearGuardedResult() {
   ])
     $(id).textContent = "—";
   $("guarded-evidence").textContent = "尚无门控分析结果。";
+  $("guarded-projection").textContent = "";
   $("guarded-interruptions").textContent = "";
   $("guarded-tracks").replaceChildren();
   $("guarded-counts").replaceChildren();
@@ -1384,6 +1385,10 @@ function drawGuardedTimeline() {
     drawing.fillRect(index * width, 0, Math.max(width, 1), 36);
     drawing.fillStyle = frame.decision === "allowed" ? "#24674d" : "#a56c61";
     drawing.fillRect(index * width, 40, Math.max(width, 1), 16);
+    if (frame.kind === "guarded_projection_replaced") {
+      drawing.fillStyle = "#72509c";
+      drawing.fillRect((index + 0.5) * width - 1.5, 0, 3, timeline.height);
+    }
   });
   drawing.strokeStyle = "#20342f";
   drawing.lineWidth = 3;
@@ -1401,12 +1406,19 @@ function renderGuarded() {
   if (!frame) return;
   const health = frame.health,
     measurement = frame.analysis.measurement,
-    counting = frame.analysis.counting;
+    counting = frame.analysis.counting,
+    replaced = frame.kind === "guarded_projection_replaced",
+    replacements = guardedReport.frames
+      .slice(0, index + 1)
+      .filter((entry) => entry.kind === "guarded_projection_replaced").length;
   $("guarded-counter").textContent =
     `${index + 1} / ${guardedReport.frames.length}`;
   $("guarded-time").textContent = `${health.timestamp_us} μs`;
-  $("guarded-decision").textContent =
-    frame.decision === "allowed" ? "已放行" : "已阻断";
+  $("guarded-decision").textContent = replaced
+    ? "切换标定"
+    : frame.decision === "allowed"
+      ? "已放行"
+      : "已阻断";
   $("guarded-health").textContent = healthStates[health.status];
   $("guarded-usable").textContent =
     `${health.usable_count} / ${health.landmarks.length}`;
@@ -1416,8 +1428,11 @@ function renderGuarded() {
       : `${health.rms_error_m.toExponential(3)} m`;
   $("guarded-observed").textContent = String(measurement.tracks.length);
   $("guarded-crossings").textContent = String(counting.crossings.length);
-  $("guarded-evidence").textContent =
-    `${healthEvidence[health.evidence]}；${frame.decision === "allowed" ? "当前健康已确认，处理本帧目标。" : "当前帧未满足健康放行条件，未处理本帧目标；已有测量片段与过线参考点已中断。"}`;
+  $("guarded-evidence").textContent = replaced
+    ? "已切换标定与相机，本帧不处理观测。旧测量片段与过线参考点已关闭；地标健康从下一帧重新确认。"
+    : `${healthEvidence[health.evidence]}；${frame.decision === "allowed" ? "当前健康已确认，处理本帧目标。" : "当前帧未满足健康放行条件，未处理本帧目标；已有测量片段与过线参考点已中断。"}`;
+  $("guarded-projection").textContent =
+    `本次回放至此发生 ${replacements} 次标定切换。${replaced ? "地标米制位置、通道及累计次数保持，后续目标从新片段预热。" : ""}`;
   $("guarded-interruptions").textContent =
     `本帧被抑制的目标：${frame.suppressed_track_ids.join("、") || "无"}；关闭的测量片段：${measurement.closed_segment_ids.join("、") || "无"}。`;
   const rows = measurement.tracks.map((track) => {
@@ -1438,8 +1453,9 @@ function renderGuarded() {
     const row = document.createElement("tr"),
       cell = document.createElement("td");
     cell.colSpan = 4;
-    cell.textContent =
-      frame.decision === "blocked"
+    cell.textContent = replaced
+      ? "标定切换帧，未生成目标测量。"
+      : frame.decision === "blocked"
         ? "本帧被健康状态阻断，未生成目标测量。"
         : "本帧无目标观测。";
     row.append(cell);
@@ -1499,7 +1515,7 @@ async function runGuarded(
   try {
     const lines = observationLines(input);
     if (lines.length < 2 || lines.length > 5001)
-      throw new Error("请输入门控分析配置及 1—5000 帧联合观测。");
+      throw new Error("请输入门控分析配置及 1—5000 行联合观测或标定切换操作。");
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (current !== guardedRevision) return;
     const { response, report } = requestGuarded(
@@ -1521,8 +1537,11 @@ async function runGuarded(
     const blocked = report.frames.filter(
       (frame) => frame.decision === "blocked",
     ).length;
+    const replacements = report.frames.filter(
+      (frame) => frame.kind === "guarded_projection_replaced",
+    ).length;
     guardedMessage(
-      `已完成 ${report.frames.length} 帧门控分析，阻断 ${blocked} 帧。下载包含全部帧及同一末帧的完整检查点。`,
+      `已完成 ${report.frames.length} 帧门控分析，阻断 ${blocked} 帧${replacements ? `，含 ${replacements} 次标定切换` : ""}。下载包含全部帧及同一末帧的完整检查点。`,
     );
     renderGuarded();
   } catch (error) {
@@ -1553,10 +1572,10 @@ $("save-guarded-checkpoint").addEventListener("click", () => {
     `已保存整批末帧 ${guardedReport.checkpoint.health.state.last_timestamp_us} μs 的完整门控检查点。`,
   );
 });
-$("guarded-example").addEventListener("click", async () => {
+async function guardedExample(name = "guarded.ndjson") {
   const current = ++guardedRevision;
   try {
-    const response = await fetch("./guarded.ndjson");
+    const response = await fetch(`./${name}`);
     if (!response.ok) throw new Error("门控分析示例读取失败。");
     const text = await response.text();
     if (current !== guardedRevision) return;
@@ -1564,7 +1583,11 @@ $("guarded-example").addEventListener("click", async () => {
   } catch (error) {
     if (current === guardedRevision) guardedMessage(error.message, true);
   }
-});
+}
+$("guarded-example").addEventListener("click", () => guardedExample());
+$("guarded-projection-example").addEventListener("click", () =>
+  guardedExample("projection-replace.ndjson"),
+);
 $("guarded-file").addEventListener("change", async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -1598,7 +1621,7 @@ $("guarded-checkpoint-file").addEventListener("change", async (event) => {
     clearGuardedResult();
     guardedInput.value = nextInput;
     guardedMessage(
-      `已载入完整门控检查点（末帧 ${report.checkpoint.health.state.last_timestamp_us ?? "尚无观测"} μs）。添加更晚的联合观测后继续。`,
+      `已载入完整门控检查点（末帧 ${report.checkpoint.health.state.last_timestamp_us ?? "尚无观测"} μs）。添加更晚的联合观测或标定切换操作后继续。`,
     );
   } catch (error) {
     if (current === guardedRevision) guardedMessage(error.message, true);

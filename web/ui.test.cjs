@@ -2523,6 +2523,399 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     });
     assert.equal(await page.locator("#download-transit").isDisabled(), true);
     assert.equal(await page.locator("#transit-ordinary").isDisabled(), true);
+    // Projection replacement stays inside the existing guarded stream. A
+    // separate ordinary transit result survives until its own source changes.
+    await page.locator("#example").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    await page.locator("#transit-input").fill(transitConfiguration);
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已处理 10 帧"),
+    );
+    const ordinaryBeforeProjection = await exportJson(
+      "#download-transit",
+      "moonground-transit-results.json",
+    );
+    const projectionSource = fs.readFileSync(
+      path.resolve(__dirname, "..", "examples", "projection-replace.ndjson"),
+      "utf8",
+    );
+    const projectionLines = projectionSource.trimEnd().split("\n");
+    await page.locator("#guarded-projection-example").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("含 1 次标定切换"),
+    );
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      projectionSource,
+    );
+    const projection = await exportJson(
+      "#download-guarded",
+      "moonground-guarded-results.json",
+    );
+    assert.equal(projection.frames.length, 16);
+    const barrierIndex = projection.frames.findIndex(
+      (frame) => frame.kind === "guarded_projection_replaced",
+    );
+    assert.equal(barrierIndex, 9);
+    const barrier = projection.frames[barrierIndex];
+    const replacement = JSON.parse(
+      JSON.parse(projectionLines[barrierIndex + 1]).replace_projection,
+    );
+    assert.equal(projection.frames[8].health.status, "drift");
+    assert.equal(barrier.decision, "blocked");
+    assert.equal(barrier.health.timestamp_us, "950000");
+    assert.equal(barrier.health.status, "insufficient");
+    assert.equal(barrier.health.streak_since_us, null);
+    assert.deepEqual(barrier.analysis.measurement.tracks, []);
+    assert.deepEqual(barrier.suppressed_track_ids, []);
+    assert.equal(barrier.analysis.counting.counts[0].positive_to_negative, "1");
+    assert.equal(projection.frames[12].health.status, "healthy");
+    assert.equal(
+      projection.frames[12].analysis.measurement.tracks[0].segment_id,
+      "2",
+    );
+    assert.equal(
+      projection.frames[12].analysis.measurement.tracks[0].status,
+      "initializing",
+    );
+    assert.equal(
+      projection.frames[12].analysis.measurement.tracks[0].speed_mps,
+      null,
+    );
+    assert.equal(
+      projection.frames.at(-1).analysis.measurement.tracks[0].status,
+      "ready",
+    );
+    assert.equal(
+      projection.frames.at(-1).analysis.counting.counts[0].positive_to_negative,
+      "2",
+    );
+    assert.deepEqual(
+      projection.checkpoint.analysis.measurement.configuration.calibration
+        .matrix,
+      replacement.calibration.matrix,
+    );
+    assert.deepEqual(
+      projection.checkpoint.health.configuration.camera,
+      projection.checkpoint.analysis.measurement.configuration.camera,
+    );
+    assert.deepEqual(
+      projection.checkpoint.health.configuration.calibration.roi,
+      replacement.calibration.roi,
+    );
+    assert.deepEqual(
+      await exportJson("#download-transit", "moonground-transit-results.json"),
+      ordinaryBeforeProjection,
+    );
+    await page.locator("#source").fill(warehouseInput + " ");
+    assert.equal(await page.locator("#download-transit").isDisabled(), true);
+    assert.equal(await page.locator("#download-guarded").isDisabled(), false);
+    await page.locator("#guarded-frame").evaluate((input, value) => {
+      input.value = String(value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }, barrierIndex);
+    assert.equal(
+      await page.locator("#guarded-decision").textContent(),
+      "切换标定",
+    );
+    assert.match(
+      await page.locator("#guarded-evidence").textContent(),
+      /从下一帧重新确认/,
+    );
+    assert.match(
+      await page.locator("#guarded-projection").textContent(),
+      /发生 1 次/,
+    );
+    assert.deepEqual(
+      await page.locator("#guarded-timeline").evaluate((canvas, index) => {
+        const x = Math.floor(((index + 0.5) * canvas.width) / 16);
+        return Array.from(
+          canvas.getContext("2d").getImageData(x, 15, 1, 1).data,
+        );
+      }, barrierIndex),
+      [114, 80, 156, 255],
+    );
+    const projectionCheckpoint = await exportJson(
+      "#save-guarded-checkpoint",
+      "moonground-guarded-checkpoint.json",
+    );
+    assert.equal(
+      projectionCheckpoint.health.state.last_timestamp_us,
+      "1550000",
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator('[aria-labelledby="guarded-heading"]').screenshot({
+      path: path.join(directory, "projection-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator('[aria-labelledby="guarded-heading"]').screenshot({
+      path: path.join(directory, "projection-desktop-preview.png"),
+    });
+    const operation = JSON.parse(projectionLines[barrierIndex + 1]);
+    const missingCamera = { ...replacement };
+    delete missingCamera.camera;
+    const unknownCamera = {
+      ...replacement,
+      camera: { ...replacement.camera, unknown: true },
+    };
+    const badProjectionOperations = [
+      JSON.stringify({ replace_projection: JSON.stringify(unknownCamera) }),
+      JSON.stringify({ replace_projection: JSON.stringify(missingCamera) }),
+      JSON.stringify({
+        replace_projection: JSON.stringify({ ...replacement, unknown: true }),
+      }),
+      JSON.stringify({
+        replace_projection: operation.replace_projection.replace(
+          '"camera":',
+          '"camera":null,"camera":',
+        ),
+      }),
+      '{"replace_projection":' +
+        JSON.stringify(operation.replace_projection) +
+        ',"replace_projection":' +
+        JSON.stringify(operation.replace_projection) +
+        "}",
+      JSON.stringify({
+        replace_projection: JSON.stringify({
+          ...replacement,
+          timestamp_us: "900000",
+        }),
+      }),
+      JSON.stringify({
+        replace_projection: operation.replace_projection,
+        measurement: JSON.parse(projectionLines[1]).measurement,
+      }),
+      JSON.stringify({ replace_projection: replacement }),
+    ];
+    for (const badOperation of badProjectionOperations) {
+      await page.locator("#guarded-file").setInputFiles({
+        name: "invalid-projection.ndjson",
+        mimeType: "application/x-ndjson",
+        buffer: Buffer.from(
+          projectionLines.slice(0, barrierIndex + 1).join("\n") +
+            "\n" +
+            badOperation +
+            "\n",
+        ),
+      });
+      await page.waitForFunction(
+        () => document.querySelector("#guarded-file").value === "",
+      );
+      assert.equal(await page.locator("#guarded-message.error").count(), 1);
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        projectionSource,
+      );
+      assert.deepEqual(
+        await exportJson(
+          "#download-guarded",
+          "moonground-guarded-results.json",
+        ),
+        projection,
+      );
+    }
+    // The final checkpoint is bound to the replacement projection, and a
+    // resumed next frame exactly matches replaying the full source.
+    const afterReplacement = JSON.parse(projectionLines.at(-1));
+    for (const field of ["measurement", "health"]) {
+      const payload = JSON.parse(afterReplacement[field]);
+      payload.timestamp_us = "1700000";
+      afterReplacement[field] = JSON.stringify(payload);
+    }
+    await page
+      .locator("#guarded-input")
+      .fill(projectionSource + JSON.stringify(afterReplacement) + "\n");
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("已完成 17 帧门控分析"),
+    );
+    const extendedProjection = await exportJson(
+      "#download-guarded",
+      "moonground-guarded-results.json",
+    );
+    await page.locator("#guarded-checkpoint-file").setInputFiles({
+      name: "projection-checkpoint.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(projectionCheckpoint)),
+    });
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("已载入完整门控检查点"),
+    );
+    await page
+      .locator("#guarded-input")
+      .fill(
+        (await page.locator("#guarded-input").inputValue()) +
+          JSON.stringify(afterReplacement) +
+          "\n",
+      );
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("已完成 1 帧门控分析"),
+    );
+    const resumedProjection = await exportJson(
+      "#download-guarded",
+      "moonground-guarded-results.json",
+    );
+    assert.deepEqual(
+      resumedProjection.frames[0],
+      extendedProjection.frames.at(-1),
+    );
+    assert.deepEqual(
+      resumedProjection.checkpoint,
+      extendedProjection.checkpoint,
+    );
+    // A second barrier while healthy closes an active segment. The transit
+    // consumer receives that exact empty frame and cancels its pending entry.
+    const secondReplacement = {
+      timestamp_us: "1600000",
+      calibration: {
+        ...replacement.calibration,
+        matrix: [0.025, 0, -0.75, 0, 0.025, -1, 0, 0, 1],
+      },
+      camera: null,
+    };
+    const twiceProjectionSource =
+      projectionSource +
+      JSON.stringify({
+        replace_projection: JSON.stringify(secondReplacement),
+      }) +
+      "\n";
+    await page.locator("#guarded-input").fill(twiceProjectionSource);
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("含 2 次标定切换"),
+    );
+    const twiceProjection = await exportJson(
+      "#download-guarded",
+      "moonground-guarded-results.json",
+    );
+    assert.deepEqual(
+      twiceProjection.frames.at(-1).analysis.measurement.closed_segment_ids,
+      ["2"],
+    );
+    assert.equal(twiceProjection.frames.at(-1).health.status, "insufficient");
+    assert.equal(
+      twiceProjection.frames.at(-1).analysis.counting.counts[0]
+        .positive_to_negative,
+      "2",
+    );
+    assert.equal(
+      twiceProjection.checkpoint.health.state.last_timestamp_us,
+      "1600000",
+    );
+    assert.equal(twiceProjection.checkpoint.health.state.streak, null);
+    assert.equal(
+      twiceProjection.checkpoint.analysis.measurement.configuration.camera ??
+        null,
+      null,
+    );
+    assert.equal(
+      twiceProjection.checkpoint.health.configuration.camera ?? null,
+      null,
+    );
+    assert.match(
+      await page.locator("#guarded-projection").textContent(),
+      /发生 2 次/,
+    );
+    const projectionTransitConfig = JSON.parse(transitConfiguration);
+    const projectionTransitGates = JSON.parse(projectionTransitConfig.counting);
+    projectionTransitGates.session_id = "projection-replace-warehouse";
+    for (const [index, x] of [6.2, 6.9].entries()) {
+      projectionTransitGates.gates[index].start_m[0] = x;
+      projectionTransitGates.gates[index].end_m[0] = x;
+    }
+    projectionTransitConfig.counting = JSON.stringify(projectionTransitGates);
+    await page
+      .locator("#transit-input")
+      .fill(JSON.stringify(projectionTransitConfig));
+    await page.locator("#transit-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已处理 17 帧"),
+    );
+    const projectionTransit = await exportJson(
+      "#download-transit",
+      "moonground-transit-results.json",
+    );
+    assert.equal(projectionTransit.frames[15].pending_count, 1);
+    assert.equal(projectionTransit.frames[16].pending_count, 0);
+    assert.equal(
+      projectionTransit.frames[16].cancellations[0].reason,
+      "discontinuity",
+    );
+    assert.equal(projectionTransit.frames[16].cancellations[0].segment_id, "2");
+    assert.equal(projectionTransit.frames.at(-1).counts[0].completed, "1");
+    await page.locator("#example").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    assert.equal(await page.locator("#download-transit").isDisabled(), false);
+    await page.locator("#guarded-projection-example").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("含 1 次标定切换"),
+    );
+    assert.equal(await page.locator("#download-transit").isDisabled(), true);
+    // The new example uses the same superseding-run rules as the original
+    // example: releasing an older preparation cannot replace the newer run.
+    await page.evaluate(() => {
+      const original = window.setTimeout;
+      window.projectionPreparationQueue = [];
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 0) {
+          window.projectionPreparationQueue.push(() => callback(...args));
+          if (window.projectionPreparationQueue.length === 2)
+            window.setTimeout = original;
+          return -1;
+        }
+        return original.call(window, callback, delay, ...args);
+      };
+    });
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(
+      () => window.projectionPreparationQueue.length === 1,
+    );
+    await page.locator("#guarded-projection-example").click();
+    await page.waitForFunction(
+      () => window.projectionPreparationQueue.length === 2,
+    );
+    await page.evaluate(() => window.projectionPreparationQueue[0]());
+    assert.equal(await page.locator("#run-guarded").isDisabled(), true);
+    await page.evaluate(() => window.projectionPreparationQueue[1]());
+    await page.waitForFunction(
+      () => !document.querySelector("#run-guarded").disabled,
+    );
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      projectionSource,
+    );
+    assert.deepEqual(
+      await exportJson("#download-guarded", "moonground-guarded-results.json"),
+      projection,
+    );
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

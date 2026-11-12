@@ -17,6 +17,10 @@ copyFileSync(
   path.join(output, "transit.json"),
 );
 copyFileSync(
+  path.join(root, "examples", "projection-replace.ndjson"),
+  path.join(output, "projection-replace.ndjson"),
+);
+copyFileSync(
   path.join(root, "examples", "guarded.ndjson"),
   path.join(output, "guarded.ndjson"),
 );
