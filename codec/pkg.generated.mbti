@@ -10,6 +10,8 @@ import {
 // Values
 pub fn calibrate_json(String) -> String raise @types.GroundError
 
+pub fn gates_json(String) -> String raise @types.GroundError
+
 pub fn project_json(String) -> String raise @types.GroundError
 
 pub fn reframe_json(String) -> String raise @types.GroundError
@@ -17,6 +19,13 @@ pub fn reframe_json(String) -> String raise @types.GroundError
 // Errors
 
 // Types and methods
+pub struct GateReplay {
+  // private fields
+}
+pub fn GateReplay::checkpoint_json(Self) -> String raise @types.GroundError
+pub fn GateReplay::open(String) -> Self raise @types.GroundError
+pub fn GateReplay::process_line(Self, String) -> String raise @types.GroundError
+
 pub struct ReplayReframer {
   // private fields
 }

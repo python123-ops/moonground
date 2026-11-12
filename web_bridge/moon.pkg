@@ -18,6 +18,7 @@ options(
         "moonground_checkpoint",
         "moonground_restore",
         "moonground_reframe",
+        "moonground_gates",
       ],
       "format": "esm",
     },
