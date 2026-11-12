@@ -40,7 +40,7 @@ pub extend GuardedCheckpoint with @debug.Debug::{to_repr}
 /// Pixel analysis enabled only by the current frame's confirmed landmark health.
 /// Both engines are owned independently of their constructor inputs.
 pub struct GuardedSession {
-  priv analysis : @analysis.AnalysisSession
+  priv mut analysis : @analysis.AnalysisSession
   priv mut health : @health.CalibrationMonitor
   priv max_tracks : Int32
 }

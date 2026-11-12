@@ -5,6 +5,8 @@ import {
   "moonbitlang/core/debug",
   "python123-ops/moonground",
   "python123-ops/moonground/analysis",
+  "python123-ops/moonground/calibration",
+  "python123-ops/moonground/camera",
   "python123-ops/moonground/health",
   "python123-ops/moonground/types",
 }
@@ -45,6 +47,7 @@ pub fn GuardedSession::fork(Self) -> Self
 pub fn GuardedSession::from_checkpoint(GuardedCheckpoint) -> Self raise @types.GroundError
 pub fn GuardedSession::new(@analysis.AnalysisSession, @health.CalibrationMonitor) -> Self raise @types.GroundError
 pub fn GuardedSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn GuardedSession::replace_projection(Self, Int64, @calibration.GroundCalibration, camera~ : @camera.CameraModel?) -> GuardedFrame raise @types.GroundError
 pub fn GuardedSession::update(Self, Int64, Array[@health.LandmarkObservation], Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> GuardedFrame raise @types.GroundError
 
 // Type aliases
