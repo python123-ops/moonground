@@ -717,3 +717,152 @@ test "packaged Brown fixed landmarks confirm health restore and reframe independ
   ignore(confirmed.update(1050000L, baseline))
   assert_eq(confirmed.update(1200000L, baseline).status, @health.Healthy)
 }
+
+///|
+test "packaged Brown guarded analysis closes hidden active state and recovers with a new segment" {
+  let calibration = @moonground.GroundCalibration::from_homography(
+    [0.02, 0.0, 0.0, 0.0, 0.02, 0.0, 0.0, 0.0, 1.0],
+    [
+      { x: 0.0, y: 0.0, },
+      { x: 640.0, y: 0.0, },
+      { x: 640.0, y: 480.0, },
+      { x: 0.0, y: 480.0, },
+    ],
+    ground_noise_floor_m=0.01,
+  )
+  let camera = @moonground.CameraModel::new(
+    fx=600.0,
+    fy=580.0,
+    cx=320.0,
+    cy=240.0,
+    k1=-0.12,
+    k2=0.015,
+    p1=0.001,
+    p2=-0.002,
+    k3=0.001,
+    max_normalized_radius=0.8,
+  )
+  let analysis = @analysis.AnalysisSession::from_pixel(
+    @moonground.MeasurementSession::new(
+      "consumer-guarded",
+      calibration,
+      @moonground.MotionConfig::new(q=1000000.0, gate=1.0e12, max_tracks=10),
+      camera~,
+    ),
+    @events.GateCounter::new(
+      "consumer-guarded",
+      [
+        @events.LineGate::new(
+          "aisle",
+          { x: 6.0, y: 0.0, },
+          { x: 6.0, y: 9.0, },
+          deadband_m=0.05,
+        ),
+      ],
+      @events.GateConfig::new(max_tracks=10),
+    ),
+  )
+  let health = @health.CalibrationMonitor::new(
+    calibration,
+    [
+      @health.KnownLandmark::new("A", { x: 3.2, y: 3.2, }),
+      @health.KnownLandmark::new("B", { x: 6.4, y: 2.4, }),
+      @health.KnownLandmark::new("C", { x: 9.6, y: 6.4, }),
+    ],
+    @health.HealthConfig::new(max_position_std_m=0.1),
+    camera~,
+  )
+  let covariance = @moonground.Covariance2::isotropic(2.0)
+  // Original-image fixture coordinates, kept separate from the metric rule.
+  let landmarks = [
+    @health.LandmarkObservation::new(
+      "A",
+      { x: 161.47630472780403, y: 160.84451293993584, },
+      covariance,
+    ),
+    @health.LandmarkObservation::new(
+      "B",
+      { x: 319.9486325802616, y: 120.68758411830997, },
+      covariance,
+    ),
+    @health.LandmarkObservation::new(
+      "C",
+      { x: 478.05431120560854, y: 319.13351617883814, },
+      covariance,
+    ),
+  ]
+  let left = @moonground.PixelObservation::new(
+    7,
+    { x: 280.035445256476, y: 299.92835400721356, },
+    covariance,
+  )
+  let right = @moonground.PixelObservation::new(
+    7,
+    { x: 319.9871581450654, y: 299.9416727043558, },
+    covariance,
+  )
+  let session = @guarded.GuardedSession::new(analysis, health)
+  for time in [0L, 150000L] {
+    assert_eq(
+      session.update(time, landmarks, [left]).decision,
+      @guarded.Blocked,
+    )
+  }
+  let allowed = session.update(300000L, landmarks, [left])
+  assert_eq(allowed.decision, @guarded.Allowed)
+  assert_eq(allowed.analysis.measurement.motion.tracks[0].segment_id, "1")
+  let crossed = session.update(350000L, landmarks, [right])
+  assert_eq(crossed.analysis.counting.counts[0].positive_to_negative, 1L)
+  let restored = @guarded.GuardedSession::from_checkpoint(session.checkpoint())
+  let transform = @moonground.PixelTransform::new(
+    scale_x=0.5,
+    scale_y=0.75,
+    offset_x=-40.0,
+    offset_y=16.0,
+  )
+  let adapted = restored.reframed(transform)
+  // No object is submitted now: the previously accepted hidden filter must
+  // still be ended, while suppression lists only this frame's observations.
+  let blocked = adapted.update(400000L, [], [])
+  assert_eq(blocked.decision, @guarded.Blocked)
+  assert_eq(blocked.suppressed_track_ids, [])
+  assert_eq(blocked.analysis.measurement.motion.closed_segment_ids, ["1"])
+  assert_eq(blocked.analysis.measurement.motion.tracks.length(), 0)
+  assert_eq(blocked.analysis.counting.counts[0].positive_to_negative, 1L)
+  let snapshot = adapted.checkpoint()
+  guard snapshot.analysis.measurement is Pixel(pixel) else {
+    fail("guarded mode changed")
+  }
+  assert_eq(pixel.motion.tracks.length(), 0)
+  assert_eq(pixel.motion.next_segment_id, 2L)
+  assert_eq(snapshot.analysis.counting.tracks.length(), 0)
+  assert_eq(snapshot.health.last_timestamp_us, Some(400000L))
+  let continuation = @guarded.GuardedSession::from_checkpoint(snapshot)
+  let transformed_landmarks = landmarks.map(item => item.reframed(transform))
+  for time in [500000L, 650000L] {
+    assert_eq(
+      continuation.update(time, transformed_landmarks, [
+        left.reframed(transform),
+      ]).decision,
+      @guarded.Blocked,
+    )
+  }
+  let recovery = continuation.update(800000L, transformed_landmarks, [
+    left.reframed(transform),
+  ])
+  assert_eq(recovery.decision, @guarded.Allowed)
+  assert_eq(recovery.analysis.measurement.motion.tracks[0].segment_id, "2")
+  assert_eq(recovery.analysis.measurement.motion.tracks[0].accepted_count, 1)
+  assert_eq(
+    recovery.analysis.measurement.motion.tracks[0].observed_path_length_m,
+    0.0,
+  )
+  assert_eq(recovery.analysis.measurement.motion.tracks[0].speed_mps, None)
+  assert_eq(recovery.analysis.counting.crossings.length(), 0)
+  let recrossed = continuation.update(850000L, transformed_landmarks, [
+    right.reframed(transform),
+  ])
+  assert_eq(recrossed.analysis.counting.counts[0].positive_to_negative, 2L)
+  assert_eq(recrossed.analysis.counting.counts[0].negative_to_positive, 0L)
+  assert_eq(restored.checkpoint().health.last_timestamp_us, Some(350000L))
+}

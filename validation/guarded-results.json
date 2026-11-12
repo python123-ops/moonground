@@ -7,7 +7,7 @@
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
   "source_sha256": "ec04a68832baf8aefe60f13992685f9a1c248c959382cdaa59dc8bed1c911175",
   "health_reference_sha256": "de503a5fe49be912176c0af2ac1c509d99059e464f9c08655c5ce43b52233188",
-  "binary_sha256": "8e9140738ccf7f9387bcaef1e80a8470a6b79cf24fb0670496eefadeba12e164",
+  "binary_sha256": "e39be2c156567050443846c0bd0e5517ab766536918cca32e09b0adf86bfd1e0",
   "independent_host_composition": {
     "cases": 6,
     "frames": 108,
@@ -404,9 +404,9 @@
     },
     "test_script_sha256": "a13fbcb5e6e6447de509e0e3eda0552e9871661a4c58adcc2bac1596399ed3c2",
     "bridge_sha256": "28ecc4f0f1cbf4e14c2c3e1757bc6fd95428ced856e26d0cd33094ba7f858e6e",
-    "stdout_sha256": "fc431002012c36722bd3a7800381806d4c5c96c80d331a8ff25bd6a1627b4d0f",
+    "stdout_sha256": "1d36e88d0c67cd7bb3f7dcc120a56aaab660cdc1ee146e210f4c10a1d80209a5",
     "stderr": ""
   },
-  "elapsed_seconds": 27.889605600000003,
+  "elapsed_seconds": 25.6784916,
   "status": "passed"
 }

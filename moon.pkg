@@ -10,4 +10,5 @@ import {
   "python123-ops/moonground/events",
   "python123-ops/moonground/analysis",
   "python123-ops/moonground/health",
+  "python123-ops/moonground/guarded",
 } for "test"
