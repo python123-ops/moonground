@@ -8,11 +8,27 @@ async fn diagnostic(message : String) -> Unit {
 }
 
 ///|
+fn reframe_line(
+  state : Ref[@codec.ReplayReframer?],
+  source : String,
+) -> String raise @types.GroundError {
+  match state.val {
+    None => {
+      let converter = @codec.ReplayReframer::new(source)
+      let header = converter.header_line()
+      state.val = Some(converter)
+      header
+    }
+    Some(converter) => converter.process_line(source)
+  }
+}
+
+///|
 async fn main {
   let args = @env.args()
   if args.length() == 2 && (args[1] == "--help" || args[1] == "-h") {
     @stdio.stdout.write(
-      "moonground (--stream | --checkpoint) [--max-line-bytes N] | --project | --calibrate\nRead configuration or {resume: checkpoint}, then frames from UTF-8 NDJSON. --checkpoint writes only the final checkpoint at EOF.\n",
+      "moonground (--stream | --checkpoint | --reframe) [--max-line-bytes N] | --project | --calibrate\nStream/checkpoint read configuration or {resume: checkpoint}, then frames. --checkpoint writes only the final state at EOF. --reframe reads {source: configuration_or_resume, transform: {...}}, then original frames, and writes transformed NDJSON.\n",
     )
     return
   }
@@ -20,16 +36,19 @@ async fn main {
     (
       args[1] != "--stream" &&
       args[1] != "--checkpoint" &&
+      args[1] != "--reframe" &&
       args[1] != "--project" &&
       args[1] != "--calibrate"
     ) {
     diagnostic(
-      "usage: moonground (--stream | --checkpoint) [--max-line-bytes N] | --project | --calibrate",
+      "usage: moonground (--stream | --checkpoint | --reframe) [--max-line-bytes N] | --project | --calibrate",
     )
     return
   }
   let mut max_bytes = 1048576
-  let stream_mode = args[1] == "--stream" || args[1] == "--checkpoint"
+  let stream_mode = args[1] == "--stream" ||
+    args[1] == "--checkpoint" ||
+    args[1] == "--reframe"
   if args.length() == 4 && stream_mode && args[2] == "--max-line-bytes" {
     max_bytes = @string.parse_int(args[3], base=10) catch {
       _ => {
@@ -43,13 +62,14 @@ async fn main {
     }
   } else if args.length() != 2 {
     diagnostic(
-      "usage: moonground (--stream | --checkpoint) [--max-line-bytes N] | --project | --calibrate",
+      "usage: moonground (--stream | --checkpoint | --reframe) [--max-line-bytes N] | --project | --calibrate",
     )
     return
   }
   let chunk = FixedArray::make(4096, b'\x00')
   let pending : Array[Byte] = []
   let mut session : @codec.ReplaySession? = None
+  let reframer : Ref[@codec.ReplayReframer?] = Ref(None)
   let mut line_number = 1
   let mut projection_done = false
   while true {
@@ -66,7 +86,15 @@ async fn main {
             return
           }
         }
-        if !stream_mode {
+        if args[1] == "--reframe" {
+          let output = reframe_line(reframer, line) catch {
+            error => {
+              diagnostic("line \{line_number}: " + error.message())
+              return
+            }
+          }
+          @stdio.stdout.write(output + "\n")
+        } else if !stream_mode {
           if projection_done {
             diagnostic("stateless mode accepts exactly one line")
             return
@@ -127,7 +155,15 @@ async fn main {
         return
       }
     }
-    if !stream_mode {
+    if args[1] == "--reframe" {
+      let output = reframe_line(reframer, line) catch {
+        error => {
+          diagnostic("line \{line_number}: " + error.message())
+          return
+        }
+      }
+      @stdio.stdout.write(output + "\n")
+    } else if !stream_mode {
       if projection_done {
         diagnostic("stateless mode accepts exactly one line")
         return
@@ -171,7 +207,11 @@ async fn main {
       }
     }
   }
-  if stream_mode && session is None {
+  if args[1] == "--reframe" {
+    if reframer.val is None {
+      diagnostic("missing reframing header")
+    }
+  } else if stream_mode && session is None {
     diagnostic("missing configuration line")
   } else if !stream_mode && !projection_done {
     diagnostic("missing stateless request")

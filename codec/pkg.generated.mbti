@@ -12,9 +12,18 @@ pub fn calibrate_json(String) -> String raise @types.GroundError
 
 pub fn project_json(String) -> String raise @types.GroundError
 
+pub fn reframe_json(String) -> String raise @types.GroundError
+
 // Errors
 
 // Types and methods
+pub struct ReplayReframer {
+  // private fields
+}
+pub fn ReplayReframer::header_line(Self) -> String
+pub fn ReplayReframer::new(String) -> Self raise @types.GroundError
+pub fn ReplayReframer::process_line(Self, String) -> String raise @types.GroundError
+
 pub struct ReplaySession {
   pixel : @moonground.MeasurementSession?
   ground : @motion.MotionEstimator?
