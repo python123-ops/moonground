@@ -600,3 +600,120 @@ test "packaged joint analysis restores reframes and rolls back counting failures
   assert_eq(retry.measurement.motion.tracks[0].segment_id, "1")
   assert_eq(restored.checkpoint().counting.last_timestamp_us, Some(400000L))
 }
+
+///|
+test "packaged Brown fixed landmarks confirm health restore and reframe independently" {
+  let calibration = @moonground.GroundCalibration::from_homography(
+    [0.02, 0.0, 0.0, 0.0, 0.02, 0.0, 0.0, 0.0, 1.0],
+    [
+      { x: 0.0, y: 0.0, },
+      { x: 640.0, y: 0.0, },
+      { x: 640.0, y: 480.0, },
+      { x: 0.0, y: 480.0, },
+    ],
+    ground_noise_floor_m=0.01,
+  )
+  let camera = @moonground.CameraModel::new(
+    fx=600.0,
+    fy=580.0,
+    cx=320.0,
+    cy=240.0,
+    k1=-0.12,
+    k2=0.015,
+    p1=0.001,
+    p2=-0.002,
+    k3=0.001,
+    max_normalized_radius=0.8,
+  )
+  let ids = ["A", "B", "C"]
+  let references = [
+    @health.KnownLandmark::new("A", { x: 3.2, y: 3.2, }),
+    @health.KnownLandmark::new("B", { x: 6.4, y: 2.4, }),
+    @health.KnownLandmark::new("C", { x: 9.6, y: 6.4, }),
+  ]
+  // These original-image coordinates come from examples/health.ndjson;
+  // the second set projects 0.3 m to the right of each independent reference.
+  let original_pixels : Array[@moonground.Point2] = [
+    { x: 161.47630472780403, y: 160.84451293993584, },
+    { x: 319.9486325802616, y: 120.68758411830997, },
+    { x: 478.05431120560854, y: 319.13351617883814, },
+  ]
+  let shifted_pixels : Array[@moonground.Point2] = [
+    { x: 176.14105629796143, y: 160.7257189052479, },
+    { x: 334.8624251931698, y: 120.70884918294097, },
+    { x: 492.5618541503113, y: 319.0028970224668, },
+  ]
+  let observe = (points : Array[@moonground.Point2]) => {
+    Array::makei(points.length(), index => {
+      @health.LandmarkObservation::new(
+        ids[index],
+        points[index],
+        @moonground.Covariance2::isotropic(2.0),
+      )
+    })
+  }
+  let monitor = @health.CalibrationMonitor::new(
+    calibration,
+    references,
+    @health.HealthConfig::new(max_position_std_m=0.1),
+    camera~,
+  )
+  assert_eq(
+    monitor.update(0L, observe(original_pixels)).status,
+    @health.Pending,
+  )
+  ignore(monitor.update(150000L, observe(original_pixels)))
+  let healthy = monitor.update(300000L, observe(original_pixels))
+  assert_eq(healthy.status, @health.Healthy)
+  guard healthy.max_error_m is Some(error) else {
+    fail("missing health residual")
+  }
+  assert_true(error < 1.0e-8)
+  let saved = monitor.checkpoint()
+  let restored = @health.CalibrationMonitor::from_checkpoint(saved)
+  let transform = @moonground.PixelTransform::new(
+    scale_x=0.5,
+    scale_y=0.75,
+    offset_x=-40.0,
+    offset_y=16.0,
+  )
+  let adapted = restored.reframed(transform)
+  for time in [400000L, 550000L, 700000L] {
+    let original = monitor.update(time, observe(shifted_pixels))
+    let next = adapted.update(
+      time,
+      observe(shifted_pixels).map(item => item.reframed(transform)),
+    )
+    assert_eq(next.status, original.status)
+    assert_eq(next.evidence, @health.BeyondTolerance)
+    assert_eq(next.streak_since_us, Some(400000L))
+    guard next.rms_error_m is Some(rms) else {
+      fail("missing shifted residual")
+    }
+    assert_true((rms - 0.3).abs() < 1.0e-8)
+  }
+  let confirmed = @health.CalibrationMonitor::from_checkpoint(
+    adapted.checkpoint(),
+  )
+  let baseline = observe(original_pixels).map(item => item.reframed(transform))
+  let incomplete = confirmed.update(800000L, [baseline[0]])
+  assert_eq(incomplete.usable_count, 1)
+  assert_eq(incomplete.status, @health.HealthStatus::Insufficient)
+  assert_eq(incomplete.streak_since_us, None)
+  assert_eq(adapted.checkpoint().last_timestamp_us, Some(700000L))
+  assert_eq(restored.checkpoint().last_timestamp_us, Some(300000L))
+  assert_eq(confirmed.update(900000L, baseline).status, @health.Pending)
+  let unknown = @health.LandmarkObservation::new(
+    "unknown",
+    original_pixels[0],
+    @moonground.Covariance2::isotropic(2.0),
+  )
+  try confirmed.update(1050000L, [unknown]) catch {
+    _ => ()
+  } noraise {
+    _ => fail("unknown fixed landmark accepted")
+  }
+  assert_eq(confirmed.checkpoint().last_timestamp_us, Some(900000L))
+  ignore(confirmed.update(1050000L, baseline))
+  assert_eq(confirmed.update(1200000L, baseline).status, @health.Healthy)
+}
