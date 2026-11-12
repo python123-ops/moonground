@@ -1,0 +1,100 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/transit"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground/events",
+  "python123-ops/moonground/motion",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) enum CancellationReason {
+  Discontinuity
+  Expired
+  Reentered
+  Reversed
+  AmbiguousOrder
+} derive(Eq, @debug.Debug)
+pub fn CancellationReason::equal(Self, Self) -> Bool
+pub fn CancellationReason::not_equal(Self, Self) -> Bool
+pub fn CancellationReason::to_repr(Self) -> @debug.Repr
+
+pub struct Section {
+  section_id : String
+  entry_gate_id : String
+  entry_direction : @events.CrossingDirection
+  exit_gate_id : String
+  exit_direction : @events.CrossingDirection
+} derive(@debug.Debug)
+pub fn Section::new(String, String, @events.CrossingDirection, String, @events.CrossingDirection) -> Self raise @types.GroundError
+pub fn Section::to_repr(Self) -> @debug.Repr
+
+pub(all) struct TransitCancellation {
+  section_id : String
+  track_id : Int32
+  segment_id : String
+  reason : CancellationReason
+  entry : @events.GateCrossing
+} derive(@debug.Debug)
+pub fn TransitCancellation::to_repr(Self) -> @debug.Repr
+
+pub(all) struct TransitCheckpoint {
+  version : Int32
+  counting : @events.GateCheckpoint
+  sections : Array[Section]
+  max_duration_us : Int64
+  counts : Array[TransitCount]
+  pending : Array[TransitPending]
+} derive(@debug.Debug)
+pub fn TransitCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct TransitCount {
+  section_id : String
+  completed : Int64
+} derive(@debug.Debug)
+pub fn TransitCount::to_repr(Self) -> @debug.Repr
+
+pub struct TransitCounter {
+  // private fields
+}
+pub fn TransitCounter::checkpoint(Self) -> TransitCheckpoint
+pub fn TransitCounter::fork(Self) -> Self
+pub fn TransitCounter::from_checkpoint(TransitCheckpoint) -> Self raise @types.GroundError
+pub fn TransitCounter::new(@events.GateCounter, Array[Section], max_duration_us? : Int64) -> Self raise @types.GroundError
+pub fn TransitCounter::update(Self, @motion.FrameResult) -> TransitFrame raise @types.GroundError
+
+pub(all) struct TransitFrame {
+  counting : @events.GateFrame
+  passages : Array[TransitPassage]
+  cancellations : Array[TransitCancellation]
+  counts : Array[TransitCount]
+  pending_count : Int32
+} derive(@debug.Debug)
+pub fn TransitFrame::to_repr(Self) -> @debug.Repr
+
+pub(all) struct TransitPassage {
+  section_id : String
+  track_id : Int32
+  segment_id : String
+  entry : @events.GateCrossing
+  exit : @events.GateCrossing
+  elapsed_lower_us : Int64
+  elapsed_upper_us : Int64
+  estimated_elapsed_us : Double
+} derive(@debug.Debug)
+pub fn TransitPassage::to_repr(Self) -> @debug.Repr
+
+pub(all) struct TransitPending {
+  section_id : String
+  entry : @events.GateCrossing
+} derive(@debug.Debug)
+pub fn TransitPending::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
