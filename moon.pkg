@@ -4,3 +4,7 @@ import {
   "python123-ops/moonground/camera",
   "python123-ops/moonground/motion",
 }
+
+import {
+  "python123-ops/moonground/events",
+} for "test"

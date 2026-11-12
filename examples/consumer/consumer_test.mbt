@@ -1,4 +1,96 @@
 ///|
+test "packaged gate consumer resumes paired checkpoints across pixel reframing" {
+  let calibration = @moonground.GroundCalibration::from_homography(
+    [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 1.0],
+    [
+      @moonground.Point2::new(0.0, 0.0),
+      @moonground.Point2::new(640.0, 0.0),
+      @moonground.Point2::new(640.0, 480.0),
+      @moonground.Point2::new(0.0, 480.0),
+    ],
+  )
+  let session = @moonground.MeasurementSession::new(
+    "consumer-gates",
+    calibration,
+    @moonground.MotionConfig::new(),
+  )
+  let counter = @events.GateCounter::new(
+    "consumer-gates",
+    [
+      @events.LineGate::new(
+        "aisle",
+        @moonground.Point2::new(1.25, 0.0),
+        @moonground.Point2::new(1.25, 4.0),
+        deadband_m=0.01,
+      ),
+    ],
+    @events.GateConfig::new(),
+  )
+  let observe = (index : Int32) => {
+    @moonground.PixelObservation::new(
+      7,
+      @moonground.Point2::new(100.0 + index.to_double() * 10.0, 200.0),
+      @moonground.Covariance2::isotropic(0.25),
+    )
+  }
+  for index in 0..<3 {
+    let frame = session.update(index.to_int64() * 200000L, [observe(index)])
+    let counted = counter.update(frame.motion)
+    assert_eq(counted.crossings.length(), 0)
+    if index == 0 {
+      assert_true(frame.motion.tracks[0].speed_mps is None)
+    }
+  }
+  // Persist both states after the same accepted measurement frame.
+  let measurement_checkpoint = session.checkpoint()
+  let gate_checkpoint : @events.GateCheckpoint = counter.checkpoint()
+  assert_eq(gate_checkpoint.last_timestamp_us, Some(400000L))
+  assert_eq(measurement_checkpoint.motion.last_timestamp_us, Some(400000L))
+  let resumed = @moonground.MeasurementSession::from_checkpoint(
+    measurement_checkpoint,
+  )
+  let resumed_counter = @events.GateCounter::from_checkpoint(gate_checkpoint)
+  let transform = @moonground.PixelTransform::new(
+    scale_x=0.5,
+    scale_y=1.5,
+    offset_x=-40.0,
+    offset_y=16.0,
+  )
+  let reframed = session.reframed(transform)
+  let reframed_counter = @events.GateCounter::from_checkpoint(gate_checkpoint)
+  for index in 3..<5 {
+    let timestamp = index.to_int64() * 200000L
+    let expected = counter.update(session.update(timestamp, [observe(index)]).motion)
+    let continued = resumed_counter.update(
+      resumed.update(timestamp, [observe(index)]).motion,
+    )
+    let converted = reframed_counter.update(
+      reframed.update(timestamp, [observe(index).reframed(transform)]).motion,
+    )
+    assert_eq("\{Repr(continued)}", "\{Repr(expected)}")
+    assert_eq(converted.crossings.length(), expected.crossings.length())
+    assert_eq(converted.counts[0].positive_to_negative, 1L)
+    assert_eq(converted.counts[0].negative_to_positive, 0L)
+    if index == 3 {
+      let crossing = converted.crossings[0]
+      assert_eq(crossing.direction, @events.PositiveToNegative)
+      assert_eq(crossing.track_id, 7)
+      assert_eq(crossing.segment_id, "1")
+      assert_eq(crossing.from_timestamp_us, 400000L)
+      assert_eq(crossing.to_timestamp_us, 600000L)
+      assert_true((crossing.position_m.x - 1.25).abs() < 1.0e-10)
+      assert_true((crossing.position_m.y - 2.0).abs() < 1.0e-10)
+      assert_true(
+        (crossing.crossing_fraction - expected.crossings[0].crossing_fraction).abs() <
+        1.0e-10,
+      )
+    }
+  }
+  assert_eq(gate_checkpoint.counts[0].positive_to_negative, 0L)
+  assert_eq(gate_checkpoint.last_timestamp_us, Some(400000L))
+}
+
+///|
 test "packaged pixel coordinate adaptation continues warm metric state through root API" {
   let calibration = @moonground.GroundCalibration::from_homography(
     [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 1.0],
