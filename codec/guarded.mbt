@@ -2,8 +2,8 @@
 /// One explicit owner of calibration evidence, pixel motion and gate counts.
 pub struct GuardedReplay {
   priv session : @guarded.GuardedSession
-  priv analysis_configuration : Json
-  priv health_configuration : Json
+  priv mut analysis_configuration : Json
+  priv mut health_configuration : Json
   priv monitor_id : String
   priv diagnostics : Bool
   priv max_tracks : Int32
@@ -71,6 +71,9 @@ fn GuardedReplay::guarded_process_frame(
   source : String,
 ) -> Json raise @types.GroundError {
   let fields = object(parse_document(source), "guarded frame")
+  if fields.contains("replace_projection") {
+    return self.replace_projection_frame(fields)
+  }
   allowed_fields(fields, ["measurement", "health"], "guarded frame")
   let (time, observations, lost, removed) = observation_frame(
     text(required(fields, "measurement"), "measurement"),
@@ -94,9 +97,19 @@ fn GuardedReplay::guarded_process_frame(
     lost~,
     removed~,
   )
+  guarded_frame_json(result, self.monitor_id, self.diagnostics)
+}
+
+///|
+fn guarded_frame_json(
+  result : @guarded.GuardedFrame,
+  monitor_id : String,
+  diagnostics : Bool,
+  kind~ : String = "guarded_analysis_frame",
+) -> Json {
   Json::object({
     "schema_version": Json("0.1.0"),
-    "kind": Json("guarded_analysis_frame"),
+    "kind": Json(kind),
     "decision": Json(
       match result.decision {
         @guarded.Allowed => "allowed"
@@ -104,8 +117,8 @@ fn GuardedReplay::guarded_process_frame(
       },
     ),
     "suppressed_track_ids": Json(result.suppressed_track_ids),
-    "health": health_report_json(self.monitor_id, result.health),
-    "analysis": analysis_frame_json(result.analysis, self.diagnostics),
+    "health": health_report_json(monitor_id, result.health),
+    "analysis": analysis_frame_json(result.analysis, diagnostics),
   })
 }
 
@@ -140,7 +153,7 @@ pub fn GuardedReplay::checkpoint_json(
 }
 
 ///|
-/// Pure bounded batch of paired raw pixel and fixed-landmark frame documents.
+/// Pure bounded batch of paired observations and explicit projection barriers.
 pub fn guarded_json(source : String) -> String raise @types.GroundError {
   if source.length() > 16777216 {
     raise invalid("guarded request exceeds 16777216 UTF-16 code units")
