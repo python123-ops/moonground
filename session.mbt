@@ -2,6 +2,7 @@
 pub using @types {
   type Point2,
   type Covariance2,
+  type PixelTransform,
   type GroundObservation,
   type GroundError,
   is_finite,

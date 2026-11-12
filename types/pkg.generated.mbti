@@ -35,6 +35,19 @@ pub fn GroundObservation::new(Int32, Point2, Covariance2) -> Self raise GroundEr
 pub fn GroundObservation::to_repr(Self) -> @debug.Repr
 pub fn GroundObservation::validate(Self) -> Unit raise GroundError
 
+pub struct PixelTransform {
+  scale_x : Double
+  scale_y : Double
+  offset_x : Double
+  offset_y : Double
+} derive(@debug.Debug)
+pub fn PixelTransform::covariance(Self, Covariance2) -> Covariance2 raise GroundError
+pub fn PixelTransform::inverse(Self) -> Self raise GroundError
+pub fn PixelTransform::new(scale_x? : Double, scale_y? : Double, offset_x? : Double, offset_y? : Double) -> Self raise GroundError
+pub fn PixelTransform::point(Self, Point2) -> Point2 raise GroundError
+pub fn PixelTransform::then(Self, Self) -> Self raise GroundError
+pub fn PixelTransform::to_repr(Self) -> @debug.Repr
+
 pub(all) struct Point2 {
   x : Double
   y : Double

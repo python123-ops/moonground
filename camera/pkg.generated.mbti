@@ -23,6 +23,7 @@ pub fn CameraModel::project(Self, @calibration.GroundCalibration, @types.Point2,
 pub fn CameraModel::project_jacobian(Self, @calibration.GroundCalibration, @types.Point2) -> Array[Double] raise @types.GroundError
 pub fn CameraModel::rectify(Self, @types.Point2) -> @types.Point2 raise @types.GroundError
 pub fn CameraModel::rectify_covariance(Self, @types.Point2, @types.Covariance2) -> @types.Covariance2 raise @types.GroundError
+pub fn CameraModel::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
 pub fn CameraModel::to_repr(Self) -> @debug.Repr
 
 // Type aliases

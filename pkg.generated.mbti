@@ -35,6 +35,7 @@ pub fn MeasurementSession::active_track_count(Self) -> Int32
 pub fn MeasurementSession::checkpoint(Self) -> MeasurementCheckpoint
 pub fn MeasurementSession::from_checkpoint(MeasurementCheckpoint) -> Self raise @types.GroundError
 pub fn MeasurementSession::new(String, @calibration.GroundCalibration, @motion.MotionConfig, camera? : @camera.CameraModel) -> Self raise @types.GroundError
+pub fn MeasurementSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
 pub fn MeasurementSession::update(Self, Int64, Array[PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> MeasurementFrame raise @types.GroundError
 
 pub(all) struct PixelObservation {
@@ -43,6 +44,7 @@ pub(all) struct PixelObservation {
   covariance : @types.Covariance2
 }
 pub fn PixelObservation::new(Int32, @types.Point2, @types.Covariance2) -> Self raise @types.GroundError
+pub fn PixelObservation::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
 
 pub(all) struct ProjectionFailure {
   track_id : Int32
@@ -63,6 +65,8 @@ pub using @types {type GroundObservation}
 pub using @motion {type MotionConfig}
 
 pub using @motion {type MotionEstimator}
+
+pub using @types {type PixelTransform}
 
 pub using @types {type Point2}
 

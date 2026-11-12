@@ -35,6 +35,7 @@ pub fn GroundCalibration::jacobian(Self, @types.Point2) -> Array[Double] raise @
 pub fn GroundCalibration::map_point(Self, @types.Point2) -> @types.Point2 raise @types.GroundError
 pub fn GroundCalibration::matrix(Self) -> Array[Double]
 pub fn GroundCalibration::project(Self, @types.Point2, @types.Covariance2) -> GroundPoint raise @types.GroundError
+pub fn GroundCalibration::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
 pub fn GroundCalibration::report(Self) -> CalibrationReport
 pub fn GroundCalibration::roi(Self) -> Array[@types.Point2]
 
