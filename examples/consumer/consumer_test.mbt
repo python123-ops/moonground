@@ -60,7 +60,9 @@ test "packaged gate consumer resumes paired checkpoints across pixel reframing" 
   let reframed_counter = @events.GateCounter::from_checkpoint(gate_checkpoint)
   for index in 3..<5 {
     let timestamp = index.to_int64() * 200000L
-    let expected = counter.update(session.update(timestamp, [observe(index)]).motion)
+    let expected = counter.update(
+      session.update(timestamp, [observe(index)]).motion,
+    )
     let continued = resumed_counter.update(
       resumed.update(timestamp, [observe(index)]).motion,
     )
@@ -505,4 +507,96 @@ test "packaged typed checkpoint resumes measured motion and keeps independent st
   assert_eq(actual_new.motion.tracks[0].accepted_count, 1)
   assert_eq(actual_new.motion.tracks[0].observed_path_length_m, 0.0)
   assert_true(actual_new.motion.tracks[0].speed_mps is None)
+}
+
+///|
+test "packaged joint analysis restores reframes and rolls back counting failures" {
+  let measurement = @moonground.MeasurementSession::new(
+    "consumer-analysis",
+    @moonground.GroundCalibration::from_homography(
+      [0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 1.0],
+      [
+        { x: 0.0, y: 0.0, },
+        { x: 640.0, y: 0.0, },
+        { x: 640.0, y: 480.0, },
+        { x: 0.0, y: 480.0, },
+      ],
+    ),
+    @moonground.MotionConfig::new(gate=1.0e12),
+  )
+  let counting = @events.GateCounter::new(
+    "consumer-analysis",
+    [
+      @events.LineGate::new(
+        "aisle",
+        { x: 1.15, y: 0.0, },
+        { x: 1.15, y: 4.0, },
+        deadband_m=0.01,
+      ),
+    ],
+    @events.GateConfig::new(),
+  )
+  let session = @analysis.AnalysisSession::from_pixel(measurement, counting)
+  let observe = (x : Double) => {
+    @moonground.PixelObservation::new(
+      7,
+      { x, y: 200.0, },
+      @moonground.Covariance2::isotropic(0.25),
+    )
+  }
+  for index in 0..<3 {
+    ignore(
+      session.update_pixel(index.to_int64() * 200000L, [
+        observe(100.0 + 10.0 * index.to_double()),
+      ]),
+    )
+  }
+  let checkpoint = session.checkpoint()
+  assert_eq(checkpoint.counting.counts[0].positive_to_negative, 1L)
+  checkpoint.counting.counts[0] = {
+    ..checkpoint.counting.counts[0],
+    negative_to_positive: 9223372036854775807L,
+  }
+  let expected = @analysis.AnalysisSession::from_checkpoint(checkpoint)
+  let restored = @analysis.AnalysisSession::from_checkpoint(checkpoint)
+  let transform = @moonground.PixelTransform::new(
+    scale_x=2.0,
+    scale_y=0.5,
+    offset_x=4.0,
+    offset_y=-2.0,
+  )
+  let adapted = restored.reframed(transform)
+  let next = adapted.update_pixel(600000L, [observe(130.0).reframed(transform)])
+  let original = expected.update_pixel(600000L, [observe(130.0)])
+  assert_eq(next.counting.counts[0].positive_to_negative, 1L)
+  assert_eq(
+    next.measurement.motion.tracks[0].filtered_state,
+    original.measurement.motion.tracks[0].filtered_state,
+  )
+  let before = adapted.checkpoint()
+  try adapted.update_pixel(800000L, [observe(90.0).reframed(transform)]) catch {
+    _ => ()
+  } noraise {
+    _ => fail("exhausted joint counter accepted a crossing")
+  }
+  let after = adapted.checkpoint()
+  assert_eq(after.counting.last_timestamp_us, before.counting.last_timestamp_us)
+  assert_eq(
+    after.counting.counts[0].negative_to_positive,
+    before.counting.counts[0].negative_to_positive,
+  )
+  guard (before.measurement, after.measurement) is (Pixel(before), Pixel(after)) else {
+    fail("pixel analysis lost its measurement mode")
+  }
+  assert_eq(after.motion.last_timestamp_us, Some(600000L))
+  assert_eq(after.motion.next_segment_id, before.motion.next_segment_id)
+  assert_eq(after.motion.tracks[0].state, before.motion.tracks[0].state)
+  assert_eq(
+    after.motion.tracks[0].covariance,
+    before.motion.tracks[0].covariance,
+  )
+  let retry = adapted.update_pixel(800000L, [observe(140.0).reframed(transform)])
+  assert_eq(retry.measurement.motion.tracks[0].accepted_count, 5)
+  assert_eq(retry.measurement.motion.tracks[0].segment_id, "1")
+  assert_eq(restored.checkpoint().counting.last_timestamp_us, Some(400000L))
 }
