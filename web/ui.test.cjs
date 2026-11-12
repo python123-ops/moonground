@@ -1349,6 +1349,402 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       document.querySelector("#message").textContent.includes("已完成 1 帧"),
     );
     assert.equal(await page.locator("#download").isDisabled(), false);
+    // Fixed-landmark checks have their own source, timeline and persistence.
+    // They must not replace or invalidate the motion/gate replay above.
+    const motionBeforeHealth = await page.locator("#source").inputValue();
+    const gatesBeforeHealth = await page.locator("#gate-input").inputValue();
+    const motionCounterBeforeHealth = await page
+      .locator("#counter")
+      .textContent();
+    const motionResultBeforeHealth = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    const healthSource = fs.readFileSync(
+      path.resolve(__dirname, "..", "examples", "health.ndjson"),
+      "utf8",
+    );
+    const healthLines = healthSource.trimEnd().split(/\r?\n/);
+    await page.locator("#health-example").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#health-message")
+        .textContent.includes("已检查 13 帧"),
+    );
+    const health = await exportJson(
+      "#download-health",
+      "moonground-health-results.json",
+    );
+    assert.equal(health.checkpoint.format, "moonground.health");
+    assert.deepEqual(
+      health.frames.map((f) => f.status),
+      [
+        "pending",
+        "pending",
+        "healthy",
+        "pending",
+        "pending",
+        "drift",
+        "insufficient",
+        "pending",
+        "pending",
+        "healthy",
+        "pending",
+        "pending",
+        "healthy",
+      ],
+    );
+    assert.deepEqual(
+      health.frames.map((f) => f.usable_count),
+      [3, 3, 3, 3, 3, 3, 1, 3, 3, 3, 3, 3, 3],
+    );
+    assert.ok(health.frames[2].rms_error_m < 1e-7);
+    assert.ok(health.frames[5].rms_error_m > 0.29);
+    assert.equal(
+      health.frames[5].scope,
+      "observed_fixed_landmarks_under_fixed_calibration",
+    );
+    assert.equal(health.frames[12].streak_since_us, "1800000");
+    const selectHealthFrame = async (index) =>
+      page.locator("#health-frame").evaluate((input, value) => {
+        input.value = String(value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }, index);
+    await selectHealthFrame(5);
+    assert.match(
+      await page.locator("#health-status").textContent(),
+      /持续残差超限/,
+    );
+    assert.match(
+      await page.locator("#health-evidence").textContent(),
+      /400000/,
+    );
+    assert.equal(await page.locator("#health-residuals tr").count(), 3);
+    assert.match(await page.locator("#health-span").textContent(), /300000/);
+    // The checkpoint download is explicitly batch-final, independent of the
+    // selected report used to inspect the residual table.
+    const healthCheckpoint = await exportJson(
+      "#save-health-checkpoint",
+      "moonground-health-checkpoint.json",
+    );
+    assert.equal(healthCheckpoint.state.last_timestamp_us, "2200000");
+    await selectHealthFrame(6);
+    assert.match(
+      await page.locator("#health-status").textContent(),
+      /地标不足/,
+    );
+    assert.equal(await page.locator("#health-residuals tr").count(), 3);
+    assert.match(await page.locator("#health-usable").textContent(), /1 \/ 3/);
+    await selectHealthFrame(5);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator('section[aria-labelledby="health-heading"]').screenshot({
+      path: path.join(directory, "health-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator('section[aria-labelledby="health-heading"]').screenshot({
+      path: path.join(directory, "health-desktop-preview.png"),
+    });
+    for (const invalid of [
+      { ...healthCheckpoint, checkpoint_version: "999" },
+      {
+        ...healthCheckpoint,
+        state: { ...healthCheckpoint.state, last_timestamp_us: "0" },
+      },
+    ]) {
+      await page.locator("#health-checkpoint-file").setInputFiles({
+        name: "invalid-health.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(invalid)),
+      });
+      await page.waitForFunction(() =>
+        document.querySelector("#health-message").classList.contains("error"),
+      );
+      assert.equal(
+        await page.locator("#health-input").inputValue(),
+        healthSource,
+      );
+      assert.deepEqual(
+        await exportJson("#download-health", "moonground-health-results.json"),
+        health,
+      );
+    }
+    // A malformed imported stream fails before replacing the valid input and
+    // leaves its current results available for download.
+    await page.locator("#health-file").setInputFiles({
+      name: "bad-health.ndjson",
+      mimeType: "application/x-ndjson",
+      buffer: Buffer.from(
+        healthSource +
+          '{"timestamp_us":"2300000","observations":[{"landmark_id":"unknown","point":[0,0]}]}\n',
+      ),
+    });
+    await page.waitForFunction(() =>
+      document.querySelector("#health-message").classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#health-input").inputValue(),
+      healthSource,
+    );
+    assert.deepEqual(
+      await exportJson("#download-health", "moonground-health-results.json"),
+      health,
+    );
+    const nextHealthFrame = {
+      ...JSON.parse(healthLines[1]),
+      timestamp_us: "2350000",
+    };
+    await page
+      .locator("#health-input")
+      .fill(healthSource + JSON.stringify(nextHealthFrame) + "\n");
+    assert.equal(await page.locator("#download-health").isDisabled(), true);
+    assert.equal(await page.locator("#health-counter").textContent(), "0 / 0");
+    await page.locator("#run-health").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#health-message")
+        .textContent.includes("已检查 14 帧"),
+    );
+    const continuedHealth = await exportJson(
+      "#download-health",
+      "moonground-health-results.json",
+    );
+    await page.locator("#health-checkpoint-file").setInputFiles({
+      name: "health.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(healthCheckpoint)),
+    });
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#health-message")
+        .textContent.includes("已载入地标检查点"),
+    );
+    assert.equal(await page.locator("#download-health").isDisabled(), true);
+    await page
+      .locator("#health-input")
+      .fill(
+        (await page.locator("#health-input").inputValue()) +
+          JSON.stringify(nextHealthFrame) +
+          "\n",
+      );
+    await page.locator("#run-health").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#health-message")
+        .textContent.includes("已检查 1 帧"),
+    );
+    const resumedHealth = await exportJson(
+      "#download-health",
+      "moonground-health-results.json",
+    );
+    assert.deepEqual(resumedHealth.frames[0], continuedHealth.frames.at(-1));
+    assert.deepEqual(resumedHealth.checkpoint, continuedHealth.checkpoint);
+    // Quality rejection keeps projection diagnostics while contributing no
+    // residual to the usable subset; all configured landmarks remain listed.
+    const qualityFrame = JSON.parse(healthLines[1]);
+    qualityFrame.observations[1].covariance = [1e6, 0, 1e6];
+    await page
+      .locator("#health-input")
+      .fill(healthLines[0] + "\n" + JSON.stringify(qualityFrame) + "\n");
+    await page.locator("#run-health").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#health-message")
+        .textContent.includes("已检查 1 帧"),
+    );
+    const qualityHealth = await exportJson(
+      "#download-health",
+      "moonground-health-results.json",
+    );
+    const qualityLandmark = qualityHealth.frames[0].landmarks[1];
+    assert.equal(qualityHealth.frames[0].usable_count, 2);
+    assert.equal(qualityHealth.frames[0].status, "insufficient");
+    assert.equal(qualityLandmark.residual_m, null);
+    assert.equal(qualityLandmark.error_m, null);
+    assert.ok(qualityLandmark.projected_position_m !== null);
+    assert.ok(qualityLandmark.projected_covariance !== null);
+    assert.ok(qualityLandmark.position_std_m > 0.1);
+    assert.ok(qualityLandmark.rejection_reason);
+    await page.evaluate(() => {
+      const original = File.prototype.text;
+      window.restoreHealthRead = () => {
+        File.prototype.text = original;
+      };
+      File.prototype.text = function () {
+        if (this.name !== "delayed-health.json") return original.call(this);
+        return new Promise((resolve, reject) => {
+          window.releaseHealthRead = async () => {
+            try {
+              resolve(await original.call(this));
+            } catch (error) {
+              reject(error);
+            }
+          };
+        });
+      };
+    });
+    await page.locator("#health-checkpoint-file").setInputFiles({
+      name: "delayed-health.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(healthCheckpoint)),
+    });
+    await page.locator("#health-input").fill(healthSource);
+    await page.evaluate(() => {
+      window.releaseHealthRead();
+      window.restoreHealthRead();
+    });
+    assert.equal(
+      await page.locator("#health-input").inputValue(),
+      healthSource,
+    );
+    const rawHealth = healthSource.replace(
+      '"min_observations":3',
+      '"min_observations":3.0000000000000001',
+    );
+    await page.locator("#health-input").fill(rawHealth);
+    await page.locator("#run-health").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#health-message").classList.contains("error"),
+    );
+    assert.equal(await page.locator("#health-input").inputValue(), rawHealth);
+    assert.equal(await page.locator("#download-health").isDisabled(), true);
+    // A late example read and a pending calculation both yield to a newer
+    // health draft without touching either main-pipeline editor.
+    let releaseHealth;
+    const healthGate = new Promise((resolve) => {
+      releaseHealth = resolve;
+    });
+    let healthRequested;
+    const pendingHealth = new Promise((resolve) => {
+      healthRequested = resolve;
+    });
+    await page.route("**/health.ndjson", async (route) => {
+      healthRequested();
+      await healthGate;
+      await route.fulfill({
+        contentType: "application/x-ndjson",
+        body: healthSource,
+      });
+    });
+    try {
+      await page.locator("#health-example").click();
+      await pendingHealth;
+      const draft = healthLines[0] + "\n";
+      await page.locator("#health-input").fill(draft);
+      const response = page.waitForResponse((value) =>
+        value.url().endsWith("/health.ndjson"),
+      );
+      releaseHealth();
+      await (await response).finished();
+      await page.waitForLoadState("networkidle");
+      assert.equal(await page.locator("#health-input").inputValue(), draft);
+    } finally {
+      releaseHealth();
+      await page.unroute("**/health.ndjson");
+    }
+    await page.locator("#health-input").fill(healthSource);
+    await page.evaluate(() => {
+      const original = window.setTimeout;
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 0) {
+          window.setTimeout = original;
+          window.releaseHealthPreparation = () => callback(...args);
+          return -1;
+        }
+        return original.call(window, callback, delay, ...args);
+      };
+    });
+    await page.locator("#run-health").click();
+    await page.waitForFunction(
+      () => typeof window.releaseHealthPreparation === "function",
+    );
+    await page.locator("#health-input").fill(healthLines[0] + "\n");
+    await page.evaluate(() => {
+      window.releaseHealthPreparation();
+      delete window.releaseHealthPreparation;
+    });
+    await page.waitForFunction(
+      () => !document.querySelector("#run-health").disabled,
+    );
+    assert.equal(await page.locator("#download-health").isDisabled(), true);
+    assert.equal(await page.locator("#health-counter").textContent(), "0 / 0");
+    // A newer valid file or example can finish reading while an older run is
+    // still preparing. It must supersede that run instead of being dropped.
+    for (const replacement of ["file", "example"]) {
+      await page
+        .locator("#health-input")
+        .fill(healthSource.replace("warehouse-landmarks", "older-monitor"));
+      await page.evaluate(() => {
+        const original = window.setTimeout;
+        window.healthPreparationQueue = [];
+        window.setTimeout = function (callback, delay, ...args) {
+          if (delay === 0) {
+            window.healthPreparationQueue.push(() => callback(...args));
+            if (window.healthPreparationQueue.length === 2)
+              window.setTimeout = original;
+            return -1;
+          }
+          return original.call(window, callback, delay, ...args);
+        };
+      });
+      await page.locator("#run-health").click();
+      await page.waitForFunction(
+        () => window.healthPreparationQueue.length === 1,
+      );
+      const replacementSource =
+        replacement === "file"
+          ? healthSource.replace("warehouse-landmarks", "replacement-monitor")
+          : healthSource;
+      if (replacement === "file") {
+        await page.locator("#health-file").setInputFiles({
+          name: "replacement-health.ndjson",
+          mimeType: "application/x-ndjson",
+          buffer: Buffer.from(replacementSource),
+        });
+      } else await page.locator("#health-example").click();
+      await page.waitForFunction(
+        () => window.healthPreparationQueue.length === 2,
+      );
+      await page.evaluate(() => window.healthPreparationQueue[0]());
+      assert.equal(await page.locator("#run-health").isDisabled(), true);
+      await page.evaluate(() => window.healthPreparationQueue[1]());
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#health-message")
+          .textContent.includes("已检查 13 帧"),
+      );
+      assert.equal(
+        await page.locator("#health-input").inputValue(),
+        replacementSource,
+      );
+      assert.equal(
+        await page.locator("#health-counter").textContent(),
+        "13 / 13",
+      );
+      assert.equal(await page.locator("#run-health").isDisabled(), false);
+      assert.equal(await page.locator("#download-health").isDisabled(), false);
+    }
+    assert.equal(
+      await page.locator("#source").inputValue(),
+      motionBeforeHealth,
+    );
+    assert.equal(
+      await page.locator("#gate-input").inputValue(),
+      gatesBeforeHealth,
+    );
+    assert.equal(
+      await page.locator("#counter").textContent(),
+      motionCounterBeforeHealth,
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      motionResultBeforeHealth,
+    );
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

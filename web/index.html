@@ -254,6 +254,116 @@
           </table>
         </div>
       </section>
+      <section class="panel" aria-labelledby="health-heading">
+        <div class="panel-title">
+          <h2 id="health-heading">固定地标检查</h2>
+          <span id="health-time" class="mono">—</span>
+        </div>
+        <p class="hint">
+          输入原标定、固定地标的已知米制位置及后续像素观测，检查投影残差。 配置
+          camera
+          时使用原始像素，否则使用已校正像素。连续同类证据达到确认帧数与时间后，才显示符合阈值或持续超限；地标不足与长间隔会重新确认。
+          此检查独立于上方轨迹，不修改标定，也不自动重标定。示例为合成数据。
+        </p>
+        <div class="health-layout">
+          <div>
+            <label for="health-input" class="hint"
+              >首行为地标配置或恢复起点，后续每行是一帧地标观测</label
+            >
+            <textarea id="health-input" spellcheck="false"></textarea>
+            <div class="actions">
+              <button id="run-health">检查地标</button>
+              <button id="health-example" class="quiet">地标示例</button>
+              <label class="file-button"
+                >导入地标 NDJSON<input
+                  id="health-file"
+                  type="file"
+                  accept=".ndjson,.jsonl,.txt"
+              /></label>
+              <button id="download-health" class="quiet" disabled>
+                下载检查结果
+              </button>
+            </div>
+            <div class="actions">
+              <button id="save-health-checkpoint" class="quiet" disabled>
+                保存末帧地标检查点
+              </button>
+              <label class="file-button"
+                >载入地标检查点<input
+                  id="health-checkpoint-file"
+                  type="file"
+                  accept=".json"
+              /></label>
+            </div>
+            <p
+              id="health-message"
+              role="status"
+              aria-live="polite"
+              class="hint"
+            >
+              载入地标示例，或输入自己的地标观测后检查。
+            </p>
+          </div>
+          <div>
+            <canvas
+              id="health-timeline"
+              width="960"
+              height="42"
+              aria-label="逐帧地标检查状态"
+            ></canvas>
+            <p class="hint health-legend">
+              <span class="health-healthy">符合阈值</span
+              ><span class="health-drift">持续超限</span
+              ><span class="health-pending">等待证据</span
+              ><span class="health-insufficient">地标不足</span>
+            </p>
+            <div class="playback">
+              <input
+                id="health-frame"
+                aria-label="地标检查回放帧"
+                type="range"
+                min="0"
+                max="0"
+                value="0"
+                disabled
+              />
+              <span id="health-counter" class="mono">0 / 0</span>
+            </div>
+            <div class="stats health-stats">
+              <div>
+                <span>所选帧状态</span><strong id="health-status">—</strong>
+              </div>
+              <div>
+                <span>可用地标</span><strong id="health-usable">—</strong>
+              </div>
+              <div><span>RMS 残差</span><strong id="health-rms">—</strong></div>
+              <div><span>最大残差</span><strong id="health-max">—</strong></div>
+              <div>
+                <span>同类证据时间跨度</span><strong id="health-span">—</strong>
+              </div>
+              <div>
+                <span>确认帧数</span><strong id="health-observations">—</strong>
+              </div>
+            </div>
+            <p id="health-evidence" class="hint">尚无地标检查结果。</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>固定地标</th>
+                <th>投影位置 x, y · m</th>
+                <th>残差 x, y · m</th>
+                <th>误差 · m</th>
+                <th>位置 σ · m</th>
+                <th>可用性</th>
+              </tr>
+            </thead>
+            <tbody id="health-residuals"></tbody>
+          </table>
+        </div>
+      </section>
       <footer>
         固定相机 ·
         单地平面。协方差以给定标定与足点为条件；观测折线连接已接受点，不补全未观测路径。数据不上传。

@@ -156,13 +156,57 @@ button:disabled {
   color: #ad4335;
 }
 #gate-message.error,
-#analysis-message.error {
+#analysis-message.error,
+#health-message.error {
   color: #ad4335;
 }
 .gate-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
+}
+.health-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  margin-bottom: 18px;
+}
+#health-input {
+  height: 230px;
+}
+#health-timeline {
+  aspect-ratio: 960/42;
+}
+.health-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0;
+}
+.health-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 5px;
+  background: var(--health-color);
+  border-radius: 2px;
+}
+.health-healthy {
+  --health-color: #498867;
+}
+.health-drift {
+  --health-color: #bb6554;
+}
+.health-pending {
+  --health-color: #dcba72;
+}
+.health-insufficient {
+  --health-color: #b5c0b3;
+}
+.stats.health-stats strong {
+  font-size: 16px;
+  overflow-wrap: anywhere;
 }
 #gate-input {
   height: 180px;
@@ -263,6 +307,10 @@ footer {
   .gate-layout {
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+  .health-layout {
+    grid-template-columns: 1fr;
+    gap: 18px;
   }
   .workspace {
     grid-template-columns: 1fr;

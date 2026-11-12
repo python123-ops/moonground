@@ -9,12 +9,14 @@ import {
   moonground_reframe,
   moonground_gates,
   moonground_analysis,
+  moonground_health,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
 const source = $("source");
 const calibrationInput = $("calibration-input");
 const gateInput = $("gate-input");
+const healthInput = $("health-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -41,6 +43,11 @@ let analysisCheckpointBusy = false;
 let analysisResponse = null;
 let analysisHeader = null;
 let analysisGateInput = "";
+let healthRevision = 0;
+let healthReport = null;
+let healthResponse = null;
+let healthLoadedSource = "";
+let healthRunToken = 0;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -1066,5 +1073,249 @@ fetch("./gates.json")
     if (gateRevision === initialGateRevision && !gateEdited)
       gateMessage(error.message, true);
   });
+const healthStates = {
+  insufficient: "地标不足",
+  pending: "等待持续证据",
+  healthy: "残差符合阈值",
+  drift: "持续残差超限",
+};
+const healthEvidence = {
+  within_tolerance: "本帧符合阈值",
+  beyond_tolerance: "本帧残差超限",
+  insufficient: "本帧可用地标不足",
+};
+const healthColors = {
+  insufficient: "#b5c0b3",
+  pending: "#dcba72",
+  healthy: "#498867",
+  drift: "#bb6554",
+};
+
+function healthMessage(text, error = false) {
+  $("health-message").textContent = text;
+  $("health-message").classList.toggle("error", error);
+}
+
+function clearHealthResult() {
+  healthRevision++;
+  healthReport = null;
+  healthResponse = null;
+  healthLoadedSource = "";
+  $("download-health").disabled = true;
+  $("save-health-checkpoint").disabled = true;
+  $("health-frame").disabled = true;
+  $("health-counter").textContent = "0 / 0";
+  $("health-time").textContent = "—";
+  for (const id of [
+    "health-status",
+    "health-usable",
+    "health-rms",
+    "health-max",
+    "health-span",
+    "health-observations",
+  ])
+    $(id).textContent = "—";
+  $("health-evidence").textContent = "尚无地标检查结果。";
+  $("health-residuals").replaceChildren();
+  drawHealthTimeline();
+}
+
+function drawHealthTimeline() {
+  const timeline = $("health-timeline"),
+    drawing = timeline.getContext("2d");
+  drawing.fillStyle = "#eef3e9";
+  drawing.fillRect(0, 0, timeline.width, timeline.height);
+  if (!healthReport?.frames.length) return;
+  const width = timeline.width / healthReport.frames.length;
+  healthReport.frames.forEach((frame, index) => {
+    drawing.fillStyle = healthColors[frame.status];
+    drawing.fillRect(index * width, 0, Math.max(width, 1), timeline.height);
+  });
+  const selected = Number($("health-frame").value);
+  drawing.strokeStyle = "#20342f";
+  drawing.lineWidth = 3;
+  drawing.strokeRect(
+    selected * width + 1.5,
+    1.5,
+    Math.max(width - 3, 1),
+    timeline.height - 3,
+  );
+}
+
+function renderHealth() {
+  const index = Number($("health-frame").value),
+    frame = healthReport?.frames[index];
+  if (!frame) return;
+  $("health-counter").textContent =
+    `${index + 1} / ${healthReport.frames.length}`;
+  $("health-time").textContent = `${frame.timestamp_us} μs`;
+  $("health-status").textContent = healthStates[frame.status];
+  $("health-usable").textContent =
+    `${frame.usable_count} / ${frame.landmarks.length}`;
+  const metric = (value) =>
+    value == null ? "—" : `${value.toExponential(3)} m`;
+  $("health-rms").textContent = metric(frame.rms_error_m);
+  $("health-max").textContent = metric(frame.max_error_m);
+  $("health-span").textContent =
+    frame.streak_since_us === null
+      ? "—"
+      : `${BigInt(frame.timestamp_us) - BigInt(frame.streak_since_us)} μs`;
+  $("health-observations").textContent = String(frame.streak_observations);
+  $("health-evidence").textContent =
+    `${healthEvidence[frame.evidence]}${frame.streak_since_us === null ? "" : `；当前同类证据始于 ${frame.streak_since_us} μs`}。`;
+  const rows = frame.landmarks.map((landmark) => {
+    const row = document.createElement("tr");
+    const vector = (value) =>
+      value == null ? "—" : value.map((n) => n.toFixed(4)).join(", ");
+    for (const value of [
+      landmark.landmark_id,
+      vector(landmark.projected_position_m),
+      vector(landmark.residual_m),
+      metric(landmark.error_m),
+      metric(landmark.position_std_m),
+      landmark.rejection_reason ?? "可用",
+    ]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    return row;
+  });
+  $("health-residuals").replaceChildren(...rows);
+  drawHealthTimeline();
+}
+
+function requestHealth(header, observations) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(header).length + encoder.encode(observations).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器地标检查输入上限为 8 MiB；更大的流请使用原生命令。");
+  const request = JSON.stringify({ source: header, observations });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("地标检查请求超过 16 Mi 字符上限，请使用原生命令。");
+  const response = moonground_health(request);
+  const report = unpack(response);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器地标检查结果超过 8 MiB；请使用原生命令保存。");
+  return { response, report };
+}
+
+async function runHealth(
+  input = healthInput.value,
+  current = ++healthRevision,
+) {
+  const runToken = ++healthRunToken;
+  $("run-health").disabled = true;
+  healthMessage("正在检查固定地标…");
+  try {
+    const lines = observationLines(input);
+    if (lines.length < 2 || lines.length > 5001)
+      throw new Error("请输入地标配置及 1—5000 帧观测。");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (current !== healthRevision) return;
+    // Preserve raw configuration, covariance and timestamp tokens for MoonBit.
+    const { response, report } = requestHealth(
+      lines[0],
+      lines.slice(1).join("\n") + "\n",
+    );
+    if (current !== healthRevision) return;
+    healthInput.value = input;
+    healthLoadedSource = input;
+    healthReport = report;
+    healthResponse = response;
+    $("health-frame").max = String(report.frames.length - 1);
+    $("health-frame").value = String(report.frames.length - 1);
+    $("health-frame").disabled = false;
+    $("download-health").disabled = false;
+    $("save-health-checkpoint").disabled = false;
+    healthMessage(
+      `已检查 ${report.frames.length} 帧固定地标。状态仅描述这些地标在原标定下的残差；测量与标定均未修改。`,
+    );
+    renderHealth();
+  } catch (error) {
+    if (current === healthRevision) healthMessage(error.message, true);
+  } finally {
+    if (runToken === healthRunToken) $("run-health").disabled = false;
+  }
+}
+
+healthInput.addEventListener("input", () => {
+  clearHealthResult();
+  healthMessage("地标输入已修改，请重新检查。");
+});
+$("run-health").addEventListener("click", () => runHealth());
+$("health-frame").addEventListener("input", renderHealth);
+$("download-health").addEventListener("click", () => {
+  if (healthResponse === null || healthInput.value !== healthLoadedSource)
+    return;
+  saveFile(healthResponse + "\n", "moonground-health-results.json");
+});
+$("save-health-checkpoint").addEventListener("click", () => {
+  if (!healthReport || healthInput.value !== healthLoadedSource) return;
+  saveFile(
+    JSON.stringify(healthReport.checkpoint) + "\n",
+    "moonground-health-checkpoint.json",
+  );
+  healthMessage(
+    `已保存整批末帧 ${healthReport.checkpoint.state.last_timestamp_us} μs 的地标检查点。`,
+  );
+});
+$("health-example").addEventListener("click", async () => {
+  const current = ++healthRevision;
+  try {
+    const response = await fetch("./health.ndjson");
+    if (!response.ok) throw new Error("地标示例读取失败。");
+    const text = await response.text();
+    if (current !== healthRevision) return;
+    await runHealth(text, current);
+  } catch (error) {
+    if (current === healthRevision) healthMessage(error.message, true);
+  }
+});
+$("health-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const current = ++healthRevision;
+  try {
+    if (file.size > 8 * 1024 * 1024)
+      throw new Error("浏览器地标输入文件上限为 8 MiB。");
+    const text = await file.text();
+    if (current !== healthRevision) return;
+    await runHealth(text, current);
+  } catch (error) {
+    if (current === healthRevision) healthMessage(error.message, true);
+  } finally {
+    event.target.value = "";
+  }
+});
+$("health-checkpoint-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const current = ++healthRevision;
+  try {
+    if (file.size > 8 * 1024 * 1024)
+      throw new Error("浏览器地标检查点文件上限为 8 MiB。");
+    const text = await file.text();
+    if (current !== healthRevision) return;
+    const { report } = requestHealth('{"resume":' + text + "}", "");
+    const nextInput = JSON.stringify({ resume: report.checkpoint }) + "\n";
+    if (new TextEncoder().encode(nextInput).length > 8 * 1024 * 1024)
+      throw new Error("恢复起点超过浏览器 8 MiB 输入上限，请使用原生命令。");
+    if (current !== healthRevision) return;
+    clearHealthResult();
+    healthInput.value = nextInput;
+    healthMessage(
+      `已载入地标检查点（末帧 ${report.checkpoint.state.last_timestamp_us ?? "尚无观测"} μs）。添加更晚的地标观测后继续检查。`,
+    );
+  } catch (error) {
+    if (current === healthRevision) healthMessage(error.message, true);
+  } finally {
+    event.target.value = "";
+  }
+});
+
+drawHealthTimeline();
 draw();
 example();
