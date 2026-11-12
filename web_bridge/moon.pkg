@@ -19,6 +19,7 @@ options(
         "moonground_restore",
         "moonground_reframe",
         "moonground_gates",
+        "moonground_analysis",
       ],
       "format": "esm",
     },

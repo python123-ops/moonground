@@ -77,11 +77,8 @@ fn gate_count_json(count : @events.GateCount) -> Json {
 }
 
 ///|
-fn gate_checkpoint_json(
-  counter : @events.GateCounter,
-) -> String raise @types.GroundError {
-  let saved = counter.checkpoint()
-  let result = Json::object({
+fn gate_checkpoint_value(saved : @events.GateCheckpoint) -> Json {
+  Json::object({
     "format": Json("moonground.gates"),
     "checkpoint_version": Json("1"),
     "configuration": gate_configuration_json(saved),
@@ -112,7 +109,14 @@ fn gate_checkpoint_json(
         }),
       ),
     }),
-  }).stringify()
+  })
+}
+
+///|
+fn gate_checkpoint_json(
+  counter : @events.GateCounter,
+) -> String raise @types.GroundError {
+  let result = gate_checkpoint_value(counter.checkpoint()).stringify()
   if result.length() > 8388608 {
     raise invalid("gate checkpoint exceeds 8388608 UTF-16 code units")
   }

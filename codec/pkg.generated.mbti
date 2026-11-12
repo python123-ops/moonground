@@ -8,6 +8,8 @@ import {
 }
 
 // Values
+pub fn analysis_json(String) -> String raise @types.GroundError
+
 pub fn calibrate_json(String) -> String raise @types.GroundError
 
 pub fn gates_json(String) -> String raise @types.GroundError
@@ -19,6 +21,13 @@ pub fn reframe_json(String) -> String raise @types.GroundError
 // Errors
 
 // Types and methods
+pub struct AnalysisReplay {
+  // private fields
+}
+pub fn AnalysisReplay::checkpoint_json(Self) -> String raise @types.GroundError
+pub fn AnalysisReplay::open(String) -> Self raise @types.GroundError
+pub fn AnalysisReplay::process_line(Self, String) -> String raise @types.GroundError
+
 pub struct GateReplay {
   // private fields
 }

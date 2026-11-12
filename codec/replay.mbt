@@ -65,11 +65,11 @@ fn track_json(track : @motion.TrackEstimate, diagnostics : Bool) -> Json {
 }
 
 ///|
-fn output_json(
+fn measurement_json(
   frame : @motion.FrameResult,
   failures : Array[@moonground.ProjectionFailure],
   diagnostics : Bool,
-) -> String {
+) -> Json {
   let tracks : Array[(Int32, Json)] = []
   for track in frame.tracks {
     tracks.push((track.track_id, track_json(track, diagnostics)))
@@ -104,15 +104,24 @@ fn output_json(
     "uncertainty_scope": Json(
       "conditional_on_fixed_calibration_camera_and_anchor",
     ),
-  }).stringify()
+  })
 }
 
 ///|
-/// Commit one valid frame. A thrown error leaves the previous frame reusable.
-pub fn ReplaySession::process_line(
-  self : ReplaySession,
+fn output_json(
+  frame : @motion.FrameResult,
+  failures : Array[@moonground.ProjectionFailure],
+  diagnostics : Bool,
+) -> String {
+  measurement_json(frame, failures, diagnostics).stringify()
+}
+
+///|
+fn observation_frame(
   source : String,
-) -> String raise @types.GroundError {
+  max_tracks : Int32,
+  pixel : Bool,
+) -> (Int64, Array[@types.GroundObservation], Array[Int32], Array[Int32]) raise @types.GroundError {
   let fields = object(parse_document(source), "frame")
   allowed_fields(
     fields,
@@ -123,7 +132,7 @@ pub fn ReplaySession::process_line(
   let values = array(
     required(fields, "observations"),
     "observations",
-    self.max_tracks,
+    max_tracks,
   )
   let observations : Array[@types.GroundObservation] = []
   for value in values {
@@ -133,21 +142,28 @@ pub fn ReplaySession::process_line(
     let position = point(required(fields, "point"), "point")
     let covariance = match fields.get("covariance") {
       Some(value) => covariance(value)
-      None =>
-        @types.Covariance2::isotropic(
-          if self.pixel is Some(_) {
-            2.0
-          } else {
-            0.05
-          },
-        )
+      None => @types.Covariance2::isotropic(if pixel { 2.0 } else { 0.05 })
     }
     observations.push(
       @types.GroundObservation::new(track_id, position, covariance),
     )
   }
-  let lost = ids(fields, "lost", self.max_tracks)
-  let removed = ids(fields, "removed", self.max_tracks)
+  let lost = ids(fields, "lost", max_tracks)
+  let removed = ids(fields, "removed", max_tracks)
+  (timestamp_us, observations, lost, removed)
+}
+
+///|
+/// Commit one valid frame. A thrown error leaves the previous frame reusable.
+pub fn ReplaySession::process_line(
+  self : ReplaySession,
+  source : String,
+) -> String raise @types.GroundError {
+  let (timestamp_us, observations, lost, removed) = observation_frame(
+    source,
+    self.max_tracks,
+    self.pixel is Some(_),
+  )
   match (self.pixel, self.ground) {
     (Some(session), None) => {
       let pixels = observations.map(observation => @moonground.PixelObservation::{
