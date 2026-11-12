@@ -38,6 +38,7 @@ pub fn GroundCalibration::project(Self, @types.Point2, @types.Covariance2) -> Gr
 pub fn GroundCalibration::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
 pub fn GroundCalibration::report(Self) -> CalibrationReport
 pub fn GroundCalibration::roi(Self) -> Array[@types.Point2]
+pub fn GroundCalibration::same_projection(Self, Self) -> Bool
 
 pub struct GroundPoint {
   // private fields

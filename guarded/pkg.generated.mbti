@@ -1,0 +1,52 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/guarded"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground",
+  "python123-ops/moonground/analysis",
+  "python123-ops/moonground/health",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) enum GuardDecision {
+  Allowed
+  Blocked
+} derive(Eq, @debug.Debug)
+pub fn GuardDecision::equal(Self, Self) -> Bool
+pub fn GuardDecision::not_equal(Self, Self) -> Bool
+pub fn GuardDecision::to_repr(Self) -> @debug.Repr
+
+pub(all) struct GuardedCheckpoint {
+  version : Int32
+  analysis : @analysis.AnalysisCheckpoint
+  health : @health.HealthCheckpoint
+} derive(@debug.Debug)
+pub fn GuardedCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct GuardedFrame {
+  decision : GuardDecision
+  health : @health.HealthReport
+  analysis : @analysis.AnalysisFrame
+  suppressed_track_ids : Array[Int32]
+} derive(@debug.Debug)
+pub fn GuardedFrame::to_repr(Self) -> @debug.Repr
+
+pub struct GuardedSession {
+  // private fields
+}
+pub fn GuardedSession::checkpoint(Self) -> GuardedCheckpoint
+pub fn GuardedSession::fork(Self) -> Self
+pub fn GuardedSession::from_checkpoint(GuardedCheckpoint) -> Self raise @types.GroundError
+pub fn GuardedSession::new(@analysis.AnalysisSession, @health.CalibrationMonitor) -> Self raise @types.GroundError
+pub fn GuardedSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn GuardedSession::update(Self, Int64, Array[@health.LandmarkObservation], Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> GuardedFrame raise @types.GroundError
+
+// Type aliases
+
+// Traits

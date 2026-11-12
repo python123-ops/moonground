@@ -41,6 +41,7 @@ pub fn AnalysisSession::fork(Self) -> Self
 pub fn AnalysisSession::from_checkpoint(AnalysisCheckpoint) -> Self raise @types.GroundError
 pub fn AnalysisSession::from_ground(@motion.MotionEstimator, @events.GateCounter) -> Self raise @types.GroundError
 pub fn AnalysisSession::from_pixel(@moonground.MeasurementSession, @events.GateCounter) -> Self raise @types.GroundError
+pub fn AnalysisSession::interrupt(Self, Int64) -> AnalysisFrame raise @types.GroundError
 pub fn AnalysisSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
 pub fn AnalysisSession::update_ground(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> AnalysisFrame raise @types.GroundError
 pub fn AnalysisSession::update_pixel(Self, Int64, Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> AnalysisFrame raise @types.GroundError

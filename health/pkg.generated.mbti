@@ -30,6 +30,7 @@ pub fn CalibrationMonitor::fork(Self) -> Self
 pub fn CalibrationMonitor::from_checkpoint(HealthCheckpoint) -> Self raise @types.GroundError
 pub fn CalibrationMonitor::new(@calibration.GroundCalibration, Array[KnownLandmark], HealthConfig, camera? : @camera.CameraModel) -> Self raise @types.GroundError
 pub fn CalibrationMonitor::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn CalibrationMonitor::status(Self) -> HealthStatus
 pub fn CalibrationMonitor::update(Self, Int64, Array[LandmarkObservation]) -> HealthReport raise @types.GroundError
 
 pub(all) struct HealthCheckpoint {
