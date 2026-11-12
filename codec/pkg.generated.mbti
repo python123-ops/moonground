@@ -22,6 +22,8 @@ pub fn project_json(String) -> String raise @types.GroundError
 
 pub fn reframe_json(String) -> String raise @types.GroundError
 
+pub fn transit_json(String) -> String raise @types.GroundError
+
 // Errors
 
 // Types and methods
@@ -72,6 +74,13 @@ pub fn ReplaySession::from_checkpoint_json(String) -> Self raise @types.GroundEr
 pub fn ReplaySession::new(String) -> Self raise @types.GroundError
 pub fn ReplaySession::open(String) -> Self raise @types.GroundError
 pub fn ReplaySession::process_line(Self, String) -> String raise @types.GroundError
+
+pub struct TransitReplay {
+  // private fields
+}
+pub fn TransitReplay::checkpoint_json(Self) -> String raise @types.GroundError
+pub fn TransitReplay::open(String) -> Self raise @types.GroundError
+pub fn TransitReplay::process_line(Self, String) -> String raise @types.GroundError
 
 // Type aliases
 

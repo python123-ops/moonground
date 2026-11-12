@@ -29,27 +29,7 @@ fn gate_frame_json(frame : @events.GateFrame) -> Json {
     "kind": Json("gate_events"),
     "session_id": Json(frame.session_id),
     "timestamp_us": Json(frame.timestamp_us.to_string()),
-    "crossings": Json(
-      frame.crossings.map(event => {
-        Json::object({
-          "gate_id": Json(event.gate_id),
-          "track_id": Json(event.track_id),
-          "segment_id": Json(event.segment_id),
-          "direction": Json(
-            match event.direction {
-              @events.NegativeToPositive => "negative_to_positive"
-              @events.PositiveToNegative => "positive_to_negative"
-            },
-          ),
-          "from_timestamp_us": Json(event.from_timestamp_us.to_string()),
-          "to_timestamp_us": Json(event.to_timestamp_us.to_string()),
-          "from_position_m": point_json(event.from_position_m),
-          "to_position_m": point_json(event.to_position_m),
-          "position_m": point_json(event.position_m),
-          "crossing_fraction": Json(event.crossing_fraction),
-        })
-      }),
-    ),
+    "crossings": Json(frame.crossings.map(gate_crossing_json)),
     "counts": Json(frame.counts.map(gate_count_json)),
     "event_scope": Json("filtered_ground_positions"),
   })

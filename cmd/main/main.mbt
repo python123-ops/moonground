@@ -80,11 +80,25 @@ fn guarded_line(
 }
 
 ///|
+fn transit_line(
+  state : Ref[@codec.TransitReplay?],
+  source : String,
+) -> String? raise @types.GroundError {
+  match state.val {
+    None => {
+      state.val = Some(@codec.TransitReplay::open(source))
+      None
+    }
+    Some(replay) => Some(replay.process_line(source))
+  }
+}
+
+///|
 async fn main {
   let args = @env.args()
   if args.length() == 2 && (args[1] == "--help" || args[1] == "-h") {
     @stdio.stdout.write(
-      "moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint) [--max-line-bytes N] | --project | --calibrate\nStream/checkpoint read configuration or {resume: checkpoint}, then frames. --checkpoint writes only the final state at EOF. --reframe reads {source: configuration_or_resume, transform: {...}}, then original frames, and writes transformed NDJSON. --count reads gate configuration or {resume: gate_checkpoint}, then schema-0.2 measurement frames; --count-checkpoint writes only final gate state at EOF. --analyze reads {measurement: raw_session_source, counting: raw_gate_source} or {resume: analysis_checkpoint}, then original observations. --analyze-checkpoint writes only final joint state. --health reads fixed-landmark calibration configuration or {resume: health_checkpoint}, then landmark observation frames; --health-checkpoint writes only final health state. --guarded reads {analysis: raw_analysis_source, health: raw_health_source} or {resume: guarded_checkpoint}, then {measurement: raw_pixel_frame, health: raw_landmark_frame}. --guarded-checkpoint writes only final bound state.\n",
+      "moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint) [--max-line-bytes N] | --project | --calibrate\nStream/checkpoint read configuration or {resume: checkpoint}, then frames. --checkpoint writes only the final state at EOF. --reframe reads {source: configuration_or_resume, transform: {...}}, then original frames, and writes transformed NDJSON. --count reads gate configuration or {resume: gate_checkpoint}, then schema-0.2 measurement frames; --count-checkpoint writes only final gate state at EOF. --analyze reads {measurement: raw_session_source, counting: raw_gate_source} or {resume: analysis_checkpoint}, then original observations. --analyze-checkpoint writes only final joint state. --health reads fixed-landmark calibration configuration or {resume: health_checkpoint}, then landmark observation frames; --health-checkpoint writes only final health state. --guarded reads {analysis: raw_analysis_source, health: raw_health_source} or {resume: guarded_checkpoint}, then {measurement: raw_pixel_frame, health: raw_landmark_frame}. --guarded-checkpoint writes only final bound state. --transit reads {counting: raw_gate_source, sections: [...], max_duration_us: optional_string} or {resume: transit_checkpoint}, then schema-0.2 measurement frames. --transit-checkpoint writes only final downstream state; upstream motion must be restored separately.\n",
     )
     return
   }
@@ -101,11 +115,13 @@ async fn main {
       args[1] != "--health-checkpoint" &&
       args[1] != "--guarded" &&
       args[1] != "--guarded-checkpoint" &&
+      args[1] != "--transit" &&
+      args[1] != "--transit-checkpoint" &&
       args[1] != "--project" &&
       args[1] != "--calibrate"
     ) {
     diagnostic(
-      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint) [--max-line-bytes N] | --project | --calibrate",
+      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint) [--max-line-bytes N] | --project | --calibrate",
     )
     return
   }
@@ -114,6 +130,7 @@ async fn main {
   let analysis_mode = args[1] == "--analyze" ||
     args[1] == "--analyze-checkpoint"
   let health_mode = args[1] == "--health" || args[1] == "--health-checkpoint"
+  let transit_mode = args[1] == "--transit" || args[1] == "--transit-checkpoint"
   let guarded_mode = args[1] == "--guarded" || args[1] == "--guarded-checkpoint"
   let stream_mode = args[1] == "--stream" ||
     args[1] == "--checkpoint" ||
@@ -121,7 +138,8 @@ async fn main {
     count_mode ||
     analysis_mode ||
     health_mode ||
-    guarded_mode
+    guarded_mode ||
+    transit_mode
   if args.length() == 4 && stream_mode && args[2] == "--max-line-bytes" {
     max_bytes = @string.parse_int(args[3], base=10) catch {
       _ => {
@@ -135,7 +153,7 @@ async fn main {
     }
   } else if args.length() != 2 {
     diagnostic(
-      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint) [--max-line-bytes N] | --project | --calibrate",
+      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint) [--max-line-bytes N] | --project | --calibrate",
     )
     return
   }
@@ -146,6 +164,7 @@ async fn main {
   let counter : Ref[@codec.GateReplay?] = Ref(None)
   let analysis : Ref[@codec.AnalysisReplay?] = Ref(None)
   let health : Ref[@codec.HealthReplay?] = Ref(None)
+  let transit : Ref[@codec.TransitReplay?] = Ref(None)
   let guarded : Ref[@codec.GuardedReplay?] = Ref(None)
   let mut line_number = 1
   let mut projection_done = false
@@ -163,7 +182,17 @@ async fn main {
             return
           }
         }
-        if guarded_mode {
+        if transit_mode {
+          let output = transit_line(transit, line) catch {
+            error => {
+              diagnostic("line \{line_number}: " + error.message())
+              return
+            }
+          }
+          if args[1] == "--transit" && output is Some(output) {
+            @stdio.stdout.write(output + "\n")
+          }
+        } else if guarded_mode {
           let output = guarded_line(guarded, line) catch {
             error => {
               diagnostic("line \{line_number}: " + error.message())
@@ -272,7 +301,17 @@ async fn main {
         return
       }
     }
-    if guarded_mode {
+    if transit_mode {
+      let output = transit_line(transit, line) catch {
+        error => {
+          diagnostic("line \{line_number}: " + error.message())
+          return
+        }
+      }
+      if args[1] == "--transit" && output is Some(output) {
+        @stdio.stdout.write(output + "\n")
+      }
+    } else if guarded_mode {
       let output = guarded_line(guarded, line) catch {
         error => {
           diagnostic("line \{line_number}: " + error.message())
@@ -364,7 +403,11 @@ async fn main {
       }
     }
   }
-  if guarded_mode {
+  if transit_mode {
+    if transit.val is None {
+      diagnostic("missing transit source")
+    }
+  } else if guarded_mode {
     if guarded.val is None {
       diagnostic("missing guarded source")
     }
@@ -429,6 +472,15 @@ async fn main {
     let checkpoint = guarded.checkpoint_json() catch {
       error => {
         diagnostic("guarded checkpoint: " + error.message())
+        return
+      }
+    }
+    @stdio.stdout.write(checkpoint + "\n")
+  }
+  if args[1] == "--transit-checkpoint" && transit.val is Some(transit) {
+    let checkpoint = transit.checkpoint_json() catch {
+      error => {
+        diagnostic("transit checkpoint: " + error.message())
         return
       }
     }
