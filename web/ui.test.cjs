@@ -205,10 +205,23 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     });
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
+    let downloadsInBurst = 0;
+    let downloadBurstStarted = 0;
     const exportJson = async (selector, filename) => {
+      // Chromium silently drops the eleventh download within a one-second
+      // burst, including trusted clicks. Pace all exports through this helper
+      // so faster CI hosts exercise the same downloads without hitting it.
+      if (downloadsInBurst === 10) {
+        const remaining = 1050 - (performance.now() - downloadBurstStarted);
+        if (remaining > 0)
+          await new Promise((resolve) => setTimeout(resolve, remaining));
+        downloadsInBurst = 0;
+      }
       const pending = page.waitForEvent("download");
       await page.locator(selector).click();
       const download = await pending;
+      if (downloadsInBurst === 0) downloadBurstStarted = performance.now();
+      downloadsInBurst++;
       assert.equal(download.suggestedFilename(), filename);
       return JSON.parse(fs.readFileSync(await download.path(), "utf8"));
     };
@@ -301,12 +314,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.waitForFunction(() =>
       document.querySelector("#message").textContent.includes("已完成 10 帧"),
     );
-    const downloaded = page.waitForEvent("download");
-    await page.locator("#download").click();
-    assert.equal(
-      (await downloaded).suggestedFilename(),
-      "moonground-results.json",
-    );
+    await exportJson("#download", "moonground-results.json");
     await page.setViewportSize({ width: 390, height: 844 });
     assert.equal(
       await page.evaluate(
