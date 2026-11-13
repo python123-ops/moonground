@@ -24,6 +24,42 @@ pub fn CancellationReason::equal(Self, Self) -> Bool
 pub fn CancellationReason::not_equal(Self, Self) -> Bool
 pub fn CancellationReason::to_repr(Self) -> @debug.Repr
 
+pub(all) struct EvidenceTransitCheckpoint {
+  version : Int32
+  counting : @events.EvidenceGateCheckpoint
+  sections : Array[Section]
+  max_duration_us : Int64
+  counts : Array[TransitCount]
+  pending : Array[EvidenceTransitPending]
+} derive(@debug.Debug)
+pub fn EvidenceTransitCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub struct EvidenceTransitCounter {
+  // private fields
+}
+pub fn EvidenceTransitCounter::checkpoint(Self) -> EvidenceTransitCheckpoint
+pub fn EvidenceTransitCounter::fork(Self) -> Self
+pub fn EvidenceTransitCounter::from_checkpoint(EvidenceTransitCheckpoint) -> Self raise @types.GroundError
+pub fn EvidenceTransitCounter::new(@events.EvidenceGateCounter, Array[Section], max_duration_us? : Int64) -> Self raise @types.GroundError
+pub fn EvidenceTransitCounter::update(Self, @motion.FrameResult) -> EvidenceTransitFrame raise @types.GroundError
+
+pub(all) struct EvidenceTransitFrame {
+  counting : @events.EvidenceGateFrame
+  passages : Array[TransitPassage]
+  cancellations : Array[TransitCancellation]
+  counts : Array[TransitCount]
+  pending_count : Int32
+} derive(@debug.Debug)
+pub fn EvidenceTransitFrame::to_repr(Self) -> @debug.Repr
+
+pub(all) struct EvidenceTransitPending {
+  section_id : String
+  entry : @events.GateCrossing
+  from_covariance : @types.Covariance2
+  to_covariance : @types.Covariance2
+} derive(@debug.Debug)
+pub fn EvidenceTransitPending::to_repr(Self) -> @debug.Repr
+
 pub struct Section {
   section_id : String
   entry_gate_id : String

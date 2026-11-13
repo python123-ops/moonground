@@ -20,19 +20,15 @@ fn directional_count(
 }
 
 ///|
-/// Start a detached downstream counter at the gate counter's current frame.
-/// Existing gate totals remain; completed transits start at zero and no earlier
-/// entry is reconstructed. max_duration_us bounds waiting since entry confirmation.
-pub fn TransitCounter::new(
-  counting : @events.GateCounter,
+fn validate_sections(
   sections : Array[Section],
-  max_duration_us~ : Int64 = 300000000L,
-) -> TransitCounter raise @types.GroundError {
-  let source = counting.checkpoint()
-  let counting = @events.GateCounter::from_checkpoint(source)
+  gates : Array[@events.LineGate],
+  max_tracks : Int32,
+  max_duration_us : Int64,
+) -> Unit raise @types.GroundError {
   if sections.length() < 1 ||
     sections.length() > 16 ||
-    sections.length() * source.config.max_tracks > 65536 ||
+    sections.length() * max_tracks > 65536 ||
     max_duration_us <= 0L {
     raise @types.InvalidInput("invalid transit section capacity or duration")
   }
@@ -48,14 +44,33 @@ pub fn TransitCounter::new(
       ),
     )
     if seen.contains(section.section_id) ||
-      gate_index(source.gates, section.entry_gate_id) is None ||
-      gate_index(source.gates, section.exit_gate_id) is None {
+      gate_index(gates, section.entry_gate_id) is None ||
+      gate_index(gates, section.exit_gate_id) is None {
       raise @types.InvalidInput(
         "transit sections must be unique and reference configured gates",
       )
     }
     seen[section.section_id] = true
   }
+}
+
+///|
+/// Start a detached downstream counter at the gate counter's current frame.
+/// Existing gate totals remain; completed transits start at zero and no earlier
+/// entry is reconstructed. max_duration_us bounds waiting since entry confirmation.
+pub fn TransitCounter::new(
+  counting : @events.GateCounter,
+  sections : Array[Section],
+  max_duration_us~ : Int64 = 300000000L,
+) -> TransitCounter raise @types.GroundError {
+  let source = counting.checkpoint()
+  let counting = @events.GateCounter::from_checkpoint(source)
+  validate_sections(
+    sections,
+    source.gates,
+    source.config.max_tracks,
+    max_duration_us,
+  )
   {
     counting,
     sections: sections.copy(),

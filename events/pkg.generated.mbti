@@ -42,9 +42,11 @@ pub fn EvidenceGateCheckpoint::to_repr(Self) -> @debug.Repr
 pub struct EvidenceGateCounter {
   // private fields
 }
+pub fn EvidenceGateCounter::anchor(Self, Int32, String, String) -> EvidenceGateAnchor? raise @types.GroundError
 pub fn EvidenceGateCounter::checkpoint(Self) -> EvidenceGateCheckpoint
 pub fn EvidenceGateCounter::fork(Self) -> Self
 pub fn EvidenceGateCounter::from_checkpoint(EvidenceGateCheckpoint) -> Self raise @types.GroundError
+pub fn EvidenceGateCounter::has_current_track(Self, Int32, String) -> Bool
 pub fn EvidenceGateCounter::new(String, Array[LineGate], GateConfig, sigma_multiplier? : Double) -> Self raise @types.GroundError
 pub fn EvidenceGateCounter::update(Self, @motion.FrameResult) -> EvidenceGateFrame raise @types.GroundError
 
