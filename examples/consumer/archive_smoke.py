@@ -44,7 +44,7 @@ def main():
                 if library.resolve() not in destination.parents and destination != library.resolve():
                     raise AssertionError("unsafe archive member")
             package.extractall(library)
-        for filename in ("moon.mod", "moon.pkg", "adapter.mbt", "consumer_test.mbt", "evidence_transit_test.mbt"):
+        for filename in ("moon.mod", "moon.pkg", "adapter.mbt", "consumer_test.mbt", "evidence_transit_test.mbt", "consumer_evidence_transit_analysis_test.mbt"):
             shutil.copy2(source / filename, consumer / filename)
         (consumer / "moon.work").write_text('members = [ ".", "../library" ]\n', encoding="utf-8")
         version = run(["moon", "version", "--all", "--no-path"], consumer)
