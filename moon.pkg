@@ -12,4 +12,5 @@ import {
   "python123-ops/moonground/health",
   "python123-ops/moonground/guarded",
   "python123-ops/moonground/transit",
+  "python123-ops/moonground/velocity",
 } for "test"

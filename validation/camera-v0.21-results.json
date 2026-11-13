@@ -1,0 +1,189 @@
+{
+  "format_version": "1",
+  "seed": 20261112,
+  "tolerance": 2e-08,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.21-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20260920 (914d7da 2026-09-20)\nmoonc v0.10.14+7d59c7ec9 (2026-09-18)\nmoonc moonrun 0.1.20260920 (914d7da 2026-09-20)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "a2edef0a2bfb588ac1001e05b72fb53d5fdf18267d1fb6462510a17b2d047f7c",
+  "v01_reference_sha256": "b75b5c247dcd381154c8fcc1acac4d84c7eaa071df99ead03b82a9dc809bb769",
+  "binary_sha256": "6b531d621cb2b8ab04c61034efaf129cb1adbad20cf8a4c3e5e2a539471885a4",
+  "camera_projection": {
+    "points": 2350,
+    "cameras": [
+      {
+        "fx": 850.0,
+        "fy": 610.0,
+        "cx": 640.0,
+        "cy": 360.0,
+        "k1": 0.035,
+        "k2": -0.006,
+        "p1": 0.002,
+        "p2": -0.0015,
+        "k3": 0.001,
+        "max_normalized_radius": 0.8
+      },
+      {
+        "fx": 920.0,
+        "fy": 680.0,
+        "cx": 640.0,
+        "cy": 360.0,
+        "k1": -0.07,
+        "k2": 0.012,
+        "p1": -0.001,
+        "p2": 0.002,
+        "k3": -0.0008,
+        "max_normalized_radius": 0.9
+      }
+    ],
+    "injectivity_bounds": [
+      0.09332300800000003,
+      0.2245168366784989
+    ],
+    "maximum_absolute_errors": {
+      "raw_to_world_position": 1.1276202194210327e-11,
+      "raw_to_world_covariance": 1.1939234323410375e-15,
+      "raw_to_world_jacobian": 4.3021142204224816e-15,
+      "single_ground_floor_increment": 5.421010862427522e-20
+    },
+    "reference_inverse_pixel_maximum_error": 1.5916157281026244e-12,
+    "composition_finite_difference_maximum_error": 3.686899743837735e-12,
+    "ground_floor_applied_once": true
+  },
+  "camera_defaults_and_radius": {
+    "zero_coefficient_defaults_match_v01_projection": true,
+    "default_max_normalized_radius": 1.0,
+    "inside_ideal_radius": 0.799999992,
+    "corresponding_raw_radius": 0.8132846340776341,
+    "configured_radius": 0.8,
+    "raw_outside_ideal_inside_accepted": true,
+    "tiny_radius": {
+      "configured_radius": 1e-15,
+      "inside_and_boundary_accepted": true,
+      "outside_rejections": [
+        {
+          "ideal_radius_multiple": 1.00000001,
+          "exit_code": 2,
+          "stderr": "line 1: pixel has no inverse within camera radius"
+        },
+        {
+          "ideal_radius_multiple": 2.0,
+          "exit_code": 2,
+          "stderr": "line 1: pixel has no inverse within camera radius"
+        }
+      ],
+      "domain_tolerance_scales_with_radius": true
+    },
+    "maximum_absolute_errors": {
+      "zero_camera_compatibility_position_m": 0.0,
+      "zero_camera_compatibility_covariance": 0.0,
+      "zero_camera_compatibility_jacobian": 0.0,
+      "ideal_radius_boundary_acceptance": 2.524647157997606e-13,
+      "tiny_radius_inside_and_boundary": 0.0
+    }
+  },
+  "raw_control_calibration": {
+    "control_points": 8,
+    "held_out_points": 28,
+    "maximum_absolute_errors": {
+      "fitted_rectified_homography": 3.1916691511924e-12,
+      "held_out_world_position": 6.24389429049188e-12
+    },
+    "report": {
+      "fit_count": 8,
+      "check_count": 28,
+      "fit_rms_m": 3.725738712939875e-12,
+      "fit_max_error_m": 7.354190310577788e-12,
+      "check_rms_m": 2.367247537980814e-12,
+      "check_max_error_m": 7.271535544456535e-12,
+      "roi_scale_bound_m_per_pixel": 0.02418486748144596
+    },
+    "camera_roundtrip_preserved": true,
+    "incorrect_held_out_rejected": {
+      "exit_code": 2,
+      "stderr": "line 1: hold-out residual exceeds check limit"
+    },
+    "truth": "independent synthetic correspondences from a known rectified homography and forward Brown camera"
+  },
+  "camera_motion": {
+    "frames": 80,
+    "rejected_indices": [
+      32
+    ],
+    "maximum_absolute_errors": {
+      "raw_stream_state": 2.342515070807849e-11,
+      "raw_stream_covariance": 4.274358644806853e-15,
+      "raw_stream_position_std": 1.0824674490095276e-15,
+      "raw_stream_velocity_std": 1.8041124150158794e-15
+    },
+    "old_kalman_reference_unchanged": true
+  },
+  "uncertainty_thresholds": {
+    "frames": 64,
+    "thresholds": {
+      "max_position_std_m": 0.07,
+      "max_velocity_std_mps": 0.35
+    },
+    "first_ready_frame": 3,
+    "first_uncertain_frame": 18,
+    "recovered_ready_frame": 32,
+    "status_counts": {
+      "initializing": 3,
+      "ready": 45,
+      "rejected_innovation": 2,
+      "uncertain": 14
+    },
+    "thresholds_leave_filter_and_lifecycle_unchanged": true,
+    "maximum_absolute_errors": {
+      "threshold_state": 3.1086244689504383e-15,
+      "threshold_covariance": 8.881784197001252e-16,
+      "threshold_position_std": 5.551115123125783e-17,
+      "threshold_velocity_std": 1.1102230246251565e-16,
+      "threshold_speed": 2.609024107869118e-15
+    },
+    "near_zero_velocity": {
+      "velocity_mps": [
+        0,
+        0
+      ],
+      "velocity_std_mps": 0.24274370064219483,
+      "speed_mps": null,
+      "interpretation": "Maximum vector-covariance principal standard deviation; not a scalar-speed confidence interval."
+    }
+  },
+  "rejections": [
+    {
+      "name": "nonpositive_focal",
+      "exit_code": 2,
+      "stderr": "line 1: camera focal lengths and radius must be positive"
+    },
+    {
+      "name": "noninjective_radius",
+      "exit_code": 2,
+      "stderr": "line 1: camera distortion cannot certify a unique inverse within radius"
+    },
+    {
+      "name": "nonpositive_radius",
+      "exit_code": 2,
+      "stderr": "line 1: camera focal lengths and radius must be positive"
+    },
+    {
+      "name": "inverse_outside_unique_domain",
+      "exit_code": 2,
+      "stderr": "line 1: camera inverse did not converge in 512 iterations"
+    },
+    {
+      "name": "max_position_std_m_not_positive",
+      "exit_code": 2,
+      "stderr": "line 1: uncertainty limits must be finite and positive"
+    },
+    {
+      "name": "max_velocity_std_mps_not_positive",
+      "exit_code": 2,
+      "stderr": "line 1: uncertainty limits must be finite and positive"
+    }
+  ],
+  "elapsed_seconds": 2.4690196,
+  "status": "passed"
+}

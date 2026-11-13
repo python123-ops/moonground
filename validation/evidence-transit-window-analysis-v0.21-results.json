@@ -1,0 +1,1178 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/evidence_transit_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-window-analysis-v0.21-results.json",
+  "python": "3.8.7",
+  "toolchain": "moon 0.1.20260920 (914d7da 2026-09-20)\nmoonc v0.10.14+7d59c7ec9 (2026-09-18)\nmoonc moonrun 0.1.20260920 (914d7da 2026-09-20)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "ed394cd1f145910b936a84ff6164defc28c3a423d53593ef82fbd7d58ddb5079",
+  "upstream_reference_sha256": "5fb19c55a8517734f316d749d8893c258e28ee018d7a186d9e38270527226ed4",
+  "window_reference_sha256": "0823ef996248fc051f985a8f45ece8dd2692cb7a937a954e5f40612f4f86bb6d",
+  "binary_sha256": "6b531d621cb2b8ab04c61034efaf129cb1adbad20cf8a4c3e5e2a539471885a4",
+  "classification_scope": "observed_chord_elapsed_bounds",
+  "independent_components_and_integer_grouping": {
+    "cases": 22,
+    "frames": 120,
+    "resume_cut_points": 142,
+    "passages": 7,
+    "cancellations": 5,
+    "closed_windows": 40,
+    "resume_source_forms": 2,
+    "statuses": [
+      "initializing",
+      "numerical_failure",
+      "ready",
+      "rejected_innovation",
+      "rejected_projection",
+      "uncertain"
+    ],
+    "offline_integer_statistics_exact": true,
+    "complete_measurement_covariance_paths_evidence_pending_counts_and_windows_equal": true,
+    "records": [
+      {
+        "name": "identity_path_lifecycle",
+        "frames": 11,
+        "resume_cut_points": 12,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 4,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 2.7755575615628914e-17,
+            "lower_m": 2.220446049250313e-16,
+            "upper_m": 2.220446049250313e-16
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 2.887953796167697e-16,
+            "lower_m": 5.630368201087193e-16,
+            "upper_m": 5.353384701790569e-16
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "f259fc7bee20ffa64ab8cc94dc618961149a7515a0ee1ea2658b75b9f9023ce3"
+      },
+      {
+        "name": "raw_camera_projection_rejection",
+        "frames": 10,
+        "resume_cut_points": 11,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 3,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 6.938893903907228e-18,
+            "lower_m": 4.440892098500626e-16,
+            "upper_m": 8.881784197001252e-16
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 2.2879435633078786e-16,
+            "lower_m": 1.345294393979347e-16,
+            "upper_m": 1.9109289247233853e-16
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "e05dfb9ec133d2b047a82e4235ce949cd7e2b7a1209f0d5b078cb9de3ec7a61b"
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 2,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 2.7755575615628914e-17,
+            "lower_m": 1.1102230246251565e-16,
+            "upper_m": 5.551115123125783e-17
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 2.887953796167697e-16,
+            "lower_m": 5.630368201087193e-16,
+            "upper_m": 5.353384701790569e-16
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "a53b696dcba6bffcee5ecf9bac76143f9b1caf34dd299a0871a70acaaf773c97"
+      },
+      {
+        "name": "effective_defaults",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 1.3877787807814457e-17,
+            "lower_m": 5.551115123125783e-17,
+            "upper_m": 2.220446049250313e-16
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 1.4424294242641618e-16,
+            "lower_m": 5.62775018514145e-16,
+            "upper_m": 2.813875092570725e-16
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "5604de7a7f7f8d5d60a6797f5bec605d304358e3ceab648c044608e10e5d0a02"
+      },
+      {
+        "name": "extreme_scale_failure_retains_restorable_state",
+        "frames": 2,
+        "resume_cut_points": 3,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 1.232595164407831e-32,
+            "lower_m": 0,
+            "upper_m": 0
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 1.232595164407831e-16,
+            "lower_m": 0,
+            "upper_m": 0
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "b40e0a85590b7f02617ec60d7f6427ac34efaca3aeeaeb172dde9bf481ace92c"
+      },
+      {
+        "name": "warehouse",
+        "frames": 10,
+        "resume_cut_points": 11,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 7,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 0,
+            "upper_m": 3.469446951953614e-18,
+            "$.counting.crossings[].from_position_m[]": 0.0,
+            "$.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.crossings[].position_m[]": 0.0,
+            "$.counting.crossings[].crossing_fraction": 1.1102230246251565e-16
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 0,
+            "upper_m": 3.4689160316722914e-17
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0,
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.counting.crossings[].from_position_m[]": 0.0,
+            "$.counting.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.counting.crossings[].position_m[]": 0.0,
+            "$.counting.counting.crossings[].crossing_fraction": 0.0,
+            "$.cancellations[].entry.from_position_m[]": 0.0,
+            "$.cancellations[].entry.to_position_m[]": 0.0,
+            "$.cancellations[].entry.position_m[]": 0.0,
+            "$.cancellations[].entry.crossing_fraction": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "5b675727bf49cdf4442c2d5f2576b7574a7b97b8d0c4ba0c82ef4d065c754b08"
+      },
+      {
+        "name": "distorted-camera",
+        "frames": 15,
+        "resume_cut_points": 16,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 5,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 6.938893903907228e-18,
+            "lower_m": 4.440892098500626e-16,
+            "upper_m": 4.440892098500626e-16
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 2.782272361355322e-16,
+            "lower_m": 1.776821120131425e-16,
+            "upper_m": 1.8503717077080653e-16
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "053ae4c21c644e765de3ded44c9703997a6d211df8d9aaba7ae1da04e6a64c7a"
+      },
+      {
+        "name": "reframe",
+        "frames": 15,
+        "resume_cut_points": 16,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 5,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 6.938893903907228e-18,
+            "lower_m": 4.440892098500626e-16,
+            "upper_m": 4.440892098500626e-16
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 2.905419723770977e-16,
+            "lower_m": 1.7768211201314256e-16,
+            "upper_m": 2.775724645317353e-16
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "f1accee6bb5e0b37311e1a6d2af3688a8036e445816c9b9f861b6a1b2e778213"
+      },
+      {
+        "name": "repeated_crossings",
+        "frames": 9,
+        "resume_cut_points": 10,
+        "passages": 0,
+        "cancellations": 2,
+        "closed_windows": 3,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 2.7755575615628914e-17,
+            "lower_m": 2.220446049250313e-16,
+            "upper_m": 1.1102230246251565e-16,
+            "$.counting.crossings[].from_position_m[]": 0.0,
+            "$.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.crossings[].position_m[]": 5.551115123125783e-17,
+            "$.counting.crossings[].crossing_fraction": 0.0
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 3.330950622963498e-16,
+            "lower_m": 6.661901245926996e-16,
+            "upper_m": 3.330950622963498e-16
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0,
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.counting.crossings[].from_position_m[]": 0.0,
+            "$.counting.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.counting.crossings[].position_m[]": 0.0,
+            "$.counting.counting.crossings[].crossing_fraction": 0.0,
+            "$.cancellations[].entry.from_position_m[]": 0.0,
+            "$.cancellations[].entry.to_position_m[]": 0.0,
+            "$.cancellations[].entry.position_m[]": 0.0,
+            "$.cancellations[].entry.crossing_fraction": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "795808c6ba17ed019840e2e8d4725d01107553e7cd768377b69dcd1b56ca1c8e"
+      },
+      {
+        "name": "quality_rejects_current_positions",
+        "frames": 9,
+        "resume_cut_points": 10,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 3,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {},
+          "maximum_relative_or_scaled_normal_errors": {},
+          "maximum_absolute_pairing_errors": {},
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "d2f0d4bc361ac252522ef53441f8d2b4fa87592337c614f98dbd1fd08f42e5ae"
+      },
+      {
+        "name": "unconfirmed_mean_outside_legacy_deadband",
+        "frames": 3,
+        "resume_cut_points": 4,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 0,
+            "upper_m": 0,
+            "$.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.crossings[].position_m[]": 2.220446049250313e-16,
+            "$.counting.crossings[].crossing_fraction": 5.551115123125783e-17
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 0,
+            "upper_m": 0
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0,
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.counting.crossings[].position_m[]": 0.0,
+            "$.counting.counting.crossings[].crossing_fraction": 0.0,
+            "$.passages[].entry.to_position_m[]": 0.0,
+            "$.passages[].entry.position_m[]": 0.0,
+            "$.passages[].entry.crossing_fraction": 0.0,
+            "$.passages[].exit.to_position_m[]": 0.0,
+            "$.passages[].exit.position_m[]": 0.0,
+            "$.passages[].exit.crossing_fraction": 0.0,
+            "$.passages[].estimated_elapsed_us": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 1.5702994460298214e-12,
+            "maximum_relative_error": 6.274165197257118e-17
+          }
+        },
+        "checkpoint_sha256": "46f480a5337c0302e34951b7d0efa93b72ccd6de27c840ae662fa6ff9ca82889"
+      },
+      {
+        "name": "int64_max_history",
+        "frames": 3,
+        "resume_cut_points": 4,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 0,
+            "upper_m": 0,
+            "$.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.crossings[].position_m[]": 2.220446049250313e-16,
+            "$.counting.crossings[].crossing_fraction": 5.551115123125783e-17
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 0,
+            "upper_m": 0
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0,
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.counting.crossings[].position_m[]": 0.0,
+            "$.counting.counting.crossings[].crossing_fraction": 0.0,
+            "$.passages[].entry.to_position_m[]": 0.0,
+            "$.passages[].entry.position_m[]": 0.0,
+            "$.passages[].entry.crossing_fraction": 0.0,
+            "$.passages[].exit.to_position_m[]": 0.0,
+            "$.passages[].exit.position_m[]": 0.0,
+            "$.passages[].exit.crossing_fraction": 0.0,
+            "$.passages[].estimated_elapsed_us": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 1.5702994460298214e-12,
+            "maximum_relative_error": 6.274165197257118e-17
+          }
+        },
+        "checkpoint_sha256": "3afd0ca8f1a4d122947accac03716a6e98affde8ca12e6b47523b041f11b7b51"
+      },
+      {
+        "name": "quality_skip_precedes_normal_domain",
+        "frames": 1,
+        "resume_cut_points": 2,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {},
+          "maximum_relative_or_scaled_normal_errors": {},
+          "maximum_absolute_pairing_errors": {},
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "2683affe3ccc395cb623ed6d1df8c5b8dc3b61c78b200d192b9c5f6435b15d24"
+      },
+      {
+        "name": "confirmed_entry_then_exit",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 0,
+            "upper_m": 0,
+            "$.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.crossings[].position_m[]": 5.551115123125783e-17,
+            "$.counting.crossings[].crossing_fraction": 0.0,
+            "$.counting.crossings[].from_position_m[]": 0.0
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 0,
+            "upper_m": 0
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0,
+            "$.counting.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.counting.crossings[].position_m[]": 0.0,
+            "$.counting.counting.crossings[].crossing_fraction": 0.0,
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.counting.crossings[].from_position_m[]": 0.0,
+            "$.passages[].entry.to_position_m[]": 0.0,
+            "$.passages[].entry.position_m[]": 0.0,
+            "$.passages[].entry.crossing_fraction": 0.0,
+            "$.passages[].exit.from_position_m[]": 0.0,
+            "$.passages[].exit.to_position_m[]": 0.0,
+            "$.passages[].exit.crossing_fraction": 0.0,
+            "$.passages[].estimated_elapsed_us": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 1.3184120462028659e-11,
+            "maximum_relative_error": 6.592058033714716e-17
+          }
+        },
+        "checkpoint_sha256": "e0087ab0b426418c250ceaa899927f627f3c8b6d6ef8db2090cbb1c3a9e6a0e1"
+      },
+      {
+        "name": "different_covariance_delays_same_frame_different_chords",
+        "frames": 3,
+        "resume_cut_points": 4,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 2.7755575615628914e-17,
+            "upper_m": 0,
+            "$.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.crossings[].position_m[]": 0.0,
+            "$.counting.crossings[].crossing_fraction": 0.0,
+            "$.counting.crossings[].from_position_m[]": 0.0
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 2.7757509618017056e-17,
+            "upper_m": 0
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0,
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.counting.crossings[].crossing_fraction": 0.0,
+            "$.counting.counting.crossings[].from_position_m[]": 0.0,
+            "$.cancellations[].entry.to_position_m[]": 0.0,
+            "$.cancellations[].entry.crossing_fraction": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 0,
+            "maximum_relative_error": 0
+          }
+        },
+        "checkpoint_sha256": "fa90fda140962aff3ff4a69c59f4e5f5a001965da7150fc9ada66037024b6205"
+      },
+      {
+        "name": "above_2pow53_one_microsecond_intervals",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 4.440892098500626e-16,
+            "upper_m": 2.220446049250313e-16,
+            "$.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.crossings[].position_m[]": 5.551115123125783e-17,
+            "$.counting.crossings[].crossing_fraction": 5.551115123125783e-17,
+            "$.counting.crossings[].from_position_m[]": 0.0
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 2.664295484489713e-16,
+            "upper_m": 1.1101120356193956e-16
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0,
+            "$.counting.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.counting.crossings[].position_m[]": 0.0,
+            "$.counting.counting.crossings[].crossing_fraction": 0.0,
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.counting.crossings[].from_position_m[]": 0.0,
+            "$.passages[].entry.to_position_m[]": 0.0,
+            "$.passages[].entry.position_m[]": 0.0,
+            "$.passages[].entry.crossing_fraction": 0.0,
+            "$.passages[].exit.from_position_m[]": 0.0,
+            "$.passages[].exit.to_position_m[]": 0.0,
+            "$.passages[].exit.crossing_fraction": 0.0,
+            "$.passages[].estimated_elapsed_us": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 5.551115123125783e-17,
+            "maximum_relative_error": 2.8025248369820216e-17
+          }
+        },
+        "checkpoint_sha256": "ccb077498cc0ac2c2e613b5d4e8785e769bd713d6c82a7c76fb4d942dd424a0c"
+      },
+      {
+        "name": "int64_max_one_microsecond_intervals",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "numeric_reference": {
+          "maximum_absolute_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 4.440892098500626e-16,
+            "upper_m": 2.220446049250313e-16,
+            "$.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.crossings[].position_m[]": 5.551115123125783e-17,
+            "$.counting.crossings[].crossing_fraction": 5.551115123125783e-17,
+            "$.counting.crossings[].from_position_m[]": 0.0
+          },
+          "maximum_relative_or_scaled_normal_errors": {
+            "distance_m": 0,
+            "normal_std_m": 0,
+            "lower_m": 2.664295484489713e-16,
+            "upper_m": 1.1101120356193956e-16
+          },
+          "maximum_absolute_pairing_errors": {
+            "$.counting.evidence[].normal_std_m": 0.0,
+            "$.counting.evidence[].lower_m": 0.0,
+            "$.counting.evidence[].upper_m": 0.0,
+            "$.counting.counting.crossings[].to_position_m[]": 0.0,
+            "$.counting.counting.crossings[].position_m[]": 0.0,
+            "$.counting.counting.crossings[].crossing_fraction": 0.0,
+            "$.counting.evidence[].distance_m": 0.0,
+            "$.counting.counting.crossings[].from_position_m[]": 0.0,
+            "$.passages[].entry.to_position_m[]": 0.0,
+            "$.passages[].entry.position_m[]": 0.0,
+            "$.passages[].entry.crossing_fraction": 0.0,
+            "$.passages[].exit.from_position_m[]": 0.0,
+            "$.passages[].exit.to_position_m[]": 0.0,
+            "$.passages[].exit.crossing_fraction": 0.0,
+            "$.passages[].estimated_elapsed_us": 0.0
+          },
+          "elapsed_errors_against_exact_fraction_interpolation": {
+            "maximum_absolute_error_us": 5.551115123125783e-17,
+            "maximum_relative_error": 2.8025248369820216e-17
+          }
+        },
+        "checkpoint_sha256": "f1fd9674fa7e691ceb0ff0d85111240caf872c80650ca0dbf1399261cda57a0d"
+      },
+      {
+        "name": "pending_before_statistics_baseline_completes",
+        "frames": 1,
+        "resume_cut_points": 2,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "numeric_reference": null,
+        "checkpoint_sha256": "e98fbc749bbd695daab62d3d581028d0c5287ee7bb7eef3fe68fd6756b5283d1"
+      },
+      {
+        "name": "nonzero_completed_baseline_is_not_new_window_history",
+        "frames": 1,
+        "resume_cut_points": 2,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "numeric_reference": null,
+        "checkpoint_sha256": "d6c63cee83aedeb3794bda877bda85929ed72f7c13f625747cafc3bb19280050"
+      },
+      {
+        "name": "huge_empty_gap_one_microsecond_windows",
+        "frames": 2,
+        "resume_cut_points": 3,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "numeric_reference": null,
+        "checkpoint_sha256": "a4262eaf01b8bd7e7c8fa0ba57b861a5fc9bc3474f7764c052851ce78afa63d8"
+      },
+      {
+        "name": "first_input_exactly_at_origin",
+        "frames": 1,
+        "resume_cut_points": 2,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "numeric_reference": null,
+        "checkpoint_sha256": "d483d0884a616fb2f723c26f3536cccaa8b1cb7c0f4bcf21b77bcce063dad0ce"
+      },
+      {
+        "name": "empty_removal_closes_hidden_and_cancels_pending",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 2,
+        "numeric_reference": null,
+        "checkpoint_sha256": "0b8192d908f0c74e75e662f4678135c915c65039473d1a50ec4fe7cbee48d734"
+      }
+    ]
+  },
+  "strict_transport_and_joint_relations": {
+    "rejected_cases": 44,
+    "independently_valid_incompatible_component_pairs": 18,
+    "incompatible_pair_names": [
+      "bound_session_mismatch",
+      "bound_sigma_mismatch",
+      "bound_capacity_mismatch",
+      "bound_gap_mismatch",
+      "bound_quality_mismatch",
+      "bound_current_lifetime_count_mismatch",
+      "bound_gate_geometry_mismatch",
+      "bound_section_direction_mismatch",
+      "bound_watermark_mismatch",
+      "known_accepted_sample_before_first_statistics_frame",
+      "hidden_distinct_accepted_times_exceed_input_frames",
+      "accepted_count_outside_bucket_capacity",
+      "unstarted_baseline_cannot_contain_pre_origin_motion",
+      "first_bucket_omits_lifetime_completion",
+      "pending_and_window_cancellation_reuse_one_entry",
+      "completion_and_window_cancellation_reuse_one_entry",
+      "cancellation_budget_sum_cannot_wrap_Int64",
+      "baseline_at_start_minus_one_cannot_lose_completion"
+    ],
+    "cases": [
+      {
+        "name": "missing_windows",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field windows"
+      },
+      {
+        "name": "analysis_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis must be a string"
+      },
+      {
+        "name": "windows_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: windows must be a string"
+      },
+      {
+        "name": "windows_has_duplicate_transit_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint transit window configuration: unknown field transit"
+      },
+      {
+        "name": "unknown_source_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: evidence transit window analysis source: unknown field extra"
+      },
+      {
+        "name": "duplicate_source_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"analysis\" at line 1, column 18"
+      },
+      {
+        "name": "number_width",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window_us must be a string"
+      },
+      {
+        "name": "empty_window_strategy",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field window_us"
+      },
+      {
+        "name": "noncanonical_width",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "duplicate_raw_window_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"window_us\" at line 1, column 17"
+      },
+      {
+        "name": "wrong_format",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported evidence transit window analysis checkpoint format or version"
+      },
+      {
+        "name": "wrong_version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported evidence transit window analysis checkpoint format or version"
+      },
+      {
+        "name": "unknown_checkpoint_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: evidence transit window analysis checkpoint: unknown field extra"
+      },
+      {
+        "name": "missing_window_width",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field window_us"
+      },
+      {
+        "name": "missing_window_deadband",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field deadband_m"
+      },
+      {
+        "name": "missing_evidence_sigma",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field sigma_multiplier"
+      },
+      {
+        "name": "bound_session_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint transit windows source definitions or watermark differ"
+      },
+      {
+        "name": "bound_sigma_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint transit windows source definitions or watermark differ"
+      },
+      {
+        "name": "bound_capacity_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint transit windows source definitions or watermark differ"
+      },
+      {
+        "name": "bound_gap_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint transit windows source definitions or watermark differ"
+      },
+      {
+        "name": "bound_quality_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint transit windows source definitions or watermark differ"
+      },
+      {
+        "name": "bound_current_lifetime_count_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint transit window sections or completed totals differ"
+      },
+      {
+        "name": "bound_gate_geometry_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint transit window gate definitions or order differ"
+      },
+      {
+        "name": "bound_section_direction_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint transit window sections or completed totals differ"
+      },
+      {
+        "name": "bound_watermark_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint transit windows source definitions or watermark differ"
+      },
+      {
+        "name": "known_accepted_sample_before_first_statistics_frame",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint window omits a saved accepted observation"
+      },
+      {
+        "name": "hidden_distinct_accepted_times_exceed_input_frames",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint window has fewer frames than saved accepted times"
+      },
+      {
+        "name": "accepted_count_outside_bucket_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint window frame count cannot contain the saved accepted observations"
+      },
+      {
+        "name": "unstarted_baseline_cannot_contain_pre_origin_motion",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint accepted observation predates the statistics origin"
+      },
+      {
+        "name": "first_bucket_omits_lifetime_completion",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint first statistics bucket lost completed outcomes"
+      },
+      {
+        "name": "pending_and_window_cancellation_reuse_one_entry",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint window cancellations exceed unused entry budget"
+      },
+      {
+        "name": "completion_and_window_cancellation_reuse_one_entry",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint window cancellations exceed unused entry budget"
+      },
+      {
+        "name": "cancellation_budget_sum_cannot_wrap_Int64",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint window cancellations exceed unused entry budget"
+      },
+      {
+        "name": "baseline_at_start_minus_one_cannot_lose_completion",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: joint first statistics bucket lost completed outcomes"
+      },
+      {
+        "name": "candidate_before_window_origin",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: transit window source session or timestamp differs"
+      },
+      {
+        "name": "before_origin_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: transit window source session or timestamp differs"
+      },
+      {
+        "name": "upstream_gate_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: gate crossing counter exhausted"
+      },
+      {
+        "name": "upstream_gate_overflow_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: gate crossing counter exhausted"
+      },
+      {
+        "name": "upstream_normal_numeric_failure",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: normal covariance cancellation or scale exceeds supported precision"
+      },
+      {
+        "name": "duplicate_objects",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e1e5c2858af6f167638473d4bb249f8db84ef6fc9c1b253d49062ca2341cddd9",
+        "stdout_bytes": 3505,
+        "stderr": "line 3: duplicate, conflicting, or nonpositive track identity"
+      },
+      {
+        "name": "unknown_observation_key",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e1e5c2858af6f167638473d4bb249f8db84ef6fc9c1b253d49062ca2341cddd9",
+        "stdout_bytes": 3505,
+        "stderr": "line 3: frame: unknown field extra"
+      },
+      {
+        "name": "raw_fractional_identity",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e1e5c2858af6f167638473d4bb249f8db84ef6fc9c1b253d49062ca2341cddd9",
+        "stdout_bytes": 3505,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "late_error_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: frame: unknown field extra"
+      },
+      {
+        "name": "invalid_utf8_tail",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e1e5c2858af6f167638473d4bb249f8db84ef6fc9c1b253d49062ca2341cddd9",
+        "stdout_bytes": 3505,
+        "stderr": "line 3: invalid UTF-8"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "origin_correction_changes_99_to_100_not_same_timestamp": true,
+    "upstream_gate_exhaustion_same_timestamp_retry_from_saved_state": true,
+    "no_unproved_reachable_window_overflow_claim": true
+  },
+  "warm_brown_reframe": {
+    "status": "passed",
+    "brown_prefix_frames": 4,
+    "continuation_frames": 11,
+    "entire_window_state_metric_motion_and_pending_preserved_at_transform": true,
+    "integer_windows_exact_after_reframe": true,
+    "maximum_absolute_reframe_differences": {
+      "$[].analysis.measurement.tracks[].position_m[]": 8.881784197001252e-16,
+      "$[].analysis.measurement.tracks[].position_covariance[]": 4.336808689942018e-19,
+      "$[].analysis.measurement.tracks[].velocity_mps[]": 2.0223860292597345e-15,
+      "$[].analysis.measurement.tracks[].velocity_covariance[]": 3.469446951953614e-18,
+      "$[].analysis.measurement.tracks[].position_std_m": 6.938893903907228e-18,
+      "$[].analysis.measurement.tracks[].velocity_std_mps": 1.3877787807814457e-17,
+      "$[].analysis.measurement.tracks[].speed_mps": 1.887379141862766e-15,
+      "$[].analysis.measurement.tracks[].observed_path_length_m": 8.881784197001252e-16,
+      "$[].analysis.measurement.tracks[].net_displacement_m": 8.881784197001252e-16,
+      "$[].analysis.measurement.tracks[].filter_state[]": 2.0223860292597345e-15,
+      "$[].analysis.measurement.tracks[].filter_covariance[]": 3.469446951953614e-18,
+      "$[].analysis.transit.counting.evidence[].distance_m": 8.881784197001252e-16,
+      "$[].analysis.transit.counting.evidence[].normal_std_m": 1.734723475976807e-17,
+      "$[].analysis.transit.counting.evidence[].lower_m": 9.159339953157541e-16,
+      "$[].analysis.transit.counting.evidence[].upper_m": 8.881784197001252e-16
+    }
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "exact_resume_utf16_units": 8388619,
+    "source_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+    },
+    "exact_observation_utf16_units": 1048576,
+    "observation_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 2: JSON text exceeds 1048576 UTF-16 code units"
+    }
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/evidence-transit-window-analysis.test.mjs",
+    "summary": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 28,
+      "continuations": 112,
+      "directions": [
+        "native_to_native",
+        "native_to_javascript",
+        "javascript_to_native",
+        "javascript_to_javascript"
+      ]
+    },
+    "measured_bounded_batch": {
+      "successful_empty_frames": 4000,
+      "complete_return_utf16_units": 7097225,
+      "five_thousand_input_rejection": "output_budget",
+      "five_thousand_one_rejection": "frame_count_budget"
+    },
+    "test_script_sha256": "1f94127ed9b8e784898f28c7d3ea5ade8c424f8a8f7a398193ce757405dd5865",
+    "bridge_sha256": "c8a9cf7283dcc78879472ff3b511bcd5a67370019d4702a095390ba23d60edff",
+    "stdout_sha256": "22cfa8111f98b539d1e26686dfaaa3c5a4c8101cefb4740363da80455043bf88",
+    "stderr": ""
+  },
+  "elapsed_seconds": 58.501731400000004,
+  "status": "passed"
+}
