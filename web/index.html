@@ -866,9 +866,9 @@
         <details id="evidence-guarded-section">
           <summary>健康门控与法向证据联合分析</summary>
           <p class="hint">
-            此入口使用上方同一原始输入框，但首行 analysis
-            为“测量＋法向证据”配置，health
-            为地标配置；完整策略包含在首行，不读取独立法向证据配置框。请用“三方证据示例”查看格式，并使用本区运行、文件导入及检查点入口；上方原门控入口保持原协议。
+            此区域使用上方同一原始输入框。证据过线首行 analysis
+            为“测量＋法向证据”配置，证据通行则为“测量＋证据区间”配置；health
+            为固定地标配置。请载入对应示例并选择相应入口，完整策略包含在首行，不读取其他统计配置框。
           </p>
           <p class="hint">
             健康确认后，目标测量与协方差侧别证据共同提交；阻断或显式标定切换关闭旧片段与证据参考点，累计次数保留。下方使用独立回放，不替换普通测量或其他联合结果。
@@ -903,6 +903,57 @@
                 accept=".json"
             /></label>
           </div>
+          <div class="actions">
+            <button id="run-evidence-guarded-transit">
+              按健康状态统计证据通行
+            </button>
+            <button id="evidence-guarded-transit-example" class="quiet">
+              健康证据通行示例
+            </button>
+            <label class="file-button"
+              >导入健康证据通行 NDJSON<input
+                id="evidence-guarded-transit-file"
+                type="file"
+                accept=".ndjson,.jsonl,.txt"
+            /></label>
+            <button
+              id="download-evidence-guarded-transit"
+              class="quiet"
+              disabled
+            >
+              下载完整健康证据通行结果
+            </button>
+            <button
+              id="save-evidence-guarded-transit-checkpoint"
+              class="quiet"
+              disabled
+            >
+              保存当前帧健康证据通行检查点
+            </button>
+            <label class="file-button"
+              >载入完整健康证据通行检查点<input
+                id="evidence-guarded-transit-checkpoint-file"
+                type="file"
+                accept=".json"
+            /></label>
+          </div>
+          <p
+            id="evidence-guarded-transit-message"
+            role="status"
+            aria-live="polite"
+            class="hint"
+          >
+            健康证据通行使用独立协议与检查点；载入对应示例后运行。
+          </p>
+          <label class="result-mode"
+            >显示结果<select
+              id="evidence-guarded-mode"
+              aria-label="健康证据结果模式"
+            >
+              <option value="gates">证据过线</option>
+              <option value="transit">证据通行</option>
+            </select></label
+          >
           <p
             id="evidence-guarded-message"
             role="status"
@@ -920,7 +971,7 @@
           <p class="hint">
             状态条颜色同上；下排表示放行或阻断，紫色竖线为标定切换。
           </p>
-          <div class="playback">
+          <div class="playback" id="evidence-guarded-gate-playback">
             <input
               id="evidence-guarded-frame"
               type="range"
@@ -930,6 +981,19 @@
               value="0"
               disabled
             /><span id="evidence-guarded-counter" class="mono">0 / 0</span>
+          </div>
+          <div class="playback" id="evidence-guarded-transit-playback" hidden>
+            <input
+              id="evidence-guarded-transit-frame"
+              type="range"
+              aria-label="健康证据通行回放帧"
+              min="0"
+              max="0"
+              value="0"
+              disabled
+            /><span id="evidence-guarded-transit-counter" class="mono"
+              >0 / 0</span
+            >
           </div>
           <p id="evidence-guarded-status" class="hint"></p>
           <p id="evidence-guarded-policy" class="hint"></p>
@@ -975,6 +1039,43 @@
             </table>
           </div>
           <ul id="evidence-guarded-events" aria-label="三方证据所选帧过线"></ul>
+          <div id="evidence-guarded-transit-results" hidden>
+            <p class="hint">
+              待出口数量：<strong id="evidence-guarded-transit-pending"
+                >—</strong
+              >。健康阻断、缺测和标定切换取消待入口，累计完成数保留；时间范围来自观测区间，不换算速度。
+            </p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>区间</th>
+                    <th>累计完成</th>
+                  </tr>
+                </thead>
+                <tbody id="evidence-guarded-transit-counts"></tbody>
+              </table>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>区间</th>
+                    <th>目标 / 片段</th>
+                    <th>入口观测区间 · μs</th>
+                    <th>出口观测区间 · μs</th>
+                    <th>通行时间范围 · μs</th>
+                    <th>均值弦估计 · μs</th>
+                  </tr>
+                </thead>
+                <tbody id="evidence-guarded-transit-passages"></tbody>
+              </table>
+            </div>
+            <ul
+              id="evidence-guarded-transit-cancellations"
+              aria-label="健康证据通行所选帧取消记录"
+            ></ul>
+          </div>
         </details>
       </section>
       <footer>

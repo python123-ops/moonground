@@ -5855,6 +5855,709 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       await page.locator("#download-evidence-transit-analysis").isDisabled(),
       true,
     );
+
+    // Health-gated evidence transit owns its complete raw protocol and state.
+    // Its display shares the evidence area, without changing the v16 panel.
+    await page.locator("#source").fill(warehouseInput);
+    await page.locator("#evidence-transit-input").fill(evidenceTransitConfig);
+    await page.locator("#evidence-transit-analyze").click();
+    await waitTransitJoint(10);
+    const healthTransitOrdinarySource = await page
+      .locator("#source")
+      .inputValue();
+    const healthTransitOtherPanelConfiguration = await page
+      .locator("#evidence-transit-input")
+      .inputValue();
+    await page.locator("#evidence-guarded-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page.locator("#evidence-guarded-example").click();
+    await page.waitForFunction(
+      (input) =>
+        document.querySelector("#guarded-input").value === input &&
+        !document.querySelector("#run-evidence-guarded").disabled,
+      threePartySource,
+    );
+    await page.locator("#run-evidence-guarded-transit").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-guarded-transit-message")
+        .classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#evidence-guarded-mode").inputValue(),
+      "gates",
+    );
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      threePartySource,
+    );
+    assert.deepEqual(
+      await exportJson(
+        "#download-evidence-guarded",
+        "moonground-evidence-guarded-results.json",
+      ),
+      threeParty,
+    );
+
+    const healthTransitSource = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        "..",
+        "examples",
+        "evidence-guarded-transit.ndjson",
+      ),
+      "utf8",
+    );
+    const healthTransitLines = healthTransitSource.trimEnd().split("\n");
+    const importGuardedTransit = async (input) => {
+      await page.locator("#evidence-guarded-transit-file").setInputFiles({
+        name: "guarded-transit.ndjson",
+        mimeType: "application/x-ndjson",
+        buffer: Buffer.from(input),
+      });
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#evidence-guarded-transit-file").value === "",
+      );
+    };
+    const exportGuardedTransit = () =>
+      exportJson(
+        "#download-evidence-guarded-transit",
+        "moonground-evidence-guarded-transit-results.json",
+      );
+    const healthTransitSetFrame = async (index) =>
+      page
+        .locator("#evidence-guarded-transit-frame")
+        .evaluate((input, value) => {
+          input.value = String(value);
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        }, index);
+    await page.locator("#evidence-guarded-transit-example").click();
+    await page.waitForFunction(
+      (input) =>
+        document.querySelector("#guarded-input").value === input &&
+        !document.querySelector("#run-evidence-guarded-transit").disabled,
+      healthTransitSource,
+    );
+    const healthTransit = await exportGuardedTransit();
+    assert.equal(healthTransit.frames.length, 17);
+    assert.equal(
+      healthTransit.checkpoint.format,
+      "moonground.evidence-guarded-transit",
+    );
+    assert.equal(
+      healthTransit.checkpoint.analysis.format,
+      "moonground.evidence-transit-analysis",
+    );
+    assert.equal(
+      healthTransit.checkpoint.analysis.transit.format,
+      "moonground.evidence-transit",
+    );
+    healthTransit.frames.forEach((frame, index) => {
+      assert.equal(
+        frame.kind,
+        [9, 16].includes(index)
+          ? "evidence_guarded_transit_projection_replaced"
+          : "evidence_guarded_transit_frame",
+      );
+      assert.equal(
+        frame.decision,
+        frame.health.status === "healthy" ? "allowed" : "blocked",
+      );
+      assert.equal(frame.analysis.transit.counting.sigma_multiplier, 2);
+      if (index < 16) {
+        assert.deepEqual(frame.health, threeParty.frames[index].health);
+        assert.deepEqual(
+          frame.analysis.measurement,
+          threeParty.frames[index].analysis.measurement,
+        );
+      }
+      if (frame.decision === "blocked") {
+        assert.deepEqual(frame.analysis.measurement.tracks, []);
+        assert.deepEqual(frame.analysis.transit.counting.evidence, []);
+        assert.equal(frame.analysis.transit.pending_count, 0);
+      }
+    });
+    assert.equal(healthTransit.frames[3].analysis.transit.pending_count, 2);
+    assert.deepEqual(
+      healthTransit.frames[4].analysis.transit.passages.map(
+        (p) => p.section_id,
+      ),
+      ["short-aisle"],
+    );
+    assert.deepEqual(
+      healthTransit.frames[6].analysis.transit.cancellations.map((c) => [
+        c.section_id,
+        c.reason,
+      ]),
+      [["long-aisle", "discontinuity"]],
+    );
+    assert.equal(
+      healthTransit.frames[13].analysis.measurement.tracks[0].segment_id,
+      "2",
+    );
+    assert.deepEqual(
+      healthTransit.frames[16].analysis.transit.cancellations.map((c) => [
+        c.section_id,
+        c.reason,
+      ]),
+      [
+        ["short-aisle", "discontinuity"],
+        ["long-aisle", "discontinuity"],
+      ],
+    );
+    assert.deepEqual(healthTransit.frames[16].analysis.transit.counts, [
+      { section_id: "short-aisle", completed: "1" },
+      { section_id: "long-aisle", completed: "0" },
+    ]);
+    assert.equal(
+      healthTransit.checkpoint.health.state.last_timestamp_us,
+      "1600000",
+    );
+    assert.equal(
+      healthTransit.checkpoint.analysis.measurement.motion.last_timestamp_us,
+      "1600000",
+    );
+    assert.equal(
+      healthTransit.checkpoint.analysis.transit.counting.state
+        .last_timestamp_us,
+      "1600000",
+    );
+    assert.deepEqual(
+      healthTransit.checkpoint.analysis.measurement.configuration.calibration,
+      healthTransit.checkpoint.health.configuration.calibration,
+    );
+    assert.deepEqual(
+      healthTransit.checkpoint.analysis.measurement.configuration.camera,
+      healthTransit.checkpoint.health.configuration.camera,
+    );
+    assert.equal(
+      healthTransit.checkpoint.health.configuration.camera ?? null,
+      null,
+    );
+    assert.equal(
+      await page.locator("#download-evidence-guarded").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#save-evidence-guarded-checkpoint").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#evidence-transit-guarded").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#source").inputValue(),
+      healthTransitOrdinarySource,
+    );
+    assert.equal(
+      await page.locator("#evidence-transit-input").inputValue(),
+      healthTransitOtherPanelConfiguration,
+    );
+    assert.deepEqual(await exportTransitJoint(), transitJoint);
+
+    await healthTransitSetFrame(4);
+    assert.match(
+      await page.locator("#evidence-guarded-status").textContent(),
+      /450000.*证据通行.*已放行/,
+    );
+    assert.match(
+      await page.locator("#evidence-guarded-transit-passages").textContent(),
+      /short-aisle/,
+    );
+    assert.equal(await page.locator("#evidence-guarded-rows tr").count(), 3);
+    await page.locator("#evidence-guarded-mode").selectOption("gates");
+    assert.equal(
+      await page.locator("#download-evidence-guarded-transit").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#download-evidence-guarded").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#evidence-guarded-frame").isVisible(),
+      true,
+    );
+    await page.locator("#evidence-guarded-mode").selectOption("transit");
+    assert.equal(
+      await page.locator("#evidence-guarded-transit-frame").inputValue(),
+      "4",
+    );
+    assert.equal(
+      await page.locator("#download-evidence-guarded-transit").isDisabled(),
+      false,
+    );
+    // Wrong-entry runs reject the new header without discarding its report.
+    for (const selector of ["#run-guarded", "#run-evidence-guarded"]) {
+      await page.locator(selector).click();
+      await page.waitForFunction(
+        (selector) => !document.querySelector(selector).disabled,
+        selector,
+      );
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        healthTransitSource,
+      );
+      assert.equal(
+        await page.locator("#evidence-guarded-mode").inputValue(),
+        "transit",
+      );
+    }
+    assert.deepEqual(await exportGuardedTransit(), healthTransit);
+
+    // Selected checkpoints include all three equal watermarks and pending proof.
+    await healthTransitSetFrame(3);
+    const healthTransitPendingCheckpoint = await exportJson(
+      "#save-evidence-guarded-transit-checkpoint",
+      "moonground-evidence-guarded-transit-checkpoint.json",
+    );
+    assert.equal(
+      healthTransitPendingCheckpoint.health.state.last_timestamp_us,
+      "350000",
+    );
+    assert.equal(
+      healthTransitPendingCheckpoint.analysis.measurement.motion
+        .last_timestamp_us,
+      "350000",
+    );
+    assert.equal(
+      healthTransitPendingCheckpoint.analysis.transit.counting.state
+        .last_timestamp_us,
+      "350000",
+    );
+    assert.equal(
+      healthTransitPendingCheckpoint.analysis.transit.pending.length,
+      2,
+    );
+    for (const pending of healthTransitPendingCheckpoint.analysis.transit
+      .pending) {
+      assert.equal(pending.from_covariance.length, 3);
+      assert.equal(pending.to_covariance.length, 3);
+    }
+    await healthTransitSetFrame(15);
+    const healthTransitWarmCheckpoint = await exportJson(
+      "#save-evidence-guarded-transit-checkpoint",
+      "moonground-evidence-guarded-transit-checkpoint.json",
+    );
+    assert.equal(
+      healthTransitWarmCheckpoint.health.state.last_timestamp_us,
+      "1550000",
+    );
+    assert.equal(
+      healthTransitWarmCheckpoint.analysis.transit.pending.length,
+      2,
+    );
+    assert.deepEqual(
+      healthTransitWarmCheckpoint.analysis.measurement.configuration
+        .calibration,
+      threeParty.checkpoint.analysis.measurement.configuration.calibration,
+    );
+
+    const invalidGuardedTransitCheckpoints = [];
+    const healthTransitClone = () =>
+      JSON.parse(JSON.stringify(healthTransitPendingCheckpoint));
+    const healthTransitBadTime = healthTransitClone();
+    healthTransitBadTime.health.state.last_timestamp_us = "350001";
+    invalidGuardedTransitCheckpoints.push(JSON.stringify(healthTransitBadTime));
+    const healthTransitBadCountingTime = healthTransitClone();
+    healthTransitBadCountingTime.analysis.transit.counting.state.last_timestamp_us =
+      "350001";
+    invalidGuardedTransitCheckpoints.push(
+      JSON.stringify(healthTransitBadCountingTime),
+    );
+    const healthTransitBadCovariance = healthTransitClone();
+    healthTransitBadCovariance.analysis.transit.pending[0].from_covariance = [
+      1, 2, 1,
+    ];
+    invalidGuardedTransitCheckpoints.push(
+      JSON.stringify(healthTransitBadCovariance),
+    );
+    const healthTransitBadProjection = healthTransitClone();
+    healthTransitBadProjection.health.configuration.calibration.matrix[2] += 1;
+    invalidGuardedTransitCheckpoints.push(
+      JSON.stringify(healthTransitBadProjection),
+    );
+    invalidGuardedTransitCheckpoints.push(
+      JSON.stringify(healthTransitPendingCheckpoint).replace(
+        '"track_id":1',
+        '"track_id":1.0000000000000001',
+      ),
+      JSON.stringify(threeParty.checkpoint),
+      JSON.stringify(transitJoint.checkpoint),
+    );
+    const importGuardedTransitCheckpoint = async (
+      checkpoint,
+      name = "guarded-transit.json",
+    ) => {
+      await page
+        .locator("#evidence-guarded-transit-checkpoint-file")
+        .setInputFiles({
+          name,
+          mimeType: "application/json",
+          buffer: Buffer.from(
+            typeof checkpoint === "string"
+              ? checkpoint
+              : JSON.stringify(checkpoint),
+          ),
+        });
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#evidence-guarded-transit-checkpoint-file")
+            .value === "",
+      );
+    };
+    for (const rawCheckpoint of invalidGuardedTransitCheckpoints) {
+      await importGuardedTransitCheckpoint(rawCheckpoint);
+      assert.equal(
+        await page.locator("#evidence-guarded-transit-message.error").count(),
+        1,
+      );
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        healthTransitSource,
+      );
+      assert.equal(
+        await page.locator("#evidence-guarded-transit-counter").textContent(),
+        "16 / 17",
+      );
+    }
+    assert.deepEqual(await exportGuardedTransit(), healthTransit);
+    const healthTransitFirst = JSON.parse(healthTransitLines[1]);
+    const healthTransitHeader = JSON.parse(healthTransitLines[0]);
+    const healthTransitRawAnalysis = JSON.parse(healthTransitHeader.analysis);
+    const fractionalGuardedTransitHeader = JSON.stringify({
+      ...healthTransitHeader,
+      analysis: JSON.stringify({
+        ...healthTransitRawAnalysis,
+        measurement: healthTransitRawAnalysis.measurement.replace(
+          '"max_tracks":10',
+          '"max_tracks":10.0000000000000001',
+        ),
+      }),
+    });
+    const invalidGuardedTransitInputs = [
+      fractionalGuardedTransitHeader + "\n" + healthTransitLines[1] + "\n",
+      healthTransitLines[0] +
+        "\n" +
+        JSON.stringify({ ...healthTransitFirst, unknown: true }) +
+        "\n",
+      healthTransitLines[0] +
+        "\n" +
+        JSON.stringify({
+          ...healthTransitFirst,
+          health: healthTransitFirst.health.replace(
+            '"timestamp_us":"0"',
+            '"timestamp_us":"1"',
+          ),
+        }) +
+        "\n",
+      healthTransitLines[0] +
+        "\n" +
+        JSON.stringify({
+          ...healthTransitFirst,
+          measurement: healthTransitFirst.measurement.replace(
+            '"track_id":1',
+            '"track_id":1.0000000000000001',
+          ),
+        }) +
+        "\n",
+      healthTransitLines[0] +
+        "\n" +
+        JSON.stringify({
+          ...healthTransitFirst,
+          measurement: healthTransitFirst.measurement.replace(
+            '"track_id":1',
+            '"track_id":1,"track_id":1',
+          ),
+        }) +
+        "\n",
+      ...badProjectionOperations.map(
+        (operation) =>
+          healthTransitLines.slice(0, 10).join("\n") + "\n" + operation + "\n",
+      ),
+    ];
+    for (const rawInput of invalidGuardedTransitInputs) {
+      await importGuardedTransit(rawInput);
+      assert.equal(
+        await page.locator("#evidence-guarded-transit-message.error").count(),
+        1,
+      );
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        healthTransitSource,
+      );
+    }
+    assert.deepEqual(await exportGuardedTransit(), healthTransit);
+    await importGuardedTransitCheckpoint(healthTransitPendingCheckpoint);
+    assert.equal(
+      await page.locator("#evidence-guarded-transit-message.error").count(),
+      0,
+    );
+    const healthTransitResume = await page
+      .locator("#guarded-input")
+      .inputValue();
+    assert.deepEqual(
+      JSON.parse(healthTransitResume).resume,
+      healthTransitPendingCheckpoint,
+    );
+    assert.equal(
+      await page.locator("#download-evidence-guarded-transit").isDisabled(),
+      true,
+    );
+    await importGuardedTransit(
+      healthTransitResume + healthTransitLines.slice(5).join("\n") + "\n",
+    );
+    const healthTransitResumed = await exportGuardedTransit();
+    assert.deepEqual(
+      healthTransitResumed.frames,
+      healthTransit.frames.slice(4),
+    );
+    assert.deepEqual(healthTransitResumed.checkpoint, healthTransit.checkpoint);
+    // Importing the final replacement retains its new projection and empty state.
+    await importGuardedTransitCheckpoint(healthTransit.checkpoint);
+    const healthTransitEndResume = await page
+      .locator("#guarded-input")
+      .inputValue();
+    assert.deepEqual(
+      JSON.parse(healthTransitEndResume).resume,
+      healthTransit.checkpoint,
+    );
+    await importGuardedTransit(healthTransitSource);
+
+    // A changing selection or mode cancels a pending prefix-save download.
+    let cancelledGuardedTransitDownloads = 0;
+    const countCancelledGuardedTransitDownload = () => {
+      cancelledGuardedTransitDownloads++;
+    };
+    page.on("download", countCancelledGuardedTransitDownload);
+    for (const change of ["frame", "mode"]) {
+      await holdThreePartyPreparation();
+      await page.locator("#save-evidence-guarded-transit-checkpoint").click();
+      await page.waitForFunction(
+        () => typeof window.releaseThreePartyRun === "function",
+      );
+      if (change === "frame") await healthTransitSetFrame(4);
+      else await page.locator("#evidence-guarded-mode").selectOption("gates");
+      await releaseThreePartyPreparation();
+      await page.waitForFunction(
+        () =>
+          !document.querySelector("#save-evidence-guarded-transit-checkpoint")
+            .disabled ||
+          document.querySelector("#evidence-guarded-mode").value !== "transit",
+      );
+    }
+    page.off("download", countCancelledGuardedTransitDownload);
+    assert.equal(cancelledGuardedTransitDownloads, 0);
+    await page.locator("#evidence-guarded-mode").selectOption("transit");
+
+    // The three shared-input owners cancel each other's late preparations.
+    await holdThreePartyPreparation();
+    await page.locator("#run-evidence-guarded-transit").click();
+    await page.waitForFunction(
+      () => typeof window.releaseThreePartyRun === "function",
+    );
+    await page.locator("#evidence-guarded-example").click();
+    await page.waitForFunction(
+      (input) => document.querySelector("#guarded-input").value === input,
+      threePartySource,
+    );
+    await releaseThreePartyPreparation();
+    assert.equal(
+      await page.locator("#evidence-guarded-mode").inputValue(),
+      "gates",
+    );
+    assert.deepEqual(
+      await exportJson(
+        "#download-evidence-guarded",
+        "moonground-evidence-guarded-results.json",
+      ),
+      threeParty,
+    );
+    await holdThreePartyPreparation();
+    await page.locator("#run-evidence-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseThreePartyRun === "function",
+    );
+    await importGuardedTransit(healthTransitSource);
+    await releaseThreePartyPreparation();
+    assert.equal(
+      await page.locator("#evidence-guarded-mode").inputValue(),
+      "transit",
+    );
+    assert.deepEqual(await exportGuardedTransit(), healthTransit);
+    await page.locator("#guarded-example").click();
+    await page.waitForFunction(
+      (input) => document.querySelector("#guarded-input").value === input,
+      beforeThreePartyLegacyInput,
+    );
+    await holdThreePartyPreparation();
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseThreePartyRun === "function",
+    );
+    await importGuardedTransit(healthTransitSource);
+    await releaseThreePartyPreparation();
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      healthTransitSource,
+    );
+    assert.doesNotMatch(
+      await page.locator("#evidence-guarded-message").textContent(),
+      /正在/,
+    );
+    assert.doesNotMatch(
+      await page.locator("#guarded-message").textContent(),
+      /正在/,
+    );
+    // A valid new file and a complete import can supersede a busy new run.
+    await holdThreePartyPreparation();
+    await page.locator("#run-evidence-guarded-transit").click();
+    await page.waitForFunction(
+      () => typeof window.releaseThreePartyRun === "function",
+    );
+    const renamedGuardedTransit = healthTransitSource.replaceAll(
+      "warehouse-landmarks",
+      "new-transit-monitor",
+    );
+    await importGuardedTransit(renamedGuardedTransit);
+    await releaseThreePartyPreparation();
+    assert.equal(
+      await page.locator("#run-evidence-guarded-transit").isDisabled(),
+      false,
+    );
+    assert.equal(
+      (await exportGuardedTransit()).frames[0].health.monitor_id,
+      "new-transit-monitor",
+    );
+    await holdThreePartyPreparation();
+    await page.locator("#run-evidence-guarded-transit").click();
+    await page.waitForFunction(
+      () => typeof window.releaseThreePartyRun === "function",
+    );
+    await importGuardedTransitCheckpoint(healthTransitPendingCheckpoint);
+    await releaseThreePartyPreparation();
+    assert.equal(
+      await page.locator("#run-evidence-guarded-transit").isDisabled(),
+      false,
+    );
+    assert.deepEqual(
+      JSON.parse(await page.locator("#guarded-input").inputValue()).resume,
+      healthTransitPendingCheckpoint,
+    );
+
+    // Neither late raw checkpoint reads nor sample responses replace new input.
+    await page.evaluate(() => {
+      const original = File.prototype.text;
+      File.prototype.text = function () {
+        if (this.name !== "guarded-transit-late.json")
+          return original.call(this);
+        File.prototype.text = original;
+        const file = this;
+        return new Promise((resolve) => {
+          window.releaseGuardedTransitRead = async () =>
+            resolve(await original.call(file));
+        });
+      };
+    });
+    await page
+      .locator("#evidence-guarded-transit-checkpoint-file")
+      .setInputFiles({
+        name: "guarded-transit-late.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(healthTransitPendingCheckpoint)),
+      });
+    await page.waitForFunction(
+      () => typeof window.releaseGuardedTransitRead === "function",
+    );
+    await page.locator("#guarded-input").fill("newer health transit draft");
+    await page.evaluate(() => {
+      window.releaseGuardedTransitRead();
+      delete window.releaseGuardedTransitRead;
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#evidence-guarded-transit-checkpoint-file")
+          .value === "",
+    );
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      "newer health transit draft",
+    );
+    assert.equal(
+      await page.locator("#download-evidence-guarded-transit").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#download-evidence-guarded").isDisabled(),
+      true,
+    );
+    assert.deepEqual(await exportTransitJoint(), transitJoint);
+
+    let releaseGuardedTransitSample, healthTransitSampleRequested;
+    const healthTransitSampleGate = new Promise((resolve) => {
+      releaseGuardedTransitSample = resolve;
+    });
+    const healthTransitSampleRequest = new Promise((resolve) => {
+      healthTransitSampleRequested = resolve;
+    });
+    await page.route("**/evidence-guarded-transit.ndjson", async (route) => {
+      healthTransitSampleRequested();
+      await healthTransitSampleGate;
+      await route.fulfill({
+        contentType: "application/x-ndjson",
+        body: healthTransitSource,
+      });
+    });
+    try {
+      await page.locator("#evidence-guarded-transit-example").click();
+      await healthTransitSampleRequest;
+      await page.locator("#guarded-input").fill("newest health transit draft");
+      const sampleResponse = page.waitForResponse((response) =>
+        response.url().endsWith("/evidence-guarded-transit.ndjson"),
+      );
+      releaseGuardedTransitSample();
+      await (await sampleResponse).finished();
+      await page.waitForLoadState("networkidle");
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        "newest health transit draft",
+      );
+    } finally {
+      releaseGuardedTransitSample();
+      await page.unroute("**/evidence-guarded-transit.ndjson");
+    }
+    await importGuardedTransit(healthTransitSource);
+    await healthTransitSetFrame(4);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#evidence-guarded-section").screenshot({
+      path: path.join(directory, "evidence-guarded-transit-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator("#evidence-guarded-section").screenshot({
+      path: path.join(
+        directory,
+        "evidence-guarded-transit-desktop-preview.png",
+      ),
+    });
+    await healthTransitSetFrame(16);
+    assert.match(
+      await page.locator("#evidence-guarded-policy").textContent(),
+      /2 次标定切换/,
+    );
+    assert.equal(
+      await page.locator("#evidence-guarded-transit-cancellations li").count(),
+      2,
+    );
+    assert.deepEqual(await exportGuardedTransit(), healthTransit);
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

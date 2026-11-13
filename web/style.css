@@ -162,6 +162,7 @@ button:disabled {
 #transit-message.error,
 #evidence-message.error,
 #evidence-guarded-message.error,
+#evidence-guarded-transit-message.error,
 #evidence-transit-message.error,
 #evidence-transit-joint-message.error {
   color: #ad4335;
@@ -237,6 +238,7 @@ button:disabled {
 #guarded-interruptions,
 #transit-cancellations,
 #evidence-transit-cancellations,
+#evidence-guarded-transit-cancellations,
 #evidence-events,
 #evidence-guarded-events {
   font-size: 12px;

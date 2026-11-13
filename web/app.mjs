@@ -15,6 +15,7 @@ import {
   moonground_gate_evidence,
   moonground_evidence_analysis,
   moonground_evidence_guarded,
+  moonground_evidence_guarded_transit,
   moonground_evidence_transit,
   moonground_evidence_transit_analysis,
 } from "./moonground.mjs";
@@ -94,6 +95,13 @@ let evidenceGuardedReport = null;
 let evidenceGuardedResponse = null;
 let evidenceGuardedLoadedSource = "";
 let evidenceGuardedCheckpointBusy = false;
+let evidenceGuardedMode = "gates";
+let evidenceGuardedTransitRevision = 0;
+let evidenceGuardedTransitRunToken = 0;
+let evidenceGuardedTransitReport = null;
+let evidenceGuardedTransitResponse = null;
+let evidenceGuardedTransitLoadedSource = "";
+let evidenceGuardedTransitCheckpointBusy = false;
 let evidenceTransitRevision = 0;
 let evidenceTransitRunToken = 0;
 let evidenceTransitEdited = false;
@@ -1404,6 +1412,7 @@ function guardedMessage(text, error = false) {
 
 function clearGuardedResult() {
   clearEvidenceGuardedResult();
+  clearEvidenceGuardedTransitResult();
   guardedRevision++;
   guardedReport = null;
   guardedResponse = null;
@@ -1570,7 +1579,7 @@ async function runGuarded(
   input = guardedInput.value,
   current = ++guardedRevision,
 ) {
-  evidenceGuardedRevision++;
+  cancelOtherGuardedPreparations("legacy");
   const runToken = ++guardedRunToken;
   $("run-guarded").disabled = true;
   guardedMessage("正在按地标健康状态分析…");
@@ -1585,7 +1594,10 @@ async function runGuarded(
       lines.slice(1).join("\n") + "\n",
     );
     if (current !== guardedRevision) return;
-    if (guardedInput.value !== input) clearEvidenceGuardedResult();
+    if (guardedInput.value !== input) {
+      clearEvidenceGuardedResult();
+      clearEvidenceGuardedTransitResult();
+    }
     guardedInput.value = input;
     invalidateTransitSource("guarded");
     invalidateEvidenceSource("guarded");
@@ -1638,7 +1650,7 @@ $("save-guarded-checkpoint").addEventListener("click", () => {
   );
 });
 async function guardedExample(name = "guarded.ndjson") {
-  evidenceGuardedRevision++;
+  cancelOtherGuardedPreparations("legacy");
   const current = ++guardedRevision;
   try {
     const response = await fetch(`./${name}`);
@@ -1657,7 +1669,7 @@ $("guarded-projection-example").addEventListener("click", () =>
 $("guarded-file").addEventListener("change", async (event) => {
   const file = event.target.files[0];
   if (!file) return;
-  evidenceGuardedRevision++;
+  cancelOtherGuardedPreparations("legacy");
   const current = ++guardedRevision;
   try {
     if (file.size > 8 * 1024 * 1024)
@@ -1674,7 +1686,7 @@ $("guarded-file").addEventListener("change", async (event) => {
 $("guarded-checkpoint-file").addEventListener("change", async (event) => {
   const file = event.target.files[0];
   if (!file) return;
-  evidenceGuardedRevision++;
+  cancelOtherGuardedPreparations("legacy");
   const current = ++guardedRevision;
   try {
     if (file.size > 8 * 1024 * 1024)
@@ -2484,38 +2496,58 @@ function clearEvidenceGuardedResult() {
   evidenceGuardedResponse = null;
   evidenceGuardedLoadedSource = "";
   invalidateEvidenceTransitSource("evidence-guarded");
-  $("download-evidence-guarded").disabled = true;
-  $("save-evidence-guarded-checkpoint").disabled = true;
   $("evidence-guarded-frame").disabled = true;
   $("evidence-guarded-counter").textContent = "0 / 0";
-  for (const id of [
-    "evidence-guarded-status",
-    "evidence-guarded-policy",
-    "evidence-guarded-closed",
-  ])
-    $(id).textContent = "";
-  for (const id of [
-    "evidence-guarded-tracks",
-    "evidence-guarded-counts",
-    "evidence-guarded-rows",
-    "evidence-guarded-events",
-  ])
-    $(id).replaceChildren();
-  drawEvidenceGuardedTimeline();
+  evidenceGuardedMessage("共享输入已更新，请使用证据过线入口重新运行。");
+  renderEvidenceGuarded();
+}
+function evidenceGuardedProjectionReplaced(frame) {
+  return (
+    frame.kind === "evidence_guarded_projection_replaced" ||
+    frame.kind === "evidence_guarded_transit_projection_replaced"
+  );
+}
+function evidenceGuardedView() {
+  const transit = evidenceGuardedMode === "transit";
+  return {
+    transit,
+    report: transit ? evidenceGuardedTransitReport : evidenceGuardedReport,
+    current: transit
+      ? evidenceGuardedTransitIsCurrent()
+      : evidenceGuardedIsCurrent(),
+    slider: $(
+      transit ? "evidence-guarded-transit-frame" : "evidence-guarded-frame",
+    ),
+    counter: $(
+      transit ? "evidence-guarded-transit-counter" : "evidence-guarded-counter",
+    ),
+  };
+}
+function refreshEvidenceGuardedExports() {
+  const gates = evidenceGuardedMode === "gates" && evidenceGuardedIsCurrent();
+  const transit =
+    evidenceGuardedMode === "transit" && evidenceGuardedTransitIsCurrent();
+  $("download-evidence-guarded").disabled = !gates;
+  $("save-evidence-guarded-checkpoint").disabled =
+    !gates || evidenceGuardedCheckpointBusy;
+  $("download-evidence-guarded-transit").disabled = !transit;
+  $("save-evidence-guarded-transit-checkpoint").disabled =
+    !transit || evidenceGuardedTransitCheckpointBusy;
 }
 function drawEvidenceGuardedTimeline() {
   const canvas = $("evidence-guarded-timeline"),
-    drawing = canvas.getContext("2d");
+    drawing = canvas.getContext("2d"),
+    view = evidenceGuardedView();
   drawing.fillStyle = "#eef3e9";
   drawing.fillRect(0, 0, canvas.width, canvas.height);
-  if (!evidenceGuardedReport?.frames.length) return;
-  const width = canvas.width / evidenceGuardedReport.frames.length;
-  evidenceGuardedReport.frames.forEach((frame, index) => {
+  if (!view.current || !view.report?.frames.length) return;
+  const width = canvas.width / view.report.frames.length;
+  view.report.frames.forEach((frame, index) => {
     drawing.fillStyle = healthColors[frame.health.status];
     drawing.fillRect(index * width, 0, Math.max(width, 1), 36);
     drawing.fillStyle = frame.decision === "allowed" ? "#24674d" : "#a56c61";
     drawing.fillRect(index * width, 40, Math.max(width, 1), 16);
-    if (frame.kind === "evidence_guarded_projection_replaced") {
+    if (evidenceGuardedProjectionReplaced(frame)) {
       drawing.fillStyle = "#72509c";
       drawing.fillRect((index + 0.5) * width - 1.5, 0, 3, canvas.height);
     }
@@ -2523,42 +2555,96 @@ function drawEvidenceGuardedTimeline() {
   drawing.strokeStyle = "#20342f";
   drawing.lineWidth = 3;
   drawing.strokeRect(
-    Number($("evidence-guarded-frame").value) * width + 1.5,
+    Number(view.slider.value) * width + 1.5,
     1.5,
     Math.max(width - 3, 1),
     canvas.height - 3,
   );
 }
 function renderEvidenceGuarded() {
-  if (!evidenceGuardedIsCurrent()) return;
-  const index = Number($("evidence-guarded-frame").value),
-    frame = evidenceGuardedReport.frames[index];
-  if (!frame) return;
-  const evidence = frame.analysis.counting,
-    measurement = frame.analysis.measurement;
-  const replaced = frame.kind === "evidence_guarded_projection_replaced";
-  const replacements = evidenceGuardedReport.frames
-    .slice(0, index + 1)
-    .filter(
-      (value) => value.kind === "evidence_guarded_projection_replaced",
-    ).length;
-  $("evidence-guarded-counter").textContent =
-    `${index + 1} / ${evidenceGuardedReport.frames.length}`;
-  $("evidence-guarded-status").textContent =
-    `${frame.health.timestamp_us} μs · ${replaced ? "切换标定" : frame.decision === "allowed" ? "已放行" : "已阻断"} · ${healthStates[frame.health.status]} · 可用地标 ${frame.health.usable_count}/${frame.health.landmarks.length} · RMS ${frame.health.rms_error_m == null ? "—" : reportNumber(frame.health.rms_error_m) + " m"}`;
-  $("evidence-guarded-policy").textContent =
-    `k = ${evidence.sigma_multiplier}；本次回放至此 ${replacements} 次标定切换。${replaced ? "本帧关闭旧片段与证据参考点；后续地标重新确认，目标从新片段预热。" : frame.decision === "blocked" ? "本帧未处理目标，证据参考点已中断，累计计数保留。" : "地标健康已确认，测量与法向证据共同提交。"}`;
-  $("evidence-guarded-closed").textContent =
-    `被抑制目标：${frame.suppressed_track_ids.join("、") || "无"}；关闭的测量片段：${measurement.closed_segment_ids.join("、") || "无"}。`;
-  drawEvidenceGuardedTimeline();
-  renderEvidenceTransit("evidence-guarded");
+  refreshEvidenceGuardedExports();
+  const view = evidenceGuardedView();
+  $("evidence-guarded-mode").value = evidenceGuardedMode;
+  $("evidence-guarded-gate-playback").hidden = view.transit;
+  $("evidence-guarded-transit-playback").hidden = !view.transit;
+  $("evidence-guarded-transit-results").hidden = !view.transit;
   for (const id of [
     "evidence-guarded-tracks",
     "evidence-guarded-counts",
     "evidence-guarded-rows",
     "evidence-guarded-events",
+    "evidence-guarded-transit-counts",
+    "evidence-guarded-transit-passages",
+    "evidence-guarded-transit-cancellations",
   ])
     $(id).replaceChildren();
+  drawEvidenceGuardedTimeline();
+  if (!view.current || !view.report?.frames.length) {
+    for (const id of [
+      "evidence-guarded-status",
+      "evidence-guarded-policy",
+      "evidence-guarded-closed",
+    ])
+      $(id).textContent = "";
+    view.counter.textContent = "0 / 0";
+    $("evidence-guarded-transit-pending").textContent = "—";
+    return;
+  }
+  const index = Number(view.slider.value),
+    frame = view.report.frames[index];
+  if (!frame) return;
+  const transit = view.transit ? frame.analysis.transit : null,
+    evidence = transit ? transit.counting : frame.analysis.counting,
+    measurement = frame.analysis.measurement,
+    replaced = evidenceGuardedProjectionReplaced(frame);
+  const replacements = view.report.frames
+    .slice(0, index + 1)
+    .filter(evidenceGuardedProjectionReplaced).length;
+  view.counter.textContent =
+    String(index + 1) + " / " + view.report.frames.length;
+  $("evidence-guarded-status").textContent =
+    frame.health.timestamp_us +
+    " μs · " +
+    (view.transit ? "证据通行" : "证据过线") +
+    " · " +
+    (replaced
+      ? "切换标定"
+      : frame.decision === "allowed"
+        ? "已放行"
+        : "已阻断") +
+    " · " +
+    healthStates[frame.health.status] +
+    " · 可用地标 " +
+    frame.health.usable_count +
+    "/" +
+    frame.health.landmarks.length +
+    " · RMS " +
+    (frame.health.rms_error_m == null
+      ? "—"
+      : reportNumber(frame.health.rms_error_m) + " m");
+  $("evidence-guarded-policy").textContent =
+    "k = " +
+    evidence.sigma_multiplier +
+    "；本次回放至此 " +
+    replacements +
+    " 次标定切换。" +
+    (replaced
+      ? "本帧关闭旧片段与证据参考点；后续地标重新确认，目标从新片段预热。"
+      : frame.decision === "blocked"
+        ? "本帧未处理目标，证据参考点已中断，累计计数保留。"
+        : "地标健康已确认，测量与法向证据共同提交。") +
+    (view.transit ? "待入口在观测中断时取消；通行时长保留原始观测区间。" : "");
+  $("evidence-guarded-closed").textContent =
+    "被抑制目标：" +
+    (frame.suppressed_track_ids.join("、") || "无") +
+    "；关闭的测量片段：" +
+    (measurement.closed_segment_ids.join("、") || "无") +
+    "。";
+  if (transit)
+    $("evidence-guarded-transit-pending").textContent = String(
+      transit.pending_count,
+    );
+  if (!view.transit) renderEvidenceTransit("evidence-guarded");
   if (!$("evidence-guarded-section").open) return;
   $("evidence-guarded-tracks").replaceChildren(...measurementRows(measurement));
   $("evidence-guarded-rows").replaceChildren(
@@ -2576,11 +2662,27 @@ function renderEvidenceGuarded() {
   $("evidence-guarded-events").replaceChildren(
     ...evidence.counting.crossings.map((event) => {
       const item = document.createElement("li");
-      item.textContent = `${event.gate_id} · 目标 ${event.track_id} / 片段 ${event.segment_id} · ${event.direction === "negative_to_positive" ? "负侧 → 正侧" : "正侧 → 负侧"} · 观测区间 [${event.from_timestamp_us}, ${event.to_timestamp_us}] μs`;
+      item.textContent =
+        event.gate_id +
+        " · 目标 " +
+        event.track_id +
+        " / 片段 " +
+        event.segment_id +
+        " · " +
+        (event.direction === "negative_to_positive"
+          ? "负侧 → 正侧"
+          : "正侧 → 负侧") +
+        " · 观测区间 [" +
+        event.from_timestamp_us +
+        ", " +
+        event.to_timestamp_us +
+        "] μs";
       return item;
     }),
   );
+  if (transit) renderTransitRows(transit, "evidence-guarded-transit");
 }
+
 function requestEvidenceGuarded(header, observations) {
   const encoder = new TextEncoder();
   if (
@@ -2602,7 +2704,7 @@ async function runEvidenceGuarded(
   current = ++evidenceGuardedRevision,
 ) {
   if (current !== evidenceGuardedRevision) return;
-  guardedRevision++;
+  cancelOtherGuardedPreparations("gates");
   const runToken = ++evidenceGuardedRunToken;
   $("run-evidence-guarded").disabled = true;
   evidenceGuardedMessage("正在联合检查健康、测量目标与统计法向证据…");
@@ -2627,9 +2729,7 @@ async function runEvidenceGuarded(
     $("evidence-guarded-frame").max = String(report.frames.length - 1);
     $("evidence-guarded-frame").value = String(report.frames.length - 1);
     $("evidence-guarded-frame").disabled = false;
-    $("download-evidence-guarded").disabled = false;
-    $("save-evidence-guarded-checkpoint").disabled =
-      evidenceGuardedCheckpointBusy;
+    evidenceGuardedMode = "gates";
     evidenceGuardedMessage(
       `已完成 ${report.frames.length} 帧三方证据分析。使用本区独立回放与完整检查点；其他结果槽保持。`,
     );
@@ -2646,7 +2746,7 @@ $("run-evidence-guarded").addEventListener("click", () => runEvidenceGuarded());
 $("evidence-guarded-frame").addEventListener("input", renderEvidenceGuarded);
 $("evidence-guarded-section").addEventListener("toggle", renderEvidenceGuarded);
 $("evidence-guarded-example").addEventListener("click", async () => {
-  guardedRevision++;
+  cancelOtherGuardedPreparations("gates");
   const current = ++evidenceGuardedRevision;
   try {
     const response = await fetch("./evidence-guarded.ndjson");
@@ -2662,7 +2762,7 @@ $("evidence-guarded-example").addEventListener("click", async () => {
 $("evidence-guarded-file").addEventListener("change", async (event) => {
   const file = event.target.files[0];
   if (!file) return;
-  guardedRevision++;
+  cancelOtherGuardedPreparations("gates");
   const current = ++evidenceGuardedRevision;
   try {
     if (file.size > 8 * 1024 * 1024)
@@ -2678,14 +2778,19 @@ $("evidence-guarded-file").addEventListener("change", async (event) => {
   }
 });
 $("download-evidence-guarded").addEventListener("click", () => {
-  if (evidenceGuardedIsCurrent())
+  if (evidenceGuardedMode === "gates" && evidenceGuardedIsCurrent())
     saveFile(
       evidenceGuardedResponse + "\n",
       "moonground-evidence-guarded-results.json",
     );
 });
 $("save-evidence-guarded-checkpoint").addEventListener("click", async () => {
-  if (evidenceGuardedCheckpointBusy || !evidenceGuardedIsCurrent()) return;
+  if (
+    evidenceGuardedCheckpointBusy ||
+    evidenceGuardedMode !== "gates" ||
+    !evidenceGuardedIsCurrent()
+  )
+    return;
   const current = evidenceGuardedRevision,
     selected = $("evidence-guarded-frame").value,
     input = evidenceGuardedLoadedSource;
@@ -2718,8 +2823,7 @@ $("save-evidence-guarded-checkpoint").addEventListener("click", async () => {
       evidenceGuardedMessage(error.message, true);
   } finally {
     evidenceGuardedCheckpointBusy = false;
-    $("save-evidence-guarded-checkpoint").disabled =
-      !evidenceGuardedIsCurrent();
+    refreshEvidenceGuardedExports();
   }
 });
 $("evidence-guarded-checkpoint-file").addEventListener(
@@ -2727,7 +2831,7 @@ $("evidence-guarded-checkpoint-file").addEventListener(
   async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-    guardedRevision++;
+    cancelOtherGuardedPreparations("gates");
     const current = ++evidenceGuardedRevision;
     try {
       if (file.size > 8 * 1024 * 1024)
@@ -2748,6 +2852,252 @@ $("evidence-guarded-checkpoint-file").addEventListener(
       if (current === evidenceGuardedRevision)
         evidenceGuardedMessage(error.message, true);
     } finally {
+      event.target.value = "";
+    }
+  },
+);
+
+function cancelOtherGuardedPreparations(owner) {
+  if (owner !== "legacy") {
+    guardedRevision++;
+    if ($("run-guarded").disabled) guardedMessage("上一次门控分析准备已取消。");
+  }
+  if (owner !== "gates") {
+    evidenceGuardedRevision++;
+    if ($("run-evidence-guarded").disabled)
+      evidenceGuardedMessage("上一次证据过线准备已取消。");
+  }
+  if (owner !== "transit") {
+    evidenceGuardedTransitRevision++;
+    if ($("run-evidence-guarded-transit").disabled)
+      evidenceGuardedTransitMessage("上一次证据通行准备已取消。");
+  }
+}
+function evidenceGuardedTransitMessage(text, error = false) {
+  $("evidence-guarded-transit-message").textContent = text;
+  $("evidence-guarded-transit-message").classList.toggle("error", error);
+}
+function evidenceGuardedTransitIsCurrent() {
+  return (
+    evidenceGuardedTransitReport !== null &&
+    guardedInput.value === evidenceGuardedTransitLoadedSource
+  );
+}
+function clearEvidenceGuardedTransitResult() {
+  evidenceGuardedTransitRevision++;
+  evidenceGuardedTransitReport = null;
+  evidenceGuardedTransitResponse = null;
+  evidenceGuardedTransitLoadedSource = "";
+  $("evidence-guarded-transit-frame").disabled = true;
+  $("evidence-guarded-transit-counter").textContent = "0 / 0";
+  evidenceGuardedTransitMessage("共享输入已更新，请使用证据通行入口重新运行。");
+  renderEvidenceGuarded();
+}
+function requestEvidenceGuardedTransit(header, observations) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(header).length + encoder.encode(observations).length >
+    8 * 1024 * 1024
+  )
+    throw new Error(
+      "浏览器健康证据通行输入上限为 8 MiB；更大的流请使用原生命令。",
+    );
+  const request = JSON.stringify({ source: header, observations });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("健康证据通行请求超过 16 Mi 字符上限。");
+  const response = moonground_evidence_guarded_transit(request),
+    report = unpack(response);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器健康证据通行结果超过 8 MiB；请使用原生命令保存。");
+  return { response, report };
+}
+async function runEvidenceGuardedTransit(
+  input = guardedInput.value,
+  current = ++evidenceGuardedTransitRevision,
+) {
+  if (current !== evidenceGuardedTransitRevision) return;
+  cancelOtherGuardedPreparations("transit");
+  const runToken = ++evidenceGuardedTransitRunToken;
+  $("run-evidence-guarded-transit").disabled = true;
+  evidenceGuardedTransitMessage(
+    "正在联合检查地标健康、测量目标并统计证据区间通行…",
+  );
+  try {
+    const lines = observationLines(input);
+    if (lines.length < 2 || lines.length > 5001)
+      throw new Error(
+        "请输入健康证据通行配置及 1—5000 行配对观测或标定切换操作。",
+      );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (current !== evidenceGuardedTransitRevision) return;
+    const { response, report } = requestEvidenceGuardedTransit(
+      lines[0],
+      lines.slice(1).join("\n") + "\n",
+    );
+    if (current !== evidenceGuardedTransitRevision) return;
+    if (guardedInput.value !== input) clearGuardedResult();
+    guardedInput.value = input;
+    evidenceGuardedTransitLoadedSource = input;
+    evidenceGuardedTransitReport = report;
+    evidenceGuardedTransitResponse = response;
+    evidenceGuardedMode = "transit";
+    $("evidence-guarded-transit-frame").max = String(report.frames.length - 1);
+    $("evidence-guarded-transit-frame").value = String(
+      report.frames.length - 1,
+    );
+    $("evidence-guarded-transit-frame").disabled = false;
+    evidenceGuardedTransitMessage(
+      "已完成 " +
+        report.frames.length +
+        " 帧健康证据通行。完整结果和所选帧检查点包含健康、测量与证据区间状态。",
+    );
+    renderEvidenceGuarded();
+  } catch (error) {
+    if (current === evidenceGuardedTransitRevision)
+      evidenceGuardedTransitMessage(error.message, true);
+  } finally {
+    if (runToken === evidenceGuardedTransitRunToken)
+      $("run-evidence-guarded-transit").disabled = false;
+  }
+}
+$("evidence-guarded-mode").addEventListener("change", (event) => {
+  cancelOtherGuardedPreparations(null);
+  evidenceGuardedMode = event.target.value;
+  renderEvidenceGuarded();
+});
+$("run-evidence-guarded-transit").addEventListener("click", () =>
+  runEvidenceGuardedTransit(),
+);
+$("evidence-guarded-transit-frame").addEventListener(
+  "input",
+  renderEvidenceGuarded,
+);
+$("evidence-guarded-transit-example").addEventListener("click", async () => {
+  cancelOtherGuardedPreparations("transit");
+  const current = ++evidenceGuardedTransitRevision;
+  try {
+    const response = await fetch("./evidence-guarded-transit.ndjson");
+    if (!response.ok) throw new Error("健康证据通行示例读取失败。");
+    const text = await response.text();
+    if (current !== evidenceGuardedTransitRevision) return;
+    await runEvidenceGuardedTransit(text, current);
+  } catch (error) {
+    if (current === evidenceGuardedTransitRevision)
+      evidenceGuardedTransitMessage(error.message, true);
+  }
+});
+$("evidence-guarded-transit-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  cancelOtherGuardedPreparations("transit");
+  const current = ++evidenceGuardedTransitRevision;
+  try {
+    if (file.size > 8 * 1024 * 1024)
+      throw new Error("浏览器健康证据通行 NDJSON 文件上限为 8 MiB。");
+    const text = await file.text();
+    if (current !== evidenceGuardedTransitRevision) return;
+    await runEvidenceGuardedTransit(text, current);
+  } catch (error) {
+    if (current === evidenceGuardedTransitRevision)
+      evidenceGuardedTransitMessage(error.message, true);
+  } finally {
+    event.target.value = "";
+  }
+});
+$("download-evidence-guarded-transit").addEventListener("click", () => {
+  if (evidenceGuardedMode === "transit" && evidenceGuardedTransitIsCurrent())
+    saveFile(
+      evidenceGuardedTransitResponse + "\n",
+      "moonground-evidence-guarded-transit-results.json",
+    );
+});
+$("save-evidence-guarded-transit-checkpoint").addEventListener(
+  "click",
+  async () => {
+    if (
+      evidenceGuardedTransitCheckpointBusy ||
+      evidenceGuardedMode !== "transit" ||
+      !evidenceGuardedTransitIsCurrent()
+    )
+      return;
+    const current = evidenceGuardedTransitRevision,
+      selected = $("evidence-guarded-transit-frame").value,
+      input = evidenceGuardedTransitLoadedSource;
+    evidenceGuardedTransitCheckpointBusy = true;
+    refreshEvidenceGuardedExports();
+    try {
+      const lines = observationLines(input);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (
+        current !== evidenceGuardedTransitRevision ||
+        !evidenceGuardedTransitIsCurrent()
+      )
+        return;
+      const { report } = requestEvidenceGuardedTransit(
+        lines[0],
+        lines.slice(1, Number(selected) + 2).join("\n") + "\n",
+      );
+      if (
+        current !== evidenceGuardedTransitRevision ||
+        evidenceGuardedMode !== "transit" ||
+        !evidenceGuardedTransitIsCurrent() ||
+        selected !== $("evidence-guarded-transit-frame").value
+      )
+        return;
+      saveFile(
+        JSON.stringify(report.checkpoint) + "\n",
+        "moonground-evidence-guarded-transit-checkpoint.json",
+      );
+      evidenceGuardedTransitMessage(
+        "已保存所选第 " +
+          (Number(selected) + 1) +
+          " 帧的完整健康证据通行检查点，共同水位 " +
+          report.checkpoint.health.state.last_timestamp_us +
+          " μs。",
+      );
+    } catch (error) {
+      if (current === evidenceGuardedTransitRevision)
+        evidenceGuardedTransitMessage(error.message, true);
+    } finally {
+      evidenceGuardedTransitCheckpointBusy = false;
+      refreshEvidenceGuardedExports();
+    }
+  },
+);
+$("evidence-guarded-transit-checkpoint-file").addEventListener(
+  "change",
+  async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    cancelOtherGuardedPreparations("transit");
+    const current = ++evidenceGuardedTransitRevision,
+      runToken = ++evidenceGuardedTransitRunToken;
+    try {
+      if (file.size > 8 * 1024 * 1024)
+        throw new Error("浏览器完整健康证据通行检查点文件上限为 8 MiB。");
+      const text = await file.text();
+      if (current !== evidenceGuardedTransitRevision) return;
+      const { report } = requestEvidenceGuardedTransit(
+        '{"resume":' + text + "}",
+        "",
+      );
+      const nextInput = JSON.stringify({ resume: report.checkpoint }) + "\n";
+      if (new TextEncoder().encode(nextInput).length > 8 * 1024 * 1024)
+        throw new Error("健康证据通行恢复起点超过浏览器 8 MiB 输入上限。");
+      if (current !== evidenceGuardedTransitRevision) return;
+      clearGuardedResult();
+      guardedInput.value = nextInput;
+      evidenceGuardedTransitMessage(
+        "已载入完整健康证据通行检查点（" +
+          (report.checkpoint.health.state.last_timestamp_us ?? "尚无观测") +
+          " μs）。添加更晚配对观测后使用证据通行入口继续。",
+      );
+    } catch (error) {
+      if (current === evidenceGuardedTransitRevision)
+        evidenceGuardedTransitMessage(error.message, true);
+    } finally {
+      if (runToken === evidenceGuardedTransitRunToken)
+        $("run-evidence-guarded-transit").disabled = false;
       event.target.value = "";
     }
   },

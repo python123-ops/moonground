@@ -28,6 +28,7 @@ const assets = new Map([
   ["health.ndjson", "application/x-ndjson; charset=utf-8"],
   ["guarded.ndjson", "application/x-ndjson; charset=utf-8"],
   ["evidence-guarded.ndjson", "application/x-ndjson; charset=utf-8"],
+  ["evidence-guarded-transit.ndjson", "application/x-ndjson; charset=utf-8"],
   ["projection-replace.ndjson", "application/x-ndjson; charset=utf-8"],
   ["transit.json", "application/json; charset=utf-8"],
   ["evidence-transit-source.json", "application/json; charset=utf-8"],
