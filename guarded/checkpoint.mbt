@@ -13,6 +13,60 @@ fn same_camera(
 }
 
 ///|
+/// Share the health/projection policy after the selected analysis checkpoint
+/// has validated its own counting relationship. Historical gate evidence is
+/// intentionally outside this policy: each counter validates its own anchors.
+fn validate_guard_binding(
+  pixel : @moonground.MeasurementCheckpoint,
+  health : @health.HealthCheckpoint,
+  status : @health.HealthStatus,
+  counting_max_tracks : Int32,
+  counting_track_count : Int32,
+) -> Int32 raise @types.GroundError {
+  let motion = pixel.motion
+  if motion.last_timestamp_us != health.last_timestamp_us {
+    raise @types.InvalidInput("guarded health and analysis watermarks differ")
+  }
+  if !pixel.calibration.same_projection(health.calibration) ||
+    !same_camera(pixel.camera, health.camera) {
+    raise @types.InvalidInput(
+      "guarded health and analysis projection configurations differ",
+    )
+  }
+  let max_tracks = motion.config.max_tracks()
+  if counting_max_tracks < max_tracks {
+    raise @types.InvalidInput(
+      "guarded gate capacity must cover the measurement capacity",
+    )
+  }
+  if status != @health.Healthy {
+    if motion.tracks.length() != 0 || counting_track_count != 0 {
+      raise @types.InvalidInput(
+        "blocked guarded checkpoint retains active object state",
+      )
+    }
+  } else {
+    guard health.streak is Some(streak) else {
+      raise @types.InvalidInput(
+        "healthy guarded checkpoint lacks an evidence streak",
+      )
+    }
+    for track in motion.tracks {
+      if track.first_timestamp_us < streak.since_us ||
+        track.first_timestamp_us - streak.since_us <
+        health.config.confirmation_us ||
+        track.first_timestamp_us - streak.since_us <
+        Int64::from_int(health.config.min_observations - 1) {
+        raise @types.InvalidInput(
+          "guarded object segment predates possible health confirmation",
+        )
+      }
+    }
+  }
+  max_tracks
+}
+
+///|
 /// Restore both old checkpoint formats before validating their shared policy.
 /// Non-healthy state cannot retain active object segments or gate anchors.
 pub fn GuardedSession::from_checkpoint(
@@ -26,47 +80,13 @@ pub fn GuardedSession::from_checkpoint(
   guard checkpoint.analysis.measurement is @analysis.Pixel(pixel) else {
     raise @types.InvalidInput("guarded analysis requires pixel measurements")
   }
-  let motion = pixel.motion
-  let counting = checkpoint.analysis.counting
-  if motion.last_timestamp_us != checkpoint.health.last_timestamp_us {
-    raise @types.InvalidInput("guarded health and analysis watermarks differ")
-  }
-  if !pixel.calibration.same_projection(checkpoint.health.calibration) ||
-    !same_camera(pixel.camera, checkpoint.health.camera) {
-    raise @types.InvalidInput(
-      "guarded health and analysis projection configurations differ",
-    )
-  }
-  let max_tracks = motion.config.max_tracks()
-  if counting.config.max_tracks < max_tracks {
-    raise @types.InvalidInput(
-      "guarded gate capacity must cover the measurement capacity",
-    )
-  }
-  if health.status() != @health.Healthy {
-    if motion.tracks.length() != 0 || counting.tracks.length() != 0 {
-      raise @types.InvalidInput(
-        "blocked guarded checkpoint retains active object state",
-      )
-    }
-  } else {
-    guard checkpoint.health.streak is Some(streak) else {
-      raise @types.InvalidInput(
-        "healthy guarded checkpoint lacks an evidence streak",
-      )
-    }
-    for track in motion.tracks {
-      if track.first_timestamp_us < streak.since_us ||
-        track.first_timestamp_us - streak.since_us <
-        checkpoint.health.config.confirmation_us ||
-        track.first_timestamp_us - streak.since_us <
-        Int64::from_int(checkpoint.health.config.min_observations - 1) {
-        raise @types.InvalidInput(
-          "guarded object segment predates possible health confirmation",
-        )
-      }
-    }
-  }
+  let max_tracks = validate_guard_binding(
+    pixel,
+    checkpoint.health,
+    health.status(),
+    checkpoint.analysis.counting.config.max_tracks,
+    checkpoint.analysis.counting.tracks.length(),
+  )
   { analysis, health, max_tracks, }
 }
 

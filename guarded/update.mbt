@@ -16,15 +16,15 @@ fn validate_ids(
 ///|
 // Validate the submitted payload even when the current health will suppress it.
 // This phase does not project pixels through a calibration that is being blocked.
-fn GuardedSession::validate_objects(
-  self : GuardedSession,
+fn validate_guarded_objects(
+  max_tracks : Int32,
   observations : Array[@moonground.PixelObservation],
   lost : Array[Int32],
   removed : Array[Int32],
 ) -> Unit raise @types.GroundError {
-  if observations.length() > self.max_tracks ||
-    lost.length() > self.max_tracks ||
-    removed.length() > self.max_tracks {
+  if observations.length() > max_tracks ||
+    lost.length() > max_tracks ||
+    removed.length() > max_tracks {
     raise @types.InvalidInput("guarded object frame exceeds target capacity")
   }
   let seen : Map[Int32, Bool] = Map([])
@@ -54,7 +54,7 @@ pub fn GuardedSession::update(
   lost~ : Array[Int32] = [],
   removed~ : Array[Int32] = [],
 ) -> GuardedFrame raise @types.GroundError {
-  self.validate_objects(observations, lost, removed)
+  validate_guarded_objects(self.max_tracks, observations, lost, removed)
   let health = self.health.fork()
   let report = health.update(timestamp_us, landmarks)
   let decision : GuardDecision = if report.status == @health.Healthy {

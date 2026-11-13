@@ -16,6 +16,32 @@ import {
 // Errors
 
 // Types and methods
+pub(all) struct EvidenceGuardedCheckpoint {
+  version : Int32
+  analysis : @analysis.EvidenceAnalysisCheckpoint
+  health : @health.HealthCheckpoint
+} derive(@debug.Debug)
+pub fn EvidenceGuardedCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct EvidenceGuardedFrame {
+  decision : GuardDecision
+  health : @health.HealthReport
+  analysis : @analysis.EvidenceAnalysisFrame
+  suppressed_track_ids : Array[Int32]
+} derive(@debug.Debug)
+pub fn EvidenceGuardedFrame::to_repr(Self) -> @debug.Repr
+
+pub struct EvidenceGuardedSession {
+  // private fields
+}
+pub fn EvidenceGuardedSession::checkpoint(Self) -> EvidenceGuardedCheckpoint
+pub fn EvidenceGuardedSession::fork(Self) -> Self
+pub fn EvidenceGuardedSession::from_checkpoint(EvidenceGuardedCheckpoint) -> Self raise @types.GroundError
+pub fn EvidenceGuardedSession::new(@analysis.EvidenceAnalysisSession, @health.CalibrationMonitor) -> Self raise @types.GroundError
+pub fn EvidenceGuardedSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn EvidenceGuardedSession::replace_projection(Self, Int64, @calibration.GroundCalibration, camera~ : @camera.CameraModel?) -> EvidenceGuardedFrame raise @types.GroundError
+pub fn EvidenceGuardedSession::update(Self, Int64, Array[@health.LandmarkObservation], Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceGuardedFrame raise @types.GroundError
+
 pub(all) enum GuardDecision {
   Allowed
   Blocked
