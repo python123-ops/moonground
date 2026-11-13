@@ -1,5 +1,12 @@
 # 更新记录
 
+## 0.16.0 — 本地开发版本，尚未发布
+
+- 新增 `analysis.EvidenceTransitSession`，直接拥有测量引擎与一个证据通行计数器，从原始 pixel／ground 观测共同提交运动、法向证据和入口／出口配对；下游失败同时回滚运动协方差、路径、水位和段号分配。
+- 新增完整 `EvidenceTransitSessionCheckpoint`，复用当前测量／证据绑定，再核对待入口的片段边界、首末点与协方差。恢复合并各门及待入口的已知历史时刻，同时间的位置／已知协方差须一致，去重时刻数不得超过接受次数；历史来源仍需宿主认证。
+- 支持独立 `fork()`、pixel `reframed()` 与关闭全部活跃片段的 `interrupt()`；空中断帧取消待入口并清除证据，保留累计与下一段号，换算保留米制状态。
+- 新增 `codec.EvidenceTransitAnalysisReplay`、CLI `--analyze-transit-evidence`／`--analyze-transit-evidence-checkpoint`、纯函数 `evidence_transit_analysis_json` 和 JavaScript `moonground_evidence_transit_analysis`，提供单一完整检查点。Web 在现证据区间面板增加独立联合模式、所选帧检查点及共同恢复。
+
 ## 0.15.0 — 本地开发版本，尚未发布
 
 - 新增 `transit.EvidenceTransitCounter`，将现有法向协方差侧别证据连接到同身份、同片段的有向双门通行；复用区间定义、完成／取消结果、精确 Int64 时长界及单独的均值弦插值估计。

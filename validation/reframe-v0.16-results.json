@@ -1,0 +1,375 @@
+{
+  "format_version": "1",
+  "seed": 20261115,
+  "tolerance": 3e-08,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.16-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "7970f7a2dc39caf334c2c0b1ced576b76c1bb8d7ba7398321e4aeb037bfa7b97",
+  "camera_reference_sha256": "a2edef0a2bfb588ac1001e05b72fb53d5fdf18267d1fb6462510a17b2d047f7c",
+  "v01_reference_sha256": "b75b5c247dcd381154c8fcc1acac4d84c7eaa071df99ead03b82a9dc809bb769",
+  "binary_sha256": "b8f58e6eed4977e8094e6cf4ea849be9a6456503257cd2f94dd031468291bf0d",
+  "independent_geometry": {
+    "source_cameras": 3,
+    "transforms_per_camera": 4,
+    "projected_points": 576,
+    "independent_reference": "NumPy homogeneous matrix algebra and Brown Newton inverse",
+    "maximum_absolute_errors": {
+      "homography": 1.1102230246251565e-16,
+      "corrected_roi": 0.0,
+      "maximum_meters_per_pixel": 0.0,
+      "pixel_point": 0.0,
+      "pixel_covariance": 0.0,
+      "projected_position_m": 9.514167231827741e-12,
+      "projected_covariance": 3.7600131341797294e-16,
+      "projected_jacobian": 1.4405143744511406e-14,
+      "camera_intrinsics": 0.0
+    }
+  },
+  "measurement_continuation": {
+    "full_stream_cases": 16,
+    "resume_cut_points": 48,
+    "preserved_observations": 164,
+    "checkpoint_motion_preserved_exactly_at_reframe": true,
+    "observed_statuses": [
+      "initializing",
+      "ready",
+      "rejected_innovation",
+      "rejected_projection"
+    ],
+    "inverse_and_composition_cases": 8,
+    "maximum_absolute_errors": {
+      "homography": 1.1102230246251565e-16,
+      "corrected_roi": 0.0,
+      "maximum_meters_per_pixel": 0.0,
+      "$[].tracks[].position_m[]": 3.552713678800501e-15,
+      "$[].tracks[].position_covariance[]": 3.469446951953614e-18,
+      "$[].tracks[].position_std_m": 3.469446951953614e-17,
+      "$[].tracks[].filter_state[]": 3.519406988061746e-14,
+      "$[].tracks[].filter_covariance[]": 8.049116928532385e-15,
+      "$[].tracks[].observed_path_length_m": 3.656797087359109e-15,
+      "$[].tracks[].net_displacement_m": 3.656797087359109e-15,
+      "$[].tracks[].velocity_mps[]": 1.049160758270773e-14,
+      "$[].tracks[].velocity_covariance[]": 2.3175905639050143e-15,
+      "$[].tracks[].velocity_std_mps": 3.2751579226442118e-15,
+      "$[].tracks[].speed_mps": 9.159339953157541e-15,
+      "$.tracks[].state[]": 4.551914400963142e-15,
+      "$.tracks[].covariance[]": 5.551115123125783e-17,
+      "$.tracks[].first_filtered[]": 3.1086244689504383e-15,
+      "$.tracks[].last_filtered[]": 3.1086244689504383e-15,
+      "camera_intrinsics": 0.0,
+      "$.tracks[].observed_path_length_m": 1.7486012637846216e-15
+    }
+  },
+  "strict_transport": {
+    "rejected_cases": 35,
+    "cases": [
+      {
+        "name": "empty_input",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "missing reframing header"
+      },
+      {
+        "name": "unknown_header_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: reframing header: unknown field extra"
+      },
+      {
+        "name": "unknown_transform_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pixel transform: unknown field rotation"
+      },
+      {
+        "name": "missing_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field source"
+      },
+      {
+        "name": "missing_transform",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field transform"
+      },
+      {
+        "name": "ground_mode",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pixel reframing requires a pixel session"
+      },
+      {
+        "name": "invalid_scale_x_0",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pixel scales must be finite and positive; offsets must be finite"
+      },
+      {
+        "name": "invalid_scale_x_-1",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pixel scales must be finite and positive; offsets must be finite"
+      },
+      {
+        "name": "invalid_scale_x_None",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: scale_x must be a finite number"
+      },
+      {
+        "name": "invalid_scale_x_1",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: scale_x must be a finite number"
+      },
+      {
+        "name": "invalid_scale_y_0",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pixel scales must be finite and positive; offsets must be finite"
+      },
+      {
+        "name": "invalid_scale_y_-1",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pixel scales must be finite and positive; offsets must be finite"
+      },
+      {
+        "name": "invalid_scale_y_None",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: scale_y must be a finite number"
+      },
+      {
+        "name": "invalid_scale_y_1",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: scale_y must be a finite number"
+      },
+      {
+        "name": "invalid_offset_x",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: offset_x must be a finite number"
+      },
+      {
+        "name": "invalid_offset_y",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: offset_y must be a finite number"
+      },
+      {
+        "name": "duplicate_transform_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid reframing JSON: Duplicate key \"scale_x\" at line 1, column 505"
+      },
+      {
+        "name": "duplicate_source_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid reframing JSON: Duplicate key \"mode\" at line 1, column 59"
+      },
+      {
+        "name": "nonfinite_scale_token",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: scale_x must be a finite number"
+      },
+      {
+        "name": "nonfinite_offset_token",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: offset_x must be a finite number"
+      },
+      {
+        "name": "late_bad_json",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "duplicate_frame_field",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: invalid JSON: Duplicate key \"observations\" at line 1, column 43"
+      },
+      {
+        "name": "rounded_fraction_identity",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "bad_second_observation_atomic",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "9e0cade6b58a0b2442d7a3dd6f2a8683052fb47703a106c5c03e9fff21eb4706",
+        "stdout_bytes": 658,
+        "stderr": "line 3: point coordinates must be finite"
+      },
+      {
+        "name": "duplicate_identity",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: duplicate observation identity"
+      },
+      {
+        "name": "overlapping_lifecycle",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: removed identities must be positive, unique and disjoint"
+      },
+      {
+        "name": "nonmonotonic_time",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: frame timestamps must strictly increase"
+      },
+      {
+        "name": "unknown_frame_field",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: frame: unknown field extra"
+      },
+      {
+        "name": "invalid_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "invalid_utf8_after_complete_frame",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "blank_line_after_complete_frame",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "configuration_over_payload_limit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: configuration exceeds 1048576 UTF-16 code units"
+      },
+      {
+        "name": "frame_payload_limit",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "dbdc141a2439e2df84898d62239a4457b6d8860b7a0be76088950b126b78dc57",
+        "stdout_bytes": 686,
+        "stderr": "line 3: JSON text exceeds 1048576 UTF-16 code units"
+      },
+      {
+        "name": "default_physical_line_limit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: line byte limit exceeded"
+      },
+      {
+        "name": "one_byte_below_header_limit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: line byte limit exceeded"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "crlf_and_unterminated_eof": "passed",
+    "exact_physical_line_boundary_bytes": 554
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/reframe.test.mjs",
+    "binary_environment": {
+      "MOONGROUND_CLI": "C:\\Users\\px830\\Documents\\ChatGPT\\\u5f20\u666f\u607a11\u6708\u4efdmoonbit\\moonground\\_build\\native\\release\\build\\cmd\\main\\main.exe"
+    },
+    "summary": {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "test_script_sha256": "4ca65733d5058c91db46a52d00e978740e52fe1bb7692824d3e45c9ad4e83ab8",
+    "bridge_sha256": "34fc977a76f9ee6d1b4771e6becdabe369bcb8cfd7d2ebc0fae011b4097ae2ff",
+    "stdout_sha256": "4a6a6106b6617e6337b0eac89df9b44b6600248b79673569a00961391fe1512e",
+    "stderr": ""
+  },
+  "elapsed_seconds": 31.3075495,
+  "status": "passed"
+}
