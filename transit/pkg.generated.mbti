@@ -60,6 +60,42 @@ pub(all) struct EvidenceTransitPending {
 } derive(@debug.Debug)
 pub fn EvidenceTransitPending::to_repr(Self) -> @debug.Repr
 
+pub(all) struct EvidenceTransitWindowCheckpoint {
+  version : Int32
+  session_id : String
+  gates : Array[@events.LineGate]
+  sections : Array[Section]
+  config : @events.GateConfig
+  sigma_multiplier : Double
+  window_us : Int64
+  origin_us : Int64
+  duration_limits_us : Array[Int64]
+  baseline_timestamp_us : Int64?
+  baseline_counts : Array[TransitCount]
+  last_timestamp_us : Int64?
+  counts : Array[TransitCount]
+  current_window : TransitWindow?
+} derive(@debug.Debug)
+pub fn EvidenceTransitWindowCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub struct EvidenceTransitWindowCounter {
+  // private fields
+}
+pub fn EvidenceTransitWindowCounter::checkpoint(Self) -> EvidenceTransitWindowCheckpoint
+pub fn EvidenceTransitWindowCounter::fork(Self) -> Self
+pub fn EvidenceTransitWindowCounter::from_checkpoint(EvidenceTransitWindowCheckpoint) -> Self raise @types.GroundError
+pub fn EvidenceTransitWindowCounter::new(EvidenceTransitCheckpoint, window_us~ : Int64, duration_limits_us~ : Array[Int64], origin_us? : Int64) -> Self raise @types.GroundError
+pub fn EvidenceTransitWindowCounter::update(Self, EvidenceTransitFrame) -> EvidenceTransitWindowFrame raise @types.GroundError
+
+pub(all) struct EvidenceTransitWindowFrame {
+  session_id : String
+  timestamp_us : Int64
+  closed_window : TransitWindow?
+  current_window : TransitWindow
+  unobserved_windows : Int64
+} derive(@debug.Debug)
+pub fn EvidenceTransitWindowFrame::to_repr(Self) -> @debug.Repr
+
 pub struct Section {
   section_id : String
   entry_gate_id : String
@@ -78,6 +114,12 @@ pub(all) struct TransitCancellation {
   entry : @events.GateCrossing
 } derive(@debug.Debug)
 pub fn TransitCancellation::to_repr(Self) -> @debug.Repr
+
+pub(all) struct TransitCancellationCount {
+  reason : CancellationReason
+  count : Int64
+} derive(@debug.Debug)
+pub fn TransitCancellationCount::to_repr(Self) -> @debug.Repr
 
 pub(all) struct TransitCheckpoint {
   version : Int32
@@ -103,6 +145,14 @@ pub fn TransitCounter::fork(Self) -> Self
 pub fn TransitCounter::from_checkpoint(TransitCheckpoint) -> Self raise @types.GroundError
 pub fn TransitCounter::new(@events.GateCounter, Array[Section], max_duration_us? : Int64) -> Self raise @types.GroundError
 pub fn TransitCounter::update(Self, @motion.FrameResult) -> TransitFrame raise @types.GroundError
+
+pub(all) struct TransitDurationLimitCount {
+  limit_us : Int64
+  within : Int64
+  exceeded : Int64
+  indeterminate : Int64
+} derive(@debug.Debug)
+pub fn TransitDurationLimitCount::to_repr(Self) -> @debug.Repr
 
 pub(all) struct TransitFrame {
   counting : @events.GateFrame
@@ -130,6 +180,24 @@ pub(all) struct TransitPending {
   entry : @events.GateCrossing
 } derive(@debug.Debug)
 pub fn TransitPending::to_repr(Self) -> @debug.Repr
+
+pub(all) struct TransitWindow {
+  start_us : Int64
+  end_exclusive_us : Int64?
+  first_timestamp_us : Int64
+  last_timestamp_us : Int64
+  input_frames : Int64
+  sections : Array[TransitWindowSection]
+} derive(@debug.Debug)
+pub fn TransitWindow::to_repr(Self) -> @debug.Repr
+
+pub(all) struct TransitWindowSection {
+  section_id : String
+  completed : Int64
+  duration_limits : Array[TransitDurationLimitCount]
+  cancellations : Array[TransitCancellationCount]
+} derive(@debug.Debug)
+pub fn TransitWindowSection::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 

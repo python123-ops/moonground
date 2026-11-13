@@ -3,4 +3,5 @@ import {
   "python123-ops/moonground/motion",
   "python123-ops/moonground/events",
   "moonbitlang/core/debug",
+  "moonbitlang/core/string",
 }
