@@ -8,6 +8,7 @@ import {
   "python123-ops/moonground/calibration",
   "python123-ops/moonground/camera",
   "python123-ops/moonground/health",
+  "python123-ops/moonground/transit",
   "python123-ops/moonground/types",
 }
 
@@ -67,6 +68,30 @@ pub fn EvidenceGuardedTransitSession::new(@analysis.EvidenceTransitSession, @hea
 pub fn EvidenceGuardedTransitSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
 pub fn EvidenceGuardedTransitSession::replace_projection(Self, Int64, @calibration.GroundCalibration, camera~ : @camera.CameraModel?) -> EvidenceGuardedTransitFrame raise @types.GroundError
 pub fn EvidenceGuardedTransitSession::update(Self, Int64, Array[@health.LandmarkObservation], Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceGuardedTransitFrame raise @types.GroundError
+
+pub(all) struct EvidenceGuardedTransitWindowCheckpoint {
+  version : Int32
+  guarded : EvidenceGuardedTransitCheckpoint
+  windows : @transit.EvidenceTransitWindowCheckpoint
+} derive(@debug.Debug)
+pub fn EvidenceGuardedTransitWindowCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct EvidenceGuardedTransitWindowFrame {
+  guarded : EvidenceGuardedTransitFrame
+  windows : @transit.EvidenceTransitWindowFrame
+} derive(@debug.Debug)
+pub fn EvidenceGuardedTransitWindowFrame::to_repr(Self) -> @debug.Repr
+
+pub struct EvidenceGuardedTransitWindowSession {
+  // private fields
+}
+pub fn EvidenceGuardedTransitWindowSession::checkpoint(Self) -> EvidenceGuardedTransitWindowCheckpoint
+pub fn EvidenceGuardedTransitWindowSession::fork(Self) -> Self
+pub fn EvidenceGuardedTransitWindowSession::from_checkpoint(EvidenceGuardedTransitWindowCheckpoint) -> Self raise @types.GroundError
+pub fn EvidenceGuardedTransitWindowSession::new(EvidenceGuardedTransitSession, window_us~ : Int64, duration_limits_us~ : Array[Int64], origin_us? : Int64) -> Self raise @types.GroundError
+pub fn EvidenceGuardedTransitWindowSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn EvidenceGuardedTransitWindowSession::replace_projection(Self, Int64, @calibration.GroundCalibration, camera~ : @camera.CameraModel?) -> EvidenceGuardedTransitWindowFrame raise @types.GroundError
+pub fn EvidenceGuardedTransitWindowSession::update(Self, Int64, Array[@health.LandmarkObservation], Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceGuardedTransitWindowFrame raise @types.GroundError
 
 pub(all) enum GuardDecision {
   Allowed
