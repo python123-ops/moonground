@@ -152,6 +152,7 @@ pub struct LineGate {
   deadband_m : Double
   // private fields
 } derive(@debug.Debug)
+pub fn LineGate::evidence_side(Self, @types.Point2, @types.Covariance2, sigma_multiplier? : Double) -> Int32 raise @types.GroundError
 pub fn LineGate::new(String, @types.Point2, @types.Point2, deadband_m? : Double) -> Self raise @types.GroundError
 pub fn LineGate::side(Self, @types.Point2) -> Int32 raise @types.GroundError
 pub fn LineGate::to_repr(Self) -> @debug.Repr

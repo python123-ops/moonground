@@ -46,6 +46,32 @@ pub fn AnalysisSession::reframed(Self, @types.PixelTransform) -> Self raise @typ
 pub fn AnalysisSession::update_ground(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> AnalysisFrame raise @types.GroundError
 pub fn AnalysisSession::update_pixel(Self, Int64, Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> AnalysisFrame raise @types.GroundError
 
+pub(all) struct EvidenceAnalysisCheckpoint {
+  version : Int32
+  measurement : AnalysisMeasurement
+  counting : @events.EvidenceGateCheckpoint
+} derive(@debug.Debug)
+pub fn EvidenceAnalysisCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct EvidenceAnalysisFrame {
+  measurement : @moonground.MeasurementFrame
+  counting : @events.EvidenceGateFrame
+} derive(@debug.Debug)
+pub fn EvidenceAnalysisFrame::to_repr(Self) -> @debug.Repr
+
+pub struct EvidenceAnalysisSession {
+  // private fields
+}
+pub fn EvidenceAnalysisSession::checkpoint(Self) -> EvidenceAnalysisCheckpoint
+pub fn EvidenceAnalysisSession::fork(Self) -> Self
+pub fn EvidenceAnalysisSession::from_checkpoint(EvidenceAnalysisCheckpoint) -> Self raise @types.GroundError
+pub fn EvidenceAnalysisSession::from_ground(@motion.MotionEstimator, @events.EvidenceGateCounter) -> Self raise @types.GroundError
+pub fn EvidenceAnalysisSession::from_pixel(@moonground.MeasurementSession, @events.EvidenceGateCounter) -> Self raise @types.GroundError
+pub fn EvidenceAnalysisSession::interrupt(Self, Int64) -> EvidenceAnalysisFrame raise @types.GroundError
+pub fn EvidenceAnalysisSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn EvidenceAnalysisSession::update_ground(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceAnalysisFrame raise @types.GroundError
+pub fn EvidenceAnalysisSession::update_pixel(Self, Int64, Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceAnalysisFrame raise @types.GroundError
+
 // Type aliases
 
 // Traits
