@@ -88,18 +88,20 @@ fn increment(
 }
 
 ///|
-fn GateCounter::validate_frame(
-  self : GateCounter,
+fn validate_gate_frame(
+  session_id : String,
+  config : GateConfig,
+  last_timestamp : Int64?,
   frame : @motion.FrameResult,
 ) -> Unit raise @types.GroundError {
-  if frame.session_id != self.session_id || frame.timestamp_us < 0L {
+  if frame.session_id != session_id || frame.timestamp_us < 0L {
     raise @types.InvalidInput("gate frame session or timestamp differs")
   }
-  if self.last_timestamp is Some(previous) && frame.timestamp_us <= previous {
+  if last_timestamp is Some(previous) && frame.timestamp_us <= previous {
     raise @types.InvalidInput("gate frame timestamps must strictly increase")
   }
-  if frame.tracks.length() > self.config.max_tracks ||
-    frame.closed_segment_ids.length() > self.config.max_tracks {
+  if frame.tracks.length() > config.max_tracks ||
+    frame.closed_segment_ids.length() > config.max_tracks {
     raise @types.InvalidInput("gate frame exceeds track capacity")
   }
   let track_ids : Map[Int32, Bool] = Map([])
@@ -158,7 +160,7 @@ pub fn GateCounter::update(
   self : GateCounter,
   frame : @motion.FrameResult,
 ) -> GateFrame raise @types.GroundError {
-  self.validate_frame(frame)
+  validate_gate_frame(self.session_id, self.config, self.last_timestamp, frame)
   let continuous = match self.last_timestamp {
     Some(previous) => frame.timestamp_us - previous < self.config.max_gap_us
     None => false
