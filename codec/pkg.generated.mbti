@@ -36,6 +36,8 @@ pub fn reframe_json(String) -> String raise @types.GroundError
 
 pub fn transit_json(String) -> String raise @types.GroundError
 
+pub fn transit_windows_json(String) -> String raise @types.GroundError
+
 // Errors
 
 // Types and methods
@@ -87,6 +89,13 @@ pub struct EvidenceTransitReplay {
 pub fn EvidenceTransitReplay::checkpoint_json(Self) -> String raise @types.GroundError
 pub fn EvidenceTransitReplay::open(String) -> Self raise @types.GroundError
 pub fn EvidenceTransitReplay::process_line(Self, String) -> String raise @types.GroundError
+
+pub struct EvidenceTransitWindowReplay {
+  // private fields
+}
+pub fn EvidenceTransitWindowReplay::checkpoint_json(Self) -> String raise @types.GroundError
+pub fn EvidenceTransitWindowReplay::open(String) -> Self raise @types.GroundError
+pub fn EvidenceTransitWindowReplay::process_line(Self, String) -> String raise @types.GroundError
 
 pub struct GateReplay {
   // private fields
