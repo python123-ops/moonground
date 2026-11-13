@@ -42,6 +42,8 @@ pub fn transit_json(String) -> String raise @types.GroundError
 
 pub fn transit_windows_json(String) -> String raise @types.GroundError
 
+pub fn velocity_evidence_json(String) -> String raise @types.GroundError
+
 // Errors
 
 // Types and methods
@@ -162,6 +164,12 @@ pub struct TransitReplay {
 pub fn TransitReplay::checkpoint_json(Self) -> String raise @types.GroundError
 pub fn TransitReplay::open(String) -> Self raise @types.GroundError
 pub fn TransitReplay::process_line(Self, String) -> String raise @types.GroundError
+
+pub struct VelocityEvidenceReplay {
+  // private fields
+}
+pub fn VelocityEvidenceReplay::open(String) -> Self raise @types.GroundError
+pub fn VelocityEvidenceReplay::process_line(Self, String) -> String raise @types.GroundError
 
 // Type aliases
 
