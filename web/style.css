@@ -160,7 +160,8 @@ button:disabled {
 #health-message.error,
 #guarded-message.error,
 #transit-message.error,
-#evidence-message.error {
+#evidence-message.error,
+#evidence-guarded-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -182,7 +183,8 @@ button:disabled {
 #health-timeline {
   aspect-ratio: 960/42;
 }
-#guarded-timeline {
+#guarded-timeline,
+#evidence-guarded-timeline {
   aspect-ratio: 960/56;
 }
 .health-legend {
@@ -231,7 +233,8 @@ button:disabled {
 #guarded-events,
 #guarded-interruptions,
 #transit-cancellations,
-#evidence-events {
+#evidence-events,
+#evidence-guarded-events {
   font-size: 12px;
   overflow-wrap: anywhere;
   padding-left: 18px;

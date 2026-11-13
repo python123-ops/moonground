@@ -3924,6 +3924,599 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       await page.locator("#download-evidence-analysis").isDisabled(),
       true,
     );
+
+    // Three-party evidence uses the shared raw input with its own protocol,
+    // result, playback and checkpoint. It never selects another result slot.
+    await page.locator("#source").fill(directionalSource);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 3 帧"),
+    );
+    await page
+      .locator("#evidence-input")
+      .fill(JSON.stringify(directionalConfiguration));
+    await page.locator("#evidence-analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已联合计算 3 帧"),
+    );
+    await page.locator("#guarded-example").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("已完成 16 帧"),
+    );
+    const beforeThreePartyLegacy = await exportJson(
+      "#download-guarded",
+      "moonground-guarded-results.json",
+    );
+    const beforeThreePartyLegacyInput = await page
+      .locator("#guarded-input")
+      .inputValue();
+    await page.locator("#evidence-guarded-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page.locator("#run-evidence-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-guarded-message")
+        .classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      beforeThreePartyLegacyInput,
+    );
+    assert.deepEqual(
+      await exportJson("#download-guarded", "moonground-guarded-results.json"),
+      beforeThreePartyLegacy,
+    );
+    const threePartySource = fs.readFileSync(
+      path.resolve(__dirname, "..", "examples", "evidence-guarded.ndjson"),
+      "utf8",
+    );
+    const threePartyLines = threePartySource.trimEnd().split("\n");
+    await page.locator("#evidence-guarded-example").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-guarded-message")
+        .textContent.includes("已完成 16 帧三方证据分析"),
+    );
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      threePartySource,
+    );
+    const threeParty = await exportJson(
+      "#download-evidence-guarded",
+      "moonground-evidence-guarded-results.json",
+    );
+    assert.equal(threeParty.checkpoint.format, "moonground.evidence-guarded");
+    assert.equal(threeParty.frames.length, 16);
+    threeParty.frames.forEach((frame, index) => {
+      assert.equal(
+        frame.kind,
+        index === 9
+          ? "evidence_guarded_projection_replaced"
+          : "evidence_guarded_frame",
+      );
+      assert.equal(frame.decision, projection.frames[index].decision);
+      assert.deepEqual(frame.health, projection.frames[index].health);
+      assert.deepEqual(
+        frame.analysis.measurement,
+        projection.frames[index].analysis.measurement,
+      );
+      assert.equal(frame.analysis.counting.sigma_multiplier, 2);
+      if (frame.decision === "blocked") {
+        assert.deepEqual(frame.analysis.counting.evidence, []);
+        assert.deepEqual(frame.analysis.measurement.tracks, []);
+      }
+    });
+    assert.deepEqual(
+      threeParty.frames[6].analysis.measurement.closed_segment_ids,
+      ["1"],
+    );
+    assert.equal(threeParty.frames[9].health.status, "insufficient");
+    assert.equal(
+      threeParty.frames[12].analysis.measurement.tracks[0].segment_id,
+      "2",
+    );
+    assert.equal(
+      threeParty.frames[12].analysis.measurement.tracks[0].speed_mps,
+      null,
+    );
+    assert.equal(
+      threeParty.frames[15].analysis.counting.counting.counts[0]
+        .positive_to_negative,
+      "2",
+    );
+    assert.equal(
+      threeParty.checkpoint.analysis.measurement.motion.last_timestamp_us,
+      "1550000",
+    );
+    assert.deepEqual(
+      threeParty.checkpoint.analysis.measurement.configuration.calibration,
+      threeParty.checkpoint.health.configuration.calibration,
+    );
+    assert.deepEqual(
+      threeParty.checkpoint.analysis.measurement.configuration.camera,
+      threeParty.checkpoint.health.configuration.camera,
+    );
+    assert.equal(await page.locator("#download-guarded").isDisabled(), true);
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      directionalMeasurement,
+    );
+    assert.deepEqual(
+      await exportJson(
+        "#download-evidence-analysis",
+        "moonground-evidence-analysis-results.json",
+      ),
+      groundEvidenceJoint,
+    );
+    const threePartySetFrame = async (index) => {
+      await page.locator("#evidence-guarded-frame").evaluate((input, value) => {
+        input.value = String(value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }, index);
+    };
+    await threePartySetFrame(9);
+    assert.match(
+      await page.locator("#evidence-guarded-status").textContent(),
+      /950000.*切换标定/,
+    );
+    assert.match(
+      await page.locator("#evidence-guarded-policy").textContent(),
+      /关闭旧片段.*重新确认/,
+    );
+    const threePartyCheckpoint = await exportJson(
+      "#save-evidence-guarded-checkpoint",
+      "moonground-evidence-guarded-checkpoint.json",
+    );
+    assert.equal(threePartyCheckpoint.health.state.last_timestamp_us, "950000");
+    assert.equal(
+      threePartyCheckpoint.analysis.measurement.motion.last_timestamp_us,
+      "950000",
+    );
+    assert.equal(
+      threePartyCheckpoint.analysis.counting.state.last_timestamp_us,
+      "950000",
+    );
+    assert.deepEqual(threePartyCheckpoint.analysis.counting.state.tracks, []);
+    assert.equal(threePartyCheckpoint.health.state.streak, null);
+    assert.equal(await page.locator("#evidence-joint-frame").inputValue(), "2");
+    assert.equal(await page.locator("#counter").textContent(), "1 / 3");
+    await page.locator("#evidence-guarded-section").evaluate((details) => {
+      details.open = false;
+    });
+    await threePartySetFrame(12);
+    assert.equal(await page.locator("#evidence-guarded-rows tr").count(), 0);
+    await page.locator("#evidence-guarded-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#evidence-guarded-rows").children.length > 0,
+    );
+    assert.equal(await page.locator("#evidence-guarded-rows tr").count(), 1);
+    // A selection change while the prefix replay is preparing cancels that
+    // download; the saved file must always match the visible selected frame.
+    await page.evaluate(() => {
+      const original = window.setTimeout;
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 0) {
+          window.setTimeout = original;
+          window.releaseThreePartySave = () => callback(...args);
+          return -1;
+        }
+        return original.call(window, callback, delay, ...args);
+      };
+    });
+    let cancelledThreePartyDownloads = 0;
+    const countCancelledThreePartyDownload = () => {
+      cancelledThreePartyDownloads++;
+    };
+    page.on("download", countCancelledThreePartyDownload);
+    await page.locator("#save-evidence-guarded-checkpoint").click();
+    await page.waitForFunction(
+      () => typeof window.releaseThreePartySave === "function",
+    );
+    await threePartySetFrame(14);
+    await page.evaluate(() => {
+      window.releaseThreePartySave();
+      delete window.releaseThreePartySave;
+    });
+    await page.waitForFunction(
+      () =>
+        !document.querySelector("#save-evidence-guarded-checkpoint").disabled,
+    );
+    page.off("download", countCancelledThreePartyDownload);
+    assert.equal(cancelledThreePartyDownloads, 0);
+    await threePartySetFrame(13);
+    assert.equal(await page.locator("#evidence-guarded-events li").count(), 1);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#evidence-guarded-section").screenshot({
+      path: path.join(directory, "evidence-guarded-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator("#evidence-guarded-section").screenshot({
+      path: path.join(directory, "evidence-guarded-desktop-preview.png"),
+    });
+    // Complete raw checkpoints are validated before changing any input. Every
+    // owner and confidence anchor is checked, including exact integer tokens.
+    const invalidThreePartyCheckpoints = [];
+    const threePartyClone = () =>
+      JSON.parse(JSON.stringify(threeParty.checkpoint));
+    const threePartyBadVersion = threePartyClone();
+    threePartyBadVersion.checkpoint_version = "999";
+    invalidThreePartyCheckpoints.push(JSON.stringify(threePartyBadVersion));
+    const threePartyBadTime = threePartyClone();
+    threePartyBadTime.health.state.last_timestamp_us = "1550001";
+    invalidThreePartyCheckpoints.push(JSON.stringify(threePartyBadTime));
+    const threePartyBadCovariance = threePartyClone();
+    threePartyBadCovariance.analysis.counting.state.tracks[0].anchors[0].covariance =
+      [1, 2, 1];
+    invalidThreePartyCheckpoints.push(JSON.stringify(threePartyBadCovariance));
+    const threePartyBadProjection = threePartyClone();
+    threePartyBadProjection.health.configuration.calibration.matrix[2] += 1;
+    invalidThreePartyCheckpoints.push(JSON.stringify(threePartyBadProjection));
+    invalidThreePartyCheckpoints.push(
+      JSON.stringify(threeParty.checkpoint).replace(
+        '"track_id":1',
+        '"track_id":1.0000000000000001',
+      ),
+    );
+    invalidThreePartyCheckpoints.push(
+      JSON.stringify(beforeThreePartyLegacy.checkpoint),
+    );
+    for (const rawCheckpoint of invalidThreePartyCheckpoints) {
+      await page.locator("#evidence-guarded-checkpoint-file").setInputFiles({
+        name: "invalid-three-party.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(rawCheckpoint),
+      });
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#evidence-guarded-checkpoint-file").value ===
+          "",
+      );
+      assert.equal(
+        await page.locator("#evidence-guarded-message.error").count(),
+        1,
+      );
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        threePartySource,
+      );
+      assert.deepEqual(
+        await exportJson(
+          "#download-evidence-guarded",
+          "moonground-evidence-guarded-results.json",
+        ),
+        threeParty,
+      );
+    }
+    const threePartyFirst = JSON.parse(threePartyLines[1]);
+    const threePartyBadTimeFrame = {
+      ...threePartyFirst,
+      health: threePartyFirst.health.replace(
+        '"timestamp_us":"0"',
+        '"timestamp_us":"1"',
+      ),
+    };
+    const threePartyBadIdentity = {
+      ...threePartyFirst,
+      measurement: threePartyFirst.measurement.replace(
+        '"track_id":1',
+        '"track_id":1.0000000000000001',
+      ),
+    };
+    const threePartyDuplicate = {
+      ...threePartyFirst,
+      measurement: threePartyFirst.measurement.replace(
+        '"track_id":1',
+        '"track_id":1,"track_id":1',
+      ),
+    };
+    const threePartyRawHeader = JSON.parse(threePartyLines[0]);
+    const threePartyRawAnalysis = JSON.parse(threePartyRawHeader.analysis);
+    const threePartyFractionalConfiguration = JSON.stringify({
+      ...threePartyRawHeader,
+      analysis: JSON.stringify({
+        ...threePartyRawAnalysis,
+        measurement: threePartyRawAnalysis.measurement.replace(
+          '"max_tracks":10',
+          '"max_tracks":10.0000000000000001',
+        ),
+      }),
+    });
+    const invalidThreePartyInputs = [
+      threePartyFractionalConfiguration + "\n" + threePartyLines[1] + "\n",
+      threePartyLines[0] +
+        "\n" +
+        JSON.stringify({ ...threePartyFirst, unknown: true }) +
+        "\n",
+      threePartyLines[0] + "\n" + JSON.stringify(threePartyBadTimeFrame) + "\n",
+      threePartyLines[0] + "\n" + JSON.stringify(threePartyBadIdentity) + "\n",
+      threePartyLines[0] + "\n" + JSON.stringify(threePartyDuplicate) + "\n",
+      ...badProjectionOperations.map(
+        (operation) =>
+          threePartyLines.slice(0, 10).join("\n") + "\n" + operation + "\n",
+      ),
+    ];
+    for (const rawInput of invalidThreePartyInputs) {
+      await page.locator("#evidence-guarded-file").setInputFiles({
+        name: "invalid-three-party.ndjson",
+        mimeType: "application/x-ndjson",
+        buffer: Buffer.from(rawInput),
+      });
+      await page.waitForFunction(
+        () => document.querySelector("#evidence-guarded-file").value === "",
+      );
+      assert.equal(
+        await page.locator("#evidence-guarded-message.error").count(),
+        1,
+      );
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        threePartySource,
+      );
+    }
+    assert.deepEqual(
+      await exportJson(
+        "#download-evidence-guarded",
+        "moonground-evidence-guarded-results.json",
+      ),
+      threeParty,
+    );
+    // Resume exactly at the selected replacement barrier, not the batch end.
+    await page.locator("#evidence-guarded-checkpoint-file").setInputFiles({
+      name: "three-party.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(threePartyCheckpoint)),
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#evidence-guarded-checkpoint-file").value ===
+        "",
+    );
+    assert.equal(
+      await page.locator("#evidence-guarded-message.error").count(),
+      0,
+    );
+    const threePartyResume = await page.locator("#guarded-input").inputValue();
+    assert.deepEqual(JSON.parse(threePartyResume).resume, threePartyCheckpoint);
+    assert.equal(
+      await page.locator("#download-evidence-guarded").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#evidence-input").inputValue(),
+      JSON.stringify(directionalConfiguration),
+    );
+    await page
+      .locator("#guarded-input")
+      .fill(threePartyResume + threePartyLines.slice(11).join("\n") + "\n");
+    await page.locator("#run-evidence-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-guarded-message")
+        .textContent.includes("已完成 6 帧三方证据分析"),
+    );
+    const threePartyResumed = await exportJson(
+      "#download-evidence-guarded",
+      "moonground-evidence-guarded-results.json",
+    );
+    assert.deepEqual(threePartyResumed.frames, threeParty.frames.slice(10));
+    assert.deepEqual(threePartyResumed.checkpoint, threeParty.checkpoint);
+    const threePartyFinalCheckpoint = await exportJson(
+      "#save-evidence-guarded-checkpoint",
+      "moonground-evidence-guarded-checkpoint.json",
+    );
+    assert.deepEqual(threePartyFinalCheckpoint, threeParty.checkpoint);
+    // Independent config and ordinary source edits are unrelated to this
+    // complete three-party header; editing the shared raw source invalidates it.
+    await page
+      .locator("#evidence-input")
+      .fill("three-party does not use this configuration");
+    await page.locator("#source").fill("unrelated ordinary draft");
+    assert.deepEqual(
+      await exportJson(
+        "#download-evidence-guarded",
+        "moonground-evidence-guarded-results.json",
+      ),
+      threePartyResumed,
+    );
+    await page.locator("#guarded-input").fill(threePartySource);
+    assert.equal(
+      await page.locator("#download-evidence-guarded").isDisabled(),
+      true,
+    );
+    // Preparation is intentionally yielded once. A valid new file must replace
+    // the pending run rather than being silently ignored by a busy flag.
+    const holdThreePartyPreparation = async () =>
+      page.evaluate(() => {
+        const original = window.setTimeout;
+        window.setTimeout = function (callback, delay, ...args) {
+          if (delay === 0) {
+            window.setTimeout = original;
+            window.releaseThreePartyRun = () => callback(...args);
+            return -1;
+          }
+          return original.call(window, callback, delay, ...args);
+        };
+      });
+    const releaseThreePartyPreparation = async () =>
+      page.evaluate(() => {
+        window.releaseThreePartyRun();
+        delete window.releaseThreePartyRun;
+      });
+    await holdThreePartyPreparation();
+    await page.locator("#run-evidence-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseThreePartyRun === "function",
+    );
+    const replacementThreePartySource = threePartySource.replaceAll(
+      "warehouse-landmarks",
+      "replacement-evidence-monitor",
+    );
+    await page.locator("#evidence-guarded-file").setInputFiles({
+      name: "replacement-three-party.ndjson",
+      mimeType: "application/x-ndjson",
+      buffer: Buffer.from(replacementThreePartySource),
+    });
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-guarded-message")
+        .textContent.includes("已完成 16 帧三方证据分析"),
+    );
+    await releaseThreePartyPreparation();
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      replacementThreePartySource,
+    );
+    const replacementThreeParty = await exportJson(
+      "#download-evidence-guarded",
+      "moonground-evidence-guarded-results.json",
+    );
+    assert.equal(
+      replacementThreeParty.frames[0].health.monitor_id,
+      "replacement-evidence-monitor",
+    );
+    assert.equal(
+      await page.locator("#run-evidence-guarded").isDisabled(),
+      false,
+    );
+    // Old and new shared-input operations cancel each other's pending work.
+    await holdThreePartyPreparation();
+    await page.locator("#run-evidence-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseThreePartyRun === "function",
+    );
+    await page.locator("#guarded-example").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-input")
+        .value.includes("guarded-warehouse"),
+    );
+    await releaseThreePartyPreparation();
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      beforeThreePartyLegacyInput,
+    );
+    assert.equal(
+      await page.locator("#download-evidence-guarded").isDisabled(),
+      true,
+    );
+    await holdThreePartyPreparation();
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseThreePartyRun === "function",
+    );
+    await page.locator("#evidence-guarded-example").click();
+    await page.waitForFunction(
+      (expected) => document.querySelector("#guarded-input").value === expected,
+      threePartySource,
+    );
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-guarded-message")
+        .textContent.includes("已完成 16 帧三方证据分析"),
+    );
+    await releaseThreePartyPreparation();
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      threePartySource,
+    );
+    assert.deepEqual(
+      await exportJson(
+        "#download-evidence-guarded",
+        "moonground-evidence-guarded-results.json",
+      ),
+      threeParty,
+    );
+    // Late sample fetch and checkpoint file reads cannot overwrite a draft.
+    let releaseThreePartySample;
+    let threePartySampleRequested;
+    const threePartySampleGate = new Promise((resolve) => {
+      releaseThreePartySample = resolve;
+    });
+    const threePartySampleRequest = new Promise((resolve) => {
+      threePartySampleRequested = resolve;
+    });
+    await page.route("**/evidence-guarded.ndjson", async (route) => {
+      threePartySampleRequested();
+      await threePartySampleGate;
+      await route.fulfill({
+        contentType: "application/x-ndjson",
+        body: threePartySource,
+      });
+    });
+    try {
+      await page.locator("#evidence-guarded-example").click();
+      await threePartySampleRequest;
+      await page.locator("#guarded-input").fill("newer three-party draft");
+      const sampleResponse = page.waitForResponse((response) =>
+        response.url().endsWith("/evidence-guarded.ndjson"),
+      );
+      releaseThreePartySample();
+      await (await sampleResponse).finished();
+      await page.waitForLoadState("networkidle");
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        "newer three-party draft",
+      );
+      assert.equal(
+        await page.locator("#download-evidence-guarded").isDisabled(),
+        true,
+      );
+    } finally {
+      releaseThreePartySample();
+      await page.unroute("**/evidence-guarded.ndjson");
+    }
+    await page.evaluate(() => {
+      const original = File.prototype.text;
+      File.prototype.text = function () {
+        if (this.name !== "three-party-late.json") return original.call(this);
+        File.prototype.text = original;
+        const file = this;
+        return new Promise((resolve) => {
+          window.releaseThreePartyRead = async () =>
+            resolve(await original.call(file));
+        });
+      };
+    });
+    await page.locator("#evidence-guarded-checkpoint-file").setInputFiles({
+      name: "three-party-late.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(threeParty.checkpoint)),
+    });
+    await page.waitForFunction(
+      () => typeof window.releaseThreePartyRead === "function",
+    );
+    await page.locator("#guarded-input").fill("newer checkpoint draft");
+    await page.evaluate(() => {
+      window.releaseThreePartyRead();
+      delete window.releaseThreePartyRead;
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#evidence-guarded-checkpoint-file").value ===
+        "",
+    );
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      "newer checkpoint draft",
+    );
+    assert.equal(
+      await page.locator("#download-evidence-guarded").isDisabled(),
+      true,
+    );
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();
