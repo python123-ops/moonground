@@ -1,0 +1,956 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-results.json",
+  "python": "3.8.7",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "0823ef996248fc051f985a8f45ece8dd2692cb7a937a954e5f40612f4f86bb6d",
+  "transit_reference_sha256": "d2f96ae9feeeea6831a2672a18c05a8e8ea7227cf459f7ed8bb1e4f33ac5907f",
+  "guarded_fixture_sha256": "533127370b3c93ea84688592eee664b3f352b6ea26d50690976e1eabb5137fa5",
+  "binary_sha256": "169bfdd40dd18241785420df6c33ba18e37a94502be335a1075f39702275559a",
+  "classification_scope": "observed_chord_elapsed_bounds",
+  "offline_integer_grouping": {
+    "cases": 39,
+    "frames": 184,
+    "resume_cut_points": 223,
+    "passages": 29,
+    "cancellations": 24,
+    "closed_windows": 74,
+    "all_five_cancellation_reasons": [
+      "ambiguous_order",
+      "discontinuity",
+      "expired",
+      "reentered",
+      "reversed"
+    ],
+    "integer_oracle_exact": true,
+    "records": [
+      {
+        "name": "separate_brackets_both_directions",
+        "frames": 7,
+        "resume_cut_points": 8,
+        "passages": 2,
+        "cancellations": 0,
+        "closed_windows": 2,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "795b45145b906ca4f2be27c67f74153e8f83b196e40f2392edbe425ef97d09e2"
+      },
+      {
+        "name": "same_frame_reverse_configuration_order",
+        "frames": 3,
+        "resume_cut_points": 4,
+        "passages": 2,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "88e4af04be5c2c7c993e6d1225f1f93137d3ce98650693a2981a72bff4345666"
+      },
+      {
+        "name": "above_2pow53_microsecond_intervals",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "c85d76bbb81b1c4c9307c525a7e7f314f50d5ad9ada53b7e1b17d262a518a1eb"
+      },
+      {
+        "name": "above_2pow53_fractional_same_frame",
+        "frames": 2,
+        "resume_cut_points": 3,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "2c528fd9d500d358a5dada7acfed50ce6ec2aa31fd4c9f854f555de390b35404"
+      },
+      {
+        "name": "int64_max_microsecond_intervals",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "25a0675f191813c304f6a3f4a17b79cf2d4061e07088e0175cd474a8c6252aff"
+      },
+      {
+        "name": "int64_max_fractional_same_frame",
+        "frames": 2,
+        "resume_cut_points": 3,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "2c5cfa5e40ff1ab24aa5dc3e2306f2efb43a915b03be52e8b995d6c577f88373"
+      },
+      {
+        "name": "finite_extension_reentry_replaces_start",
+        "frames": 7,
+        "resume_cut_points": 8,
+        "passages": 1,
+        "cancellations": 1,
+        "closed_windows": 2,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "7f26c70661ce577bc5cec4b719e5fed3de0359446f5e07a5912b83944eed4fb4"
+      },
+      {
+        "name": "same_frame_reentry_then_completion",
+        "frames": 6,
+        "resume_cut_points": 7,
+        "passages": 1,
+        "cancellations": 1,
+        "closed_windows": 2,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "fc90d3d2463006a87f425df97f52f7bad00bfbdf59f358e8cb6d959f3dcbb266"
+      },
+      {
+        "name": "same_frame_exit_completes_old_then_entry_starts_new",
+        "frames": 6,
+        "resume_cut_points": 7,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 2,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "f4028579fc0e6f77a4b9ce7404c214a27e4785efbf419235a0b68e92265755af"
+      },
+      {
+        "name": "overlapping_different_chords_are_ambiguous",
+        "frames": 3,
+        "resume_cut_points": 4,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 0,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "0c7372be8d68fdc6807486bfb4561983533a955ee809019512dfd8dc51358531"
+      },
+      {
+        "name": "expiration_confirmation_boundary",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "5eb8d49b9b4646af2b9b0728286a3ae4548603f18c6690666c72bf6de0234188"
+      },
+      {
+        "name": "discontinuity_precedes_expiration",
+        "frames": 3,
+        "resume_cut_points": 4,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "1",
+        "checkpoint_sha256": "c8f6924f70da54c742d1ecc3edf0019c52e3c80cd49147cbe93eaf1f7f0b965b"
+      },
+      {
+        "name": "cancel_missing",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "effb6fe7b5bf39823708a513951cc6d941cedf2f8fc9acfb1924072454f1406a"
+      },
+      {
+        "name": "cancel_rejected_projection",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "d4a5d1c9f512af9d3069ddada05f8f0ae7a80ec4fc6daeb32517c9a103ddb45a"
+      },
+      {
+        "name": "cancel_rejected_innovation",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "eadd1d01ad63ed32e2a6ea24d1100f7bc4487b642ac4582171fea5898d04012a"
+      },
+      {
+        "name": "cancel_numerical_failure",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "476b97dd7250ed3e8317510043a9dd8d88db71fac6d6227af3225ec7c69d3a68"
+      },
+      {
+        "name": "cancel_quality",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "4ad74bd49887a591e57ff569c8ef4ba431f566a79e75c623a0df80dd46a8eb86"
+      },
+      {
+        "name": "cancel_closed",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "d9c57f9ed0064c25d38a02df02257ac8c68abf92099b35853480d8e8fefa8108"
+      },
+      {
+        "name": "cancel_gap",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "1",
+        "checkpoint_sha256": "8b82aa08a207571cbc2e16851269f7e7cab180137de3874d1f60396df0a476d0"
+      },
+      {
+        "name": "reverse_entry_cancels_pending",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "6967d7bfe1ffa6ee728eb8460d1c7cc2a05b315921c84b1b65b0e43dbc632b63"
+      },
+      {
+        "name": "guarded_interrupt_closes_pending",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "2efc6c87e554861b2552a7dbbd51109f855f5ed805440ebcf58d38a2c55e39bd"
+      },
+      {
+        "name": "same_frame_different_anchors_are_ambiguous",
+        "frames": 3,
+        "resume_cut_points": 4,
+        "passages": 0,
+        "cancellations": 1,
+        "closed_windows": 0,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "6cc250db9f4fa0890c376b3654f417172aed42940b55c81ab3c4567e1b118eb7"
+      },
+      {
+        "name": "unconfirmed_retains_pending_without_refreshing_entry",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "576fb9b802a7546d6cd0bd27ef31e548435179ccd1c0a1b5b41b3b7603163c2a"
+      },
+      {
+        "name": "unconfirmed_anchor_ttl_reaches_exact_gap",
+        "frames": 5,
+        "resume_cut_points": 6,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 2,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "d71dca6a535867d7dc797c84284e07e96f4db112bcf175df4a7a065c6d7a6192"
+      },
+      {
+        "name": "pending_preserves_original_covariances_after_anchor_moves",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "fbfc2906291cf38e2516e2ad50af9119e9a998cffa774229972aae9b69123c97"
+      },
+      {
+        "name": "rotated_anisotropic_covariance",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 2,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "d93e00f5f44b76c06df8a8102b7ff66706074cd5b7b29cf721ed199ad6e0559d"
+      },
+      {
+        "name": "section_order_then_sorted_track_ids",
+        "frames": 3,
+        "resume_cut_points": 4,
+        "passages": 2,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "bc29f55c2cd2bab409bba929299d126ef26d026cabba1bd0a306647e66a22f43"
+      },
+      {
+        "name": "long_int64_chord_converts_only_elapsed_difference",
+        "frames": 2,
+        "resume_cut_points": 3,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "unobserved_windows": "36893488147418",
+        "checkpoint_sha256": "8158ee17996eed8e96b10f2f9ed4b6be56d485ea2c4e08e111dc4af6bf32f444"
+      },
+      {
+        "name": "zero_sigma_supported_diagnostics",
+        "frames": 3,
+        "resume_cut_points": 4,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "0d60e7f95b50016466e6d9cfac708726267caee8109ea7b39b4b9e09b9fe6d36"
+      },
+      {
+        "name": "elapsed_bounds_can_exceed_gate_gap",
+        "frames": 7,
+        "resume_cut_points": 8,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 3,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "ffbf75331abfe14e47bf47a78076233d13bc50c10db1e4d44b361309953a3bbc"
+      },
+      {
+        "name": "one_microsecond_at_2pow53",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 3,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "deed5a35dce22584fdee1b3e6935a3d5a4de2cd3ad8e4db0d7119a766e029cea"
+      },
+      {
+        "name": "nonaligned_origin_above_2pow53",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "f85a440c8b32d7dfde3867ffde5673d6355721ab73ba4f28baf81585aa66a3cf"
+      },
+      {
+        "name": "exclusive_end_equal_MAX_then_terminal",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "4a3230d15621baa9a9252ae7b6a37b627e3d6ed5816bdd21541f7849a64ddfb8"
+      },
+      {
+        "name": "one_microsecond_terminal",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 3,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "465475a258ba37ce525bd54ef93ad560773c7a84d3952e62a2d2d1efc7f25a60"
+      },
+      {
+        "name": "unobserved_giant_gap",
+        "frames": 2,
+        "resume_cut_points": 3,
+        "passages": 0,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "unobserved_windows": "9223372036854775806",
+        "checkpoint_sha256": "d0845b87ebab1f3b7bfb079c24fc976d9fc75cc20494e2f4b23c47c8e726462f"
+      },
+      {
+        "name": "elapsed_interval_reaches_Int64_MAX",
+        "frames": 4,
+        "resume_cut_points": 5,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 1,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "df88b28c9ee7581acced78819369cab459b2cc5dc6b75513d689d9a40ba85142"
+      },
+      {
+        "name": "started_checkpoint_does_not_reconstruct_history",
+        "frames": 1,
+        "resume_cut_points": 2,
+        "passages": 1,
+        "cancellations": 0,
+        "closed_windows": 0,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "c07070b001b3a44e27cfdc886d0cbf6d61791d70373435ddc8c6336e78433a32"
+      },
+      {
+        "name": "guarded_replacement_camera_add_change_remove_equal",
+        "frames": 29,
+        "resume_cut_points": 30,
+        "passages": 0,
+        "cancellations": 8,
+        "closed_windows": 28,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "7ce7e300040839a2eb87f6385d5461296a4e57b69ed24603d24707c2b204447c"
+      },
+      {
+        "name": "guarded_replacement_cancels_pending_and_hidden_segments",
+        "frames": 10,
+        "resume_cut_points": 11,
+        "passages": 2,
+        "cancellations": 1,
+        "closed_windows": 8,
+        "unobserved_windows": "0",
+        "checkpoint_sha256": "5df9122cec4a1ca7be669f6a19113f8fbe009690379ec9a15be1c93e6ae7664b"
+      }
+    ]
+  },
+  "strict_transport_and_relations": {
+    "rejected_cases": 60,
+    "cases": [
+      {
+        "name": "missing_transit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field transit"
+      },
+      {
+        "name": "transit_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit must be a string"
+      },
+      {
+        "name": "zero_width",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window width origin or limit capacity"
+      },
+      {
+        "name": "negative_origin",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: origin_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "number_width_not_decimal_string",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window_us must be a string"
+      },
+      {
+        "name": "fractional_width_text",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window_us must be a nonnegative Int64 decimal string"
+      },
+      {
+        "name": "noncanonical_width",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "empty_limits",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window width origin or limit capacity"
+      },
+      {
+        "name": "duplicate_limits",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit duration limits must be nonnegative and strictly increasing"
+      },
+      {
+        "name": "unordered_limits",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit duration limits must be nonnegative and strictly increasing"
+      },
+      {
+        "name": "seventeen_limits",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: duration limits exceeds its record limit"
+      },
+      {
+        "name": "number_limit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: duration limit must be a string"
+      },
+      {
+        "name": "overflow_limit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: duration limit must be a nonnegative Int64 decimal string"
+      },
+      {
+        "name": "unknown_header",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit windows source: unknown field extra"
+      },
+      {
+        "name": "duplicate_header",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"window_us\" at line 1, column 936"
+      },
+      {
+        "name": "wrong_format",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported transit windows checkpoint format or version"
+      },
+      {
+        "name": "wrong_version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported transit windows checkpoint format or version"
+      },
+      {
+        "name": "unknown_checkpoint_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit windows checkpoint: unknown field extra"
+      },
+      {
+        "name": "missing_effective_width",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field window_us"
+      },
+      {
+        "name": "missing_config_gap",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field max_gap_us"
+      },
+      {
+        "name": "missing_effective_sigma",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field sigma_multiplier"
+      },
+      {
+        "name": "missing_deadband",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field deadband_m"
+      },
+      {
+        "name": "baseline_after_watermark",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window watermark"
+      },
+      {
+        "name": "baseline_count_exceeds_lifetime",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit window lifetime count predates its baseline"
+      },
+      {
+        "name": "wrong_current_start",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window bounds chronology or shape"
+      },
+      {
+        "name": "wrong_current_end",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window bounds chronology or shape"
+      },
+      {
+        "name": "current_last_not_watermark",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window bounds chronology or shape"
+      },
+      {
+        "name": "first_after_last",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window bounds chronology or shape"
+      },
+      {
+        "name": "zero_observed_frames",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window bounds chronology or shape"
+      },
+      {
+        "name": "too_many_distinct_input_frames",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window bounds chronology or shape"
+      },
+      {
+        "name": "missing_current_with_advanced_watermark",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: observed transit window lacks its aggregate"
+      },
+      {
+        "name": "window_count_exceeds_new_lifetime",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window section totals or shape"
+      },
+      {
+        "name": "partition_sum",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit duration classification partition"
+      },
+      {
+        "name": "MAX_limit_not_all_within",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit duration classification partition"
+      },
+      {
+        "name": "zero_limit_within",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit duration classification partition"
+      },
+      {
+        "name": "wrong_cancellation_order",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit window cancellation count or order"
+      },
+      {
+        "name": "negative_cancellation_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: count must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "cancellation_count_exceeds_observed_frame_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit window count exceeds its observed frame capacity"
+      },
+      {
+        "name": "wrong_session",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: transit window source session or timestamp differs"
+      },
+      {
+        "name": "duplicate_passage",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: invalid transit window passage identity order or bracket"
+      },
+      {
+        "name": "missing_passage",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: transit window completion delta differs from supplied outcomes"
+      },
+      {
+        "name": "omitted_completed_count",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: transit window completion delta differs from supplied outcomes"
+      },
+      {
+        "name": "unknown_section",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: transit window outcome references an unknown section"
+      },
+      {
+        "name": "bad_elapsed_bound",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: transit window passage duration differs from its original brackets"
+      },
+      {
+        "name": "bad_estimate",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: transit window passage duration differs from its original brackets"
+      },
+      {
+        "name": "wrong_exit_confirmation",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: invalid transit window passage identity order or bracket"
+      },
+      {
+        "name": "identity_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: invalid transit window passage identity order or bracket"
+      },
+      {
+        "name": "unknown_frame_field",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: window source transit frame: unknown field extra"
+      },
+      {
+        "name": "wrong_crossing_fraction",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: saved crossing differs from its chord geometry"
+      },
+      {
+        "name": "evidence_policy_changed",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: window source evidence policy differs"
+      },
+      {
+        "name": "evidence_side_changed",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: transit window source evidence side differs"
+      },
+      {
+        "name": "missing_source_exit_crossing",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: transit window outcome lacks its current source crossing"
+      },
+      {
+        "name": "duplicate_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "431a3429873940d744451afb57a7268e32dd3d8f7a3f9d201dcdb817480c5cab",
+        "stdout_bytes": 1727,
+        "stderr": "line 3: transit window source session or timestamp differs"
+      },
+      {
+        "name": "raw_pending_underflow_is_not_zero",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: pending_count must be a nonnegative integer at most 65536"
+      },
+      {
+        "name": "raw_fractional_track_identity",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "late_error_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 4: window source transit frame: unknown field extra"
+      },
+      {
+        "name": "invalid_utf8_tail",
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "ce1480a6baf9011ce6a567f9b5aa4bfff1e708e14a7494f4f9cdd5e49237c858",
+        "stdout_bytes": 3464,
+        "stderr": "line 4: invalid UTF-8"
+      },
+      {
+        "name": "nonmonotone_within_across_thresholds",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit duration classification partition"
+      },
+      {
+        "name": "late_cancellation_count_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: transit window counter exhausted"
+      },
+      {
+        "name": "late_cancellation_overflow_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: transit window counter exhausted"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "same_timestamp_correction_from_saved_state": true,
+    "synthetic_exhausted_cancellation_slot_checked_without_history_authentication": true
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "exact_source_utf16_units": 8388619,
+    "source_one_unit_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+    },
+    "default_native_physical_limit": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 2: line byte limit exceeded"
+    },
+    "native_frame_over_1MiB_with_explicit_line_budget": true
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/transit-windows.test.mjs",
+    "summary": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 11,
+      "continuations": 44,
+      "directions": [
+        "native_to_native",
+        "native_to_javascript",
+        "javascript_to_native",
+        "javascript_to_javascript"
+      ]
+    },
+    "test_script_sha256": "5578faf0f958b38da27d2f62d2898c22f7be53bf5b851ae97ce53b1f45c9bb87",
+    "bridge_sha256": "a922d032b1fa3e97b6dce7cd986ec1b85cbb630cae32f0f57871e61365318e44",
+    "stdout_sha256": "2311742a4b3f122b9a8a16b4df3c7657c03dc390f8051b498cf23e4262ded813",
+    "stderr": ""
+  },
+  "elapsed_seconds": 37.409492,
+  "status": "passed"
+}
