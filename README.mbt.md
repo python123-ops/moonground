@@ -2,7 +2,7 @@
 
 MoonGround 把固定相机中的目标轨迹转换为米制地面位置、速度和观测路径，面向园区、仓储和其他近似平面的场地。输入是已有目标身份、地面接触锚点和真实时间戳；库负责标定有效域、投影协方差、运动估计、轨迹分段和双向通道过线统计，并支持原子组合更新与完整状态恢复。固定地标检查持续核对原标定的米制残差；需要按检查结果决定是否计算对象测量时，可显式使用 `guarded` 入口。
 
-当前开发版本为 `0.14.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
+当前开发版本为 `0.15.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
 
 ## 与现有项目的衔接
 
@@ -27,7 +27,7 @@ MoonGround 复用 `moon-cv-geometry@0.2.2` 的几何能力与 `moon-kalman@0.2.1
 | `analysis` | 像素／米制测量与均值或法向证据计数的原子更新，分别保存 `AnalysisCheckpoint`／`EvidenceAnalysisCheckpoint`，支持独立分支与像素换算 |
 | `health` | 独立固定地标的逐点残差、连续采样证据确认、完整 `HealthCheckpoint` 与像素换算 |
 | `guarded` | 当前地标确认健康后计算对象，阻断时结束片段；均值／法向证据门控分别保存完整检查点，支持投影切换与重新确认 |
-| `transit` | 同目标同片段的有向入口／出口配对、通行时间界与插值估计、取消原因及独立 `TransitCheckpoint` |
+| `transit` | 同目标同片段的有向入口／出口配对、通行时间界与插值估计、取消原因；均值／法向证据策略分别保存独立完整检查点 |
 | `codec` | 原生 CLI 与浏览器共用的严格 JSON 协议、检查点、坐标转换，以及独立／联合测量、通道、证据、地标健康、门控与区间回放 |
 
 计算包支持 `wasm`、`wasm-gc`、`js`、`native`。流式命令使用 native，浏览器桥使用 JavaScript；图像解码、检测、跟踪及相机采集由调用方接入。
@@ -191,7 +191,7 @@ test "README: three contact observations produce a measured speed" {
 
 `position_std_m` 和 `velocity_std_mps` 是各自 2×2 协方差最大特征值的平方根，即最差方向的一倍标准差。速度初始化期间 `velocity_std_mps` 与速度向量均为 `null`。可在 `motion` 中设置有限正数门限，例如 `"max_velocity_std_mps":0.2`。满足预热条件后，任一标准差**大于**对应门限便返回 `uncertain`，`speed_mps=null`；位置、速度向量、协方差和路径仍保留。后续不确定性下降即可恢复 `ready`。该规则不拒绝观测、不改 Kalman 状态；初始化、创新拒绝与数值失败保留原有含义。这些标准差描述二维向量的不确定性，不能直接当作非负速率的置信区间，尤其是在接近静止时。
 
-测量 JSON 的 `schema_version` 为 `0.2.0`，`uncertainty_scope` 为 `conditional_on_fixed_calibration_camera_and_anchor`。这是 v0.2.0 引入的结果格式，v0.14.0 继续使用；从 v0.1.0 接入的调用方需处理 `uncertain` 状态和两个标准差字段。
+测量 JSON 的 `schema_version` 为 `0.2.0`，`uncertainty_scope` 为 `conditional_on_fixed_calibration_camera_and_anchor`。这是 v0.2.0 引入的结果格式，v0.15.0 继续使用；从 v0.1.0 接入的调用方需处理 `uncertain` 状态和两个标准差字段。
 
 ### 缩放、裁剪与补边后的像素坐标
 
@@ -711,6 +711,65 @@ test "README: measured motion completes a directional transit after checkpoint r
 
 `new` 复制并验证给定计数器；允许已开始的计数器，保留通道累计，区间完成数从零开始，不追溯入口。`checkpoint()` 同时保存通道、区间、完成数和待入口；`from_checkpoint` 核对几何、方向、当前目标片段、时间、期限及累计关系，隔离可变数组。它验证状态自洽性，不认证历史过线。`fork()` 建立独立分支。区间检查点不含上游测量或健康状态；分别持久化时，宿主须保存同一已处理帧的状态并从更晚帧续接。
 
+### 以法向证据确认入口和出口
+
+`transit.EvidenceTransitCounter` 拥有独立的 `EvidenceGateCounter`，复用 `Section`、`TransitPassage` 和取消原因。`new(counting, sections, max_duration_us~)`、`update(FrameResult)`、`checkpoint()`、`from_checkpoint()`、`fork()` 与前述均值入口并列；结果 `EvidenceTransitFrame.counting` 保留完整法向证据及原通道结果。入口、出口都须通过各自 `d ± kσ` 的闭死区确认；未确认位置保留各门原参考点和时间，质量策略仍取原位置标准差。
+
+```mbt check
+///|
+test "README: covariance-confirmed transit restores its endpoint evidence" {
+  let motion = @moonground.MotionEstimator::new(
+    "evidence-transit-example",
+    @moonground.MotionConfig::new(q=1000000.0, gate=1.0e12, max_tracks=10),
+  )
+  let transit = @transit.EvidenceTransitCounter::new(
+    @events.EvidenceGateCounter::new(
+      "evidence-transit-example",
+      [
+        @events.LineGate::new("entry", { x: 0.0, y: 0.0, }, { x: 10.0, y: 0.0, }),
+        @events.LineGate::new("exit", { x: 0.0, y: 2.0, }, { x: 10.0, y: 2.0, }),
+      ],
+      @events.GateConfig::new(max_tracks=10),
+    ),
+    [
+      @transit.Section::new(
+        "aisle",
+        "entry",
+        @events.NegativeToPositive,
+        "exit",
+        @events.NegativeToPositive,
+      ),
+    ],
+  )
+  let observation = (y : Double) => {
+    @moonground.GroundObservation::new(
+      7,
+      { x: 5.0, y, },
+      @moonground.Covariance2::isotropic(0.01),
+    )
+  }
+  ignore(transit.update(motion.update(0L, [observation(-1.0)])))
+  assert_eq(
+    transit.update(motion.update(100000L, [observation(1.0)])).pending_count,
+    1,
+  )
+  let restored = @transit.EvidenceTransitCounter::from_checkpoint(
+    transit.checkpoint(),
+  )
+  let result = restored.update(motion.update(200000L, [observation(3.0)]))
+  assert_eq(result.passages.length(), 1)
+  assert_eq(result.counts[0].completed, 1L)
+  assert_eq(result.passages[0].elapsed_upper_us, 200000L)
+  assert_true(result.passages[0].estimated_elapsed_us > 0.0)
+}
+```
+
+不同门可以在不同帧确认，也可以从不同参考点产生同帧事件。配对复用前述精确时间括号／逐值相同弦的判序规则；同一输出帧不意味着同一弦，重叠异弦不能按比例或配置顺序强行完成。时长界仍来自确认位置的均值弦括号，插值仍是单独估计，均不附加过线时刻的概率含义。`max_duration_us` 从入口确认帧计算，未确认帧不刷新它。
+
+`EvidenceTransitCheckpoint` 保存完整证据计数器、区间、累计和待入口；每条 `EvidenceTransitPending` 额外保存真实入口两端的 `from_covariance`、`to_covariance`。恢复除原几何、片段、期限和累计约束外，还用保存的 `sigma_multiplier` 重验两端确实确认相反侧别。检查的是状态自洽性，不能认证历史数据来源；旧均值检查点没有这些信息，不能直接迁移。更新使用独立分支，一次提交证据和配对状态，失败保留整个下游；不回滚已经提交的上游。
+
+逐帧传入普通 `MeasurementFrame.motion`，或 `EvidenceGuardedFrame.analysis.measurement.motion`，包括阻断与投影替换的空帧。空帧立即取消待入口；恢复健康后的新片段不会补配旧入口。完整下游检查点不含上游运动或健康状态，宿主须保存共同已处理水位，从严格更晚的原时钟续接。
+
 ## 命令行与浏览器
 
 ```sh
@@ -961,6 +1020,25 @@ python -c 'from pathlib import Path; print("{\"resume\":"+Path("evidence-guarded
 
 浏览器“健康门控与法向证据联合分析”使用上方**同一个门控原文输入框**，通过本区入口运行新协议；不适配旧均值门控头，也不读取独立证据配置框。新示例提供完整来源、成对观测及投影切换流。它有独立结果和回放滑块：完整结果下载包含全批帧及末帧完整检查点，所选帧检查点通过原始前缀重放取得。导入完整检查点先交核心校验，再把一行完整恢复包装写回共享输入，后续仍从本区入口续接。
 
+### 法向证据通行协议
+
+`--transit-evidence` 首行为 `{"counting":<原始证据来源JSON字符串>,"sections":[...],"max_duration_us":<可省略的十进制字符串>}`，`counting` 使用 `--count-evidence` 的完整 fresh 或 resume 协议。外层也可直接使用 `{"resume":<完整证据区间检查点对象>}`，此时不允许覆盖字段。后续为原 schema-0.2 测量 JSON，空帧、逐目标拒绝和关闭信息均完整保留。
+
+```sh
+./_build/native/release/build/cmd/main/main.exe --stream < examples/warehouse.ndjson > measurements.ndjson
+python -c 'from pathlib import Path; print(Path("examples/evidence-transit-source.json").read_text(encoding="utf-8").strip()); print(Path("measurements.ndjson").read_text(encoding="utf-8"), end="")' > evidence-transit-input.ndjson
+./_build/native/release/build/cmd/main/main.exe --transit-evidence < evidence-transit-input.ndjson > evidence-transit-results.ndjson
+./_build/native/release/build/cmd/main/main.exe --transit-evidence-checkpoint < evidence-transit-input.ndjson > evidence-transit-checkpoint.json
+```
+
+输出使用 `schema_version:"0.1.0"`、`kind:"evidence_transit_frame"`，`counting` 嵌套原 `gate_evidence_frame`，其余 `passages`、`cancellations`、`counts`、`pending_count` 与均值区间结果同义。时间与计数均保留十进制字符串。检查点使用 `format:"moonground.evidence-transit"`、`checkpoint_version:"1"`，嵌套完整证据检查点；pending 两端协方差用 `[xx,xy,yy]`，不可缺失或从默认值补全。
+
+`codec.EvidenceTransitReplay::open/process_line/checkpoint_json` 与 CLI 同协议。fresh 首行限 1,048,576 个 UTF-16 代码单元，恢复首行限 8,388,619、完整检查点限 8,388,608，每测量原文限 1,048,576、嵌套限 32。CLI 默认物理行 1 MiB，大恢复头用 `--max-line-bytes` 显式放宽，最大 16 MiB；失败退出 2，流式保留完整前缀，检查点模式失败 stdout 为空。
+
+纯函数 `codec.evidence_transit_json`／JavaScript `moonground_evidence_transit` 接受 `{"source":<原始首行字符串>,"measurements":<原始测量NDJSON字符串>}`，返回 `{"frames":[...],"checkpoint":...}`。请求限 16,777,216 个 UTF-16 代码单元，测量文本及完整返回各限 8,388,608、最多 5,000 帧；无持久句柄，失败不返回前缀。浏览器提供独立证据通行面板，显式选择普通或证据健康门控测量，操作与恢复边界见 [Web 使用说明](docs/evidence-transit-web.md)。
+
+本批的有限 Mooncakes 检索核读了 [MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 的空间事件、区域转换与帧数停留，以及 [Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1) 的滤波协方差和检查点 API。所查公开 API 未见“协方差确认双门通行、原时钟时长括号、独立完整恢复”的直接对应；这一结论限于所查页面。
+
 ## 验证与复现
 
 以下开发命令在完整项目目录运行。Mooncakes 源码包只保留库、命令、JavaScript 桥及其必要文件，开发示例、验证脚本和网页资源保留在项目仓库中。
@@ -973,18 +1051,19 @@ moon build --target all --deny-warn
 moon test --target all --deny-warn
 node web/build.mjs
 node --test web/parity.test.mjs
-python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.14-results.json
-python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.14-results.json
-python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.14-results.json
-python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.14-results.json
-python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.14-results.json
-python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.14-results.json
-python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.14-results.json
-python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.14-results.json
-python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.14-results.json
-python validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.14-results.json
-python validation/evidence_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-analysis-v0.14-results.json
-python validation/evidence_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-results.json
+python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.15-results.json
+python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.15-results.json
+python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.15-results.json
+python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.15-results.json
+python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.15-results.json
+python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.15-results.json
+python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.15-results.json
+python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.15-results.json
+python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.15-results.json
+python validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.15-results.json
+python validation/evidence_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-analysis-v0.15-results.json
+python validation/evidence_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-v0.15-results.json
+python validation/evidence_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-results.json
 ```
 
 浏览器交互测试需要外部安装 Playwright 或 Playwright Core `1.62.1` 与浏览器。设置 `PLAYWRIGHT_MODULE` 为该包路径后，执行 `node --test web/ui.test.cjs`；默认使用配套 Chromium，设置 `MOONGROUND_BROWSER_CHANNEL=chrome` 可使用已安装的 Google Chrome。CI 使用 GitHub Ubuntu runner 预装的 Chrome，并从固定上游 blob 下载、校验 Noto Sans CJK SC 字体，记录实际浏览器版本与字体，避开系统软件源下载。交互用例覆盖桌面与 390 像素移动视口、本地导入、下载、旧结果失效、原始像素标定配置、选帧检查点的导出与续接、坐标变换、双向过线与死区、独立配对恢复和完整联合恢复、固定地标状态、门控阻断、标定切换与末帧完整检查点、区间统计来源选择和下游恢复、整数 token 保留、控制点草稿保护和异步操作取消。
@@ -992,12 +1071,20 @@ python validation/evidence_guarded_verify.py --binary _build/native/release/buil
 安装 NumPy 后，可执行独立参考与长流检查。固定工具链在 Linux 和 Windows 上的原生产物均命名为 `main.exe`。
 
 ```sh
-python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.14-results.json
-python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.14-results.json
+python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.15-results.json
+python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.15-results.json
 moon package
-python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.14-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.14.0.zip --output validation/package-v0.14-results.json
+python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.15-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.15.0.zip --output validation/package-v0.15-results.json
 ```
+
+v0.15.0 的证据通行验证见 [`validation/evidence-transit-results.json`](validation/evidence-transit-results.json)：28 个确定性场景、112 帧、216 条证据、61 次过线、19 次完成通行，140 个原生切点恢复后状态一致，65 项严格拒绝通过；另用两条原门控／投影替换链消费 47 帧，在 49 个切点核对恢复，4 次替换屏障不跨段补配。`k=0` 在相同协方差支持域下重放 28 个场景，与旧区间输出逐值一致，完成 21 次通行。
+
+独立 `Fraction`／`Decimal` 参考核对原 binary64 数值：法向标准差最大相对差约 `1.92e-16`，带端点尺度归一化最大差约 `3.14e-16`，有限交点最大绝对差约 `4.44e-16 m`。时间括号和上下界保持精确 Int64；单独的 Double 插值估计在上界不超过 `1e6 μs` 的场景中最大绝对差约 `1.20e-11 μs`，近 Int64 上限长弦的绝对差约 `513.2 μs`、相对差约 `9.27e-17`，不能把后者解释为微秒绝对精度。
+
+同一记录包含 Node 10 项测试，15 个切点完成 60 次原生／JavaScript 四方向续接。原生实测 12,800 条待入口及完成通行，待入口检查点为 4,339,375 个 UTF-16 代码单元；完整完成帧超过 8 Mi 时，纯批量入口按完整返回上限拒绝并不返回前缀。65,536 槽仅测试构造容量边界。库四后端各 393 项、工作区消费者连库各 417 项通过，其中消费者 24 项；独立 ZIP 结果见 [`validation/package-v0.15-results.json`](validation/package-v0.15-results.json)。Chromium 151 与 Chrome 157 的完整交互用例分别通过，含原时钟续接、空帧取消、来源失效和迟到导入保护；390／1440 像素预览已检查。
+
+v0.15 原有功能回归记录见 [`regression`](validation/regression-v0.15-results.json)、[`camera`](validation/camera-v0.15-results.json)、[`checkpoint`](validation/checkpoint-v0.15-results.json)、[`robust-fit`](validation/robust-fit-v0.15-results.json)、[`reframe`](validation/reframe-v0.15-results.json)、[`gates`](validation/gates-v0.15-results.json)、[`analysis`](validation/analysis-v0.15-results.json)、[`health`](validation/health-v0.15-results.json)、[`guarded`](validation/guarded-v0.15-results.json)、[`transit`](validation/transit-v0.15-results.json)、[`projection-replace`](validation/projection-replace-v0.15-results.json)、[`evidence`](validation/evidence-v0.15-results.json)、[`evidence-analysis`](validation/evidence-analysis-v0.15-results.json)、[`evidence-guarded`](validation/evidence-guarded-v0.15-results.json) 和 [`stream`](validation/stream-v0.15-results.json)。长流性能仍针对既有运动协议。
 
 v0.14.0 的三方证据验证见 [`validation/evidence-guarded-results.json`](validation/evidence-guarded-results.json)：11 个场景、206 帧，放行与阻断各 103 帧，含 16 次投影切换、231 条证据和 81 次过线。健康序列、完整运动状态、协方差、路径、累计、参考点原协方差与投影配置均与原组件构造的宿主参考逐值一致；217 个原生切点分别从完整检查点及两份组件检查点恢复，41 项严格拒绝通过。独立地标残差范数与通道交点最大绝对差分别约 `4.20e-11 m`、`4.44e-16 m`，法向标准差最大相对差约 `1.40e-16`。
 

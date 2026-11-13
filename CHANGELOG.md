@@ -1,5 +1,12 @@
 # 更新记录
 
+## 0.15.0 — 本地开发版本，尚未发布
+
+- 新增 `transit.EvidenceTransitCounter`，将现有法向协方差侧别证据连接到同身份、同片段的有向双门通行；复用区间定义、完成／取消结果、精确 Int64 时长界及单独的均值弦插值估计。
+- 各门保留独立确认参考点。只在非重叠时间括号或逐值相同弦证明先后时配对；同帧异弦不按比例猜测顺序。未确认帧不刷新入口等待期限；完整传入空帧、拒绝、阻断及投影切换以取消旧入口。
+- 新增完整独立 `EvidenceTransitCheckpoint`，待入口保存真实两端原协方差，恢复按原倍率重验相反确认侧别、几何、期限、当前片段及累计关系。独立分支上计算后整帧提交，失败保留证据和配对状态；历史来源与上下游持久化水位由宿主负责。
+- 新增 `codec.EvidenceTransitReplay`、CLI `--transit-evidence`／`--transit-evidence-checkpoint`、纯函数 `evidence_transit_json` 与 JavaScript `moonground_evidence_transit`；Web 独立选择普通或证据门控测量，提供逐帧时间界、取消及末帧完整下游检查点。
+
 ## 0.14.0 — 本地开发版本，尚未发布
 
 - 新增并列的 `guarded.EvidenceGuardedSession`，仅当前地标确认健康时执行像素测量与法向证据计数；其他状态原子结束全部活跃片段并清除参考点。健康确认进度、运动和证据计数共同提交，下游数值或累计失败也回滚本帧刚增加的地标样本和水位。
