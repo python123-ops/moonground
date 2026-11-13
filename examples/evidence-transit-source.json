@@ -1,0 +1,13 @@
+{
+  "counting": "{\"counting\":\"{\\\"session_id\\\":\\\"warehouse-example\\\",\\\"gates\\\":[{\\\"gate_id\\\":\\\"entry\\\",\\\"start_m\\\":[0.8,0],\\\"end_m\\\":[0.8,8],\\\"deadband_m\\\":0.03},{\\\"gate_id\\\":\\\"exit\\\",\\\"start_m\\\":[1.4,0],\\\"end_m\\\":[1.4,8],\\\"deadband_m\\\":0.03}],\\\"max_gap_us\\\":\\\"500000\\\",\\\"max_tracks\\\":1000}\",\"sigma_multiplier\":2}",
+  "sections": [
+    {
+      "section_id": "aisle",
+      "entry_gate_id": "entry",
+      "entry_direction": "positive_to_negative",
+      "exit_gate_id": "exit",
+      "exit_direction": "positive_to_negative"
+    }
+  ],
+  "max_duration_us": "300000000"
+}

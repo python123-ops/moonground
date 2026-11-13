@@ -93,6 +93,14 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     const pendingGates = new Promise((resolve) => {
       gatesRequested = resolve;
     });
+    let releaseInitialEvidenceTransit;
+    let initialEvidenceTransitRequested;
+    const initialEvidenceTransitGate = new Promise((resolve) => {
+      releaseInitialEvidenceTransit = resolve;
+    });
+    const initialEvidenceTransitRequest = new Promise((resolve) => {
+      initialEvidenceTransitRequested = resolve;
+    });
     try {
       await draftPage.route("**/calibration.json", async (route) => {
         calibrationRequested();
@@ -116,12 +124,51 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
           ),
         });
       });
+      await draftPage.route(
+        "**/evidence-transit-source.json",
+        async (route) => {
+          initialEvidenceTransitRequested();
+          await initialEvidenceTransitGate;
+          await route.fulfill({
+            contentType: "application/json",
+            body: fs.readFileSync(
+              path.resolve(
+                __dirname,
+                "..",
+                "examples",
+                "evidence-transit-source.json",
+              ),
+              "utf8",
+            ),
+          });
+        },
+      );
       await draftPage.goto(
         `http://127.0.0.1:${server.address().port}/moonground/`,
         { waitUntil: "domcontentloaded" },
       );
       await pendingCalibration;
       await pendingGates;
+      await initialEvidenceTransitRequest;
+      await draftPage
+        .locator("#evidence-transit-section")
+        .evaluate((details) => {
+          details.open = true;
+        });
+      const initialEvidenceTransitDraft =
+        '{"counting":"user-evidence-transit-draft"}';
+      await draftPage
+        .locator("#evidence-transit-input")
+        .fill(initialEvidenceTransitDraft);
+      const initialEvidenceTransitResponse = draftPage.waitForResponse(
+        (response) => response.url().endsWith("/evidence-transit-source.json"),
+      );
+      releaseInitialEvidenceTransit();
+      await (await initialEvidenceTransitResponse).finished();
+      assert.equal(
+        await draftPage.locator("#evidence-transit-input").inputValue(),
+        initialEvidenceTransitDraft,
+      );
       const gateDraft = '{"session_id":"user-gate-draft","gates":[]}';
       await draftPage.locator("#gate-input").fill(gateDraft);
       const gatesResponse = draftPage.waitForResponse((value) =>
@@ -198,6 +245,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     } finally {
       releaseCalibration();
       releaseGates();
+      releaseInitialEvidenceTransit();
       await draftPage.close();
     }
     const page = await browser.newPage({
@@ -4517,6 +4565,697 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       await page.locator("#download-evidence-guarded").isDisabled(),
       true,
     );
+
+    // Evidence transit is a detached downstream owner. Both its gate policy
+    // and its selected measurement source are explicit and independent.
+    await page.locator("#evidence-transit-section").evaluate((details) => {
+      details.open = true;
+    });
+    const evidenceTransitConfig = fs.readFileSync(
+      path.resolve(__dirname, "..", "examples", "evidence-transit-source.json"),
+      "utf8",
+    );
+    const evidenceTransitFresh = JSON.parse(evidenceTransitConfig);
+    const evidenceTransitPolicy = JSON.parse(evidenceTransitFresh.counting);
+    await page.locator("#evidence-transit-example").click();
+    await page.waitForFunction(
+      (expected) =>
+        document.querySelector("#evidence-transit-input").value === expected,
+      evidenceTransitConfig,
+    );
+    await page.locator("#example").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    const evidenceTransitBase = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    await page.locator("#transit-input").fill(transitConfiguration);
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已处理 10 帧"),
+    );
+    const legacyBeforeEvidenceTransit = await exportJson(
+      "#download-transit",
+      "moonground-transit-results.json",
+    );
+    const waitEvidenceTransit = async (frames) =>
+      page.waitForFunction(
+        (count) =>
+          document
+            .querySelector("#evidence-transit-message")
+            .textContent.includes(`已处理 ${count} 帧`),
+        frames,
+      );
+    const exportEvidenceTransit = () =>
+      exportJson(
+        "#download-evidence-transit",
+        "moonground-evidence-transit-results.json",
+      );
+    await page.locator("#evidence-transit-ordinary").click();
+    await waitEvidenceTransit(10);
+    const evidenceTransit = await exportEvidenceTransit();
+    assert.equal(
+      evidenceTransit.checkpoint.format,
+      "moonground.evidence-transit",
+    );
+    assert.equal(
+      evidenceTransit.checkpoint.counting.format,
+      "moonground.gate-evidence",
+    );
+    assert.equal(evidenceTransit.frames.length, 10);
+    evidenceTransit.frames.forEach((frame) => {
+      assert.equal(frame.kind, "evidence_transit_frame");
+      assert.equal(frame.counting.sigma_multiplier, 2);
+    });
+    assert.equal(
+      evidenceTransit.frames[1].counting.evidence.find(
+        (value) => value.gate_id === "entry",
+      ).side,
+      "unconfirmed",
+    );
+    assert.equal(evidenceTransit.frames[2].pending_count, 1);
+    assert.deepEqual(evidenceTransit.frames.at(-1).counts, [
+      { section_id: "aisle", completed: "1" },
+    ]);
+    const evidenceTransitPassageIndex = evidenceTransit.frames.findIndex(
+      (frame) => frame.passages.length,
+    );
+    assert.equal(evidenceTransitPassageIndex, 4);
+    const evidenceTransitPassage = evidenceTransit.frames[4].passages[0];
+    assert.equal(evidenceTransitPassage.entry.from_timestamp_us, "0");
+    assert.equal(evidenceTransitPassage.entry.to_timestamp_us, "400000");
+    assert.equal(evidenceTransitPassage.exit.from_timestamp_us, "400000");
+    assert.equal(evidenceTransitPassage.exit.to_timestamp_us, "800000");
+    assert.equal(evidenceTransitPassage.elapsed_lower_us, "0");
+    assert.equal(evidenceTransitPassage.elapsed_upper_us, "800000");
+    assert.equal(Object.hasOwn(evidenceTransitPassage, "speed_mps"), false);
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      evidenceTransitBase,
+    );
+    assert.deepEqual(
+      await exportJson("#download-transit", "moonground-transit-results.json"),
+      legacyBeforeEvidenceTransit,
+    );
+    const setEvidenceTransitOrdinaryFrame = async (index) =>
+      page.locator("#frame").evaluate((input, value) => {
+        input.value = String(value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }, index);
+    await setEvidenceTransitOrdinaryFrame(1);
+    assert.match(
+      await page.locator("#evidence-transit-rows").textContent(),
+      /侧别未确认/,
+    );
+    await setEvidenceTransitOrdinaryFrame(4);
+    assert.match(
+      await page.locator("#evidence-transit-source").textContent(),
+      /普通测量.*5 \/ 10.*800000/,
+    );
+    assert.match(
+      await page.locator("#evidence-transit-policy").textContent(),
+      /k = 2/,
+    );
+    assert.match(
+      await page.locator("#evidence-transit-passages").textContent(),
+      /\[0, 800000\]/,
+    );
+    const evidenceTransitCheckpoint = await exportJson(
+      "#save-evidence-transit-checkpoint",
+      "moonground-evidence-transit-checkpoint.json",
+    );
+    assert.equal(
+      evidenceTransitCheckpoint.counting.state.last_timestamp_us,
+      "1800000",
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#evidence-transit-section").screenshot({
+      path: path.join(directory, "evidence-transit-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator("#evidence-transit-section").screenshot({
+      path: path.join(directory, "evidence-transit-desktop-preview.png"),
+    });
+    // Core applies k=2 when omitted; the browser never supplies or recomputes it.
+    const evidenceTransitDefault = {
+      ...evidenceTransitFresh,
+      counting: JSON.stringify({ counting: evidenceTransitPolicy.counting }),
+    };
+    await page
+      .locator("#evidence-transit-input")
+      .fill(JSON.stringify(evidenceTransitDefault));
+    await page.locator("#evidence-transit-ordinary").click();
+    await waitEvidenceTransit(10);
+    assert.deepEqual(await exportEvidenceTransit(), evidenceTransit);
+    // A mismatched but otherwise valid source is a failed new request. It
+    // preserves the successful existing result and its original source binding.
+    await page.locator("#evidence-guarded-example").click();
+    await page.waitForFunction(
+      (expected) => document.querySelector("#guarded-input").value === expected,
+      threePartySource,
+    );
+    await page.locator("#evidence-transit-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-transit-message")
+        .classList.contains("error"),
+    );
+    assert.deepEqual(await exportEvidenceTransit(), evidenceTransit);
+    const invalidEvidenceTransitSaved = JSON.parse(
+      JSON.stringify(evidenceTransitCheckpoint),
+    );
+    invalidEvidenceTransitSaved.checkpoint_version = "999";
+    const invalidEvidenceTransitAnchor = JSON.parse(
+      JSON.stringify(evidenceTransitCheckpoint),
+    );
+    invalidEvidenceTransitAnchor.counting.state.tracks[0].anchors[0].covariance =
+      [1, 2, 1];
+    for (const checkpoint of [
+      invalidEvidenceTransitSaved,
+      invalidEvidenceTransitAnchor,
+      legacyBeforeEvidenceTransit.checkpoint,
+    ]) {
+      await page.locator("#evidence-transit-checkpoint-file").setInputFiles({
+        name: "invalid-evidence-transit.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(checkpoint)),
+      });
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#evidence-transit-checkpoint-file").value ===
+          "",
+      );
+      assert.equal(
+        await page.locator("#evidence-transit-message.error").count(),
+        1,
+      );
+      assert.equal(
+        await page.locator("#evidence-transit-input").inputValue(),
+        JSON.stringify(evidenceTransitDefault),
+      );
+      assert.deepEqual(await exportEvidenceTransit(), evidenceTransit);
+    }
+    // Exact nested numeric tokens remain raw until core validation.
+    const evidenceTransitFractional = {
+      ...evidenceTransitFresh,
+      counting: JSON.stringify({
+        ...evidenceTransitPolicy,
+        counting: evidenceTransitPolicy.counting.replace(
+          '"max_tracks":1000',
+          '"max_tracks":1000.0000000000000001',
+        ),
+      }),
+    };
+    const evidenceTransitDuplicate = {
+      ...evidenceTransitFresh,
+      counting:
+        '{"counting":' +
+        JSON.stringify(evidenceTransitPolicy.counting) +
+        ',"sigma_multiplier":2,"sigma_multiplier":0}',
+    };
+    for (const configuration of [
+      evidenceTransitFractional,
+      evidenceTransitDuplicate,
+      JSON.parse(transitConfiguration),
+    ]) {
+      await page
+        .locator("#evidence-transit-input")
+        .fill(JSON.stringify(configuration));
+      await page.locator("#evidence-transit-ordinary").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#evidence-transit-message")
+          .classList.contains("error"),
+      );
+      assert.equal(
+        await page.locator("#download-evidence-transit").isDisabled(),
+        true,
+      );
+      assert.equal(await page.locator("#download").isDisabled(), false);
+      assert.equal(await page.locator("#download-transit").isDisabled(), false);
+    }
+    // Save a confirmed entry and both endpoint covariances before the exit.
+    const evidenceTransitWarehouseLines = warehouseInput.trimEnd().split("\n");
+    await page
+      .locator("#source")
+      .fill(evidenceTransitWarehouseLines.slice(0, 4).join("\n") + "\n");
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 3 帧"),
+    );
+    await page.locator("#evidence-transit-input").fill(evidenceTransitConfig);
+    await page.locator("#evidence-transit-ordinary").click();
+    await waitEvidenceTransit(3);
+    const evidenceTransitPrefix = await exportEvidenceTransit();
+    assert.equal(evidenceTransitPrefix.frames.at(-1).pending_count, 1);
+    const evidenceTransitPendingCheckpoint = await exportJson(
+      "#save-evidence-transit-checkpoint",
+      "moonground-evidence-transit-checkpoint.json",
+    );
+    assert.equal(
+      evidenceTransitPendingCheckpoint.counting.state.last_timestamp_us,
+      "400000",
+    );
+    assert.equal(evidenceTransitPendingCheckpoint.pending.length, 1);
+    assert.deepEqual(
+      evidenceTransitPendingCheckpoint.pending[0].from_covariance,
+      evidenceTransitBase.frames[0].tracks[0].position_covariance,
+    );
+    assert.deepEqual(
+      evidenceTransitPendingCheckpoint.pending[0].to_covariance,
+      evidenceTransitBase.frames[2].tracks[0].position_covariance,
+    );
+    await setEvidenceTransitOrdinaryFrame(2);
+    const evidenceTransitMotionCheckpoint = await exportJson(
+      "#save-checkpoint",
+      "moonground-checkpoint.json",
+    );
+    assert.equal(
+      evidenceTransitMotionCheckpoint.motion.last_timestamp_us,
+      "400000",
+    );
+    const invalidEvidenceTransitPending = [];
+    const evidenceTransitMissingCovariance = JSON.parse(
+      JSON.stringify(evidenceTransitPendingCheckpoint),
+    );
+    delete evidenceTransitMissingCovariance.pending[0].from_covariance;
+    invalidEvidenceTransitPending.push(evidenceTransitMissingCovariance);
+    const evidenceTransitIndefiniteCovariance = JSON.parse(
+      JSON.stringify(evidenceTransitPendingCheckpoint),
+    );
+    evidenceTransitIndefiniteCovariance.pending[0].to_covariance = [1, 2, 1];
+    invalidEvidenceTransitPending.push(evidenceTransitIndefiniteCovariance);
+    const evidenceTransitUnconfirmedCovariance = JSON.parse(
+      JSON.stringify(evidenceTransitPendingCheckpoint),
+    );
+    evidenceTransitUnconfirmedCovariance.pending[0].from_covariance = [
+      1000000, 0, 1000000,
+    ];
+    invalidEvidenceTransitPending.push(evidenceTransitUnconfirmedCovariance);
+    for (const checkpoint of invalidEvidenceTransitPending) {
+      await page.locator("#evidence-transit-checkpoint-file").setInputFiles({
+        name: "invalid-pending-evidence-transit.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(checkpoint)),
+      });
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#evidence-transit-checkpoint-file").value ===
+          "",
+      );
+      assert.equal(
+        await page.locator("#evidence-transit-message.error").count(),
+        1,
+      );
+      assert.equal(
+        await page.locator("#evidence-transit-input").inputValue(),
+        evidenceTransitConfig,
+      );
+      assert.deepEqual(await exportEvidenceTransit(), evidenceTransitPrefix);
+    }
+    const evidenceTransitSourceBeforeImport = await page
+      .locator("#source")
+      .inputValue();
+    const evidenceTransitGuardedBeforeImport = await page
+      .locator("#guarded-input")
+      .inputValue();
+    await page.locator("#evidence-transit-checkpoint-file").setInputFiles({
+      name: "pending-evidence-transit.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(evidenceTransitPendingCheckpoint)),
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#evidence-transit-checkpoint-file").value ===
+        "",
+    );
+    assert.equal(
+      await page.locator("#evidence-transit-message.error").count(),
+      0,
+    );
+    assert.equal(
+      await page.locator("#source").inputValue(),
+      evidenceTransitSourceBeforeImport,
+    );
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      evidenceTransitGuardedBeforeImport,
+    );
+    assert.deepEqual(
+      JSON.parse(await page.locator("#evidence-transit-input").inputValue())
+        .resume,
+      evidenceTransitPendingCheckpoint,
+    );
+    // The selected upstream still contains old frames. Core must reject it;
+    // silently filtering to the imported watermark would hide an invalid flow.
+    await page.locator("#evidence-transit-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-transit-message")
+        .classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#download-evidence-transit").isDisabled(),
+      true,
+    );
+    await page
+      .locator("#source")
+      .fill(
+        JSON.stringify({ resume: evidenceTransitMotionCheckpoint }) +
+          "\n" +
+          evidenceTransitWarehouseLines.slice(4).join("\n") +
+          "\n",
+      );
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 7 帧"),
+    );
+    await page.locator("#evidence-transit-ordinary").click();
+    await waitEvidenceTransit(7);
+    const evidenceTransitResumed = await exportEvidenceTransit();
+    assert.deepEqual(
+      evidenceTransitResumed.frames,
+      evidenceTransit.frames.slice(3),
+    );
+    assert.deepEqual(
+      evidenceTransitResumed.checkpoint,
+      evidenceTransit.checkpoint,
+    );
+    // Health and replacement barriers cancel confirmed entries without joining
+    // two segments or inventing a passage through the blocked interval.
+    const evidenceTransitGuardedGates = JSON.parse(
+      evidenceTransitPolicy.counting,
+    );
+    evidenceTransitGuardedGates.session_id = "projection-replace-warehouse";
+    evidenceTransitGuardedGates.gates.forEach((gate, index) => {
+      gate.start_m[0] = [6.2, 6.9][index];
+      gate.end_m[0] = [6.2, 6.9][index];
+    });
+    const evidenceTransitGuardedConfig = {
+      ...evidenceTransitFresh,
+      counting: JSON.stringify({
+        counting: JSON.stringify(evidenceTransitGuardedGates),
+        sigma_multiplier: 2,
+      }),
+    };
+    const evidenceTransitGuardedSource =
+      threePartySource +
+      JSON.stringify({
+        replace_projection: JSON.stringify(secondReplacement),
+      }) +
+      "\n";
+    await page.locator("#guarded-input").fill(evidenceTransitGuardedSource);
+    await page.locator("#run-evidence-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-guarded-message")
+        .textContent.includes("已完成 17 帧三方证据分析"),
+    );
+    await page
+      .locator("#evidence-transit-input")
+      .fill(JSON.stringify(evidenceTransitGuardedConfig));
+    await page.locator("#evidence-transit-guarded").click();
+    await waitEvidenceTransit(17);
+    const evidenceTransitGuarded = await exportEvidenceTransit();
+    assert.equal(evidenceTransitGuarded.frames[3].pending_count, 1);
+    assert.equal(evidenceTransitGuarded.frames[6].pending_count, 0);
+    assert.equal(
+      evidenceTransitGuarded.frames[6].cancellations[0].reason,
+      "discontinuity",
+    );
+    assert.equal(
+      evidenceTransitGuarded.frames[9].counting.counting.timestamp_us,
+      "950000",
+    );
+    assert.deepEqual(evidenceTransitGuarded.frames[9].counting.evidence, []);
+    assert.equal(evidenceTransitGuarded.frames[13].pending_count, 1);
+    assert.equal(
+      evidenceTransitGuarded.frames[16].cancellations[0].reason,
+      "discontinuity",
+    );
+    assert.equal(
+      evidenceTransitGuarded.frames[16].cancellations[0].segment_id,
+      "2",
+    );
+    assert.deepEqual(evidenceTransitGuarded.frames.at(-1).counts, [
+      { section_id: "aisle", completed: "0" },
+    ]);
+    assert.deepEqual(evidenceTransitGuarded.checkpoint.pending, []);
+    await threePartySetFrame(6);
+    assert.match(
+      await page.locator("#evidence-transit-source").textContent(),
+      /三方证据门控.*7 \/ 17/,
+    );
+    assert.match(
+      await page.locator("#evidence-transit-cancellations").textContent(),
+      /观测中断/,
+    );
+    const evidenceTransitGuardedCheckpoint = await exportJson(
+      "#save-evidence-transit-checkpoint",
+      "moonground-evidence-transit-checkpoint.json",
+    );
+    assert.equal(
+      evidenceTransitGuardedCheckpoint.counting.state.last_timestamp_us,
+      "1600000",
+    );
+    await page.locator("#evidence-input").fill("independent evidence draft");
+    await page.locator("#transit-input").fill("independent old transit draft");
+    await page.locator("#source").fill("unrelated ordinary draft");
+    assert.deepEqual(await exportEvidenceTransit(), evidenceTransitGuarded);
+    await page
+      .locator("#guarded-input")
+      .fill(evidenceTransitGuardedSource + " ");
+    assert.equal(
+      await page.locator("#download-evidence-transit").isDisabled(),
+      true,
+    );
+    // New source choices supersede older work, and invalidation is scoped to
+    // each captured source, including when an older display belongs elsewhere.
+    const holdEvidenceTransitPreparation = async () =>
+      page.evaluate(() => {
+        const original = window.setTimeout;
+        window.setTimeout = function (callback, delay, ...args) {
+          if (delay === 0) {
+            window.setTimeout = original;
+            window.releaseEvidenceTransitRun = () => callback(...args);
+            return -1;
+          }
+          return original.call(window, callback, delay, ...args);
+        };
+      });
+    const releaseEvidenceTransitPreparation = async () =>
+      page.evaluate(() => {
+        window.releaseEvidenceTransitRun();
+        delete window.releaseEvidenceTransitRun;
+      });
+    await page.locator("#example").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    const evidenceTransitSameSessionSource = threePartySource.replaceAll(
+      "projection-replace-warehouse",
+      "warehouse-example",
+    );
+    await page.locator("#guarded-input").fill(evidenceTransitSameSessionSource);
+    await page.locator("#run-evidence-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-guarded-message")
+        .textContent.includes("已完成 16 帧三方证据分析"),
+    );
+    await page.locator("#evidence-transit-input").fill(evidenceTransitConfig);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#evidence-transit-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#evidence-transit-ordinary").click();
+    await waitEvidenceTransit(10);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportEvidenceTransit(), evidenceTransit);
+    // Clearing the older ordinary display must not cancel the newer valid
+    // three-party request waiting to commit.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#evidence-transit-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#source").fill(warehouseInput + " ");
+    assert.equal(
+      await page.locator("#download-evidence-transit").isDisabled(),
+      true,
+    );
+    await releaseEvidenceTransitPreparation();
+    await waitEvidenceTransit(16);
+    const evidenceTransitOtherOrigin = await exportEvidenceTransit();
+    assert.equal(evidenceTransitOtherOrigin.frames.length, 16);
+    assert.equal(
+      await page.locator("#evidence-transit-message.error").count(),
+      0,
+    );
+    // A pending ordinary request likewise survives clearing the older guarded
+    // display, while invalidating its own source cancels it.
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    await holdEvidenceTransitPreparation();
+    await page.locator("#evidence-transit-ordinary").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page
+      .locator("#guarded-input")
+      .fill(evidenceTransitSameSessionSource + " ");
+    await releaseEvidenceTransitPreparation();
+    await waitEvidenceTransit(10);
+    assert.deepEqual(await exportEvidenceTransit(), evidenceTransit);
+    await page.locator("#guarded-input").fill(evidenceTransitSameSessionSource);
+    await page.locator("#run-evidence-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-guarded-message")
+        .textContent.includes("已完成 16 帧三方证据分析"),
+    );
+    await holdEvidenceTransitPreparation();
+    await page.locator("#evidence-transit-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page
+      .locator("#guarded-input")
+      .fill(evidenceTransitSameSessionSource + "  ");
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportEvidenceTransit(), evidenceTransit);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#evidence-transit-ordinary").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page
+      .locator("#evidence-transit-input")
+      .fill(evidenceTransitConfig + " ");
+    await releaseEvidenceTransitPreparation();
+    assert.equal(
+      await page.locator("#download-evidence-transit").isDisabled(),
+      true,
+    );
+    assert.equal(await page.locator("#download").isDisabled(), false);
+    // A valid imported checkpoint supersedes a pending computation immediately.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#evidence-transit-ordinary").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#evidence-transit-checkpoint-file").setInputFiles({
+      name: "replacement-evidence-transit.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(evidenceTransitPendingCheckpoint)),
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#evidence-transit-checkpoint-file").value ===
+        "",
+    );
+    assert.equal(
+      await page.locator("#evidence-transit-message.error").count(),
+      0,
+    );
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(
+      JSON.parse(await page.locator("#evidence-transit-input").inputValue())
+        .resume,
+      evidenceTransitPendingCheckpoint,
+    );
+    assert.equal(
+      await page.locator("#download-evidence-transit").isDisabled(),
+      true,
+    );
+    // A late complete checkpoint read and an example response both yield to a
+    // newer raw configuration draft rather than replacing it after validation.
+    await page.evaluate(() => {
+      const original = File.prototype.text;
+      File.prototype.text = function () {
+        if (this.name !== "evidence-transit-late.json")
+          return original.call(this);
+        File.prototype.text = original;
+        const file = this;
+        return new Promise((resolve) => {
+          window.releaseEvidenceTransitRead = async () =>
+            resolve(await original.call(file));
+        });
+      };
+    });
+    await page.locator("#evidence-transit-checkpoint-file").setInputFiles({
+      name: "evidence-transit-late.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(evidenceTransitCheckpoint)),
+    });
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRead === "function",
+    );
+    await page
+      .locator("#evidence-transit-input")
+      .fill("newer evidence transit draft");
+    await page.evaluate(() => {
+      window.releaseEvidenceTransitRead();
+      delete window.releaseEvidenceTransitRead;
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#evidence-transit-checkpoint-file").value ===
+        "",
+    );
+    assert.equal(
+      await page.locator("#evidence-transit-input").inputValue(),
+      "newer evidence transit draft",
+    );
+    let releaseEvidenceTransitExample;
+    let evidenceTransitExampleRequested;
+    const evidenceTransitExampleGate = new Promise((resolve) => {
+      releaseEvidenceTransitExample = resolve;
+    });
+    const evidenceTransitExampleRequest = new Promise((resolve) => {
+      evidenceTransitExampleRequested = resolve;
+    });
+    await page.route("**/evidence-transit-source.json", async (route) => {
+      evidenceTransitExampleRequested();
+      await evidenceTransitExampleGate;
+      await route.fulfill({
+        contentType: "application/json",
+        body: evidenceTransitConfig,
+      });
+    });
+    try {
+      await page.locator("#evidence-transit-example").click();
+      await evidenceTransitExampleRequest;
+      await page
+        .locator("#evidence-transit-input")
+        .fill("newer example configuration draft");
+      const exampleResponse = page.waitForResponse((response) =>
+        response.url().endsWith("/evidence-transit-source.json"),
+      );
+      releaseEvidenceTransitExample();
+      await (await exampleResponse).finished();
+      await page.waitForLoadState("networkidle");
+      assert.equal(
+        await page.locator("#evidence-transit-input").inputValue(),
+        "newer example configuration draft",
+      );
+    } finally {
+      releaseEvidenceTransitExample();
+      await page.unroute("**/evidence-transit-source.json");
+    }
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

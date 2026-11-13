@@ -30,6 +30,7 @@ const assets = new Map([
   ["evidence-guarded.ndjson", "application/x-ndjson; charset=utf-8"],
   ["projection-replace.ndjson", "application/x-ndjson; charset=utf-8"],
   ["transit.json", "application/json; charset=utf-8"],
+  ["evidence-transit-source.json", "application/json; charset=utf-8"],
   ["gate-evidence.json", "application/json; charset=utf-8"],
   ["robust-calibration.json", "application/json; charset=utf-8"],
 ]);

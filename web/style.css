@@ -161,7 +161,8 @@ button:disabled {
 #guarded-message.error,
 #transit-message.error,
 #evidence-message.error,
-#evidence-guarded-message.error {
+#evidence-guarded-message.error,
+#evidence-transit-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -223,7 +224,8 @@ button:disabled {
   height: 180px;
 }
 #transit-input,
-#evidence-input {
+#evidence-input,
+#evidence-transit-input {
   height: 180px;
 }
 .gate-table {
@@ -233,6 +235,7 @@ button:disabled {
 #guarded-events,
 #guarded-interruptions,
 #transit-cancellations,
+#evidence-transit-cancellations,
 #evidence-events,
 #evidence-guarded-events {
   font-size: 12px;

@@ -421,6 +421,104 @@
           </div>
           <ul id="transit-cancellations" aria-label="所选帧取消的入口记录"></ul>
         </details>
+        <details id="evidence-transit-section">
+          <summary>法向证据确认的区间通行时间</summary>
+          <p class="hint">
+            独立配置法向侧别策略、两道门及通过方向；不读取其他通道或证据配置框。只消费普通测量或三方证据门控测量的原始测量结果，阻断与标定切换空帧也保留。
+          </p>
+          <label for="evidence-transit-input" class="hint"
+            >证据区间配置或完整独立恢复起点 JSON</label
+          >
+          <textarea id="evidence-transit-input" spellcheck="false"></textarea>
+          <div class="actions">
+            <button id="evidence-transit-ordinary" disabled>
+              使用普通测量
+            </button>
+            <button id="evidence-transit-guarded" disabled>
+              使用三方门控测量
+            </button>
+            <button id="evidence-transit-example" class="quiet">
+              仓储区间配置
+            </button>
+            <button id="download-evidence-transit" class="quiet" disabled>
+              下载证据区间结果
+            </button>
+            <button
+              id="save-evidence-transit-checkpoint"
+              class="quiet"
+              disabled
+            >
+              保存末帧证据区间检查点
+            </button>
+            <label class="file-button"
+              >载入完整证据区间检查点<input
+                id="evidence-transit-checkpoint-file"
+                type="file"
+                accept=".json"
+            /></label>
+          </div>
+          <p
+            id="evidence-transit-message"
+            role="status"
+            aria-live="polite"
+            class="hint"
+          >
+            先生成普通测量或三方门控测量，再显式选择来源。
+          </p>
+          <p class="hint">
+            独立检查点保存证据参考点协方差、待入口及累计次数；不包含上游测量与地标状态。恢复需使用同一原始时钟的更晚帧，页面不会过滤旧帧或自动协调水位。
+          </p>
+          <p class="hint">
+            <span id="evidence-transit-source">尚未选择测量来源</span
+            >；待出口确认：<strong id="evidence-transit-pending">—</strong>
+          </p>
+          <p id="evidence-transit-policy" class="hint"></p>
+          <div class="table-wrap">
+            <table class="gate-table">
+              <thead>
+                <tr>
+                  <th>区间</th>
+                  <th>累计完成</th>
+                </tr>
+              </thead>
+              <tbody id="evidence-transit-counts"></tbody>
+            </table>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>区间</th>
+                  <th>目标 / 片段</th>
+                  <th>入口观测区间 · μs</th>
+                  <th>出口观测区间 · μs</th>
+                  <th>通行时长范围 · μs</th>
+                  <th>插值估计 · μs</th>
+                </tr>
+              </thead>
+              <tbody id="evidence-transit-passages"></tbody>
+            </table>
+          </div>
+          <ul
+            id="evidence-transit-cancellations"
+            aria-label="证据区间所选帧取消的入口记录"
+          ></ul>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>通道</th>
+                  <th>目标 / 片段</th>
+                  <th>带符号距离 · m</th>
+                  <th>法向 σ · m</th>
+                  <th>法向带 · m</th>
+                  <th>侧别</th>
+                </tr>
+              </thead>
+              <tbody id="evidence-transit-rows"></tbody>
+            </table>
+          </div>
+        </details>
       </section>
       <section class="panel">
         <div class="panel-title">
