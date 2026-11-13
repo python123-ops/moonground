@@ -162,7 +162,8 @@ button:disabled {
 #transit-message.error,
 #evidence-message.error,
 #evidence-guarded-message.error,
-#evidence-transit-message.error {
+#evidence-transit-message.error,
+#evidence-transit-joint-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -378,4 +379,19 @@ summary {
 
 [hidden] {
   display: none !important;
+}
+
+.result-mode {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+}
+.result-mode select {
+  color: var(--accent);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 6px 10px;
+  font: inherit;
 }

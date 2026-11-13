@@ -424,7 +424,7 @@
         <details id="evidence-transit-section">
           <summary>法向证据确认的区间通行时间</summary>
           <p class="hint">
-            独立配置法向侧别策略、两道门及通过方向；不读取其他通道或证据配置框。只消费普通测量或三方证据门控测量的原始测量结果，阻断与标定切换空帧也保留。
+            独立配置法向侧别策略、两道门及通过方向，不读取其他通道或证据配置框。独立下游消费普通或三方门控测量结果，完整保留阻断与标定切换空帧；原观测联合入口直接完成测量和区间统计。
           </p>
           <label for="evidence-transit-input" class="hint"
             >证据区间配置或完整独立恢复起点 JSON</label
@@ -456,6 +456,78 @@
                 type="file"
                 accept=".json"
             /></label>
+          </div>
+          <div class="actions">
+            <button id="evidence-transit-analyze">测量并统计证据区间</button>
+            <button
+              id="download-evidence-transit-analysis"
+              class="quiet"
+              disabled
+            >
+              下载完整联合区间结果
+            </button>
+            <button
+              id="save-evidence-transit-analysis-checkpoint"
+              class="quiet"
+              disabled
+            >
+              保存所选帧完整联合区间检查点
+            </button>
+            <label class="file-button"
+              >载入完整联合区间检查点<input
+                id="evidence-transit-analysis-checkpoint-file"
+                type="file"
+                accept=".json"
+            /></label>
+          </div>
+          <p
+            id="evidence-transit-joint-message"
+            class="hint"
+            role="status"
+            aria-live="polite"
+          >
+            联合入口直接读取上方普通测量的原始输入和本区配置，不需要先生成普通测量结果。
+          </p>
+          <p class="hint">
+            联合检查点同时保存测量与证据区间状态，按所选帧保存；独立检查点保存整批末帧。两个结果槽分别保留，下载按钮随显示模式切换。
+          </p>
+          <label class="hint result-mode"
+            >显示结果<select
+              id="evidence-transit-mode"
+              aria-label="证据区间结果模式"
+            >
+              <option value="independent">独立下游</option>
+              <option value="joint">原观测联合</option>
+            </select></label
+          >
+          <div id="evidence-transit-joint-playback" class="playback" hidden>
+            <input
+              id="evidence-transit-joint-frame"
+              type="range"
+              aria-label="联合证据区间回放帧"
+              min="0"
+              max="0"
+              value="0"
+              disabled
+            /><span id="evidence-transit-joint-counter" class="mono"
+              >0 / 0</span
+            >
+          </div>
+          <div id="evidence-transit-joint-measurement" hidden>
+            <p id="evidence-transit-joint-closed" class="hint"></p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>目标 / 片段</th>
+                    <th>测量状态</th>
+                    <th>位置 x, y · m</th>
+                    <th>速度 · m/s</th>
+                  </tr>
+                </thead>
+                <tbody id="evidence-transit-joint-tracks"></tbody>
+              </table>
+            </div>
           </div>
           <p
             id="evidence-transit-message"

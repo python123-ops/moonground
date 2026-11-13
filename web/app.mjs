@@ -16,6 +16,7 @@ import {
   moonground_evidence_analysis,
   moonground_evidence_guarded,
   moonground_evidence_transit,
+  moonground_evidence_transit_analysis,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -102,6 +103,16 @@ let evidenceTransitOrigin = null;
 let evidenceTransitPendingOrigin = null;
 let evidenceTransitReference = null;
 let evidenceTransitConfiguration = "";
+let evidenceTransitMode = "independent";
+let evidenceTransitJointRevision = 0;
+let evidenceTransitJointRunToken = 0;
+let evidenceTransitJointReport = null;
+let evidenceTransitJointResponse = null;
+let evidenceTransitJointHeader = null;
+let evidenceTransitJointSource = "";
+let evidenceTransitJointConfiguration = "";
+let evidenceTransitJointPendingSource = null;
+let evidenceTransitJointCheckpointBusy = false;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -124,6 +135,7 @@ function stop() {
 
 function invalidate() {
   revision++;
+  invalidateEvidenceTransitJointSource();
   stop();
   results = [];
   measurementLines = [];
@@ -2742,7 +2754,7 @@ $("evidence-guarded-checkpoint-file").addEventListener(
 );
 
 function evidenceTransitMessage(text, error = false) {
-  $("evidence-transit-message").textContent = text;
+  $("evidence-transit-message").textContent = "独立下游：" + text;
   $("evidence-transit-message").classList.toggle("error", error);
 }
 function evidenceTransitSource(origin) {
@@ -2787,13 +2799,7 @@ function clearEvidenceTransitResult(cancelPending = true) {
   evidenceTransitOrigin = null;
   evidenceTransitReference = null;
   evidenceTransitConfiguration = "";
-  $("download-evidence-transit").disabled = true;
-  $("save-evidence-transit-checkpoint").disabled = true;
-  $("evidence-transit-source").textContent = "尚未选择测量来源";
-  $("evidence-transit-policy").textContent = "";
-  $("evidence-transit-pending").textContent = "—";
-  for (const suffix of ["counts", "passages", "cancellations", "rows"])
-    $("evidence-transit-" + suffix).replaceChildren();
+  renderEvidenceTransit();
 }
 function invalidateEvidenceTransitSource(origin) {
   if (evidenceTransitOrigin === origin) {
@@ -2823,33 +2829,100 @@ function evidenceTransitIsCurrent() {
     )
   );
 }
+function refreshEvidenceTransitExports() {
+  const independent =
+    evidenceTransitMode === "independent" && evidenceTransitIsCurrent();
+  const joint =
+    evidenceTransitMode === "joint" && evidenceTransitJointIsCurrent();
+  $("download-evidence-transit").disabled = !independent;
+  $("save-evidence-transit-checkpoint").disabled = !independent;
+  $("download-evidence-transit-analysis").disabled = !joint;
+  $("save-evidence-transit-analysis-checkpoint").disabled =
+    !joint || evidenceTransitJointCheckpointBusy;
+}
 function renderEvidenceTransit(changedOrigin = evidenceTransitOrigin) {
-  if (!evidenceTransitReport || changedOrigin !== evidenceTransitOrigin) return;
-  if (!evidenceTransitIsCurrent()) {
-    clearEvidenceTransitResult();
+  refreshEvidenceTransitExports();
+  const joint = evidenceTransitMode === "joint";
+  $("evidence-transit-mode").value = evidenceTransitMode;
+  $("evidence-transit-joint-playback").hidden = !joint;
+  $("evidence-transit-joint-measurement").hidden = !joint;
+  const valid = joint
+    ? evidenceTransitJointIsCurrent()
+    : evidenceTransitIsCurrent();
+  if (!valid) {
+    $("evidence-transit-source").textContent = joint
+      ? "原观测联合 · 尚无有效结果"
+      : "尚未选择测量来源";
+    $("evidence-transit-policy").textContent = "";
+    $("evidence-transit-pending").textContent = "—";
+    $("evidence-transit-joint-counter").textContent = "0 / 0";
+    $("evidence-transit-joint-closed").textContent = "";
+    for (const suffix of [
+      "counts",
+      "passages",
+      "cancellations",
+      "rows",
+      "joint-tracks",
+    ])
+      $("evidence-transit-" + suffix).replaceChildren();
     return;
   }
+  if (
+    !joint &&
+    changedOrigin !== null &&
+    changedOrigin !== evidenceTransitOrigin
+  )
+    return;
   const index = Number(
-    $(evidenceTransitOrigin === "ordinary" ? "frame" : "evidence-guarded-frame")
-      .value,
+    $(
+      joint
+        ? "evidence-transit-joint-frame"
+        : evidenceTransitOrigin === "ordinary"
+          ? "frame"
+          : "evidence-guarded-frame",
+    ).value,
   );
-  const frame = evidenceTransitReport.frames[index];
+  const selected = joint ? evidenceTransitJointReport.frames[index] : null;
+  const frame = joint ? selected?.transit : evidenceTransitReport.frames[index];
   if (!frame) return;
-  const label =
-    evidenceTransitOrigin === "ordinary" ? "普通测量" : "三方证据门控测量";
+  const label = joint
+    ? "原观测联合"
+    : evidenceTransitOrigin === "ordinary"
+      ? "普通测量"
+      : "三方证据门控测量";
+  const length = joint
+    ? evidenceTransitJointReport.frames.length
+    : evidenceTransitReport.frames.length;
   $("evidence-transit-source").textContent =
-    `${label} · ${index + 1} / ${evidenceTransitReport.frames.length} · ${frame.counting.counting.timestamp_us} μs`;
+    `${label} · ${index + 1} / ${length} · ${frame.counting.counting.timestamp_us} μs`;
   $("evidence-transit-policy").textContent =
     `k = ${frame.counting.sigma_multiplier}；本帧 ${frame.counting.evidence.length} 项法向证据。侧别确认后配对均值弦过线；通行时长范围来自原始观测区间，不是概率置信区间。`;
   $("evidence-transit-pending").textContent = String(frame.pending_count);
-  for (const suffix of ["counts", "passages", "cancellations", "rows"])
+  if (joint) {
+    $("evidence-transit-joint-counter").textContent =
+      `${index + 1} / ${length}`;
+    $("evidence-transit-joint-closed").textContent =
+      `关闭的测量片段：${selected.measurement.closed_segment_ids.join("、") || "无"}。`;
+  }
+  for (const suffix of [
+    "counts",
+    "passages",
+    "cancellations",
+    "rows",
+    "joint-tracks",
+  ])
     $("evidence-transit-" + suffix).replaceChildren();
   if (!$("evidence-transit-section").open) return;
   renderTransitRows(frame, "evidence-transit");
   $("evidence-transit-rows").replaceChildren(
     ...evidenceRows(frame.counting.evidence),
   );
+  if (joint)
+    $("evidence-transit-joint-tracks").replaceChildren(
+      ...measurementRows(selected.measurement),
+    );
 }
+
 function requestEvidenceTransit(configuration, measurements) {
   const encoder = new TextEncoder();
   if (
@@ -2869,6 +2942,7 @@ function requestEvidenceTransit(configuration, measurements) {
 async function runEvidenceTransit(origin) {
   const reference = evidenceTransitSource(origin);
   if (!evidenceTransitSourceCurrent(origin, reference)) return;
+  cancelEvidenceTransitJointPreparation();
   const current = ++evidenceTransitRevision,
     runToken = ++evidenceTransitRunToken,
     configuration = evidenceTransitInput.value;
@@ -2906,8 +2980,7 @@ async function runEvidenceTransit(origin) {
     evidenceTransitOrigin = origin;
     evidenceTransitReference = reference;
     evidenceTransitConfiguration = configuration;
-    $("download-evidence-transit").disabled = false;
-    $("save-evidence-transit-checkpoint").disabled = false;
+    evidenceTransitMode = "independent";
     const completed = report.frames.reduce(
       (total, frame) => total + frame.passages.length,
       0,
@@ -2926,6 +2999,7 @@ async function runEvidenceTransit(origin) {
 }
 evidenceTransitInput.addEventListener("input", () => {
   evidenceTransitEdited = true;
+  clearEvidenceTransitJoint();
   clearEvidenceTransitResult();
   evidenceTransitMessage("证据区间配置已修改，请显式选择测量来源重新统计。");
 });
@@ -2939,14 +3013,15 @@ $("evidence-transit-guarded").addEventListener("click", () =>
   runEvidenceTransit("evidence-guarded"),
 );
 $("download-evidence-transit").addEventListener("click", () => {
-  if (evidenceTransitIsCurrent())
+  if (evidenceTransitMode === "independent" && evidenceTransitIsCurrent())
     saveFile(
       evidenceTransitResponse + "\n",
       "moonground-evidence-transit-results.json",
     );
 });
 $("save-evidence-transit-checkpoint").addEventListener("click", () => {
-  if (!evidenceTransitIsCurrent()) return;
+  if (evidenceTransitMode !== "independent" || !evidenceTransitIsCurrent())
+    return;
   saveFile(
     JSON.stringify(evidenceTransitReport.checkpoint) + "\n",
     "moonground-evidence-transit-checkpoint.json",
@@ -2960,6 +3035,7 @@ $("evidence-transit-checkpoint-file").addEventListener(
   async (event) => {
     const file = event.target.files[0];
     if (!file) return;
+    cancelEvidenceTransitJointPreparation();
     const current = ++evidenceTransitRevision;
     evidenceTransitPendingOrigin = null;
     try {
@@ -2972,6 +3048,7 @@ $("evidence-transit-checkpoint-file").addEventListener(
       if (new TextEncoder().encode(nextInput).length > 8 * 1024 * 1024)
         throw new Error("证据区间恢复起点超过浏览器 8 MiB 输入上限。");
       if (current !== evidenceTransitRevision) return;
+      clearEvidenceTransitJoint();
       clearEvidenceTransitResult();
       evidenceTransitEdited = true;
       evidenceTransitInput.value = nextInput;
@@ -2991,6 +3068,7 @@ async function loadEvidenceTransitExample(explicit = false) {
     ? ++evidenceTransitRevision
     : evidenceTransitRevision;
   if (explicit) {
+    cancelEvidenceTransitJointPreparation();
     evidenceTransitEdited = true;
     evidenceTransitPendingOrigin = null;
   }
@@ -3004,6 +3082,7 @@ async function loadEvidenceTransitExample(explicit = false) {
         (evidenceTransitEdited || evidenceTransitInput.value !== ""))
     )
       return;
+    clearEvidenceTransitJoint();
     clearEvidenceTransitResult();
     evidenceTransitInput.value = text;
     evidenceTransitMessage(
@@ -3017,6 +3096,244 @@ async function loadEvidenceTransitExample(explicit = false) {
 $("evidence-transit-example").addEventListener("click", () =>
   loadEvidenceTransitExample(true),
 );
+function evidenceTransitJointMessage(text, error = false) {
+  $("evidence-transit-joint-message").textContent = "原观测联合：" + text;
+  $("evidence-transit-joint-message").classList.toggle("error", error);
+}
+function cancelEvidenceTransitJointPreparation() {
+  evidenceTransitJointRevision++;
+  evidenceTransitJointPendingSource = null;
+}
+function evidenceTransitJointIsCurrent() {
+  return (
+    evidenceTransitJointReport !== null &&
+    source.value === evidenceTransitJointSource &&
+    evidenceTransitInput.value === evidenceTransitJointConfiguration
+  );
+}
+function clearEvidenceTransitJoint() {
+  cancelEvidenceTransitJointPreparation();
+  evidenceTransitJointReport = null;
+  evidenceTransitJointResponse = null;
+  evidenceTransitJointHeader = null;
+  evidenceTransitJointSource = "";
+  evidenceTransitJointConfiguration = "";
+  $("evidence-transit-joint-frame").disabled = true;
+  renderEvidenceTransit();
+}
+function invalidateEvidenceTransitJointSource() {
+  // Recomputing ordinary results at the same raw input is independent. A raw
+  // replacement, including a new example/reframe/resume, invalidates the joint.
+  if (
+    (evidenceTransitJointReport &&
+      source.value !== evidenceTransitJointSource) ||
+    (evidenceTransitJointPendingSource !== null &&
+      source.value !== evidenceTransitJointPendingSource)
+  ) {
+    clearEvidenceTransitJoint();
+    evidenceTransitJointMessage("原始测量输入已修改，请重新联合计算。");
+  }
+}
+function requestEvidenceTransitAnalysis(header, observations) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(header).length + encoder.encode(observations).length >
+    8 * 1024 * 1024
+  )
+    throw new Error(
+      "浏览器联合证据区间输入上限为 8 MiB；更大的流请使用原生命令。",
+    );
+  const request = JSON.stringify({ source: header, observations });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("联合证据区间请求超过 16 Mi 字符上限。");
+  const response = moonground_evidence_transit_analysis(request),
+    report = unpack(response);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器联合证据区间结果超过 8 MiB；请使用原生命令保存。");
+  return { response, report };
+}
+$("evidence-transit-analyze").addEventListener("click", async () => {
+  const current = ++evidenceTransitJointRevision,
+    runToken = ++evidenceTransitJointRunToken,
+    input = source.value,
+    transit = evidenceTransitInput.value;
+  evidenceTransitRevision++;
+  evidenceTransitPendingOrigin = null;
+  evidenceTransitJointPendingSource = input;
+  $("evidence-transit-analyze").disabled = true;
+  evidenceTransitJointMessage("正在联合测量、确认法向证据并统计区间通行…");
+  try {
+    const lines = observationLines(input);
+    if (lines.length < 2 || lines.length > 5001)
+      throw new Error("请输入测量配置及 1—5000 行原始观测。");
+    const header = JSON.stringify({ measurement: lines[0], transit });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (
+      current !== evidenceTransitJointRevision ||
+      input !== source.value ||
+      transit !== evidenceTransitInput.value
+    )
+      return;
+    const { response, report } = requestEvidenceTransitAnalysis(
+      header,
+      lines.slice(1).join("\n") + "\n",
+    );
+    if (
+      current !== evidenceTransitJointRevision ||
+      input !== source.value ||
+      transit !== evidenceTransitInput.value
+    )
+      return;
+    evidenceTransitJointReport = report;
+    evidenceTransitJointResponse = response;
+    evidenceTransitJointHeader = header;
+    evidenceTransitJointSource = input;
+    evidenceTransitJointConfiguration = transit;
+    evidenceTransitMode = "joint";
+    $("evidence-transit-joint-frame").max = String(report.frames.length - 1);
+    $("evidence-transit-joint-frame").value = String(report.frames.length - 1);
+    $("evidence-transit-joint-frame").disabled = false;
+    evidenceTransitJointMessage(
+      `已联合计算 ${report.frames.length} 帧。测量、法向证据和区间通行在同一帧提交；普通测量及独立结果槽保持。`,
+    );
+    renderEvidenceTransit();
+  } catch (error) {
+    if (current === evidenceTransitJointRevision)
+      evidenceTransitJointMessage(error.message, true);
+  } finally {
+    if (runToken === evidenceTransitJointRunToken) {
+      evidenceTransitJointPendingSource = null;
+      $("evidence-transit-analyze").disabled = false;
+    }
+  }
+});
+$("evidence-transit-mode").addEventListener("change", (event) => {
+  evidenceTransitRevision++;
+  evidenceTransitPendingOrigin = null;
+  cancelEvidenceTransitJointPreparation();
+  evidenceTransitMode = event.target.value;
+  renderEvidenceTransit();
+});
+$("evidence-transit-joint-frame").addEventListener("input", () =>
+  renderEvidenceTransit(),
+);
+$("download-evidence-transit-analysis").addEventListener("click", () => {
+  if (evidenceTransitMode === "joint" && evidenceTransitJointIsCurrent())
+    saveFile(
+      evidenceTransitJointResponse + "\n",
+      "moonground-evidence-transit-analysis-results.json",
+    );
+});
+$("save-evidence-transit-analysis-checkpoint").addEventListener(
+  "click",
+  async () => {
+    if (
+      evidenceTransitJointCheckpointBusy ||
+      evidenceTransitMode !== "joint" ||
+      !evidenceTransitJointIsCurrent()
+    )
+      return;
+    const current = evidenceTransitJointRevision,
+      selected = $("evidence-transit-joint-frame").value,
+      input = evidenceTransitJointSource,
+      header = evidenceTransitJointHeader;
+    evidenceTransitJointCheckpointBusy = true;
+    refreshEvidenceTransitExports();
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (
+        current !== evidenceTransitJointRevision ||
+        !evidenceTransitJointIsCurrent()
+      )
+        return;
+      const { report } = requestEvidenceTransitAnalysis(
+        header,
+        observationLines(input)
+          .slice(1, Number(selected) + 2)
+          .join("\n") + "\n",
+      );
+      if (
+        current !== evidenceTransitJointRevision ||
+        evidenceTransitMode !== "joint" ||
+        !evidenceTransitJointIsCurrent() ||
+        selected !== $("evidence-transit-joint-frame").value
+      )
+        return;
+      saveFile(
+        JSON.stringify(report.checkpoint) + "\n",
+        "moonground-evidence-transit-analysis-checkpoint.json",
+      );
+      evidenceTransitJointMessage(
+        `已保存所选第 ${Number(selected) + 1} 帧的完整联合区间检查点，共同水位 ${report.checkpoint.transit.counting.state.last_timestamp_us} μs。`,
+      );
+    } catch (error) {
+      if (current === evidenceTransitJointRevision)
+        evidenceTransitJointMessage(error.message, true);
+    } finally {
+      evidenceTransitJointCheckpointBusy = false;
+      refreshEvidenceTransitExports();
+    }
+  },
+);
+$("evidence-transit-analysis-checkpoint-file").addEventListener(
+  "change",
+  async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const current = ++evidenceTransitJointRevision,
+      runToken = ++evidenceTransitJointRunToken;
+    evidenceTransitJointPendingSource = source.value;
+    evidenceTransitRevision++;
+    evidenceTransitPendingOrigin = null;
+    try {
+      if (file.size > 8 * 1024 * 1024)
+        throw new Error("浏览器完整联合证据区间检查点文件上限为 8 MiB。");
+      const text = await file.text();
+      if (current !== evidenceTransitJointRevision) return;
+      const { report } = requestEvidenceTransitAnalysis(
+        '{"resume":' + text + "}",
+        "",
+      );
+      const checkpoint = report.checkpoint,
+        measurement = JSON.stringify({ resume: checkpoint.measurement }),
+        transit = JSON.stringify({ resume: checkpoint.transit }, null, 2);
+      requestEvidenceTransitAnalysis(
+        JSON.stringify({ measurement, transit }),
+        "",
+      );
+      if (
+        new TextEncoder().encode(measurement + "\n").length +
+          new TextEncoder().encode(transit).length >
+        8 * 1024 * 1024
+      )
+        throw new Error("联合恢复起点超过浏览器 8 MiB 输入上限。");
+      if (current !== evidenceTransitJointRevision) return;
+      // Commit both canonical, fully validated components together. No raw
+      // checkpoint component is used before the complete joint validation.
+      source.value = measurement + "\n";
+      evidenceTransitInput.value = transit;
+      invalidate();
+      clearEvidenceTransitJoint();
+      clearEvidenceTransitResult();
+      evidenceTransitEdited = true;
+      configuration = checkpoint.measurement.configuration;
+      draw();
+      evidenceTransitJointMessage(
+        `已载入完整联合区间检查点，共同恢复至 ${checkpoint.transit.counting.state.last_timestamp_us ?? "尚无观测"} μs。在原观测输入中添加更晚观测后继续联合计算。`,
+      );
+    } catch (error) {
+      if (current === evidenceTransitJointRevision)
+        evidenceTransitJointMessage(error.message, true);
+    } finally {
+      if (runToken === evidenceTransitJointRunToken) {
+        evidenceTransitJointPendingSource = null;
+        $("evidence-transit-analyze").disabled = false;
+      }
+      event.target.value = "";
+    }
+  },
+);
+
 loadEvidenceTransitExample();
 
 drawEvidenceGuardedTimeline();
