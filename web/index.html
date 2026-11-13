@@ -867,6 +867,72 @@
             <tbody id="tracks"></tbody>
           </table>
         </div>
+        <details id="velocity-section">
+          <summary id="velocity-heading">指定米制方向的速度证据</summary>
+          <p class="hint">
+            显式使用上方普通测量结果，沿配置方向读取有符号速度、方向标准差及 kσ
+            闭区间。 仅 Ready
+            目标生成阈值证据；初始化、不确定性超限和拒绝观测单独列出，缺测不补零。
+            这是当前米制滤波模型的分量证据，不表示欧氏速率范围或概率，也不累计持续超限。
+          </p>
+          <label for="velocity-input" class="hint"
+            >方向配置 JSON · 会话须与普通测量一致</label
+          >
+          <textarea id="velocity-input" spellcheck="false">
+{"session_id":"warehouse-example","probes":[{"probe_id":"forward","direction":[1,0],"threshold_mps":1},{"probe_id":"reverse","direction":[-1,0],"threshold_mps":0},{"probe_id":"across","direction":[0,1],"threshold_mps":0}]}</textarea
+          >
+          <div class="actions">
+            <button id="velocity-compute" disabled>计算方向速度证据</button>
+            <button id="velocity-example" class="quiet" disabled>
+              载入当前会话配置示例
+            </button>
+            <button id="download-velocity" class="quiet" disabled>
+              下载整批方向速度证据
+            </button>
+          </div>
+          <p
+            id="velocity-message"
+            class="hint"
+            role="status"
+            aria-live="polite"
+          >
+            配置和测量原文交核心验证，计算后跟随上方普通测量滑块。
+          </p>
+          <p id="velocity-frame" class="hint"></p>
+          <p class="hint">
+            下界大于阈值为确定高于；上界小于或等于阈值为确定不高于；其余关系未确认。
+            表内显示六位有效数字，悬停行可查看核心原值，整批下载保留完整数值。
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>目标 / 片段</th>
+                  <th>方向 ID</th>
+                  <th>分量 · m/s</th>
+                  <th>方向 σ · m/s</th>
+                  <th>闭区间 · m/s</th>
+                  <th>阈值 · m/s</th>
+                  <th>k</th>
+                  <th>阈值证据</th>
+                </tr>
+              </thead>
+              <tbody id="velocity-evidence"></tbody>
+            </table>
+          </div>
+          <p class="hint">本帧不可判定目标</p>
+          <div class="table-wrap">
+            <table class="gate-table">
+              <thead>
+                <tr>
+                  <th>目标 / 片段</th>
+                  <th>原测量状态</th>
+                </tr>
+              </thead>
+              <tbody id="velocity-unavailable"></tbody>
+            </table>
+          </div>
+        </details>
       </section>
       <section class="panel" aria-labelledby="health-heading">
         <div class="panel-title">

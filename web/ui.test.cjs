@@ -8354,6 +8354,381 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.locator("#transit-windows-section").screenshot({
       path: path.join(directory, "guarded-transit-windows-desktop-preview.png"),
     });
+    // Direction evidence consumes ordinary measurements only. Two identities
+    // have equal motion and swapped anisotropic covariance, never radial sigma.
+    const velocityHeader = {
+      session_id: "velocity-ui",
+      mode: "ground",
+      motion: {
+        q: 0.01,
+        gate: 1e12,
+        initial_velocity_std: 2,
+        min_observations: 2,
+        min_span_us: "0",
+        max_gap_us: "500000",
+      },
+    };
+    const velocityObservations = Array.from({ length: 6 }, (_, index) => ({
+      timestamp_us: String(index * 200000),
+      observations: [
+        { track_id: 2, point: [index * 0.4, 0], covariance: [1, 0, 0.0001] },
+        { track_id: 1, point: [index * 0.4, 0], covariance: [0.0001, 0, 1] },
+      ],
+    })).concat({ timestamp_us: "1200000", observations: [] });
+    const velocitySource =
+      [velocityHeader, ...velocityObservations]
+        .map((line) => JSON.stringify(line))
+        .join("\n") + "\n";
+    const velocityConfiguration = JSON.stringify({
+      session_id: "velocity-ui",
+      probes: [
+        { probe_id: "forward", direction: [1, 0], threshold_mps: 0.5 },
+        { probe_id: "reverse", direction: [-1, 0], threshold_mps: 0 },
+        { probe_id: "across", direction: [0, 1], threshold_mps: 0 },
+        {
+          probe_id: "equality",
+          direction: [0, 1],
+          threshold_mps: 0,
+          sigma_multiplier: 0,
+        },
+        { probe_id: "rescaled", direction: [1e300, 0], threshold_mps: 0.5 },
+      ],
+    });
+    const runVelocityBase = async (input, count) => {
+      await page.locator("#source").fill(input);
+      await page.locator("#run").click();
+      await page.waitForFunction(
+        (frames) =>
+          document
+            .querySelector("#message")
+            .textContent.includes("已完成 " + frames + " 帧"),
+        count,
+      );
+      assert.equal(await page.locator("#message.error").count(), 0);
+    };
+    const runVelocity = async (count) => {
+      await page.locator("#velocity-compute").click();
+      await page.waitForFunction(() => {
+        const message = document.querySelector("#velocity-message");
+        return (
+          message.textContent.includes("已计算") ||
+          message.classList.contains("error")
+        );
+      });
+      const text = await page.locator("#velocity-message").textContent();
+      assert.equal(
+        await page.locator("#velocity-message.error").count(),
+        0,
+        text,
+      );
+      assert.match(text, new RegExp("已计算 " + count + " 帧方向速度证据"));
+    };
+    const exportVelocity = () =>
+      exportJson("#download-velocity", "moonground-velocity-evidence.json");
+    const selectVelocityFrame = (index) =>
+      page.locator("#frame").evaluate((input, value) => {
+        input.value = String(value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }, index);
+    await page.locator("#velocity-section").evaluate((details) => {
+      details.open = true;
+    });
+    await runVelocityBase(velocitySource, 7);
+    const velocityBase = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    await page.locator("#velocity-input").fill(velocityConfiguration);
+    assert.equal(await page.locator("#download-velocity").isDisabled(), true);
+    await runVelocity(7);
+    const velocityEvidence = await exportVelocity();
+    assert.deepEqual(Object.keys(velocityEvidence), ["frames"]);
+    velocityEvidence.frames.forEach((frame, index) => {
+      assert.equal(frame.kind, "velocity_evidence_frame");
+      assert.equal(frame.evidence_scope, "model_velocity_component_band");
+      assert.equal(frame.session_id, "velocity-ui");
+      assert.equal(frame.timestamp_us, velocityBase.frames[index].timestamp_us);
+    });
+    assert.deepEqual(velocityEvidence.frames[0].evidence, []);
+    assert.deepEqual(velocityEvidence.frames[0].unavailable, [
+      { track_id: 1, segment_id: "1", reason: "initializing" },
+      { track_id: 2, segment_id: "2", reason: "initializing" },
+    ]);
+    await selectVelocityFrame(0);
+    assert.match(
+      await page.locator("#velocity-unavailable").textContent(),
+      /初始化/,
+    );
+    assert.match(
+      await page.locator("#velocity-evidence").textContent(),
+      /没有可判定/,
+    );
+    await selectVelocityFrame(5);
+    const velocityLast = velocityEvidence.frames[5];
+    assert.deepEqual(
+      velocityLast.evidence.map((row) => row.track_id),
+      [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
+    );
+    const firstAxis = velocityLast.evidence.filter((row) => row.track_id === 1);
+    const secondAxis = velocityLast.evidence.filter(
+      (row) => row.track_id === 2,
+    );
+    assert.deepEqual(
+      firstAxis.map((row) => row.probe_id),
+      ["forward", "reverse", "across", "equality", "rescaled"],
+    );
+    assert.ok(firstAxis[0].axis_std_mps < firstAxis[2].axis_std_mps);
+    assert.ok(secondAxis[0].axis_std_mps > secondAxis[2].axis_std_mps);
+    assert.equal(firstAxis[0].decision, "above");
+    assert.equal(firstAxis[1].decision, "at_or_below");
+    assert.equal(firstAxis[2].decision, "indeterminate");
+    assert.equal(firstAxis[3].decision, "at_or_below");
+    assert.equal(firstAxis[3].component_mps, 0);
+    assert.equal(firstAxis[3].lower_mps, 0);
+    assert.equal(firstAxis[3].upper_mps, 0);
+    assert.ok(firstAxis[3].axis_std_mps > 0);
+    assert.equal(firstAxis[0].sigma_multiplier, 2);
+    for (const key of [
+      "component_mps",
+      "axis_std_mps",
+      "lower_mps",
+      "upper_mps",
+      "decision",
+    ])
+      assert.equal(firstAxis[0][key], firstAxis[4][key]);
+    for (const row of velocityLast.evidence) {
+      const original = velocityBase.frames[5].tracks.find(
+        (track) => track.track_id === row.track_id,
+      );
+      const expected =
+        row.probe_id === "reverse"
+          ? -original.velocity_mps[0]
+          : row.probe_id === "across" || row.probe_id === "equality"
+            ? original.velocity_mps[1]
+            : original.velocity_mps[0];
+      assert.equal(row.component_mps, expected);
+    }
+    assert.equal(await page.locator("#velocity-evidence tr").count(), 10);
+    assert.match(
+      await page.locator("#velocity-evidence").textContent(),
+      /确定高于阈值.*确定不高于阈值.*阈值关系未确认/,
+    );
+    assert.deepEqual(
+      JSON.parse(
+        await page
+          .locator("#velocity-evidence tr")
+          .first()
+          .getAttribute("title"),
+      ),
+      velocityLast.evidence[0],
+    );
+    await selectVelocityFrame(6);
+    assert.deepEqual(velocityEvidence.frames[6].evidence, []);
+    assert.deepEqual(velocityEvidence.frames[6].unavailable, []);
+    assert.match(
+      await page.locator("#velocity-frame").textContent(),
+      /7 \/ 7.*方向证据 0 行/,
+    );
+    assert.match(
+      await page.locator("#velocity-evidence").textContent(),
+      /没有可判定/,
+    );
+
+    // Recomputing unchanged original measurements retains the same stateless
+    // evidence. Independent gate/guarded configuration edits do not own it.
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 7 帧"),
+    );
+    assert.deepEqual(await exportVelocity(), velocityEvidence);
+    const velocityGateInput = await page.locator("#gate-input").inputValue();
+    await page.locator("#gate-input").fill(velocityGateInput + " ");
+    assert.deepEqual(await exportVelocity(), velocityEvidence);
+    await page.locator("#gate-input").fill(velocityGateInput);
+    const velocityGuardedInput = await page
+      .locator("#guarded-input")
+      .inputValue();
+    await page.locator("#guarded-input").fill(velocityGuardedInput + " ");
+    assert.deepEqual(await exportVelocity(), velocityEvidence);
+    await page.locator("#guarded-input").fill(velocityGuardedInput);
+
+    // Config is forwarded as raw text. Numeric token fractions, duplicate keys
+    // and unsupported small radii fail without damaging ordinary measurements.
+    for (const raw of [
+      velocityConfiguration.replace('"velocity-ui"', '"wrong-session"'),
+      velocityConfiguration.replace('"probes":', '"unknown":true,"probes":'),
+      velocityConfiguration.replace(
+        '"session_id":"velocity-ui"',
+        '"session_id":"velocity-ui","session_id":"velocity-ui"',
+      ),
+      velocityConfiguration.replace('"reverse"', '"forward"'),
+      velocityConfiguration.replace("[1,0]", "[0,0]"),
+      velocityConfiguration.replace(
+        '"probes":',
+        '"max_tracks":10.0000000000000001,"probes":',
+      ),
+      velocityConfiguration.replace(
+        '"probe_id":"forward"',
+        '"probe_id":"forward","sigma_multiplier":5e-324',
+      ),
+      '{"resume":{}}',
+      velocityConfiguration + " ".repeat(1048577),
+    ]) {
+      await page.locator("#velocity-input").fill(raw);
+      await page.locator("#velocity-compute").click();
+      await page.waitForFunction(() =>
+        document.querySelector("#velocity-message").classList.contains("error"),
+      );
+      assert.equal(await page.locator("#velocity-input").inputValue(), raw);
+      assert.equal(await page.locator("#download-velocity").isDisabled(), true);
+      assert.deepEqual(
+        await exportJson("#download", "moonground-results.json"),
+        velocityBase,
+      );
+    }
+    await page.locator("#velocity-input").fill(velocityConfiguration);
+    await runVelocity(7);
+
+    // Uncertain retains vectors/covariance upstream but cannot create evidence.
+    const velocityUncertainInput =
+      [
+        {
+          ...velocityHeader,
+          motion: { ...velocityHeader.motion, max_velocity_std_mps: 1e-12 },
+        },
+        ...velocityObservations,
+      ]
+        .map((line) => JSON.stringify(line))
+        .join("\n") + "\n";
+    await runVelocityBase(velocityUncertainInput, 7);
+    assert.equal(await page.locator("#download-velocity").isDisabled(), true);
+    await runVelocity(7);
+    const velocityUncertain = await exportVelocity();
+    assert.deepEqual(velocityUncertain.frames[5].evidence, []);
+    assert.equal(velocityUncertain.frames[5].unavailable.length, 2);
+    assert.ok(
+      velocityUncertain.frames[5].unavailable.every(
+        (row) => row.reason === "uncertain",
+      ),
+    );
+    await selectVelocityFrame(5);
+    assert.match(
+      await page.locator("#velocity-unavailable").textContent(),
+      /不确定性超限/,
+    );
+    const velocityRejectedInput =
+      [
+        { ...velocityHeader, motion: { ...velocityHeader.motion, gate: 1e-9 } },
+        ...velocityObservations,
+      ]
+        .map((line) => JSON.stringify(line))
+        .join("\n") + "\n";
+    await runVelocityBase(velocityRejectedInput, 7);
+    await runVelocity(7);
+    const velocityRejected = await exportVelocity();
+    assert.deepEqual(velocityRejected.frames[5].evidence, []);
+    assert.ok(
+      velocityRejected.frames[5].unavailable.every(
+        (row) => row.reason === "rejected_innovation",
+      ),
+    );
+    await selectVelocityFrame(5);
+    assert.match(
+      await page.locator("#velocity-unavailable").textContent(),
+      /异常观测/,
+    );
+    const velocityPixelInput =
+      warehouseInput.replace('"warehouse-example"', '"velocity-ui"') +
+      JSON.stringify({
+        timestamp_us: "2000000",
+        observations: [{ track_id: 1, point: [-10, 100] }],
+      }) +
+      "\n";
+    await runVelocityBase(velocityPixelInput, 11);
+    await runVelocity(11);
+    const velocityPixel = await exportVelocity();
+    assert.deepEqual(velocityPixel.frames[10].evidence, []);
+    assert.deepEqual(velocityPixel.frames[10].unavailable, [
+      { track_id: 1, segment_id: null, reason: "rejected_projection" },
+    ]);
+    await selectVelocityFrame(10);
+    assert.match(
+      await page.locator("#velocity-unavailable").textContent(),
+      /区域外 \/ 不可测/,
+    );
+
+    // Late prepares cannot replace edited config/source or a newer synchronous
+    // sample and explicit compute. No new file/fetch or checkpoint owner exists.
+    await runVelocityBase(velocitySource, 7);
+    await runVelocity(7);
+    for (const selector of ["#velocity-input", "#source"]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#velocity-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(await page.locator("#download-velocity").isDisabled(), true);
+      assert.equal(await page.locator(selector).inputValue(), previous + " ");
+      await page.locator(selector).fill(previous);
+      if (selector === "#source") {
+        await page.locator("#run").click();
+        await page.waitForFunction(() =>
+          document
+            .querySelector("#message")
+            .textContent.includes("已完成 7 帧"),
+        );
+      }
+      await runVelocity(7);
+    }
+    await holdEvidenceTransitPreparation();
+    await page.locator("#velocity-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#velocity-example").click();
+    const velocitySampleConfig = await page
+      .locator("#velocity-input")
+      .inputValue();
+    assert.equal(JSON.parse(velocitySampleConfig).session_id, "velocity-ui");
+    assert.equal(await page.locator("#download-velocity").isDisabled(), true);
+    await runVelocity(7);
+    const velocitySampleResult = await exportVelocity();
+    await releaseEvidenceTransitPreparation();
+    assert.equal(
+      await page.locator("#velocity-input").inputValue(),
+      velocitySampleConfig,
+    );
+    assert.deepEqual(await exportVelocity(), velocitySampleResult);
+
+    await holdEvidenceTransitPreparation();
+    await page.locator("#velocity-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 7 帧"),
+    );
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportVelocity(), velocitySampleResult);
+    await selectVelocityFrame(5);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#velocity-section").screenshot({
+      path: path.join(directory, "velocity-evidence-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator("#velocity-section").screenshot({
+      path: path.join(directory, "velocity-evidence-desktop-preview.png"),
+    });
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

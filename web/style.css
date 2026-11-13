@@ -167,7 +167,8 @@ button:disabled {
 #evidence-transit-joint-message.error,
 #transit-windows-message.error,
 #transit-windows-joint-message.error,
-#transit-windows-guarded-message.error {
+#transit-windows-guarded-message.error,
+#velocity-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -404,4 +405,9 @@ summary {
 
 #transit-windows-input {
   height: 100px;
+}
+
+#velocity-input {
+  height: 150px;
+  margin-top: 8px;
 }

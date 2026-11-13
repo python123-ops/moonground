@@ -21,6 +21,7 @@ import {
   moonground_transit_windows,
   moonground_evidence_transit_window_analysis,
   moonground_evidence_guarded_transit_window,
+  moonground_velocity_evidence,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -33,6 +34,7 @@ const transitInput = $("transit-input");
 const evidenceInput = $("evidence-input");
 const evidenceTransitInput = $("evidence-transit-input");
 const transitWindowsInput = $("transit-windows-input");
+const velocityInput = $("velocity-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -150,6 +152,15 @@ let transitWindowsGuardedHeader = null;
 let transitWindowsGuardedInputs = null;
 let transitWindowsGuardedPendingInputs = null;
 let transitWindowsGuardedCheckpointBusy = false;
+let velocityRevision = 0;
+let velocityRunToken = 0;
+let velocityReport = null;
+let velocityResponse = null;
+let velocityConfiguration = "";
+let velocitySource = "";
+let velocityMeasurements = "";
+let velocityReference = null;
+let velocityPending = null;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -171,6 +182,7 @@ function stop() {
 }
 
 function invalidate() {
+  cancelVelocityPreparation();
   revision++;
   invalidateEvidenceTransitJointSource();
   stop();
@@ -190,6 +202,7 @@ function invalidate() {
   $("time").textContent = "—";
   for (const id of ["ready", "speed", "segments"]) $(id).textContent = "—";
   $("tracks").replaceChildren();
+  renderVelocity();
   draw();
 }
 
@@ -623,8 +636,224 @@ function render() {
   renderTransit("ordinary");
   renderEvidenceTransit("ordinary");
   renderEvidence("ordinary");
+  renderVelocity();
   draw();
 }
+
+function velocityMessage(text, error = false) {
+  $("velocity-message").textContent = text;
+  $("velocity-message").classList.toggle("error", error);
+}
+function ordinaryVelocitySourceCurrent() {
+  return results.length > 0 && source.value === loadedSource;
+}
+function cancelVelocityPreparation() {
+  velocityRevision++;
+  if (velocityPending !== null)
+    velocityMessage("上一次方向速度证据准备已取消。");
+  velocityPending = null;
+}
+function clearVelocityResult() {
+  cancelVelocityPreparation();
+  velocityReport = null;
+  velocityResponse = null;
+  velocityConfiguration = "";
+  velocitySource = "";
+  velocityMeasurements = "";
+  velocityReference = null;
+}
+function velocityIsCurrent() {
+  return (
+    velocityReport !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    velocityConfiguration === velocityInput.value &&
+    velocitySource === source.value &&
+    velocityReference === measurementLines
+  );
+}
+function renderVelocity() {
+  if (
+    velocityReport !== null &&
+    (velocityConfiguration !== velocityInput.value ||
+      velocitySource !== source.value)
+  ) {
+    clearVelocityResult();
+    velocityMessage("原始测量输入或方向配置已修改，请重新计算证据。");
+  }
+  if (
+    velocityReport !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    velocityReference !== measurementLines
+  ) {
+    // Recomputing identical original measurement text keeps the stateless
+    // evidence valid; changed payloads must be evaluated explicitly again.
+    if (velocityMeasurements === measurementLines.join("\n") + "\n")
+      velocityReference = measurementLines;
+    else {
+      clearVelocityResult();
+      velocityMessage("普通测量结果已变化，请重新计算方向速度证据。");
+    }
+  }
+  $("velocity-compute").disabled =
+    !ordinaryVelocitySourceCurrent() || velocityPending !== null;
+  $("velocity-example").disabled = !ordinaryVelocitySourceCurrent();
+  $("download-velocity").disabled = !velocityIsCurrent();
+  $("velocity-evidence").replaceChildren();
+  $("velocity-unavailable").replaceChildren();
+  if (!velocityIsCurrent()) {
+    $("velocity-frame").textContent =
+      "先计算上方普通测量，再显式计算方向速度证据。";
+    return;
+  }
+  const index = Number(slider.value),
+    frame = velocityReport.frames[index];
+  if (!frame) return;
+  $("velocity-frame").textContent =
+    index +
+    1 +
+    " / " +
+    velocityReport.frames.length +
+    " · " +
+    frame.timestamp_us +
+    " μs · 方向证据 " +
+    frame.evidence.length +
+    " 行；不可判定目标 " +
+    frame.unavailable.length +
+    " 个。";
+  if (!$("velocity-section").open) return;
+  const decisions = {
+    above: "确定高于阈值",
+    at_or_below: "确定不高于阈值",
+    indeterminate: "阈值关系未确认",
+  };
+  const rows = frame.evidence.map((item) => {
+    const row = reportRow([
+      item.track_id + " / " + item.segment_id,
+      item.probe_id,
+      reportNumber(item.component_mps),
+      reportNumber(item.axis_std_mps),
+      "[" +
+        reportNumber(item.lower_mps) +
+        ", " +
+        reportNumber(item.upper_mps) +
+        "]",
+      reportNumber(item.threshold_mps),
+      reportNumber(item.sigma_multiplier),
+      decisions[item.decision],
+    ]);
+    row.title = JSON.stringify(item);
+    return row;
+  });
+  if (!rows.length) {
+    const row = reportRow(["本帧没有可判定的方向速度证据。"]);
+    row.firstChild.colSpan = 8;
+    rows.push(row);
+  }
+  $("velocity-evidence").replaceChildren(...rows);
+  $("velocity-unavailable").replaceChildren(
+    ...frame.unavailable.map((item) =>
+      reportRow([
+        item.track_id + " / " + (item.segment_id ?? "—"),
+        states[item.reason] ?? item.reason,
+      ]),
+    ),
+  );
+}
+function requestVelocity(configuration, measurements) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(configuration).length + encoder.encode(measurements).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器方向速度证据输入上限为 8 MiB。");
+  const request = JSON.stringify({ source: configuration, measurements });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("方向速度证据请求超过 16 Mi 字符上限。");
+  const response = moonground_velocity_evidence(request);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器方向速度证据结果超过 8 MiB。");
+  return { response, report: unpack(response) };
+}
+$("velocity-compute").addEventListener("click", async () => {
+  if (!ordinaryVelocitySourceCurrent()) return;
+  const current = ++velocityRevision,
+    runToken = ++velocityRunToken,
+    upstream = revision,
+    reference = measurementLines,
+    configuration = velocityInput.value,
+    input = loadedSource;
+  velocityPending = { reference, configuration, input };
+  velocityMessage("正在计算当前米制模型的方向速度证据…");
+  renderVelocity();
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (
+      current !== velocityRevision ||
+      upstream !== revision ||
+      configuration !== velocityInput.value ||
+      input !== source.value ||
+      reference !== measurementLines ||
+      !ordinaryVelocitySourceCurrent()
+    )
+      return;
+    const measurements = reference.join("\n") + "\n";
+    const { response, report } = requestVelocity(configuration, measurements);
+    if (
+      current !== velocityRevision ||
+      upstream !== revision ||
+      configuration !== velocityInput.value ||
+      input !== source.value ||
+      reference !== measurementLines
+    )
+      return;
+    velocityReport = report;
+    velocityResponse = response;
+    velocityConfiguration = configuration;
+    velocitySource = input;
+    velocityMeasurements = measurements;
+    velocityReference = reference;
+    velocityMessage(
+      "已计算 " +
+        report.frames.length +
+        " 帧方向速度证据；结果跟随上方普通测量回放。",
+    );
+  } catch (error) {
+    if (current === velocityRevision) velocityMessage(error.message, true);
+  } finally {
+    if (runToken === velocityRunToken) {
+      velocityPending = null;
+      renderVelocity();
+    }
+  }
+});
+velocityInput.addEventListener("input", () => {
+  clearVelocityResult();
+  velocityMessage("方向配置已修改，请显式重新计算。");
+  renderVelocity();
+});
+$("velocity-example").addEventListener("click", () => {
+  if (!ordinaryVelocitySourceCurrent()) return;
+  clearVelocityResult();
+  velocityInput.value = JSON.stringify(
+    {
+      session_id: results[0].session_id,
+      probes: [
+        { probe_id: "forward", direction: [1, 0], threshold_mps: 1 },
+        { probe_id: "reverse", direction: [-1, 0], threshold_mps: 0 },
+        { probe_id: "across", direction: [0, 1], threshold_mps: 0 },
+      ],
+    },
+    null,
+    2,
+  );
+  velocityMessage("已载入当前会话的三个方向配置；点击计算后读取证据。");
+  renderVelocity();
+});
+$("download-velocity").addEventListener("click", () => {
+  if (velocityIsCurrent())
+    saveFile(velocityResponse + "\n", "moonground-velocity-evidence.json");
+});
+$("velocity-section").addEventListener("toggle", renderVelocity);
 
 async function run() {
   invalidate();
@@ -691,6 +920,8 @@ gateInput.addEventListener("input", () => {
 });
 $("analyze").addEventListener("click", async () => {
   if (analysisBusy) return;
+  cancelVelocityPreparation();
+  renderVelocity();
   const current = ++revision,
     currentGate = ++gateRevision,
     input = source.value,
