@@ -6,6 +6,7 @@ import {
   "python123-ops/moonground",
   "python123-ops/moonground/events",
   "python123-ops/moonground/motion",
+  "python123-ops/moonground/transit",
   "python123-ops/moonground/types",
 }
 
@@ -71,6 +72,32 @@ pub fn EvidenceAnalysisSession::interrupt(Self, Int64) -> EvidenceAnalysisFrame 
 pub fn EvidenceAnalysisSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
 pub fn EvidenceAnalysisSession::update_ground(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceAnalysisFrame raise @types.GroundError
 pub fn EvidenceAnalysisSession::update_pixel(Self, Int64, Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceAnalysisFrame raise @types.GroundError
+
+pub struct EvidenceTransitSession {
+  // private fields
+}
+pub fn EvidenceTransitSession::checkpoint(Self) -> EvidenceTransitSessionCheckpoint
+pub fn EvidenceTransitSession::fork(Self) -> Self
+pub fn EvidenceTransitSession::from_checkpoint(EvidenceTransitSessionCheckpoint) -> Self raise @types.GroundError
+pub fn EvidenceTransitSession::from_ground(@motion.MotionEstimator, @transit.EvidenceTransitCounter) -> Self raise @types.GroundError
+pub fn EvidenceTransitSession::from_pixel(@moonground.MeasurementSession, @transit.EvidenceTransitCounter) -> Self raise @types.GroundError
+pub fn EvidenceTransitSession::interrupt(Self, Int64) -> EvidenceTransitSessionFrame raise @types.GroundError
+pub fn EvidenceTransitSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn EvidenceTransitSession::update_ground(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceTransitSessionFrame raise @types.GroundError
+pub fn EvidenceTransitSession::update_pixel(Self, Int64, Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceTransitSessionFrame raise @types.GroundError
+
+pub(all) struct EvidenceTransitSessionCheckpoint {
+  version : Int32
+  measurement : AnalysisMeasurement
+  transit : @transit.EvidenceTransitCheckpoint
+} derive(@debug.Debug)
+pub fn EvidenceTransitSessionCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct EvidenceTransitSessionFrame {
+  measurement : @moonground.MeasurementFrame
+  transit : @transit.EvidenceTransitFrame
+} derive(@debug.Debug)
+pub fn EvidenceTransitSessionFrame::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 
