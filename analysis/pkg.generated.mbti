@@ -99,6 +99,31 @@ pub(all) struct EvidenceTransitSessionFrame {
 } derive(@debug.Debug)
 pub fn EvidenceTransitSessionFrame::to_repr(Self) -> @debug.Repr
 
+pub struct EvidenceTransitWindowSession {
+  // private fields
+}
+pub fn EvidenceTransitWindowSession::checkpoint(Self) -> EvidenceTransitWindowSessionCheckpoint
+pub fn EvidenceTransitWindowSession::fork(Self) -> Self
+pub fn EvidenceTransitWindowSession::from_checkpoint(EvidenceTransitWindowSessionCheckpoint) -> Self raise @types.GroundError
+pub fn EvidenceTransitWindowSession::interrupt(Self, Int64) -> EvidenceTransitWindowSessionFrame raise @types.GroundError
+pub fn EvidenceTransitWindowSession::new(EvidenceTransitSession, window_us~ : Int64, duration_limits_us~ : Array[Int64], origin_us? : Int64) -> Self raise @types.GroundError
+pub fn EvidenceTransitWindowSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn EvidenceTransitWindowSession::update_ground(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceTransitWindowSessionFrame raise @types.GroundError
+pub fn EvidenceTransitWindowSession::update_pixel(Self, Int64, Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceTransitWindowSessionFrame raise @types.GroundError
+
+pub(all) struct EvidenceTransitWindowSessionCheckpoint {
+  version : Int32
+  analysis : EvidenceTransitSessionCheckpoint
+  windows : @transit.EvidenceTransitWindowCheckpoint
+} derive(@debug.Debug)
+pub fn EvidenceTransitWindowSessionCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct EvidenceTransitWindowSessionFrame {
+  analysis : EvidenceTransitSessionFrame
+  windows : @transit.EvidenceTransitWindowFrame
+} derive(@debug.Debug)
+pub fn EvidenceTransitWindowSessionFrame::to_repr(Self) -> @debug.Repr
+
 // Type aliases
 
 // Traits
