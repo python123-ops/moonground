@@ -22,6 +22,7 @@ pub(all) struct Covariance2 {
   yy : Double
 } derive(@debug.Debug)
 pub fn Covariance2::isotropic(Double) -> Self raise GroundError
+pub fn Covariance2::linear_std(Self, Point2) -> Double raise GroundError
 pub fn Covariance2::new(Double, Double, Double) -> Self raise GroundError
 pub fn Covariance2::to_repr(Self) -> @debug.Repr
 pub fn Covariance2::validate(Self) -> Unit raise GroundError

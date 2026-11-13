@@ -1,0 +1,87 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/velocity"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground/motion",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) struct VelocityBand {
+  probe_id : String
+  component_mps : Double
+  axis_std_mps : Double
+  lower_mps : Double
+  upper_mps : Double
+  threshold_mps : Double
+  sigma_multiplier : Double
+  decision : VelocityDecision
+} derive(@debug.Debug)
+pub fn VelocityBand::to_repr(Self) -> @debug.Repr
+
+pub(all) enum VelocityDecision {
+  Above
+  AtOrBelow
+  Indeterminate
+} derive(Eq, @debug.Debug)
+pub fn VelocityDecision::equal(Self, Self) -> Bool
+pub fn VelocityDecision::not_equal(Self, Self) -> Bool
+pub fn VelocityDecision::to_repr(Self) -> @debug.Repr
+
+pub(all) struct VelocityEvidence {
+  track_id : Int32
+  segment_id : String
+  evidence : VelocityBand
+} derive(@debug.Debug)
+pub fn VelocityEvidence::to_repr(Self) -> @debug.Repr
+
+pub(all) struct VelocityEvidenceFrame {
+  session_id : String
+  timestamp_us : Int64
+  evidence : Array[VelocityEvidence]
+  unavailable : Array[VelocityUnavailable]
+} derive(@debug.Debug)
+pub fn VelocityEvidenceFrame::to_repr(Self) -> @debug.Repr
+
+pub struct VelocityProbe {
+  probe_id : String
+  direction : @types.Point2
+  threshold_mps : Double
+  sigma_multiplier : Double
+} derive(@debug.Debug)
+pub fn VelocityProbe::evaluate(Self, @types.Point2, @types.Covariance2) -> VelocityBand raise @types.GroundError
+pub fn VelocityProbe::new(String, @types.Point2, Double, sigma_multiplier? : Double) -> Self raise @types.GroundError
+pub fn VelocityProbe::to_repr(Self) -> @debug.Repr
+
+pub struct VelocityProjector {
+  // private fields
+}
+pub fn VelocityProjector::evaluate(Self, @motion.FrameResult) -> VelocityEvidenceFrame raise @types.GroundError
+pub fn VelocityProjector::new(String, Array[VelocityProbe], max_tracks? : Int32) -> Self raise @types.GroundError
+
+pub(all) struct VelocityUnavailable {
+  track_id : Int32
+  segment_id : String?
+  reason : VelocityUnavailableReason
+} derive(@debug.Debug)
+pub fn VelocityUnavailable::to_repr(Self) -> @debug.Repr
+
+pub(all) enum VelocityUnavailableReason {
+  Initializing
+  Uncertain
+  RejectedInnovation
+  NumericalFailure
+  RejectedProjection
+} derive(Eq, @debug.Debug)
+pub fn VelocityUnavailableReason::equal(Self, Self) -> Bool
+pub fn VelocityUnavailableReason::not_equal(Self, Self) -> Bool
+pub fn VelocityUnavailableReason::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
