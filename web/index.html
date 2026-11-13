@@ -590,6 +590,128 @@
               <tbody id="evidence-transit-rows"></tbody>
             </table>
           </div>
+
+          <details id="transit-windows-section">
+            <summary>通行时限分窗统计</summary>
+            <p class="hint">
+              以原确认帧时钟划分固定窗口。对通行时长闭区间 [L, U]：U ≤
+              时限为确定达标，L &gt;
+              时限为确定超时，其余无法判定。分类描述原观测弦时长界；取消记录分别计数。
+            </p>
+            <label for="transit-windows-input" class="hint"
+              >分窗配置或完整独立分窗恢复起点 JSON · 时间为十进制字符串</label
+            >
+            <textarea id="transit-windows-input" spellcheck="false">
+{"window_us":"500000","duration_limits_us":["100000","300000","600000"]}</textarea
+            >
+            <div class="actions">
+              <button id="transit-windows-independent" disabled>
+                统计独立证据区间
+              </button>
+              <button id="transit-windows-joint" disabled>
+                统计原观测联合区间
+              </button>
+              <button id="transit-windows-guarded" disabled>
+                统计健康证据通行
+              </button>
+              <button id="download-transit-windows" class="quiet" disabled>
+                下载整批分窗结果
+              </button>
+              <button
+                id="save-transit-windows-checkpoint"
+                class="quiet"
+                disabled
+              >
+                保存末帧分窗检查点
+              </button>
+              <label class="file-button"
+                >载入完整分窗检查点<input
+                  id="transit-windows-checkpoint-file"
+                  type="file"
+                  accept=".json"
+              /></label>
+            </div>
+            <p
+              id="transit-windows-message"
+              role="status"
+              aria-live="polite"
+              class="hint"
+            >
+              先生成通行结果，再显式选择本区统计来源。初始化检查点不产生输入窗口。
+            </p>
+            <p class="hint">
+              此下游检查点只保存分窗状态。恢复时需另行准备同水位上游的全部更晚通行帧。窗口关闭不表示连续相机覆盖；跨越没有输入的窗口只记录跳过数量。
+            </p>
+            <p id="transit-windows-source" class="hint"></p>
+            <p id="transit-windows-gap" class="hint"></p>
+            <h3>当前输入窗口</h3>
+
+            <p id="transit-windows-current-summary" class="hint"></p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>区间</th>
+                    <th>时限 · μs</th>
+                    <th>确定达标</th>
+                    <th>确定超时</th>
+                    <th>无法判定</th>
+                    <th>完成总数</th>
+                  </tr>
+                </thead>
+                <tbody id="transit-windows-current-limits"></tbody>
+              </table>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>区间</th>
+                    <th>观测中断</th>
+                    <th>确认期限到达</th>
+                    <th>重复入口</th>
+                    <th>反向通过</th>
+                    <th>先后不明确</th>
+                  </tr>
+                </thead>
+                <tbody id="transit-windows-current-cancellations"></tbody>
+              </table>
+            </div>
+
+            <h3>本帧关闭的窗口</h3>
+
+            <p id="transit-windows-closed-summary" class="hint"></p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>区间</th>
+                    <th>时限 · μs</th>
+                    <th>确定达标</th>
+                    <th>确定超时</th>
+                    <th>无法判定</th>
+                    <th>完成总数</th>
+                  </tr>
+                </thead>
+                <tbody id="transit-windows-closed-limits"></tbody>
+              </table>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>区间</th>
+                    <th>观测中断</th>
+                    <th>确认期限到达</th>
+                    <th>重复入口</th>
+                    <th>反向通过</th>
+                    <th>先后不明确</th>
+                  </tr>
+                </thead>
+                <tbody id="transit-windows-closed-cancellations"></tbody>
+              </table>
+            </div>
+          </details>
         </details>
       </section>
       <section class="panel">

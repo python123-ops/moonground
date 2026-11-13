@@ -164,7 +164,8 @@ button:disabled {
 #evidence-guarded-message.error,
 #evidence-guarded-transit-message.error,
 #evidence-transit-message.error,
-#evidence-transit-joint-message.error {
+#evidence-transit-joint-message.error,
+#transit-windows-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -396,4 +397,8 @@ summary {
   border-radius: 5px;
   padding: 6px 10px;
   font: inherit;
+}
+
+#transit-windows-input {
+  height: 100px;
 }
