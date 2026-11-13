@@ -14,6 +14,8 @@ pub fn calibrate_json(String) -> String raise @types.GroundError
 
 pub fn evidence_analysis_json(String) -> String raise @types.GroundError
 
+pub fn evidence_guarded_json(String) -> String raise @types.GroundError
+
 pub fn gate_evidence_json(String) -> String raise @types.GroundError
 
 pub fn gates_json(String) -> String raise @types.GroundError
@@ -51,6 +53,13 @@ pub struct EvidenceGateReplay {
 pub fn EvidenceGateReplay::checkpoint_json(Self) -> String raise @types.GroundError
 pub fn EvidenceGateReplay::open(String) -> Self raise @types.GroundError
 pub fn EvidenceGateReplay::process_line(Self, String) -> String raise @types.GroundError
+
+pub struct EvidenceGuardedReplay {
+  // private fields
+}
+pub fn EvidenceGuardedReplay::checkpoint_json(Self) -> String raise @types.GroundError
+pub fn EvidenceGuardedReplay::open(String) -> Self raise @types.GroundError
+pub fn EvidenceGuardedReplay::process_line(Self, String) -> String raise @types.GroundError
 
 pub struct GateReplay {
   // private fields

@@ -24,10 +24,9 @@ fn replaced_projection_configuration(
 ///|
 // Prepare both canonical configurations before changing the owned session.
 // The required camera field makes removing Brown correction an explicit choice.
-fn GuardedReplay::replace_projection_frame(
-  self : GuardedReplay,
+fn projection_replacement(
   fields : Map[String, Json],
-) -> Json raise @types.GroundError {
+) -> (Int64, @calibration.GroundCalibration, Json, @camera.CameraModel?) raise @types.GroundError {
   allowed_fields(
     fields,
     ["replace_projection"],
@@ -48,6 +47,15 @@ fn GuardedReplay::replace_projection_frame(
     Null => None
     _ => optional_camera(replacement)
   }
+  (time, calibration, effective, camera)
+}
+
+///|
+fn GuardedReplay::replace_projection_frame(
+  self : GuardedReplay,
+  fields : Map[String, Json],
+) -> Json raise @types.GroundError {
+  let (time, calibration, effective, camera) = projection_replacement(fields)
   let analysis_configuration = replaced_projection_configuration(
     self.analysis_configuration,
     effective,

@@ -25,6 +25,7 @@ options(
         "moonground_transit",
         "moonground_gate_evidence",
         "moonground_evidence_analysis",
+        "moonground_evidence_guarded",
       ],
       "format": "esm",
     },

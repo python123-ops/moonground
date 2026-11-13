@@ -106,15 +106,24 @@ fn EvidenceAnalysisReplay::evidence_analysis_process_frame(
   } else {
     self.session.update_ground(time, observations, lost~, removed~)
   }
+  evidence_analysis_frame_json(result, self.diagnostics, self.sigma_multiplier)
+}
+
+///|
+fn evidence_analysis_frame_json(
+  result : @analysis.EvidenceAnalysisFrame,
+  diagnostics : Bool,
+  sigma_multiplier : Double,
+) -> Json {
   Json::object({
     "schema_version": Json("0.1.0"),
     "kind": Json("evidence_analysis_frame"),
     "measurement": measurement_json(
       result.measurement.motion,
       result.measurement.projection_failures,
-      self.diagnostics,
+      diagnostics,
     ),
-    "counting": gate_evidence_frame_json(result.counting, self.sigma_multiplier),
+    "counting": gate_evidence_frame_json(result.counting, sigma_multiplier),
   })
 }
 
@@ -131,22 +140,32 @@ pub fn EvidenceAnalysisReplay::process_line(
 pub fn EvidenceAnalysisReplay::checkpoint_json(
   self : EvidenceAnalysisReplay,
 ) -> String raise @types.GroundError {
-  let saved = self.session.checkpoint()
-  let result = Json::object({
-    "format": Json("moonground.evidence-analysis"),
-    "checkpoint_version": Json("1"),
-    "measurement": analysis_measurement_checkpoint_value(
-      saved.measurement,
-      self.configuration,
-    ),
-    "counting": evidence_checkpoint_value(saved.counting),
-  }).stringify()
+  let result = evidence_analysis_checkpoint_value(
+    self.session.checkpoint(),
+    self.configuration,
+  ).stringify()
   if result.length() > 8388608 {
     raise invalid(
       "evidence analysis checkpoint exceeds 8388608 UTF-16 code units",
     )
   }
   result
+}
+
+///|
+fn evidence_analysis_checkpoint_value(
+  saved : @analysis.EvidenceAnalysisCheckpoint,
+  configuration : Json,
+) -> Json raise @types.GroundError {
+  Json::object({
+    "format": Json("moonground.evidence-analysis"),
+    "checkpoint_version": Json("1"),
+    "measurement": analysis_measurement_checkpoint_value(
+      saved.measurement,
+      configuration,
+    ),
+    "counting": evidence_checkpoint_value(saved.counting),
+  })
 }
 
 ///|
