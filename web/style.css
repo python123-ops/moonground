@@ -165,7 +165,8 @@ button:disabled {
 #evidence-guarded-transit-message.error,
 #evidence-transit-message.error,
 #evidence-transit-joint-message.error,
-#transit-windows-message.error {
+#transit-windows-message.error,
+#transit-windows-joint-message.error {
   color: #ad4335;
 }
 .gate-layout {

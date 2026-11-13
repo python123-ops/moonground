@@ -19,6 +19,7 @@ import {
   moonground_evidence_transit,
   moonground_evidence_transit_analysis,
   moonground_transit_windows,
+  moonground_evidence_transit_window_analysis,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -131,6 +132,15 @@ let transitWindowsResponse = null;
 let transitWindowsOrigin = null;
 let transitWindowsReference = null;
 let transitWindowsConfiguration = "";
+let transitWindowsMode = "independent";
+let transitWindowsJointRevision = 0;
+let transitWindowsJointRunToken = 0;
+let transitWindowsJointReport = null;
+let transitWindowsJointResponse = null;
+let transitWindowsJointHeader = null;
+let transitWindowsJointInputs = null;
+let transitWindowsJointPendingInputs = null;
+let transitWindowsJointCheckpointBusy = false;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -3420,6 +3430,7 @@ $("evidence-transit-checkpoint-file").addEventListener(
       clearEvidenceTransitResult();
       evidenceTransitEdited = true;
       evidenceTransitInput.value = nextInput;
+      renderTransitWindows();
       evidenceTransitMessage(
         `已载入完整独立证据区间检查点（末帧 ${report.checkpoint.counting.state.last_timestamp_us ?? "尚无观测"} μs）。将上游恢复至同一原始时钟水位，再选择仅含更晚帧的测量结果。`,
       );
@@ -3453,6 +3464,7 @@ async function loadEvidenceTransitExample(explicit = false) {
     clearEvidenceTransitJoint();
     clearEvidenceTransitResult();
     evidenceTransitInput.value = text;
+    renderTransitWindows();
     evidenceTransitMessage(
       "已载入独立仓储证据区间配置。先生成仓储普通测量，再显式选择普通来源。",
     );
@@ -3491,6 +3503,7 @@ function clearEvidenceTransitJoint() {
   renderEvidenceTransit();
 }
 function invalidateEvidenceTransitJointSource() {
+  invalidateTransitWindowsJointInputs();
   // Recomputing ordinary results at the same raw input is independent. A raw
   // replacement, including a new example/reframe/resume, invalidates the joint.
   if (
@@ -3682,6 +3695,7 @@ $("evidence-transit-analysis-checkpoint-file").addEventListener(
       // checkpoint component is used before the complete joint validation.
       source.value = measurement + "\n";
       evidenceTransitInput.value = transit;
+      renderTransitWindows();
       invalidate();
       clearEvidenceTransitJoint();
       clearEvidenceTransitResult();
@@ -3812,21 +3826,41 @@ function renderTransitWindow(window, prefix) {
   );
 }
 function renderTransitWindows() {
-  const valid = transitWindowsIsCurrent();
-  $("download-transit-windows").disabled = !valid;
-  $("save-transit-windows-checkpoint").disabled = !valid;
+  invalidateTransitWindowsJointInputs();
+  const joint = transitWindowsMode === "joint";
+  const valid = joint
+    ? transitWindowsJointIsCurrent()
+    : transitWindowsIsCurrent();
+  $("transit-windows-mode").value = transitWindowsMode;
+  $("transit-windows-joint-playback").hidden = !joint;
+  $("transit-windows-joint-measurement").hidden = !joint;
+  $("download-transit-windows").disabled = joint || !valid;
+  $("save-transit-windows-checkpoint").disabled = joint || !valid;
+  $("download-transit-windows-analysis").disabled = !joint || !valid;
+  $("save-transit-windows-analysis-checkpoint").disabled =
+    !joint || !valid || transitWindowsJointCheckpointBusy;
+  $("transit-windows-joint-tracks").replaceChildren();
   for (const prefix of ["transit-windows-current", "transit-windows-closed"])
     for (const suffix of ["limits", "cancellations"])
       $(prefix + "-" + suffix).replaceChildren();
   if (!valid) {
-    $("transit-windows-source").textContent = "尚未选择通行来源";
+    $("transit-windows-source").textContent = joint
+      ? "原观测联合分窗 · 尚无有效结果"
+      : "尚未选择通行来源";
     $("transit-windows-gap").textContent = "";
     $("transit-windows-current-summary").textContent = "尚无输入窗口。";
     $("transit-windows-closed-summary").textContent = "尚无关闭窗口。";
+    $("transit-windows-joint-summary").textContent = "";
     return;
   }
-  const index = Number(transitWindowsSlider(transitWindowsOrigin).value);
-  const frame = transitWindowsReport.frames[index];
+  const report = joint ? transitWindowsJointReport : transitWindowsReport;
+  const index = Number(
+    joint
+      ? $("transit-windows-joint-frame").value
+      : transitWindowsSlider(transitWindowsOrigin).value,
+  );
+  const selected = report.frames[index];
+  const frame = joint ? selected?.windows : selected;
   if (!frame) return;
   const labels = {
     independent: "独立证据区间",
@@ -3834,11 +3868,11 @@ function renderTransitWindows() {
     guarded: "健康证据通行",
   };
   $("transit-windows-source").textContent =
-    labels[transitWindowsOrigin] +
+    (joint ? "原观测联合分窗" : labels[transitWindowsOrigin]) +
     " · " +
     (index + 1) +
     " / " +
-    transitWindowsReport.frames.length +
+    report.frames.length +
     " · 确认帧 " +
     frame.timestamp_us +
     " μs";
@@ -3846,7 +3880,27 @@ function renderTransitWindows() {
     "本次跨窗跳过的未观察窗口：" +
     frame.unobserved_windows +
     "。分类依据为原观测弦的时长闭区间；关闭窗口不表示连续相机覆盖。";
+  if (joint) {
+    const measurement = selected.analysis.measurement,
+      transit = selected.analysis.transit;
+    $("transit-windows-joint-counter").textContent =
+      index + 1 + " / " + report.frames.length;
+    $("transit-windows-joint-summary").textContent =
+      "本帧完成通行 " +
+      transit.passages.length +
+      "；取消 " +
+      transit.cancellations.length +
+      "；待出口 " +
+      transit.pending_count +
+      "；关闭测量片段：" +
+      (measurement.closed_segment_ids.join("、") || "无") +
+      "。";
+  }
   if (!$("transit-windows-section").open) return;
+  if (joint)
+    $("transit-windows-joint-tracks").replaceChildren(
+      ...measurementRows(selected.analysis.measurement),
+    );
   renderTransitWindow(frame.current_window, "transit-windows-current");
   renderTransitWindow(frame.closed_window, "transit-windows-closed");
 }
@@ -3901,6 +3955,7 @@ function transitWindowsHeader(configuration, origin) {
 async function runTransitWindows(origin) {
   const reference = transitWindowsSource(origin);
   if (!transitWindowsSourceCurrent(origin, reference)) return;
+  cancelTransitWindowsJointPreparation();
   const current = ++transitWindowsRevision,
     runToken = ++transitWindowsRunToken,
     configuration = transitWindowsInput.value;
@@ -3937,6 +3992,7 @@ async function runTransitWindows(origin) {
     transitWindowsOrigin = origin;
     transitWindowsReference = reference;
     transitWindowsConfiguration = configuration;
+    transitWindowsMode = "independent";
     transitWindowsMessage(
       "已统计 " +
         report.frames.length +
@@ -3951,6 +4007,7 @@ async function runTransitWindows(origin) {
   }
 }
 transitWindowsInput.addEventListener("input", () => {
+  clearTransitWindowsJoint();
   clearTransitWindowsResult();
   transitWindowsMessage("分窗配置已修改，请显式选择通行来源重新统计。");
 });
@@ -3960,14 +4017,15 @@ for (const origin of ["independent", "joint", "guarded"])
     runTransitWindows(origin),
   );
 $("download-transit-windows").addEventListener("click", () => {
-  if (transitWindowsIsCurrent())
+  if (transitWindowsMode === "independent" && transitWindowsIsCurrent())
     saveFile(
       transitWindowsResponse + "\n",
       "moonground-transit-windows-results.json",
     );
 });
 $("save-transit-windows-checkpoint").addEventListener("click", () => {
-  if (!transitWindowsIsCurrent()) return;
+  if (transitWindowsMode !== "independent" || !transitWindowsIsCurrent())
+    return;
   saveFile(
     JSON.stringify(transitWindowsReport.checkpoint) + "\n",
     "moonground-transit-windows-checkpoint.json",
@@ -3983,6 +4041,7 @@ $("transit-windows-checkpoint-file").addEventListener(
   async (event) => {
     const file = event.target.files[0];
     if (!file) return;
+    cancelTransitWindowsJointPreparation();
     const current = ++transitWindowsRevision,
       runToken = ++transitWindowsRunToken;
     transitWindowsPendingOrigin = "checkpoint";
@@ -3997,7 +4056,10 @@ $("transit-windows-checkpoint-file").addEventListener(
         throw new Error("分窗恢复起点超过浏览器 8 MiB 输入上限。");
       if (current !== transitWindowsRevision) return;
       clearTransitWindowsResult();
+      clearTransitWindowsJoint();
       transitWindowsInput.value = nextInput;
+      transitWindowsMode = "independent";
+      renderTransitWindows();
       transitWindowsMessage(
         "已载入完整分窗检查点（末帧 " +
           (report.checkpoint.last_timestamp_us ?? "尚无输入") +
@@ -4009,6 +4071,275 @@ $("transit-windows-checkpoint-file").addEventListener(
     } finally {
       if (runToken === transitWindowsRunToken)
         transitWindowsPendingOrigin = null;
+      event.target.value = "";
+    }
+  },
+);
+
+function transitWindowsJointMessage(text, error = false) {
+  $("transit-windows-joint-message").textContent = "原观测联合分窗：" + text;
+  $("transit-windows-joint-message").classList.toggle("error", error);
+}
+function currentTransitWindowsJointInputs() {
+  return {
+    source: source.value,
+    transit: evidenceTransitInput.value,
+    windows: transitWindowsInput.value,
+  };
+}
+function sameTransitWindowsJointInputs(inputs) {
+  return (
+    inputs !== null &&
+    inputs.source === source.value &&
+    inputs.transit === evidenceTransitInput.value &&
+    inputs.windows === transitWindowsInput.value
+  );
+}
+function transitWindowsJointIsCurrent() {
+  return (
+    transitWindowsJointReport !== null &&
+    sameTransitWindowsJointInputs(transitWindowsJointInputs)
+  );
+}
+function cancelTransitWindowsJointPreparation() {
+  transitWindowsJointRevision++;
+  transitWindowsJointPendingInputs = null;
+  if ($("transit-windows-analyze").disabled)
+    transitWindowsJointMessage("上一次联合分窗准备已取消。");
+}
+function clearTransitWindowsJoint() {
+  cancelTransitWindowsJointPreparation();
+  transitWindowsJointReport = null;
+  transitWindowsJointResponse = null;
+  transitWindowsJointHeader = null;
+  transitWindowsJointInputs = null;
+  $("transit-windows-joint-frame").disabled = true;
+  $("transit-windows-joint-counter").textContent = "0 / 0";
+}
+function invalidateTransitWindowsJointInputs() {
+  if (
+    (transitWindowsJointReport !== null &&
+      !sameTransitWindowsJointInputs(transitWindowsJointInputs)) ||
+    (transitWindowsJointPendingInputs !== null &&
+      !sameTransitWindowsJointInputs(transitWindowsJointPendingInputs))
+  ) {
+    clearTransitWindowsJoint();
+    transitWindowsJointMessage(
+      "原始测量、区间或分窗配置已修改，请重新联合计算。",
+    );
+  }
+}
+function requestTransitWindowsAnalysis(header, observations) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(header).length + encoder.encode(observations).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器联合分窗输入上限为 8 MiB；更大的流请使用原生命令。");
+  const request = JSON.stringify({ source: header, observations });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("联合分窗请求超过 16 Mi 字符上限。");
+  const response = moonground_evidence_transit_window_analysis(request),
+    report = unpack(response);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器联合分窗结果超过 8 MiB；请使用原生命令保存。");
+  return { response, report };
+}
+function cancelTransitWindowsDownstreamPreparation() {
+  if (transitWindowsPendingOrigin !== null)
+    transitWindowsMessage("上一次独立下游分窗准备已取消。");
+  transitWindowsRevision++;
+  transitWindowsPendingOrigin = null;
+}
+$("transit-windows-analyze").addEventListener("click", async () => {
+  cancelTransitWindowsDownstreamPreparation();
+  const current = ++transitWindowsJointRevision,
+    runToken = ++transitWindowsJointRunToken,
+    inputs = currentTransitWindowsJointInputs();
+  transitWindowsJointPendingInputs = inputs;
+  $("transit-windows-analyze").disabled = true;
+  transitWindowsJointMessage("正在联合测量、证据通行与确认帧分窗…");
+  try {
+    const lines = observationLines(inputs.source);
+    if (lines.length < 2 || lines.length > 5001)
+      throw new Error("请输入测量配置及 1—5000 行原始观测。");
+    const header = JSON.stringify({
+      analysis: JSON.stringify({
+        measurement: lines[0],
+        transit: inputs.transit,
+      }),
+      windows: inputs.windows,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (
+      current !== transitWindowsJointRevision ||
+      !sameTransitWindowsJointInputs(inputs)
+    )
+      return;
+    const { response, report } = requestTransitWindowsAnalysis(
+      header,
+      lines.slice(1).join("\n") + "\n",
+    );
+    if (
+      current !== transitWindowsJointRevision ||
+      !sameTransitWindowsJointInputs(inputs)
+    )
+      return;
+    transitWindowsJointReport = report;
+    transitWindowsJointResponse = response;
+    transitWindowsJointHeader = header;
+    transitWindowsJointInputs = inputs;
+    transitWindowsMode = "joint";
+    $("transit-windows-joint-frame").max = String(report.frames.length - 1);
+    $("transit-windows-joint-frame").value = String(report.frames.length - 1);
+    $("transit-windows-joint-frame").disabled = false;
+    transitWindowsJointMessage(
+      "已联合处理 " +
+        report.frames.length +
+        " 帧。测量、证据通行与分窗共同提交；使用本区独立回放和完整检查点。",
+    );
+    renderTransitWindows();
+  } catch (error) {
+    if (current === transitWindowsJointRevision)
+      transitWindowsJointMessage(error.message, true);
+  } finally {
+    if (runToken === transitWindowsJointRunToken) {
+      transitWindowsJointPendingInputs = null;
+      $("transit-windows-analyze").disabled = false;
+    }
+  }
+});
+$("transit-windows-mode").addEventListener("change", (event) => {
+  cancelTransitWindowsDownstreamPreparation();
+  cancelTransitWindowsJointPreparation();
+  transitWindowsMode = event.target.value;
+  renderTransitWindows();
+});
+$("transit-windows-joint-frame").addEventListener(
+  "input",
+  renderTransitWindows,
+);
+$("download-transit-windows-analysis").addEventListener("click", () => {
+  if (transitWindowsMode === "joint" && transitWindowsJointIsCurrent())
+    saveFile(
+      transitWindowsJointResponse + "\n",
+      "moonground-transit-windows-analysis-results.json",
+    );
+});
+$("save-transit-windows-analysis-checkpoint").addEventListener(
+  "click",
+  async () => {
+    if (
+      transitWindowsJointCheckpointBusy ||
+      transitWindowsMode !== "joint" ||
+      !transitWindowsJointIsCurrent()
+    )
+      return;
+    const current = transitWindowsJointRevision,
+      selected = $("transit-windows-joint-frame").value,
+      header = transitWindowsJointHeader,
+      inputs = transitWindowsJointInputs;
+    transitWindowsJointCheckpointBusy = true;
+    renderTransitWindows();
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (
+        current !== transitWindowsJointRevision ||
+        !transitWindowsJointIsCurrent()
+      )
+        return;
+      const { report } = requestTransitWindowsAnalysis(
+        header,
+        observationLines(inputs.source)
+          .slice(1, Number(selected) + 2)
+          .join("\n") + "\n",
+      );
+      if (
+        current !== transitWindowsJointRevision ||
+        transitWindowsMode !== "joint" ||
+        !transitWindowsJointIsCurrent() ||
+        selected !== $("transit-windows-joint-frame").value
+      )
+        return;
+      saveFile(
+        JSON.stringify(report.checkpoint) + "\n",
+        "moonground-transit-windows-analysis-checkpoint.json",
+      );
+      transitWindowsJointMessage(
+        "已保存所选第 " +
+          (Number(selected) + 1) +
+          " 帧的完整检查点，共同水位 " +
+          report.checkpoint.windows.last_timestamp_us +
+          " μs。",
+      );
+    } catch (error) {
+      if (current === transitWindowsJointRevision)
+        transitWindowsJointMessage(error.message, true);
+    } finally {
+      transitWindowsJointCheckpointBusy = false;
+      renderTransitWindows();
+    }
+  },
+);
+$("transit-windows-analysis-checkpoint-file").addEventListener(
+  "change",
+  async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    cancelTransitWindowsDownstreamPreparation();
+    const current = ++transitWindowsJointRevision,
+      runToken = ++transitWindowsJointRunToken;
+    transitWindowsJointPendingInputs = currentTransitWindowsJointInputs();
+    try {
+      if (file.size > 8 * 1024 * 1024)
+        throw new Error("浏览器完整联合分窗检查点文件上限为 8 MiB。");
+      const text = await file.text();
+      if (current !== transitWindowsJointRevision) return;
+      const { report } = requestTransitWindowsAnalysis(
+        '{"resume":' + text + "}",
+        "",
+      );
+      const checkpoint = report.checkpoint;
+      const measurement = JSON.stringify({
+        resume: checkpoint.analysis.measurement,
+      });
+      const transit = JSON.stringify({ resume: checkpoint.analysis.transit });
+      const windows = JSON.stringify({ resume: checkpoint.windows });
+      requestTransitWindowsAnalysis(
+        JSON.stringify({
+          analysis: JSON.stringify({ measurement, transit }),
+          windows,
+        }),
+        "",
+      );
+      if (current !== transitWindowsJointRevision) return;
+      // Complete core validation precedes this single synchronous input commit.
+      invalidate();
+      clearEvidenceTransitJoint();
+      clearEvidenceTransitResult();
+      clearTransitWindowsResult();
+      clearTransitWindowsJoint();
+      source.value = measurement + "\n";
+      evidenceTransitInput.value = transit;
+      transitWindowsInput.value = windows;
+      evidenceTransitEdited = true;
+      configuration = checkpoint.analysis.measurement.configuration;
+      transitWindowsMode = "joint";
+      draw();
+      renderTransitWindows();
+      transitWindowsJointMessage(
+        "已载入完整联合分窗检查点，共同恢复至 " +
+          (checkpoint.windows.last_timestamp_us ?? "尚无观测") +
+          " μs。添加更晚原始观测后点击“测量、通行并分窗”继续。",
+      );
+    } catch (error) {
+      if (current === transitWindowsJointRevision)
+        transitWindowsJointMessage(error.message, true);
+    } finally {
+      if (runToken === transitWindowsJointRunToken) {
+        transitWindowsJointPendingInputs = null;
+        $("transit-windows-analyze").disabled = false;
+      }
       event.target.value = "";
     }
   },

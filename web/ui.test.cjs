@@ -7115,6 +7115,590 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.locator("#transit-windows-input").fill(windowConfiguration);
     await runWindows("guarded", 17);
     await healthTransitSetFrame(5);
+
+    // Raw measurement, evidence transit and windows commit as one independent
+    // slot; the original three-source downstream remains available.
+    await page.locator("#source").fill(warehouseInput);
+    await page.locator("#evidence-transit-input").fill(evidenceTransitConfig);
+    await page.locator("#transit-windows-input").fill(windowConfiguration);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    await page.locator("#evidence-transit-analyze").click();
+    await waitTransitJoint(10);
+    await runWindows("joint", 10);
+    const waitWindowJoint = async (count) => {
+      await page.waitForFunction(() => {
+        const message = document.querySelector(
+          "#transit-windows-joint-message",
+        );
+        return (
+          message.textContent.includes("已联合处理") ||
+          message.classList.contains("error")
+        );
+      });
+      assert.equal(
+        await page.locator("#transit-windows-joint-message.error").count(),
+        0,
+      );
+      assert.match(
+        await page.locator("#transit-windows-joint-message").textContent(),
+        new RegExp("已联合处理 " + count + " 帧"),
+      );
+    };
+    const runWindowJoint = async (count) => {
+      await page.locator("#transit-windows-analyze").click();
+      await waitWindowJoint(count);
+    };
+    const exportWindowJoint = () =>
+      exportJson(
+        "#download-transit-windows-analysis",
+        "moonground-transit-windows-analysis-results.json",
+      );
+    const selectWindowJointFrame = (index) =>
+      page.locator("#transit-windows-joint-frame").evaluate((input, index) => {
+        input.value = String(index);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }, index);
+    await runWindowJoint(10);
+    const windowJoint = await exportWindowJoint();
+    assert.equal(
+      windowJoint.checkpoint.format,
+      "moonground.evidence-transit-window-analysis",
+    );
+    assert.deepEqual(windowJoint.checkpoint.analysis, transitJoint.checkpoint);
+    assert.deepEqual(
+      windowJoint.checkpoint.windows,
+      independentWindows.checkpoint,
+    );
+    windowJoint.frames.forEach((frame, index) => {
+      assert.equal(frame.kind, "evidence_transit_window_analysis_frame");
+      assert.deepEqual(frame.analysis, transitJoint.frames[index]);
+      assert.deepEqual(frame.windows, independentWindows.frames[index]);
+    });
+    assert.equal(
+      await page.locator("#transit-windows-mode").inputValue(),
+      "joint",
+    );
+    assert.equal(
+      await page.locator("#download-transit-windows").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#save-transit-windows-checkpoint").isDisabled(),
+      true,
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      beforeTransitJointBase,
+    );
+    assert.deepEqual(await exportTransitJoint(), transitJoint);
+    await page.locator("#transit-windows-mode").selectOption("independent");
+    assert.equal(
+      await page.locator("#download-transit-windows-analysis").isDisabled(),
+      true,
+    );
+    assert.deepEqual(await exportWindows(), independentWindows);
+    await page.locator("#transit-windows-mode").selectOption("joint");
+    await selectWindowJointFrame(2);
+    assert.match(
+      await page.locator("#transit-windows-source").textContent(),
+      /原观测联合分窗.*3 \/ 10.*400000/,
+    );
+    assert.match(
+      await page.locator("#transit-windows-joint-summary").textContent(),
+      /待出口 1/,
+    );
+    assert.equal(
+      await page.locator("#transit-windows-joint-tracks tr").count(),
+      windowJoint.frames[2].analysis.measurement.tracks.length,
+    );
+    const windowJointCheckpoint = await exportJson(
+      "#save-transit-windows-analysis-checkpoint",
+      "moonground-transit-windows-analysis-checkpoint.json",
+    );
+    assert.equal(
+      windowJointCheckpoint.analysis.measurement.motion.last_timestamp_us,
+      "400000",
+    );
+    assert.equal(
+      windowJointCheckpoint.analysis.transit.counting.state.last_timestamp_us,
+      "400000",
+    );
+    assert.equal(windowJointCheckpoint.windows.last_timestamp_us, "400000");
+    assert.equal(windowJointCheckpoint.analysis.transit.pending.length, 1);
+    assert.equal(
+      windowJointCheckpoint.windows.current_window.input_frames,
+      "3",
+    );
+    // Saving replays the selected prefix and cancels on selection/mode changes.
+    let cancelledWindowJointDownloads = 0;
+    const countCancelledWindowJoint = () => {
+      cancelledWindowJointDownloads++;
+    };
+    page.on("download", countCancelledWindowJoint);
+    for (const change of ["selection", "mode"]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#save-transit-windows-analysis-checkpoint").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      if (change === "selection") await selectWindowJointFrame(4);
+      else
+        await page.locator("#transit-windows-mode").selectOption("independent");
+      await releaseEvidenceTransitPreparation();
+      await page.waitForFunction(
+        () =>
+          !document.querySelector("#save-transit-windows-analysis-checkpoint")
+            .disabled ||
+          document.querySelector("#transit-windows-mode").value !== "joint",
+      );
+    }
+    page.off("download", countCancelledWindowJoint);
+    assert.equal(cancelledWindowJointDownloads, 0);
+    await page.locator("#transit-windows-mode").selectOption("joint");
+    await selectWindowJointFrame(3);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#transit-windows-section").screenshot({
+      path: path.join(directory, "transit-windows-analysis-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator("#transit-windows-section").screenshot({
+      path: path.join(
+        directory,
+        "transit-windows-analysis-desktop-preview.png",
+      ),
+    });
+
+    const importWindowJointCheckpoint = async (
+      checkpoint,
+      name = "window-joint.json",
+    ) => {
+      await page
+        .locator("#transit-windows-analysis-checkpoint-file")
+        .setInputFiles({
+          name,
+          mimeType: "application/json",
+          buffer: Buffer.from(
+            typeof checkpoint === "string"
+              ? checkpoint
+              : JSON.stringify(checkpoint),
+          ),
+        });
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#transit-windows-analysis-checkpoint-file")
+            .value === "",
+      );
+    };
+    const badWindowJointVersion = JSON.parse(
+      JSON.stringify(windowJoint.checkpoint),
+    );
+    badWindowJointVersion.checkpoint_version = "99";
+    const badWindowJointTime = JSON.parse(
+      JSON.stringify(windowJointCheckpoint),
+    );
+    badWindowJointTime.windows.last_timestamp_us = "400001";
+    const badWindowJointDefinitions = JSON.parse(
+      JSON.stringify(windowJointCheckpoint),
+    );
+    badWindowJointDefinitions.windows.gates[0].end_m[0] += 0.1;
+    const badWindowJointCapacity = JSON.parse(
+      JSON.stringify(windowJointCheckpoint),
+    );
+    badWindowJointCapacity.windows.config.max_tracks += 1;
+    const badWindowJointCounts = JSON.parse(
+      JSON.stringify(windowJointCheckpoint),
+    );
+    badWindowJointCounts.windows.counts[0].completed = "1";
+    for (const checkpoint of [
+      badWindowJointVersion,
+      badWindowJointTime,
+      badWindowJointDefinitions,
+      badWindowJointCapacity,
+      badWindowJointCounts,
+      transitJoint.checkpoint,
+      independentWindows.checkpoint,
+    ]) {
+      await importWindowJointCheckpoint(checkpoint);
+      assert.equal(
+        await page.locator("#transit-windows-joint-message.error").count(),
+        1,
+      );
+      assert.equal(await page.locator("#source").inputValue(), warehouseInput);
+      assert.equal(
+        await page.locator("#evidence-transit-input").inputValue(),
+        evidenceTransitConfig,
+      );
+      assert.equal(
+        await page.locator("#transit-windows-input").inputValue(),
+        windowConfiguration,
+      );
+      assert.deepEqual(await exportWindowJoint(), windowJoint);
+    }
+    await importWindowJointCheckpoint(windowJointCheckpoint);
+    assert.equal(
+      await page.locator("#transit-windows-joint-message.error").count(),
+      0,
+    );
+    const windowJointResumeSource = await page.locator("#source").inputValue();
+    assert.deepEqual(
+      JSON.parse(windowJointResumeSource).resume,
+      windowJointCheckpoint.analysis.measurement,
+    );
+    assert.deepEqual(
+      JSON.parse(await page.locator("#evidence-transit-input").inputValue())
+        .resume,
+      windowJointCheckpoint.analysis.transit,
+    );
+    assert.deepEqual(
+      JSON.parse(await page.locator("#transit-windows-input").inputValue())
+        .resume,
+      windowJointCheckpoint.windows,
+    );
+    assert.equal(
+      await page.locator("#download-transit-windows-analysis").isDisabled(),
+      true,
+    );
+    await page
+      .locator("#source")
+      .fill(
+        windowJointResumeSource +
+          evidenceTransitWarehouseLines.slice(4).join("\n") +
+          "\n",
+      );
+    await runWindowJoint(7);
+    const resumedWindowJoint = await exportWindowJoint();
+    assert.deepEqual(resumedWindowJoint.frames, windowJoint.frames.slice(3));
+    assert.deepEqual(resumedWindowJoint.checkpoint, windowJoint.checkpoint);
+    // A fresh statistics baseline at an already-started analysis preserves its
+    // pending entry and counts only later input frames.
+    await page.locator("#transit-windows-input").fill(windowConfiguration);
+    await runWindowJoint(7);
+    const freshStartedWindowJoint = await exportWindowJoint();
+    assert.equal(
+      freshStartedWindowJoint.checkpoint.windows.baseline_timestamp_us,
+      "400000",
+    );
+    assert.equal(
+      freshStartedWindowJoint.frames[0].windows.current_window.input_frames,
+      "1",
+    );
+    assert.deepEqual(
+      freshStartedWindowJoint.frames.map((f) => f.analysis),
+      windowJoint.frames.slice(3).map((f) => f.analysis),
+    );
+    // Ground mode retains anisotropic covariance and matches the old host chain.
+    await page.locator("#source").fill(groundTransitJointSource);
+    await page
+      .locator("#evidence-transit-input")
+      .fill(JSON.stringify(groundTransitJointConfig));
+    await page.locator("#evidence-transit-analyze").click();
+    await waitTransitJoint(4);
+    await runWindows("joint", 4);
+    const groundWindowIndependent = await exportWindows();
+    await runWindowJoint(4);
+    const groundWindowJoint = await exportWindowJoint();
+    assert.deepEqual(
+      groundWindowJoint.frames.map((f) => f.analysis),
+      groundTransitJoint.frames,
+    );
+    assert.deepEqual(
+      groundWindowJoint.frames.map((f) => f.windows),
+      groundWindowIndependent.frames,
+    );
+
+    await importWindowJointCheckpoint(groundWindowJoint.checkpoint);
+    assert.equal(
+      await page.locator("#transit-windows-joint-message.error").count(),
+      0,
+    );
+    assert.deepEqual(
+      JSON.parse(await page.locator("#source").inputValue()).resume,
+      groundWindowJoint.checkpoint.analysis.measurement,
+    );
+    assert.deepEqual(
+      JSON.parse(await page.locator("#transit-windows-input").inputValue())
+        .resume,
+      groundWindowJoint.checkpoint.windows,
+    );
+    await page.locator("#source").fill(groundTransitJointSource);
+    await page
+      .locator("#evidence-transit-input")
+      .fill(JSON.stringify(groundTransitJointConfig));
+    await page.locator("#transit-windows-input").fill(windowConfiguration);
+    await page.locator("#evidence-transit-analyze").click();
+    await waitTransitJoint(4);
+    await runWindowJoint(4);
+    assert.deepEqual(await exportWindowJoint(), groundWindowJoint);
+    // A real origin failure occurs after the upstream candidate update. The
+    // browser exposes no partial joint batch and leaves the existing v16 report.
+    await page
+      .locator("#transit-windows-input")
+      .fill(
+        '{"window_us":"500000","duration_limits_us":["100000"],"origin_us":"1"}',
+      );
+    await page.locator("#transit-windows-analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-windows-joint-message")
+        .classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#download-transit-windows-analysis").isDisabled(),
+      true,
+    );
+    assert.deepEqual(await exportTransitJoint(), groundTransitJoint);
+    for (const raw of [
+      '{"window_us":500000.0000000000000001,"duration_limits_us":["100000"]}',
+      '{"window_us":"500000","window_us":"500001","duration_limits_us":["100000"]}',
+      '{"window_us":"500000","duration_limits_us":["100000"],"transit":"unexpected"}',
+    ]) {
+      await page.locator("#transit-windows-input").fill(raw);
+      await page.locator("#transit-windows-analyze").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#transit-windows-joint-message")
+          .classList.contains("error"),
+      );
+      assert.equal(
+        await page.locator("#transit-windows-input").inputValue(),
+        raw,
+      );
+    }
+    await page.locator("#transit-windows-input").fill(windowConfiguration);
+    await page
+      .locator("#evidence-transit-input")
+      .fill(JSON.stringify(fractionalTransitJointConfig));
+    await page.locator("#transit-windows-analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-windows-joint-message")
+        .classList.contains("error"),
+    );
+    await page
+      .locator("#evidence-transit-input")
+      .fill(JSON.stringify(groundTransitJointConfig));
+    await page
+      .locator("#source")
+      .fill(
+        groundTransitJointSource.replace(
+          '"track_id":1',
+          '"track_id":1.0000000000000001',
+        ),
+      );
+    await page.locator("#transit-windows-analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-windows-joint-message")
+        .classList.contains("error"),
+    );
+    await page
+      .locator("#source")
+      .fill(
+        groundTransitJointSource.replace(
+          '"track_id":1',
+          '"track_id":1,"track_id":1',
+        ),
+      );
+    await page.locator("#transit-windows-analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-windows-joint-message")
+        .classList.contains("error"),
+    );
+    // Joint results bind raw inputs rather than other report objects.
+    await page.locator("#source").fill(warehouseInput);
+    await page.locator("#evidence-transit-input").fill(evidenceTransitConfig);
+    await runWindowJoint(10);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    await page.locator("#evidence-transit-analyze").click();
+    await waitTransitJoint(10);
+    assert.deepEqual(await exportWindowJoint(), windowJoint);
+    await page.locator("#evidence-transit-ordinary").click();
+    await waitEvidenceTransit(10);
+    assert.deepEqual(await exportWindowJoint(), windowJoint);
+    for (const origin of ["independent", "joint", "guarded"]) {
+      await runWindows(origin, origin === "guarded" ? 17 : 10);
+      await page.locator("#transit-windows-mode").selectOption("joint");
+      assert.deepEqual(await exportWindowJoint(), windowJoint);
+    }
+    // Upstream report invalidation must not cancel an unrelated raw-joint run.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#transit-windows-analyze").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    await releaseEvidenceTransitPreparation();
+    await waitWindowJoint(10);
+    assert.deepEqual(await exportWindowJoint(), windowJoint);
+    // Explicit joint/downstream run choices and mode changes supersede old work.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#transit-windows-analyze").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runWindows("guarded", 17);
+    await releaseEvidenceTransitPreparation();
+    assert.equal(
+      await page.locator("#transit-windows-mode").inputValue(),
+      "independent",
+    );
+    assert.deepEqual(await exportWindows(), guardedWindows);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#transit-windows-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runWindowJoint(10);
+    await releaseEvidenceTransitPreparation();
+    assert.equal(
+      await page.locator("#transit-windows-mode").inputValue(),
+      "joint",
+    );
+    assert.deepEqual(await exportWindowJoint(), windowJoint);
+    for (const selector of [
+      "#source",
+      "#evidence-transit-input",
+      "#transit-windows-input",
+    ]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#transit-windows-analyze").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page.locator("#download-transit-windows-analysis").isDisabled(),
+        true,
+      );
+      assert.equal(await page.locator(selector).inputValue(), previous + " ");
+      await page.locator(selector).fill(previous);
+      await runWindowJoint(10);
+    }
+    await holdEvidenceTransitPreparation();
+    await page.locator("#transit-windows-analyze").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#transit-windows-mode").selectOption("independent");
+    await releaseEvidenceTransitPreparation();
+    assert.equal(
+      await page.locator("#transit-windows-mode").inputValue(),
+      "independent",
+    );
+    await page.locator("#transit-windows-mode").selectOption("joint");
+    assert.deepEqual(await exportWindowJoint(), windowJoint);
+    // A valid whole import supersedes a busy preparation. A late file read
+    // cannot replace a later raw edit in any of the three shared inputs.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#transit-windows-analyze").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await importWindowJointCheckpoint(windowJointCheckpoint);
+    await releaseEvidenceTransitPreparation();
+    assert.equal(
+      await page.locator("#transit-windows-analyze").isDisabled(),
+      false,
+    );
+    assert.deepEqual(
+      JSON.parse(await page.locator("#transit-windows-input").inputValue())
+        .resume,
+      windowJointCheckpoint.windows,
+    );
+    await page.evaluate(() => {
+      const original = File.prototype.text;
+      File.prototype.text = function () {
+        if (this.name !== "window-joint-late.json") return original.call(this);
+        File.prototype.text = original;
+        const file = this;
+        return new Promise((resolve) => {
+          window.releaseWindowJointRead = async () =>
+            resolve(await original.call(file));
+        });
+      };
+    });
+    await page
+      .locator("#transit-windows-analysis-checkpoint-file")
+      .setInputFiles({
+        name: "window-joint-late.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(windowJointCheckpoint)),
+      });
+    await page.waitForFunction(
+      () => typeof window.releaseWindowJointRead === "function",
+    );
+    const untouchedWindowTransit = await page
+      .locator("#evidence-transit-input")
+      .inputValue();
+    const untouchedWindowConfig = await page
+      .locator("#transit-windows-input")
+      .inputValue();
+    await page.locator("#source").fill("newer raw joint-window draft");
+    await page.evaluate(() => {
+      window.releaseWindowJointRead();
+      delete window.releaseWindowJointRead;
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#transit-windows-analysis-checkpoint-file")
+          .value === "",
+    );
+    assert.equal(
+      await page.locator("#source").inputValue(),
+      "newer raw joint-window draft",
+    );
+    assert.equal(
+      await page.locator("#evidence-transit-input").inputValue(),
+      untouchedWindowTransit,
+    );
+    assert.equal(
+      await page.locator("#transit-windows-input").inputValue(),
+      untouchedWindowConfig,
+    );
+    // Int64 boundary formatting and bounded huge-gap output also survive joint mode.
+    await page.locator("#source").fill(windowClockSource);
+    await page
+      .locator("#evidence-transit-input")
+      .fill(JSON.stringify(windowClockTransit));
+    await page
+      .locator("#transit-windows-input")
+      .fill(
+        '{"window_us":"1","duration_limits_us":["0","9223372036854775807"]}',
+      );
+    await runWindowJoint(3);
+    const clockWindowJoint = await exportWindowJoint();
+    assert.deepEqual(
+      clockWindowJoint.frames.map((f) => f.windows),
+      clockWindows.frames,
+    );
+    assert.match(
+      await page.locator("#transit-windows-current-summary").textContent(),
+      /9223372036854775807.*Int64 时钟上限/,
+    );
+    // Leave the complete joint warehouse preview available for inspection.
+    await page.locator("#source").fill(warehouseInput);
+    await page.locator("#evidence-transit-input").fill(evidenceTransitConfig);
+    await page.locator("#transit-windows-input").fill(windowConfiguration);
+    await runWindowJoint(10);
+    await selectWindowJointFrame(3);
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

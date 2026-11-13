@@ -56,6 +56,16 @@
 
 输入修改清除本区统计。上游变化只使依赖该来源的统计失效，迟到计算不能覆盖新选择；无效检查点保留已有输入和有效显示。其他测量、门控和区间报告分别保留。
 
+## 原观测、通行与分窗共同提交
+
+分窗区域的“测量、通行并分窗”直接读取普通测量的原始 NDJSON、证据区间配置和分窗选项，支持 pixel 与 ground。测量、法向证据通行和分窗在同一次更新中提交；分窗失败时，上游候选状态也回滚。它保留独立报告与滑块，在“显示结果”中选择“原观测联合分窗”，复用当前窗和关闭窗表。原三个下游来源继续使用“独立下游”结果槽。
+
+联合运行不会覆盖普通测量、原联合通行或健康门控结果。重新计算相同原文的上游结果不会清除联合分窗；修改原始测量或证据区间输入会使它失效，修改分窗输入使两个统计结果槽都失效。模式切换、运行与导入会取消旧准备，迟到结果不能覆盖新选择。
+
+“下载完整联合分窗结果”保存全部测量、通行和分窗帧及批末完整检查点。“保存所选帧完整联合分窗检查点”重放联合滑块之前的原始观测前缀，保存当前所选水位。完整格式为 `moonground.evidence-transit-window-analysis`，包括原 v0.16 联合通行检查点和原 v0.18 分窗检查点。
+
+导入完整检查点先把原文交新核心验证，再将返回的 canonical 测量、证据通行、分窗 resume 文档重新组合验证。全部成功后才一次性回填三份现有输入，清除依赖旧输入的结果；添加更晚原始观测后使用同一联合入口继续。失败保留已有输入和有效显示。分窗恢复起点不重建过去窗口，不改写观测时间。
+
 ## 与已查生态能力的关系
 
 本批核对限于 Mooncakes 官方搜索与以下公开 API：[MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics)、[Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1)。前者提供过线、区域转换及按帧停留，后者提供协方差、ConfidenceBand 和滤波检查点。所查 API 未见“法向协方差确认的双门通行＋原始时钟观测区间＋完整独立检查点”这一组合；该结论不覆盖整个 registry。
@@ -63,3 +73,5 @@
 健康门控联合通行另核对了 [Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1) 与 [Fiducial Marker 0.1.1](https://mooncakes.io/docs/2515050242/fiducial_marker@0.1.1) 的官方 API。前者的 OperationalMonitor、FilterCheckpoint 覆盖滤波健康与滤波状态恢复，后者提供 CameraCalibrator、ExtendedKalmanFilter6DOF 及协方差能力。在这些版本与已查页面中，未见固定地标标定健康、法向协方差确认的双门通行和原始目标测量共同提交、整体恢复的直接对应接口。基础标定和滤波能力存在交集，此处结论只针对已查组合。
 
 分窗统计另核对了 [robust_stats 0.2.2](https://mooncakes.io/docs/hxiuzheng/robust_stats@0.2.2) 与 [moonbitSPC 0.2.0](https://mooncakes.io/docs/mwqcodex/moonbitSPC@0.2.0)，它们与 Moon-Kalman 已提供通用数值滑窗及流式汇总。所查 API 未见以证据通行确认帧划分 Int64 固定窗、按通行时长闭区间作三类时限计数、保留取消原因与未观察窗口并整体恢复的直接组合。
+
+原观测联合分窗本轮重查了上述 MBMOT、Moon-Kalman 官方 API，并核对定向搜索命中的 [MoonLoudness 0.1.3](https://mooncakes.io/docs/hutingyu-nuist/moonloudness@0.1.3)。MBMOT 已有单帧原子空间分析，Moon-Kalman 已有滤波检查点，MoonLoudness 提供音频窗口及原子输入验证。所查页面未见原始 pixel / ground 运动、协方差确认通行和 Int64 确认分窗共同回滚、完整检查点共同恢复的直接对应接口；该区别针对这一视觉流程，未把原子更新或状态恢复机制本身作为新能力。

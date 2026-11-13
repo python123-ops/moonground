@@ -639,8 +639,81 @@
             >
               先生成通行结果，再显式选择本区统计来源。初始化检查点不产生输入窗口。
             </p>
+            <div class="actions">
+              <button id="transit-windows-analyze">测量、通行并分窗</button>
+              <button
+                id="download-transit-windows-analysis"
+                class="quiet"
+                disabled
+              >
+                下载完整联合分窗结果
+              </button>
+              <button
+                id="save-transit-windows-analysis-checkpoint"
+                class="quiet"
+                disabled
+              >
+                保存所选帧完整联合分窗检查点
+              </button>
+              <label class="file-button"
+                >载入完整联合分窗检查点<input
+                  id="transit-windows-analysis-checkpoint-file"
+                  type="file"
+                  accept=".json"
+              /></label>
+            </div>
+            <p
+              id="transit-windows-joint-message"
+              role="status"
+              aria-live="polite"
+              class="hint"
+            >
+              联合入口直接读取普通测量原始输入、上方证据区间配置和本区分窗选项，支持
+              pixel / ground；使用独立结果与回放。
+            </p>
+            <label class="hint result-mode"
+              >显示结果<select
+                id="transit-windows-mode"
+                aria-label="分窗结果模式"
+              >
+                <option value="independent">独立下游</option>
+                <option value="joint">原观测联合分窗</option>
+              </select></label
+            >
+            <div id="transit-windows-joint-playback" class="playback" hidden>
+              <input
+                id="transit-windows-joint-frame"
+                type="range"
+                aria-label="联合分窗回放帧"
+                min="0"
+                max="0"
+                value="0"
+                disabled
+              /><span id="transit-windows-joint-counter" class="mono"
+                >0 / 0</span
+              >
+            </div>
+            <div id="transit-windows-joint-measurement" hidden>
+              <p id="transit-windows-joint-summary" class="hint"></p>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>目标 / 片段</th>
+                      <th>测量状态</th>
+                      <th>位置 x, y · m</th>
+                      <th>速度 · m/s</th>
+                    </tr>
+                  </thead>
+                  <tbody id="transit-windows-joint-tracks"></tbody>
+                </table>
+              </div>
+            </div>
             <p class="hint">
               此下游检查点只保存分窗状态。恢复时需另行准备同水位上游的全部更晚通行帧。窗口关闭不表示连续相机覆盖；跨越没有输入的窗口只记录跳过数量。
+            </p>
+            <p class="hint">
+              完整联合检查点共同保存测量、证据通行和分窗，按联合滑块所选帧保存；导入后一次恢复三份输入。两个结果槽分别保留，下载入口对应当前模式。
             </p>
             <p id="transit-windows-source" class="hint"></p>
             <p id="transit-windows-gap" class="hint"></p>
