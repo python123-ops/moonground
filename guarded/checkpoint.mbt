@@ -13,6 +13,40 @@ fn same_camera(
 }
 
 ///|
+fn validate_guard_accepted_time(
+  timestamp_us : Int64,
+  health : @health.HealthCheckpoint,
+  motion_max_gap_us : Int64,
+) -> Unit raise @types.GroundError {
+  guard health.streak is Some(streak) else {
+    raise @types.InvalidInput(
+      "healthy guarded checkpoint lacks an evidence streak",
+    )
+  }
+  let instant = health.config.min_observations == 1 &&
+    health.config.confirmation_us == 0L &&
+    health.config.max_gap_us < motion_max_gap_us
+  if instant {
+    // A health gap can start an immediately Healthy streak without an
+    // intervening blocked frame or an expired motion segment. No accepted
+    // object sample can lie strictly inside that restart gap, however.
+    if timestamp_us < streak.since_us &&
+      streak.since_us - timestamp_us < health.config.max_gap_us {
+      raise @types.InvalidInput(
+        "guarded accepted observation lies inside the health restart gap",
+      )
+    }
+  } else if timestamp_us < streak.since_us ||
+    timestamp_us - streak.since_us < health.config.confirmation_us ||
+    timestamp_us - streak.since_us <
+    Int64::from_int(health.config.min_observations - 1) {
+    raise @types.InvalidInput(
+      "guarded object segment predates possible health confirmation",
+    )
+  }
+}
+
+///|
 /// Share the health/projection policy after the selected analysis checkpoint
 /// has validated its own counting relationship. Historical gate evidence is
 /// intentionally outside this policy: each counter validates its own anchors.
@@ -46,21 +80,17 @@ fn validate_guard_binding(
       )
     }
   } else {
-    guard health.streak is Some(streak) else {
-      raise @types.InvalidInput(
-        "healthy guarded checkpoint lacks an evidence streak",
-      )
-    }
     for track in motion.tracks {
-      if track.first_timestamp_us < streak.since_us ||
-        track.first_timestamp_us - streak.since_us <
-        health.config.confirmation_us ||
-        track.first_timestamp_us - streak.since_us <
-        Int64::from_int(health.config.min_observations - 1) {
-        raise @types.InvalidInput(
-          "guarded object segment predates possible health confirmation",
-        )
-      }
+      validate_guard_accepted_time(
+        track.first_timestamp_us,
+        health,
+        motion.config.max_gap_us,
+      )
+      validate_guard_accepted_time(
+        track.last_timestamp_us,
+        health,
+        motion.config.max_gap_us,
+      )
     }
   }
   max_tracks
@@ -87,6 +117,17 @@ pub fn GuardedSession::from_checkpoint(
     checkpoint.analysis.counting.config.max_tracks,
     checkpoint.analysis.counting.tracks.length(),
   )
+  for track in checkpoint.analysis.counting.tracks {
+    for anchor in track.anchors {
+      if anchor is Some(anchor) {
+        validate_guard_accepted_time(
+          anchor.timestamp_us,
+          checkpoint.health,
+          pixel.motion.config.max_gap_us,
+        )
+      }
+    }
+  }
   { analysis, health, max_tracks, }
 }
 

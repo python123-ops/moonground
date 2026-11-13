@@ -42,6 +42,32 @@ pub fn EvidenceGuardedSession::reframed(Self, @types.PixelTransform) -> Self rai
 pub fn EvidenceGuardedSession::replace_projection(Self, Int64, @calibration.GroundCalibration, camera~ : @camera.CameraModel?) -> EvidenceGuardedFrame raise @types.GroundError
 pub fn EvidenceGuardedSession::update(Self, Int64, Array[@health.LandmarkObservation], Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceGuardedFrame raise @types.GroundError
 
+pub(all) struct EvidenceGuardedTransitCheckpoint {
+  version : Int32
+  analysis : @analysis.EvidenceTransitSessionCheckpoint
+  health : @health.HealthCheckpoint
+} derive(@debug.Debug)
+pub fn EvidenceGuardedTransitCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct EvidenceGuardedTransitFrame {
+  decision : GuardDecision
+  health : @health.HealthReport
+  analysis : @analysis.EvidenceTransitSessionFrame
+  suppressed_track_ids : Array[Int32]
+} derive(@debug.Debug)
+pub fn EvidenceGuardedTransitFrame::to_repr(Self) -> @debug.Repr
+
+pub struct EvidenceGuardedTransitSession {
+  // private fields
+}
+pub fn EvidenceGuardedTransitSession::checkpoint(Self) -> EvidenceGuardedTransitCheckpoint
+pub fn EvidenceGuardedTransitSession::fork(Self) -> Self
+pub fn EvidenceGuardedTransitSession::from_checkpoint(EvidenceGuardedTransitCheckpoint) -> Self raise @types.GroundError
+pub fn EvidenceGuardedTransitSession::new(@analysis.EvidenceTransitSession, @health.CalibrationMonitor) -> Self raise @types.GroundError
+pub fn EvidenceGuardedTransitSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn EvidenceGuardedTransitSession::replace_projection(Self, Int64, @calibration.GroundCalibration, camera~ : @camera.CameraModel?) -> EvidenceGuardedTransitFrame raise @types.GroundError
+pub fn EvidenceGuardedTransitSession::update(Self, Int64, Array[@health.LandmarkObservation], Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> EvidenceGuardedTransitFrame raise @types.GroundError
+
 pub(all) enum GuardDecision {
   Allowed
   Blocked

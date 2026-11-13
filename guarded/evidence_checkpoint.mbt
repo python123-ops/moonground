@@ -19,6 +19,17 @@ pub fn EvidenceGuardedSession::from_checkpoint(
     checkpoint.analysis.counting.config.max_tracks,
     checkpoint.analysis.counting.tracks.length(),
   )
+  for track in checkpoint.analysis.counting.tracks {
+    for anchor in track.anchors {
+      if anchor is Some(anchor) {
+        validate_guard_accepted_time(
+          anchor.timestamp_us,
+          checkpoint.health,
+          pixel.motion.config.max_gap_us,
+        )
+      }
+    }
+  }
   { analysis, health, max_tracks, }
 }
 
