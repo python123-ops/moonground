@@ -136,11 +136,25 @@ fn evidence_guarded_line(
 }
 
 ///|
+fn evidence_transit_line(
+  state : Ref[@codec.EvidenceTransitReplay?],
+  source : String,
+) -> String? raise @types.GroundError {
+  match state.val {
+    None => {
+      state.val = Some(@codec.EvidenceTransitReplay::open(source))
+      None
+    }
+    Some(replay) => Some(replay.process_line(source))
+  }
+}
+
+///|
 async fn main {
   let args = @env.args()
   if args.length() == 2 && (args[1] == "--help" || args[1] == "-h") {
     @stdio.stdout.write(
-      "moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint) [--max-line-bytes N] | --project | --calibrate\nStream/checkpoint read configuration or {resume: checkpoint}, then frames. --checkpoint writes only the final state at EOF. --reframe reads {source: configuration_or_resume, transform: {...}}, then original frames, and writes transformed NDJSON. --count reads gate configuration or {resume: gate_checkpoint}, then schema-0.2 measurement frames; --count-checkpoint writes only final gate state at EOF. --analyze reads {measurement: raw_session_source, counting: raw_gate_source} or {resume: analysis_checkpoint}, then original observations. --analyze-checkpoint writes only final joint state. --health reads fixed-landmark calibration configuration or {resume: health_checkpoint}, then landmark observation frames; --health-checkpoint writes only final health state. --guarded reads {analysis: raw_analysis_source, health: raw_health_source} or {resume: guarded_checkpoint}, then {measurement: raw_pixel_frame, health: raw_landmark_frame}. --guarded also accepts {replace_projection: raw_replacement_JSON}; its timestamp_us, calibration and explicit camera (object or null) create a blocked barrier and require new health evidence. --guarded-checkpoint writes only final bound state. --transit reads {counting: raw_gate_source, sections: [...], max_duration_us: optional_string} or {resume: transit_checkpoint}, then schema-0.2 measurement frames. --transit-checkpoint writes only final downstream state; upstream motion must be restored separately. --count-evidence reads {counting: raw_fresh_gate_configuration, sigma_multiplier: optional_number} or {resume: evidence_checkpoint}, then schema-0.2 measurements. --evidence-checkpoint writes only final covariance-evidence state. --analyze-evidence reads {measurement: raw_session_source, counting: raw_evidence_source} or {resume: evidence_analysis_checkpoint}, then original observations. --analyze-evidence-checkpoint writes only the final complete atomic measurement and covariance-evidence state. --guarded-evidence reads {analysis: raw_evidence_analysis_source, health: raw_health_source} or {resume: evidence_guarded_checkpoint}, then the same paired raw observation or replace_projection lines as --guarded. --guarded-evidence-checkpoint writes only the final complete health, motion and evidence state.\n",
+      "moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint | --transit-evidence | --transit-evidence-checkpoint) [--max-line-bytes N] | --project | --calibrate\nStream/checkpoint read configuration or {resume: checkpoint}, then frames. --checkpoint writes only the final state at EOF. --reframe reads {source: configuration_or_resume, transform: {...}}, then original frames, and writes transformed NDJSON. --count reads gate configuration or {resume: gate_checkpoint}, then schema-0.2 measurement frames; --count-checkpoint writes only final gate state at EOF. --analyze reads {measurement: raw_session_source, counting: raw_gate_source} or {resume: analysis_checkpoint}, then original observations. --analyze-checkpoint writes only final joint state. --health reads fixed-landmark calibration configuration or {resume: health_checkpoint}, then landmark observation frames; --health-checkpoint writes only final health state. --guarded reads {analysis: raw_analysis_source, health: raw_health_source} or {resume: guarded_checkpoint}, then {measurement: raw_pixel_frame, health: raw_landmark_frame}. --guarded also accepts {replace_projection: raw_replacement_JSON}; its timestamp_us, calibration and explicit camera (object or null) create a blocked barrier and require new health evidence. --guarded-checkpoint writes only final bound state. --transit reads {counting: raw_gate_source, sections: [...], max_duration_us: optional_string} or {resume: transit_checkpoint}, then schema-0.2 measurement frames. --transit-checkpoint writes only final downstream state; upstream motion must be restored separately. --count-evidence reads {counting: raw_fresh_gate_configuration, sigma_multiplier: optional_number} or {resume: evidence_checkpoint}, then schema-0.2 measurements. --evidence-checkpoint writes only final covariance-evidence state. --analyze-evidence reads {measurement: raw_session_source, counting: raw_evidence_source} or {resume: evidence_analysis_checkpoint}, then original observations. --analyze-evidence-checkpoint writes only the final complete atomic measurement and covariance-evidence state. --guarded-evidence reads {analysis: raw_evidence_analysis_source, health: raw_health_source} or {resume: evidence_guarded_checkpoint}, then the same paired raw observation or replace_projection lines as --guarded. --guarded-evidence-checkpoint writes only the final complete health, motion and evidence state. --transit-evidence reads {counting: raw_evidence_source, sections: [...], max_duration_us: optional_string} or {resume: evidence_transit_checkpoint}, then original schema-0.2 measurement frames. --transit-evidence-checkpoint writes only the final complete downstream evidence and passage state; restore the upstream clock separately.\n",
     )
     return
   }
@@ -165,11 +179,13 @@ async fn main {
       args[1] != "--analyze-evidence-checkpoint" &&
       args[1] != "--guarded-evidence" &&
       args[1] != "--guarded-evidence-checkpoint" &&
+      args[1] != "--transit-evidence" &&
+      args[1] != "--transit-evidence-checkpoint" &&
       args[1] != "--project" &&
       args[1] != "--calibrate"
     ) {
     diagnostic(
-      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint) [--max-line-bytes N] | --project | --calibrate",
+      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint | --transit-evidence | --transit-evidence-checkpoint) [--max-line-bytes N] | --project | --calibrate",
     )
     return
   }
@@ -178,6 +194,8 @@ async fn main {
   let analysis_mode = args[1] == "--analyze" ||
     args[1] == "--analyze-checkpoint"
   let health_mode = args[1] == "--health" || args[1] == "--health-checkpoint"
+  let evidence_transit_mode = args[1] == "--transit-evidence" ||
+    args[1] == "--transit-evidence-checkpoint"
   let evidence_guarded_mode = args[1] == "--guarded-evidence" ||
     args[1] == "--guarded-evidence-checkpoint"
   let evidence_analysis_mode = args[1] == "--analyze-evidence" ||
@@ -196,7 +214,8 @@ async fn main {
     transit_mode ||
     evidence_mode ||
     evidence_analysis_mode ||
-    evidence_guarded_mode
+    evidence_guarded_mode ||
+    evidence_transit_mode
   if args.length() == 4 && stream_mode && args[2] == "--max-line-bytes" {
     max_bytes = @string.parse_int(args[3], base=10) catch {
       _ => {
@@ -210,7 +229,7 @@ async fn main {
     }
   } else if args.length() != 2 {
     diagnostic(
-      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint) [--max-line-bytes N] | --project | --calibrate",
+      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint | --transit-evidence | --transit-evidence-checkpoint) [--max-line-bytes N] | --project | --calibrate",
     )
     return
   }
@@ -221,6 +240,7 @@ async fn main {
   let counter : Ref[@codec.GateReplay?] = Ref(None)
   let analysis : Ref[@codec.AnalysisReplay?] = Ref(None)
   let health : Ref[@codec.HealthReplay?] = Ref(None)
+  let evidence_transit : Ref[@codec.EvidenceTransitReplay?] = Ref(None)
   let evidence_guarded : Ref[@codec.EvidenceGuardedReplay?] = Ref(None)
   let evidence_analysis : Ref[@codec.EvidenceAnalysisReplay?] = Ref(None)
   let evidence : Ref[@codec.EvidenceGateReplay?] = Ref(None)
@@ -242,7 +262,17 @@ async fn main {
             return
           }
         }
-        if evidence_guarded_mode {
+        if evidence_transit_mode {
+          let output = evidence_transit_line(evidence_transit, line) catch {
+            error => {
+              diagnostic("line \{line_number}: " + error.message())
+              return
+            }
+          }
+          if args[1] == "--transit-evidence" && output is Some(output) {
+            @stdio.stdout.write(output + "\n")
+          }
+        } else if evidence_guarded_mode {
           let output = evidence_guarded_line(evidence_guarded, line) catch {
             error => {
               diagnostic("line \{line_number}: " + error.message())
@@ -391,7 +421,17 @@ async fn main {
         return
       }
     }
-    if evidence_guarded_mode {
+    if evidence_transit_mode {
+      let output = evidence_transit_line(evidence_transit, line) catch {
+        error => {
+          diagnostic("line \{line_number}: " + error.message())
+          return
+        }
+      }
+      if args[1] == "--transit-evidence" && output is Some(output) {
+        @stdio.stdout.write(output + "\n")
+      }
+    } else if evidence_guarded_mode {
       let output = evidence_guarded_line(evidence_guarded, line) catch {
         error => {
           diagnostic("line \{line_number}: " + error.message())
@@ -523,7 +563,11 @@ async fn main {
       }
     }
   }
-  if evidence_guarded_mode {
+  if evidence_transit_mode {
+    if evidence_transit.val is None {
+      diagnostic("missing evidence transit source")
+    }
+  } else if evidence_guarded_mode {
     if evidence_guarded.val is None {
       diagnostic("missing evidence guarded source")
     }
@@ -642,6 +686,16 @@ async fn main {
     let checkpoint = evidence.checkpoint_json() catch {
       error => {
         diagnostic("evidence checkpoint: " + error.message())
+        return
+      }
+    }
+    @stdio.stdout.write(checkpoint + "\n")
+  }
+  if args[1] == "--transit-evidence-checkpoint" &&
+    evidence_transit.val is Some(replay) {
+    let checkpoint = replay.checkpoint_json() catch {
+      error => {
+        diagnostic("evidence transit checkpoint: " + error.message())
         return
       }
     }
