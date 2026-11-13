@@ -130,7 +130,23 @@ fn analysis_checkpoint_value(
   saved : @analysis.AnalysisCheckpoint,
   configuration : Json,
 ) -> Json raise @types.GroundError {
-  let motion = match saved.measurement {
+  Json::object({
+    "format": Json("moonground.analysis"),
+    "checkpoint_version": Json("1"),
+    "measurement": analysis_measurement_checkpoint_value(
+      saved.measurement,
+      configuration,
+    ),
+    "counting": gate_checkpoint_value(saved.counting),
+  })
+}
+
+///|
+fn analysis_measurement_checkpoint_value(
+  saved : @analysis.AnalysisMeasurement,
+  configuration : Json,
+) -> Json raise @types.GroundError {
+  let motion = match saved {
     @analysis.Pixel(pixel) => pixel.motion
     @analysis.Ground(ground) => ground
   }
@@ -138,15 +154,10 @@ fn analysis_checkpoint_value(
     raise invalid("measurement checkpoint exceeds 10000 active tracks")
   }
   Json::object({
-    "format": Json("moonground.analysis"),
+    "format": Json("moonground.session"),
     "checkpoint_version": Json("1"),
-    "measurement": Json::object({
-      "format": Json("moonground.session"),
-      "checkpoint_version": Json("1"),
-      "configuration": configuration,
-      "motion": motion_checkpoint_json(motion),
-    }),
-    "counting": gate_checkpoint_value(saved.counting),
+    "configuration": configuration,
+    "motion": motion_checkpoint_json(motion),
   })
 }
 
