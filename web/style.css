@@ -166,7 +166,8 @@ button:disabled {
 #evidence-transit-message.error,
 #evidence-transit-joint-message.error,
 #transit-windows-message.error,
-#transit-windows-joint-message.error {
+#transit-windows-joint-message.error,
+#transit-windows-guarded-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -189,7 +190,8 @@ button:disabled {
   aspect-ratio: 960/42;
 }
 #guarded-timeline,
-#evidence-guarded-timeline {
+#evidence-guarded-timeline,
+#transit-windows-guarded-timeline {
   aspect-ratio: 960/56;
 }
 .health-legend {

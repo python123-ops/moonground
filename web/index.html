@@ -671,6 +671,39 @@
               联合入口直接读取普通测量原始输入、上方证据区间配置和本区分窗选项，支持
               pixel / ground；使用独立结果与回放。
             </p>
+            <div class="actions">
+              <button id="transit-windows-guarded-analyze">
+                按健康状态通行并分窗
+              </button>
+              <button
+                id="download-transit-windows-guarded"
+                class="quiet"
+                disabled
+              >
+                下载完整健康分窗结果
+              </button>
+              <button
+                id="save-transit-windows-guarded-checkpoint"
+                class="quiet"
+                disabled
+              >
+                保存所选帧完整健康分窗检查点
+              </button>
+              <label class="file-button"
+                >载入完整健康分窗检查点<input
+                  id="transit-windows-guarded-checkpoint-file"
+                  type="file"
+                  accept=".json"
+              /></label>
+            </div>
+            <p
+              id="transit-windows-guarded-message"
+              role="status"
+              aria-live="polite"
+              class="hint"
+            >
+              健康联合入口读取下方“健康证据通行示例”所用的完整原始输入和本区分窗选项。通行策略取自该健康输入首行，配对观测及标定切换行保持原格式。
+            </p>
             <label class="hint result-mode"
               >显示结果<select
                 id="transit-windows-mode"
@@ -678,6 +711,7 @@
               >
                 <option value="independent">独立下游</option>
                 <option value="joint">原观测联合分窗</option>
+                <option value="guarded">健康联合分窗</option>
               </select></label
             >
             <div id="transit-windows-joint-playback" class="playback" hidden>
@@ -709,11 +743,36 @@
                 </table>
               </div>
             </div>
+            <div id="transit-windows-guarded-health" hidden>
+              <canvas
+                id="transit-windows-guarded-timeline"
+                width="960"
+                height="56"
+                aria-label="健康联合分窗逐帧健康、放行与标定切换"
+              ></canvas>
+              <p class="hint">
+                状态条颜色沿用地标健康时序，下排表示放行或阻断，紫色竖线为标定切换；阻断与切换仍作为同一时刻的分窗输入。
+              </p>
+              <p id="transit-windows-guarded-status" class="hint"></p>
+            </div>
+            <div id="transit-windows-guarded-playback" class="playback" hidden>
+              <input
+                id="transit-windows-guarded-frame"
+                type="range"
+                aria-label="健康联合分窗回放帧"
+                min="0"
+                max="0"
+                value="0"
+                disabled
+              /><span id="transit-windows-guarded-counter" class="mono"
+                >0 / 0</span
+              >
+            </div>
             <p class="hint">
               此下游检查点只保存分窗状态。恢复时需另行准备同水位上游的全部更晚通行帧。窗口关闭不表示连续相机覆盖；跨越没有输入的窗口只记录跳过数量。
             </p>
             <p class="hint">
-              完整联合检查点共同保存测量、证据通行和分窗，按联合滑块所选帧保存；导入后一次恢复三份输入。两个结果槽分别保留，下载入口对应当前模式。
+              完整联合检查点按相应联合滑块所选帧保存。普通联合导入恢复测量、通行和分窗三份输入；健康联合导入恢复完整健康通行和分窗两份输入。三种模式分别保留结果，下载入口对应当前模式。
             </p>
             <p id="transit-windows-source" class="hint"></p>
             <p id="transit-windows-gap" class="hint"></p>

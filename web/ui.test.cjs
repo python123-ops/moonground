@@ -7699,6 +7699,661 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.locator("#transit-windows-input").fill(windowConfiguration);
     await runWindowJoint(10);
     await selectWindowJointFrame(3);
+
+    // Health, raw evidence transit and windows use the original v17 paired
+    // source/control text; ordinary measurement/transit inputs stay unrelated.
+    await importGuardedTransit(healthTransitSource);
+    const healthWindowOrdinaryInput = await page
+      .locator("#source")
+      .inputValue();
+    const healthWindowTransitInput = await page
+      .locator("#evidence-transit-input")
+      .inputValue();
+    const runHealthWindows = async (count) => {
+      await page.locator("#transit-windows-guarded-analyze").click();
+      await page.waitForFunction(() => {
+        const message = document.querySelector(
+          "#transit-windows-guarded-message",
+        );
+        return (
+          message.textContent.includes("已联合处理") ||
+          message.classList.contains("error")
+        );
+      });
+      assert.equal(
+        await page.locator("#transit-windows-guarded-message.error").count(),
+        0,
+      );
+      assert.match(
+        await page.locator("#transit-windows-guarded-message").textContent(),
+        new RegExp("已联合处理 " + count + " 帧"),
+      );
+    };
+    const exportHealthWindows = () =>
+      exportJson(
+        "#download-transit-windows-guarded",
+        "moonground-guarded-transit-windows-results.json",
+      );
+    const selectHealthWindowFrame = (index) =>
+      page
+        .locator("#transit-windows-guarded-frame")
+        .evaluate((input, value) => {
+          input.value = String(value);
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        }, index);
+    await runHealthWindows(17);
+    const healthWindowJoint = await exportHealthWindows();
+    assert.equal(
+      healthWindowJoint.checkpoint.format,
+      "moonground.evidence-guarded-transit-windows",
+    );
+    assert.deepEqual(
+      healthWindowJoint.checkpoint.guarded,
+      healthTransit.checkpoint,
+    );
+    assert.deepEqual(
+      healthWindowJoint.checkpoint.windows,
+      guardedWindows.checkpoint,
+    );
+    healthWindowJoint.frames.forEach((frame, index) => {
+      assert.equal(frame.kind, "evidence_guarded_transit_window_frame");
+      assert.deepEqual(frame.guarded, healthTransit.frames[index]);
+      assert.deepEqual(frame.windows, guardedWindows.frames[index]);
+    });
+    assert.equal(
+      await page.locator("#transit-windows-mode").inputValue(),
+      "guarded",
+    );
+    assert.equal(
+      await page.locator("#download-transit-windows").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#download-transit-windows-analysis").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#source").inputValue(),
+      healthWindowOrdinaryInput,
+    );
+    assert.equal(
+      await page.locator("#evidence-transit-input").inputValue(),
+      healthWindowTransitInput,
+    );
+    await page.locator("#transit-windows-mode").selectOption("joint");
+    assert.deepEqual(await exportWindowJoint(), windowJoint);
+    assert.equal(
+      await page.locator("#download-transit-windows-guarded").isDisabled(),
+      true,
+    );
+    await page.locator("#transit-windows-mode").selectOption("guarded");
+    await selectHealthWindowFrame(6);
+    assert.match(
+      await page.locator("#transit-windows-guarded-status").textContent(),
+      /已阻断.*被抑制目标：1/,
+    );
+    assert.match(
+      await page.locator("#transit-windows-joint-summary").textContent(),
+      /取消 1.*关闭测量片段：1/,
+    );
+    assert.equal(
+      await page.locator("#transit-windows-joint-tracks tr").count(),
+      1,
+    );
+    assert.equal(
+      await page.locator("#transit-windows-joint-tracks").textContent(),
+      "本帧无目标测量。",
+    );
+    assert.match(
+      await page.locator("#transit-windows-current-summary").textContent(),
+      /输入 2 帧/,
+    );
+    await selectHealthWindowFrame(16);
+    assert.match(
+      await page.locator("#transit-windows-guarded-status").textContent(),
+      /切换标定.*已阻断.*2 次标定切换/,
+    );
+    assert.match(
+      await page.locator("#transit-windows-joint-summary").textContent(),
+      /取消 2/,
+    );
+
+    await selectHealthWindowFrame(3);
+    const healthWindowPendingCP = await exportJson(
+      "#save-transit-windows-guarded-checkpoint",
+      "moonground-guarded-transit-windows-checkpoint.json",
+    );
+    assert.deepEqual(
+      healthWindowPendingCP.guarded,
+      healthTransitPendingCheckpoint,
+    );
+    assert.equal(healthWindowPendingCP.windows.last_timestamp_us, "350000");
+    assert.equal(
+      healthWindowPendingCP.guarded.health.state.last_timestamp_us,
+      "350000",
+    );
+    assert.equal(
+      healthWindowPendingCP.guarded.analysis.measurement.motion
+        .last_timestamp_us,
+      "350000",
+    );
+    assert.equal(
+      healthWindowPendingCP.guarded.analysis.transit.counting.state
+        .last_timestamp_us,
+      "350000",
+    );
+    assert.equal(
+      healthWindowPendingCP.guarded.analysis.transit.pending.length,
+      2,
+    );
+    await selectHealthWindowFrame(9);
+    const healthWindowBarrierCP = await exportJson(
+      "#save-transit-windows-guarded-checkpoint",
+      "moonground-guarded-transit-windows-checkpoint.json",
+    );
+    assert.equal(healthWindowBarrierCP.windows.last_timestamp_us, "950000");
+    assert.equal(healthWindowBarrierCP.guarded.health.state.streak, null);
+    assert.deepEqual(
+      healthWindowBarrierCP.guarded.analysis.transit.pending,
+      [],
+    );
+    assert.deepEqual(
+      healthWindowBarrierCP.guarded.analysis.measurement.configuration
+        .calibration,
+      healthWindowBarrierCP.guarded.health.configuration.calibration,
+    );
+    assert.equal(
+      healthWindowBarrierCP.windows.current_window.input_frames,
+      "5",
+    );
+    await selectHealthWindowFrame(15);
+    const healthWindowWarmCP = await exportJson(
+      "#save-transit-windows-guarded-checkpoint",
+      "moonground-guarded-transit-windows-checkpoint.json",
+    );
+    assert.deepEqual(healthWindowWarmCP.guarded, healthTransitWarmCheckpoint);
+    assert.equal(healthWindowWarmCP.windows.last_timestamp_us, "1550000");
+
+    const importHealthWindowCP = async (
+      checkpoint,
+      name = "health-windows.json",
+    ) => {
+      await page
+        .locator("#transit-windows-guarded-checkpoint-file")
+        .setInputFiles({
+          name,
+          mimeType: "application/json",
+          buffer: Buffer.from(
+            typeof checkpoint === "string"
+              ? checkpoint
+              : JSON.stringify(checkpoint),
+          ),
+        });
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#transit-windows-guarded-checkpoint-file")
+            .value === "",
+      );
+    };
+    const healthWindowBadVersion = JSON.parse(
+      JSON.stringify(healthWindowPendingCP),
+    );
+    healthWindowBadVersion.checkpoint_version = "99";
+    const healthWindowBadTime = JSON.parse(
+      JSON.stringify(healthWindowPendingCP),
+    );
+    healthWindowBadTime.guarded.health.state.last_timestamp_us = "350001";
+    const healthWindowBadFirst = JSON.parse(
+      JSON.stringify(healthWindowPendingCP),
+    );
+    healthWindowBadFirst.windows.current_window.first_timestamp_us = "1";
+    const healthWindowBadDefinitions = JSON.parse(
+      JSON.stringify(healthWindowPendingCP),
+    );
+    healthWindowBadDefinitions.windows.gates[0].end_m[0] += 0.1;
+    const healthWindowBadProjection = JSON.parse(
+      JSON.stringify(healthWindowPendingCP),
+    );
+    healthWindowBadProjection.guarded.health.configuration.calibration.matrix[2] += 1;
+    for (const checkpoint of [
+      healthWindowBadVersion,
+      healthWindowBadTime,
+      healthWindowBadFirst,
+      healthWindowBadDefinitions,
+      healthWindowBadProjection,
+      JSON.stringify(healthWindowPendingCP).replace(
+        '"track_id":1',
+        '"track_id":1.0000000000000001',
+      ),
+      healthTransit.checkpoint,
+      windowJoint.checkpoint,
+      guardedWindows.checkpoint,
+    ]) {
+      await importHealthWindowCP(checkpoint);
+      assert.equal(
+        await page.locator("#transit-windows-guarded-message.error").count(),
+        1,
+      );
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        healthTransitSource,
+      );
+      assert.equal(
+        await page.locator("#transit-windows-input").inputValue(),
+        windowConfiguration,
+      );
+      assert.equal(
+        await page.locator("#source").inputValue(),
+        healthWindowOrdinaryInput,
+      );
+      assert.equal(
+        await page.locator("#evidence-transit-input").inputValue(),
+        healthWindowTransitInput,
+      );
+      assert.deepEqual(await exportHealthWindows(), healthWindowJoint);
+    }
+    await importHealthWindowCP(healthWindowPendingCP);
+    assert.equal(
+      await page.locator("#transit-windows-guarded-message.error").count(),
+      0,
+    );
+    const healthWindowResumeInput = await page
+      .locator("#guarded-input")
+      .inputValue();
+    assert.deepEqual(
+      JSON.parse(healthWindowResumeInput).resume,
+      healthWindowPendingCP.guarded,
+    );
+    assert.deepEqual(
+      JSON.parse(await page.locator("#transit-windows-input").inputValue())
+        .resume,
+      healthWindowPendingCP.windows,
+    );
+    assert.equal(
+      await page.locator("#source").inputValue(),
+      healthWindowOrdinaryInput,
+    );
+    assert.equal(
+      await page.locator("#evidence-transit-input").inputValue(),
+      healthWindowTransitInput,
+    );
+    assert.equal(
+      await page.locator("#download-transit-windows-guarded").isDisabled(),
+      true,
+    );
+    await page
+      .locator("#guarded-input")
+      .fill(
+        healthWindowResumeInput + healthTransitLines.slice(5).join("\n") + "\n",
+      );
+    await runHealthWindows(13);
+    const healthWindowResumed = await exportHealthWindows();
+    assert.deepEqual(
+      healthWindowResumed.frames,
+      healthWindowJoint.frames.slice(4),
+    );
+    assert.deepEqual(
+      healthWindowResumed.checkpoint,
+      healthWindowJoint.checkpoint,
+    );
+    // Selected replacement prefixes preserve cold health and the updated Brown
+    // projection; later original paired/control rows resume without rewriting.
+    await importHealthWindowCP(healthWindowBarrierCP);
+    const healthWindowBarrierResume = await page
+      .locator("#guarded-input")
+      .inputValue();
+    await page
+      .locator("#guarded-input")
+      .fill(
+        healthWindowBarrierResume +
+          healthTransitLines.slice(11).join("\n") +
+          "\n",
+      );
+    await runHealthWindows(7);
+    const healthWindowBarrierResumed = await exportHealthWindows();
+    assert.deepEqual(
+      healthWindowBarrierResumed.frames,
+      healthWindowJoint.frames.slice(10),
+    );
+    assert.deepEqual(
+      healthWindowBarrierResumed.checkpoint,
+      healthWindowJoint.checkpoint,
+    );
+    // A fresh statistics strategy starts at an old pending-entry checkpoint.
+    await importGuardedTransitCheckpoint(healthTransitPendingCheckpoint);
+    const healthWindowStartedSource = await page
+      .locator("#guarded-input")
+      .inputValue();
+    await page
+      .locator("#guarded-input")
+      .fill(
+        healthWindowStartedSource +
+          healthTransitLines.slice(5).join("\n") +
+          "\n",
+      );
+    await page.locator("#transit-windows-input").fill(windowConfiguration);
+    await runHealthWindows(13);
+    const healthWindowStarted = await exportHealthWindows();
+    assert.equal(
+      healthWindowStarted.checkpoint.windows.baseline_timestamp_us,
+      "350000",
+    );
+    assert.equal(
+      healthWindowStarted.frames[0].windows.current_window.input_frames,
+      "1",
+    );
+    assert.equal(
+      healthWindowStarted.frames[0].windows.current_window.first_timestamp_us,
+      "450000",
+    );
+    assert.deepEqual(
+      healthWindowStarted.frames.map((f) => f.guarded),
+      healthTransit.frames.slice(4),
+    );
+
+    await importGuardedTransit(healthTransitSource);
+    await page.locator("#transit-windows-input").fill(windowConfiguration);
+    await runHealthWindows(17);
+    await page.locator("#run-evidence-guarded-transit").click();
+    await page.waitForFunction(
+      () => !document.querySelector("#run-evidence-guarded-transit").disabled,
+    );
+    assert.deepEqual(await exportHealthWindows(), healthWindowJoint);
+    // The first blocked candidate can advance old health before origin failure;
+    // no partial new batch is exposed and the independent v17 report stays valid.
+    await page
+      .locator("#transit-windows-input")
+      .fill(
+        '{"window_us":"500000","duration_limits_us":["100000"],"origin_us":"1"}',
+      );
+    await page.locator("#transit-windows-guarded-analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-windows-guarded-message")
+        .classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#download-transit-windows-guarded").isDisabled(),
+      true,
+    );
+    assert.deepEqual(await exportGuardedTransit(), healthTransit);
+    for (const raw of [
+      '{"window_us":500000.0000000000000001,"duration_limits_us":["100000"]}',
+      '{"window_us":"500000","window_us":"500001","duration_limits_us":["100000"]}',
+      '{"window_us":"500000","duration_limits_us":["100000"],"unknown":true}',
+    ]) {
+      await page.locator("#transit-windows-input").fill(raw);
+      await page.locator("#transit-windows-guarded-analyze").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#transit-windows-guarded-message")
+          .classList.contains("error"),
+      );
+      assert.equal(
+        await page.locator("#transit-windows-input").inputValue(),
+        raw,
+      );
+    }
+    await page.locator("#transit-windows-input").fill(windowConfiguration);
+    for (const raw of [
+      fractionalGuardedTransitHeader + "\n" + healthTransitLines[1] + "\n",
+      healthTransitLines[0] +
+        "\n" +
+        JSON.stringify({
+          ...JSON.parse(healthTransitLines[1]),
+          measurement: JSON.parse(healthTransitLines[1]).measurement.replace(
+            '"track_id":1',
+            '"track_id":1.0000000000000001',
+          ),
+        }) +
+        "\n",
+      healthTransitLines[0] +
+        "\n" +
+        JSON.stringify({
+          ...JSON.parse(healthTransitLines[1]),
+          measurement: JSON.parse(healthTransitLines[1]).measurement.replace(
+            '"track_id":1',
+            '"track_id":1,"track_id":1',
+          ),
+        }) +
+        "\n",
+      ...badProjectionOperations.map(
+        (operation) =>
+          healthTransitLines.slice(0, 10).join("\n") + "\n" + operation + "\n",
+      ),
+    ]) {
+      await page.locator("#guarded-input").fill(raw);
+      await page.locator("#transit-windows-guarded-analyze").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#transit-windows-guarded-message")
+          .classList.contains("error"),
+      );
+      assert.equal(await page.locator("#guarded-input").inputValue(), raw);
+    }
+    await importGuardedTransit(healthTransitSource);
+    await runHealthWindows(17);
+    // Ordinary raw inputs are unrelated to this slot. Identical v17 reruns
+    // replace its old report object without invalidating the new raw-bound one.
+    await page.locator("#source").fill(warehouseInput + " ");
+    await page
+      .locator("#evidence-transit-input")
+      .fill(evidenceTransitConfig + " ");
+    assert.deepEqual(await exportHealthWindows(), healthWindowJoint);
+    await page.locator("#source").fill(warehouseInput);
+    await page.locator("#evidence-transit-input").fill(evidenceTransitConfig);
+    await runWindowJoint(10);
+    await page.locator("#transit-windows-mode").selectOption("guarded");
+    assert.deepEqual(await exportHealthWindows(), healthWindowJoint);
+    await runWindows("guarded", 17);
+    await page.locator("#transit-windows-mode").selectOption("guarded");
+    assert.deepEqual(await exportHealthWindows(), healthWindowJoint);
+    // Prefix downloads must match the visible selected frame and active mode.
+    let cancelledHealthWindowDownloads = 0;
+    const countCancelledHealthWindow = () => {
+      cancelledHealthWindowDownloads++;
+    };
+    page.on("download", countCancelledHealthWindow);
+    for (const change of ["selection", "mode"]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#save-transit-windows-guarded-checkpoint").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      if (change === "selection") await selectHealthWindowFrame(9);
+      else await page.locator("#transit-windows-mode").selectOption("joint");
+      await releaseEvidenceTransitPreparation();
+      await page.waitForFunction(
+        () =>
+          !document.querySelector("#save-transit-windows-guarded-checkpoint")
+            .disabled ||
+          document.querySelector("#transit-windows-mode").value !== "guarded",
+      );
+    }
+    page.off("download", countCancelledHealthWindow);
+    assert.equal(cancelledHealthWindowDownloads, 0);
+    await page.locator("#transit-windows-mode").selectOption("guarded");
+    // Three window modes cancel old preparations, keeping inactive reports.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#transit-windows-guarded-analyze").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runWindowJoint(10);
+    await releaseEvidenceTransitPreparation();
+    assert.equal(
+      await page.locator("#transit-windows-mode").inputValue(),
+      "joint",
+    );
+    assert.deepEqual(await exportWindowJoint(), windowJoint);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#transit-windows-analyze").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runHealthWindows(17);
+    await releaseEvidenceTransitPreparation();
+    assert.equal(
+      await page.locator("#transit-windows-mode").inputValue(),
+      "guarded",
+    );
+    await holdEvidenceTransitPreparation();
+    await page.locator("#transit-windows-guarded").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runHealthWindows(17);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportHealthWindows(), healthWindowJoint);
+    // Shared guarded owners also cancel late operations, without clearing a
+    // valid health-window report merely because the same raw v17 input reruns.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#transit-windows-guarded-analyze").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#run-evidence-guarded-transit").click();
+    await page.waitForFunction(
+      () => !document.querySelector("#run-evidence-guarded-transit").disabled,
+    );
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportHealthWindows(), healthWindowJoint);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#run-evidence-guarded-transit").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runHealthWindows(17);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportHealthWindows(), healthWindowJoint);
+    for (const selector of ["#guarded-input", "#transit-windows-input"]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#transit-windows-guarded-analyze").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page.locator("#download-transit-windows-guarded").isDisabled(),
+        true,
+      );
+      assert.equal(await page.locator(selector).inputValue(), previous + " ");
+      await page.locator(selector).fill(previous);
+      await runHealthWindows(17);
+    }
+    // Whole imports supersede a busy run and a late read yields to new input.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#transit-windows-guarded-analyze").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await importHealthWindowCP(healthWindowPendingCP);
+    await releaseEvidenceTransitPreparation();
+    assert.equal(
+      await page.locator("#transit-windows-guarded-analyze").isDisabled(),
+      false,
+    );
+    assert.deepEqual(
+      JSON.parse(await page.locator("#guarded-input").inputValue()).resume,
+      healthWindowPendingCP.guarded,
+    );
+    await page.evaluate(() => {
+      const original = File.prototype.text;
+      File.prototype.text = function () {
+        if (this.name !== "health-window-late.json") return original.call(this);
+        File.prototype.text = original;
+        const file = this;
+        return new Promise((resolve) => {
+          window.releaseHealthWindowRead = async () =>
+            resolve(await original.call(file));
+        });
+      };
+    });
+    await page
+      .locator("#transit-windows-guarded-checkpoint-file")
+      .setInputFiles({
+        name: "health-window-late.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(healthWindowPendingCP)),
+      });
+    await page.waitForFunction(
+      () => typeof window.releaseHealthWindowRead === "function",
+    );
+    const healthWindowUntouchedConfig = await page
+      .locator("#transit-windows-input")
+      .inputValue();
+    await page.locator("#guarded-input").fill("newer health-window draft");
+    await page.evaluate(() => {
+      window.releaseHealthWindowRead();
+      delete window.releaseHealthWindowRead;
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#transit-windows-guarded-checkpoint-file")
+          .value === "",
+    );
+    assert.equal(
+      await page.locator("#guarded-input").inputValue(),
+      "newer health-window draft",
+    );
+    assert.equal(
+      await page.locator("#transit-windows-input").inputValue(),
+      healthWindowUntouchedConfig,
+    );
+    // A late old example fetch cannot replace the new health-window draft.
+    let releaseHealthWindowExample, healthWindowExampleRequested;
+    const healthWindowExampleGate = new Promise((resolve) => {
+      releaseHealthWindowExample = resolve;
+    });
+    const healthWindowExampleRequest = new Promise((resolve) => {
+      healthWindowExampleRequested = resolve;
+    });
+    await page.route("**/evidence-guarded-transit.ndjson", async (route) => {
+      healthWindowExampleRequested();
+      await healthWindowExampleGate;
+      await route.fulfill({
+        contentType: "application/x-ndjson",
+        body: healthTransitSource,
+      });
+    });
+    try {
+      await page.locator("#evidence-guarded-transit-example").click();
+      await healthWindowExampleRequest;
+      await page.locator("#guarded-input").fill(healthTransitSource);
+      await page.locator("#transit-windows-input").fill(windowConfiguration);
+      await runHealthWindows(17);
+      const sampleResponse = page.waitForResponse((response) =>
+        response.url().endsWith("/evidence-guarded-transit.ndjson"),
+      );
+      releaseHealthWindowExample();
+      await (await sampleResponse).finished();
+      await page.waitForLoadState("networkidle");
+      assert.deepEqual(await exportHealthWindows(), healthWindowJoint);
+      assert.equal(
+        await page.locator("#guarded-input").inputValue(),
+        healthTransitSource,
+      );
+    } finally {
+      releaseHealthWindowExample();
+      await page.unroute("**/evidence-guarded-transit.ndjson");
+    }
+    await selectHealthWindowFrame(5);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#transit-windows-section").screenshot({
+      path: path.join(directory, "guarded-transit-windows-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator("#transit-windows-section").screenshot({
+      path: path.join(directory, "guarded-transit-windows-desktop-preview.png"),
+    });
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();
