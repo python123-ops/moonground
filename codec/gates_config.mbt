@@ -46,10 +46,23 @@ fn gate_configuration(
 
 ///|
 fn gate_configuration_json(checkpoint : @events.GateCheckpoint) -> Json {
+  gate_definition_json(
+    checkpoint.session_id,
+    checkpoint.gates,
+    checkpoint.config,
+  )
+}
+
+///|
+fn gate_definition_json(
+  session_id : String,
+  gates : Array[@events.LineGate],
+  config : @events.GateConfig,
+) -> Json {
   let fields : Map[String, Json] = {
-    "session_id": Json(checkpoint.session_id),
+    "session_id": Json(session_id),
     "gates": Json(
-      checkpoint.gates.map(gate => {
+      gates.map(gate => {
         Json::object({
           "gate_id": Json(gate.gate_id),
           "start_m": point_json(gate.start_m),
@@ -58,10 +71,10 @@ fn gate_configuration_json(checkpoint : @events.GateCheckpoint) -> Json {
         })
       }),
     ),
-    "max_gap_us": Json(checkpoint.config.max_gap_us.to_string()),
-    "max_tracks": Json(checkpoint.config.max_tracks),
+    "max_gap_us": Json(config.max_gap_us.to_string()),
+    "max_tracks": Json(config.max_tracks),
   }
-  if checkpoint.config.max_position_std_m is Some(value) {
+  if config.max_position_std_m is Some(value) {
     fields["max_position_std_m"] = Json(value)
   }
   Json::object(fields)

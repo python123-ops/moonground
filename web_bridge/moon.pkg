@@ -23,6 +23,7 @@ options(
         "moonground_health",
         "moonground_guarded",
         "moonground_transit",
+        "moonground_gate_evidence",
       ],
       "format": "esm",
     },
