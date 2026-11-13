@@ -1,0 +1,670 @@
+{
+  "format_version": "1",
+  "seed": 20261116,
+  "tolerance": 2e-10,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.20-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "e295e92f0345e182d0cac50fb23535c7134d3046cc029bafd8c0dff982e50416",
+  "binary_sha256": "a230c3ce2ae621685313b5b6a6425d8fa2505c13da3c99660198c8bed35a6cea",
+  "finite_segment_reference": {
+    "cases": 48,
+    "frames": 359,
+    "crossings": 1057,
+    "intersection_reference": "NumPy solve of P0 + alpha*(P1-P0) = A + beta*(B-A), beta in [0,1]",
+    "maximum_errors": {
+      "$[].crossings[].from_position_m[]": 0.0,
+      "$[].crossings[].to_position_m[]": 0.0,
+      "$[].crossings[].position_m[]": 3.552713678800501e-15,
+      "$[].crossings[].crossing_fraction": 6.661338147750939e-16
+    },
+    "details": [
+      {
+        "name": "directions",
+        "frames": 3,
+        "crossings": 2
+      },
+      {
+        "name": "finite_extension_then_endpoint",
+        "frames": 5,
+        "crossings": 2
+      },
+      {
+        "name": "integer_rotated_end_included",
+        "frames": 2,
+        "crossings": 1
+      },
+      {
+        "name": "integer_rotated_start_included",
+        "frames": 2,
+        "crossings": 1
+      },
+      {
+        "name": "floating_rotated_end_included",
+        "frames": 2,
+        "crossings": 1
+      },
+      {
+        "name": "rotated_near_endpoint_-1e-09",
+        "frames": 2,
+        "crossings": 1
+      },
+      {
+        "name": "rotated_near_endpoint_1e-09",
+        "frames": 2,
+        "crossings": 0
+      },
+      {
+        "name": "closed_deadband_and_chord",
+        "frames": 7,
+        "crossings": 1
+      },
+      {
+        "name": "latest_same_side_anchor",
+        "frames": 3,
+        "crossings": 1
+      },
+      {
+        "name": "initializing_and_uncertain",
+        "frames": 3,
+        "crossings": 2
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 3,
+        "crossings": 2
+      },
+      {
+        "name": "exact_int64_max_time",
+        "frames": 2,
+        "crossings": 1
+      },
+      {
+        "name": "missing_breaks_reference",
+        "frames": 3,
+        "crossings": 0
+      },
+      {
+        "name": "rejected_projection_breaks_reference",
+        "frames": 3,
+        "crossings": 0
+      },
+      {
+        "name": "rejected_innovation_breaks_reference",
+        "frames": 3,
+        "crossings": 0
+      },
+      {
+        "name": "numerical_failure_breaks_reference",
+        "frames": 3,
+        "crossings": 0
+      },
+      {
+        "name": "closed_breaks_reference",
+        "frames": 3,
+        "crossings": 0
+      },
+      {
+        "name": "segment_breaks_reference",
+        "frames": 3,
+        "crossings": 0
+      },
+      {
+        "name": "frame_gap_499999",
+        "frames": 2,
+        "crossings": 1
+      },
+      {
+        "name": "frame_gap_500000",
+        "frames": 2,
+        "crossings": 0
+      },
+      {
+        "name": "frame_gap_500001",
+        "frames": 2,
+        "crossings": 0
+      },
+      {
+        "name": "deadband_anchor_expires",
+        "frames": 4,
+        "crossings": 0
+      },
+      {
+        "name": "position_quality_breaks_reference",
+        "frames": 5,
+        "crossings": 0
+      },
+      {
+        "name": "inclusive_quality_boundary",
+        "frames": 2,
+        "crossings": 1
+      },
+      {
+        "name": "rotated_multigate_0",
+        "frames": 12,
+        "crossings": 46
+      },
+      {
+        "name": "rotated_multigate_1",
+        "frames": 12,
+        "crossings": 38
+      },
+      {
+        "name": "rotated_multigate_2",
+        "frames": 12,
+        "crossings": 50
+      },
+      {
+        "name": "rotated_multigate_3",
+        "frames": 12,
+        "crossings": 52
+      },
+      {
+        "name": "rotated_multigate_4",
+        "frames": 12,
+        "crossings": 35
+      },
+      {
+        "name": "rotated_multigate_5",
+        "frames": 12,
+        "crossings": 38
+      },
+      {
+        "name": "rotated_multigate_6",
+        "frames": 12,
+        "crossings": 45
+      },
+      {
+        "name": "rotated_multigate_7",
+        "frames": 12,
+        "crossings": 43
+      },
+      {
+        "name": "rotated_multigate_8",
+        "frames": 12,
+        "crossings": 47
+      },
+      {
+        "name": "rotated_multigate_9",
+        "frames": 12,
+        "crossings": 54
+      },
+      {
+        "name": "rotated_multigate_10",
+        "frames": 12,
+        "crossings": 49
+      },
+      {
+        "name": "rotated_multigate_11",
+        "frames": 12,
+        "crossings": 38
+      },
+      {
+        "name": "rotated_multigate_12",
+        "frames": 12,
+        "crossings": 45
+      },
+      {
+        "name": "rotated_multigate_13",
+        "frames": 12,
+        "crossings": 46
+      },
+      {
+        "name": "rotated_multigate_14",
+        "frames": 12,
+        "crossings": 44
+      },
+      {
+        "name": "rotated_multigate_15",
+        "frames": 12,
+        "crossings": 40
+      },
+      {
+        "name": "rotated_multigate_16",
+        "frames": 12,
+        "crossings": 45
+      },
+      {
+        "name": "rotated_multigate_17",
+        "frames": 12,
+        "crossings": 44
+      },
+      {
+        "name": "rotated_multigate_18",
+        "frames": 12,
+        "crossings": 39
+      },
+      {
+        "name": "rotated_multigate_19",
+        "frames": 12,
+        "crossings": 36
+      },
+      {
+        "name": "rotated_multigate_20",
+        "frames": 12,
+        "crossings": 43
+      },
+      {
+        "name": "rotated_multigate_21",
+        "frames": 12,
+        "crossings": 38
+      },
+      {
+        "name": "rotated_multigate_22",
+        "frames": 12,
+        "crossings": 38
+      },
+      {
+        "name": "rotated_multigate_23",
+        "frames": 12,
+        "crossings": 47
+      }
+    ]
+  },
+  "durable_continuation": {
+    "resume_cut_points": 9,
+    "exact_counter_after_increment": "9007199254740994",
+    "pixel_measurement_frames": 10,
+    "pixel_measurement_crossings": 1,
+    "maximum_errors": {
+      "$[].crossings[].from_position_m[]": 0.0,
+      "$[].crossings[].to_position_m[]": 0.0,
+      "$[].crossings[].crossing_fraction": 0.0,
+      "$[].crossings[].position_m[]": 0.0,
+      "$.configuration.gates[].deadband_m": 0.0,
+      "$.state.tracks[].anchors[].point_m[]": 0.0
+    }
+  },
+  "strict_transport": {
+    "rejected_cases": 52,
+    "cases": {
+      "empty_stream": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "missing gate configuration"
+      },
+      "empty_gates": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate count or anchor capacity exceeded"
+      },
+      "too_many_gates": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gates exceeds its record limit"
+      },
+      "duplicate_gate_id": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate identities must be unique"
+      },
+      "zero_length_gate": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate endpoints must differ"
+      },
+      "negative_deadband": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate deadband must be finite and nonnegative"
+      },
+      "zero_tracks": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      "tracks_above_bound": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid gate continuity or track capacity"
+      },
+      "anchor_budget": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate count or anchor capacity exceeded"
+      },
+      "unknown_config": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate configuration: unknown field extra"
+      },
+      "zero_gap": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid gate continuity or track capacity"
+      },
+      "empty_gate_id": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate_id must contain 1 to 128 UTF-16 code units"
+      },
+      "long_gate_id": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate_id must contain 1 to 128 UTF-16 code units"
+      },
+      "unknown_gate": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: line gate: unknown field extra"
+      },
+      "zero_quality": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate position limit must be finite and positive"
+      },
+      "fractional_config_integer": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      "duplicate_config_key": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"session_id\" at line 1, column 31"
+      },
+      "session_change": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: gate frame session or timestamp differs"
+      },
+      "schema_change": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: unsupported measurement schema or uncertainty scope"
+      },
+      "scope_change": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: unsupported measurement schema or uncertainty scope"
+      },
+      "same_time": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: gate frame timestamps must strictly increase"
+      },
+      "unknown_frame": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      "duplicate_track": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: duplicate measurement track identity"
+      },
+      "duplicate_closed_segment": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: closed gate segments must be unique and disjoint from current segments"
+      },
+      "fractional_track": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      "negative_track": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      "unknown_status": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: unknown measurement status"
+      },
+      "missing_accepted_position": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: measurement availability contradicts its status"
+      },
+      "missing_accepted_std": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: measurement availability contradicts its status"
+      },
+      "bad_covariance": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      "unknown_track_field": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: measurement track: unknown field extra"
+      },
+      "bad_diagnostics_shape": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: filter_state must contain exactly 4 numbers"
+      },
+      "fractional_track_token": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      "duplicate_measurement_key": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: invalid JSON: Duplicate key \"timestamp_us\" at line 1, column 80"
+      },
+      "invalid_utf8": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      "blank_measurement": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: invalid JSON: Unexpected end of file"
+      },
+      "measurement_payload_limit": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: JSON text exceeds 1048576 UTF-16 code units"
+      },
+      "default_physical_limit": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: line byte limit exceeded"
+      },
+      "checkpoint_format": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported gate checkpoint format or version"
+      },
+      "checkpoint_version": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported gate checkpoint format or version"
+      },
+      "checkpoint_unknown": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate checkpoint: unknown field extra"
+      },
+      "negative_counter": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: negative_to_positive must be a canonical nonnegative Int64 decimal string"
+      },
+      "counter_overflow": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: negative_to_positive must be a nonnegative Int64 decimal string"
+      },
+      "checkpoint_duplicate_track": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate checkpoint track and segment identities must be unique"
+      },
+      "checkpoint_future_anchor": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid or expired gate checkpoint anchor"
+      },
+      "checkpoint_anchor_on_gate": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid or expired gate checkpoint anchor"
+      },
+      "checkpoint_anchor_count": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate checkpoint anchor shape differs"
+      },
+      "resume_override": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate resume envelope: unknown field session_id"
+      },
+      "counter_overflow_on_event": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: gate crossing counter exhausted"
+      },
+      "unrepresentable_open_crossing_fraction": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: gate crossing fraction is not representable inside its bracket"
+      },
+      "checkpoint_mode_late_error": {
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      "physical_limit_one_byte_below_measurement": {
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "8ab4ef2d412170f7d4bda69bf25ea735536a97c6ca9f45190e12347bb1bca870",
+        "stdout_bytes": 242,
+        "stderr": "line 3: line byte limit exceeded"
+      }
+    },
+    "complete_prefix_preserved": true,
+    "crlf_and_unterminated_eof": "passed",
+    "exact_physical_line_boundary_bytes": 520
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/gates.test.mjs",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "test_script_sha256": "10108f16d6f5fc95c74193d8b4faf42a27a0a840ab096d8011d5164930c47877",
+    "bridge_sha256": "e0a742a4d14d61c55b91791de4a3ce529f705306cabb32d29137162e546081ee",
+    "stdout_sha256": "6111fde4d1546fb692cacc68ddb5f144bcd00c94553048ecd6e9106dff30b415",
+    "stderr": ""
+  },
+  "elapsed_seconds": 7.978047,
+  "status": "passed"
+}

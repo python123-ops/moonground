@@ -2,7 +2,7 @@
 
 MoonGround 把固定相机中的目标轨迹转换为米制地面位置、速度和观测路径，面向园区、仓储和其他近似平面的场地。输入是已有目标身份、地面接触锚点和真实时间戳；库负责标定有效域、投影协方差、运动估计、轨迹分段和双向通道过线统计，并支持原子组合更新与完整状态恢复。固定地标检查持续核对原标定的米制残差；需要按检查结果决定是否计算对象测量时，可显式使用 `guarded` 入口。
 
-当前开发版本为 `0.19.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
+当前开发版本为 `0.20.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
 
 ## 与现有项目的衔接
 
@@ -26,7 +26,7 @@ MoonGround 复用 `moon-cv-geometry@0.2.2` 的几何能力与 `moon-kalman@0.2.1
 | `events` | 消费 `motion.FrameResult` 的有向有限通道；均值计数 `GateCounter` 与法向协方差证据计数 `EvidenceGateCounter` 各自保存完整状态 |
 | `analysis` | 像素／米制测量与均值或法向证据计数的原子更新，分别保存完整检查点，并可直接联合证据区间通行及确认时刻分窗，支持独立分支与像素换算 |
 | `health` | 独立固定地标的逐点残差、连续采样证据确认、完整 `HealthCheckpoint` 与像素换算 |
-| `guarded` | 当前地标确认健康后计算对象，阻断时结束片段；均值／法向证据门控及证据通行分别保存完整检查点，支持投影切换与重新确认 |
+| `guarded` | 当前地标确认健康后计算对象，阻断时结束片段；均值／法向证据门控、证据通行及其确认分窗分别保存完整检查点，支持投影切换与重新确认 |
 | `transit` | 同目标同片段的有向入口／出口配对、通行时间界与插值估计、取消原因；均值／法向证据策略分别保存独立完整检查点；已完成证据通行可按确认时刻分窗、按时长界分类 |
 | `codec` | 原生 CLI 与浏览器共用的严格 JSON 协议、检查点、坐标转换，以及独立／联合测量、通道、证据、地标健康、门控与区间回放 |
 
@@ -1410,6 +1410,127 @@ CLI `--analyze-transit-windows` 首行为 `{"analysis":<原始v0.16配置或resu
 
 纯函数外层请求限 16 Mi UTF-16 代码单元，观测文本 8 Mi／5,000 行，原观测单行 1 Mi，完整输出含检查点 8 Mi；新统计选项限 1 Mi，完整检查点限 8 Mi。CLI 沿用默认 1 Mi 物理行预算及显式放宽选项，普通模式错误前的完整前缀可以已输出，检查点模式失败无输出。浏览器在现分窗面板选择“原观测联合”模式，可导出所选帧的完整检查点并恢复三份输入；导入先验证共同状态再提交，追加观测仍须晚于共同水位。交互及所查生态 API 边界见 [`docs/evidence-transit-web.md`](docs/evidence-transit-web.md)。
 
+### 健康门控、通行与分窗的共同提交
+
+`guarded.EvidenceGuardedTransitWindowSession::new(guarded, window_us~, duration_limits_us~, origin_us~)` 接受已验证的 v0.17 健康证据通行会话，分离其可变状态，并从实际当前通行累计建立新统计基线。内部复用 v0.19 的联合测量／通行／分窗和原地标监测器；普通帧更新不导出再恢复检查点。结果含原 `guarded` 帧和同一时刻的 `windows`，完整检查点包含两份原格式状态。
+
+每次输入都更新健康与统计，包括 `Pending`、`Drift`、地标不足及显式标定切换。阻断关闭全部活跃片段并取消待入口，同一空帧只计一次窗口输入。健康首次确认后的对象计算或窗口更新失败，健康采样进度也保持；早于统计起点的帧整体拒绝，须改用符合起点的时刻。窗口关闭表示输入跨越边界，未观察窗口不代表持续覆盖。
+
+```mbt check
+///|
+test "README: health-controlled windows preserve pending entries and count projection barriers once" {
+  let calibration = @moonground.GroundCalibration::from_homography(
+    [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+    [
+      { x: -10.0, y: -10.0, },
+      { x: 10.0, y: -10.0, },
+      { x: 10.0, y: 10.0, },
+      { x: -10.0, y: 10.0, },
+    ],
+    max_meters_per_pixel=2.0,
+  )
+  let transit = @transit.EvidenceTransitCounter::new(
+    @events.EvidenceGateCounter::new(
+      "guarded-window-example",
+      [
+        @events.LineGate::new("entry", { x: -5.0, y: 0.0, }, { x: 5.0, y: 0.0, }),
+        @events.LineGate::new("exit", { x: -5.0, y: 2.0, }, { x: 5.0, y: 2.0, }),
+      ],
+      @events.GateConfig::new(max_tracks=10),
+      sigma_multiplier=2.0,
+    ),
+    [
+      @transit.Section::new(
+        "aisle",
+        "entry",
+        @events.NegativeToPositive,
+        "exit",
+        @events.NegativeToPositive,
+      ),
+    ],
+  )
+  let upstream = @guarded.EvidenceGuardedTransitSession::new(
+    @analysis.EvidenceTransitSession::from_pixel(
+      @moonground.MeasurementSession::new(
+        "guarded-window-example",
+        calibration,
+        @moonground.MotionConfig::new(q=1000000.0, gate=1.0e12, max_tracks=10),
+      ),
+      transit,
+    ),
+    @health.CalibrationMonitor::new(
+      calibration,
+      [@health.KnownLandmark::new("A", { x: 1.0, y: 1.0, })],
+      @health.HealthConfig::new(
+        min_landmarks=1,
+        confirmation_us=100000L,
+        min_observations=2,
+      ),
+    ),
+  )
+  let session = @guarded.EvidenceGuardedTransitWindowSession::new(
+    upstream,
+    window_us=200000L,
+    duration_limits_us=[0L, 100000L, 200000L],
+  )
+  let covariance = @moonground.Covariance2::isotropic(0.01)
+  let landmarks = [
+    @health.LandmarkObservation::new("A", { x: 1.0, y: 1.0, }, covariance),
+  ]
+  let object = (y : Double) => {
+    @moonground.PixelObservation::new(7, { x: 0.0, y, }, covariance)
+  }
+  assert_eq(
+    session.update(0L, landmarks, [object(-1.0)]).guarded.decision,
+    @guarded.Blocked,
+  )
+  ignore(session.update(100000L, landmarks, [object(-1.0)]))
+  assert_eq(
+    session.update(200000L, landmarks, [object(1.0)]).guarded.analysis.transit.pending_count,
+    1,
+  )
+  let restored = @guarded.EvidenceGuardedTransitWindowSession::from_checkpoint(
+    session.checkpoint(),
+  )
+  assert_eq(
+    restored.update(300000L, landmarks, [object(3.0)]).guarded.analysis.transit.passages.length(),
+    1,
+  )
+  let barrier = restored.replace_projection(350000L, calibration, camera=None)
+  assert_eq(barrier.windows.current_window.input_frames, 3L)
+  assert_eq(barrier.guarded.decision, @guarded.Blocked)
+  assert_eq(barrier.guarded.health.status, @health.Insufficient)
+  assert_eq(barrier.guarded.analysis.transit.counts[0].completed, 1L)
+  assert_eq(barrier.guarded.analysis.measurement.motion.closed_segment_ids, [
+    "1",
+  ])
+  assert_eq(
+    restored.update(400000L, landmarks, [object(-1.0)]).guarded.decision,
+    @guarded.Blocked,
+  )
+  let fresh = restored.update(500000L, landmarks, [object(-1.0)])
+  assert_eq(fresh.guarded.decision, @guarded.Allowed)
+  assert_eq(fresh.guarded.analysis.measurement.motion.tracks[0].segment_id, "2")
+}
+```
+
+恢复先验证原健康通行绑定和 v0.19 的全部统计关系，再把地标连续序列起点与运动、门参考点、待入口及窗口首末时刻合并去重，核对当前窗输入数。连续地标采样还要求严格小于配置的最大间隔；相邻已知时刻之间必须容得下必要的中间帧，跨窗口或基线的首帧也须满足该连续间隔。未饱和的地标样本数是精确值，饱和后仅为下界，恢复按两种情况检查可用帧数。基线以前的健康与对象历史可保留，不把旧待入口或旧序列补进新窗口。
+
+`fork()` 和 `reframed(transform)` 保留完整米制、地标采样、待入口和统计状态。`replace_projection(timestamp_us, calibration, camera~)` 将同一个空屏障计入原窗口，保留累计和下一段号，清除旧待入口并重新采样确认健康。完整检查点检查保存状态的必要关系，不认证过去地标来源或保存已丢弃的逐帧历史。
+
+### 健康联合分窗协议
+
+CLI `--guarded-transit-windows` 首行为 `{"guarded":<原始v0.17配置或resume字符串>,"windows":<原始统计选项或v0.18 resume字符串>}`，或 `{"resume":<完整联合检查点对象>}`。新统计选项只含 `window_us`、`duration_limits_us` 和可省略的 `origin_us`，采用规范十进制字符串，基线来自实际健康通行状态。随后沿用原配对观测 `{"measurement":<原始对象帧字符串>,"health":<原始地标帧字符串>}` 和原 `replace_projection` 控制行，不转写数值 token。
+
+```sh
+./_build/native/release/build/cmd/main/main.exe --guarded-transit-windows < guarded.ndjson > results.ndjson
+./_build/native/release/build/cmd/main/main.exe --guarded-transit-windows-checkpoint < guarded.ndjson > checkpoint.json
+```
+
+`codec.EvidenceGuardedTransitWindowReplay` 共用该协议；帧的 `kind` 为 `evidence_guarded_transit_window_frame`、`schema_version` 为 `0.1.0`，内嵌原 `guarded` 和 `windows`。替换帧保留原嵌套替换标记。检查点 `format` 为 `moonground.evidence-guarded-transit-windows`、版本 `1`。纯函数 `codec.evidence_guarded_transit_window_json` 与 JavaScript `moonground_evidence_guarded_transit_window` 接受 `{"source":<原始首行字符串>,"observations":<原始配对观测及控制NDJSON字符串>}`，返回全批帧及完整检查点，不分配句柄。
+
+首行限 8 Mi＋11 个 UTF-16 代码单元，新统计选项 1 Mi，完整检查点 8 Mi；原始观测／控制单行 1 Mi。纯函数外层 16 Mi、观测文本 8 Mi／5,000 行、整个输出含检查点 8 Mi。CLI 沿用默认 1 Mi 物理行预算与显式放宽选项，普通流模式可以已输出完整前缀，检查点模式失败无输出。浏览器分窗面板的“健康联合分窗”读取现有健康通行输入及分窗配置，保存所选帧完整检查点时包含前缀中的标定切换；完整导入验证后一次恢复这两份输入。详见 [`docs/evidence-transit-web.md`](docs/evidence-transit-web.md)。
+
 ## 验证与复现
 
 以下开发命令在完整项目目录运行。Mooncakes 源码包只保留库、命令、JavaScript 桥及其必要文件，开发示例、验证脚本和网页资源保留在项目仓库中。
@@ -1422,23 +1543,24 @@ moon build --target all --deny-warn
 moon test --target all --deny-warn
 node web/build.mjs
 node --test web/parity.test.mjs
-python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.19-results.json
-python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.19-results.json
-python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.19-results.json
-python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.19-results.json
-python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.19-results.json
-python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.19-results.json
-python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.19-results.json
-python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.19-results.json
-python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.19-results.json
-python validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.19-results.json
-python validation/evidence_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-analysis-v0.19-results.json
-python validation/evidence_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-v0.19-results.json
-python validation/evidence_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-v0.19-results.json
-python validation/evidence_transit_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-analysis-v0.19-results.json
-python validation/evidence_guarded_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-v0.19-results.json
-python validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-v0.19-results.json
-python validation/evidence_transit_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-window-analysis-results.json
+python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.20-results.json
+python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.20-results.json
+python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.20-results.json
+python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.20-results.json
+python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.20-results.json
+python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.20-results.json
+python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.20-results.json
+python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.20-results.json
+python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.20-results.json
+python validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.20-results.json
+python validation/evidence_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-analysis-v0.20-results.json
+python validation/evidence_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-v0.20-results.json
+python validation/evidence_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-v0.20-results.json
+python validation/evidence_transit_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-analysis-v0.20-results.json
+python validation/evidence_guarded_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-v0.20-results.json
+python validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-v0.20-results.json
+python validation/evidence_transit_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-window-analysis-v0.20-results.json
+python validation/evidence_guarded_transit_window_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-window-results.json
 ```
 
 浏览器交互测试需要外部安装 Playwright 或 Playwright Core `1.62.1` 与浏览器。设置 `PLAYWRIGHT_MODULE` 为该包路径后，执行 `node --test web/ui.test.cjs`；默认使用配套 Chromium，设置 `MOONGROUND_BROWSER_CHANNEL=chrome` 可使用已安装的 Google Chrome。CI 使用 GitHub Ubuntu runner 预装的 Chrome，并从固定上游 blob 下载、校验 Noto Sans CJK SC 字体，记录实际浏览器版本与字体，避开系统软件源下载。交互用例覆盖桌面与 390 像素移动视口、本地导入、下载、旧结果失效、原始像素标定配置、选帧检查点的导出与续接、坐标变换、双向过线与死区、独立配对恢复和完整联合恢复、固定地标状态、门控阻断、标定切换与末帧完整检查点、区间统计来源选择和下游恢复、整数 token 保留、控制点草稿保护和异步操作取消。
@@ -1446,12 +1568,20 @@ python validation/evidence_transit_window_analysis_verify.py --binary _build/nat
 安装 NumPy 后，可执行独立参考与长流检查。固定工具链在 Linux 和 Windows 上的原生产物均命名为 `main.exe`。
 
 ```sh
-python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.19-results.json
-python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.19-results.json
+python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.20-results.json
+python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.20-results.json
 moon package
-python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.19-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.19.0.zip --output validation/package-v0.19-results.json
+python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.20-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.20.0.zip --output validation/package-v0.20-results.json
 ```
+
+v0.20.0 的健康联合分窗验证见 [`validation/evidence-guarded-transit-window-results.json`](validation/evidence-guarded-transit-window-results.json)：17 个确定性场景、245 帧，含 111 帧阻断、18 次标定切换、36 次完成、37 次取消和 88 个封存窗。原健康通行到独立分窗的宿主链逐帧及最终状态一致，Python 整数离线分组再次核对统计；262 个原生切点分别从完整和组件检查点续接，31 项严格拒绝通过。其中 10 对状态能分别通过原健康通行与原观测分窗的恢复，新的健康采样／统计关系仍判定矛盾，覆盖隐藏轨迹时刻并集、连续采样中间帧、跨桶首间隔及未饱和精确样本数。
+
+同一记录包含 Node 7 项测试，30 个切点完成 120 次原生／JavaScript 四方向续接。验证 Brown 预热换系、旧待入口统计基线、冷标定屏障、16 个区间 × 16 个时限及 Int64 终端时刻；2,000 空帧成功返回 4,842,951 个 UTF-16 代码单元，5,000 帧因完整输出预算拒绝，5,001 帧先因帧数拒绝。首次健康确认后的数值失败验证同时间修正；早于统计起点的输入须改用符合起点的时刻。
+
+库四后端各 550 项、工作区消费者连库各 589 项通过，其中消费者 39 项。独立 ZIP 消费者记录见 [`validation/package-v0.20-results.json`](validation/package-v0.20-results.json)。Chromium 151.0.7922.34 与 Chrome 157.0.8103.52 的完整交互流程均通过，包含健康联合分窗、含标定屏障的所选帧检查点、共同导入、三模式独立结果及异步取消，并检查 390／1440 像素视口。
+
+v0.20 对此前 19 项独立参考及运动长流重新回归，记录见 [`regression`](validation/regression-v0.20-results.json)、[`camera`](validation/camera-v0.20-results.json)、[`checkpoint`](validation/checkpoint-v0.20-results.json)、[`robust-fit`](validation/robust-fit-v0.20-results.json)、[`reframe`](validation/reframe-v0.20-results.json)、[`gates`](validation/gates-v0.20-results.json)、[`analysis`](validation/analysis-v0.20-results.json)、[`health`](validation/health-v0.20-results.json)、[`guarded`](validation/guarded-v0.20-results.json)、[`transit`](validation/transit-v0.20-results.json)、[`projection-replace`](validation/projection-replace-v0.20-results.json)、[`evidence`](validation/evidence-v0.20-results.json)、[`evidence-analysis`](validation/evidence-analysis-v0.20-results.json)、[`evidence-guarded`](validation/evidence-guarded-v0.20-results.json)、[`evidence-transit`](validation/evidence-transit-v0.20-results.json)、[`evidence-transit-analysis`](validation/evidence-transit-analysis-v0.20-results.json)、[`evidence-guarded-transit`](validation/evidence-guarded-transit-v0.20-results.json)、[`transit-windows`](validation/transit-windows-v0.20-results.json)、[`evidence-transit-window-analysis`](validation/evidence-transit-window-analysis-v0.20-results.json) 和 [`stream`](validation/stream-v0.20-results.json)。长流性能仍针对既有运动协议，包含宿主产流、管道和调度。
 
 v0.19.0 的原观测联合分窗验证见 [`validation/evidence-transit-window-analysis-results.json`](validation/evidence-transit-window-analysis-results.json)：22 个确定性场景、120 帧，含 7 次完成、5 次取消和 40 个封存窗。逐项比较原 v0.16 测量／证据通行到 v0.18 分窗的宿主链，并用 Python 整数对完整输入离线分组，完整帧与最终状态一致；142 个原生切点分别从完整联合检查点和两份原组件恢复，44 项严格拒绝通过，其中 18 对检查点的组件可各自合法恢复，组合关系却不成立。
 

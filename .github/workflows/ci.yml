@@ -96,6 +96,8 @@ jobs:
         run: python validation/transit_windows_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-transit-windows.json
       - name: Verify joint observation transit windows and bound history recovery
         run: python validation/evidence_transit_window_analysis_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-evidence-transit-window-analysis.json
+      - name: Verify health-controlled transit windows and sample continuity
+        run: python validation/evidence_guarded_transit_window_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-evidence-guarded-transit-window.json
       - name: Exercise process protocol and bounded stream
         run: python validation/stream_test.py --binary "$MOONGROUND_CLI" --frames 3000 --targets 10 --latency-samples 100 --output _build/ci-stream.json
       - name: Check MBMOT consumer and package archive
@@ -104,7 +106,7 @@ jobs:
           moon -C examples/consumer check --target all --deny-warn
           moon -C examples/consumer test --target all --deny-warn
           moon package
-          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.19.0.zip --output _build/ci-package.json
+          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.20.0.zip --output _build/ci-package.json
       - name: Prepare browser test driver
         if: runner.os == 'Linux'
         run: |
@@ -154,6 +156,7 @@ jobs:
             _build/ci-evidence-guarded-transit.json
             _build/ci-transit-windows.json
             _build/ci-evidence-transit-window-analysis.json
+            _build/ci-evidence-guarded-transit-window.json
             _build/ci-stream.json
             _build/ci-package.json
             _build/site/*preview.png
