@@ -29,6 +29,7 @@ const assets = new Map([
   ["guarded.ndjson", "application/x-ndjson; charset=utf-8"],
   ["projection-replace.ndjson", "application/x-ndjson; charset=utf-8"],
   ["transit.json", "application/json; charset=utf-8"],
+  ["gate-evidence.json", "application/json; charset=utf-8"],
   ["robust-calibration.json", "application/json; charset=utf-8"],
 ]);
 const server = http.createServer((request, response) => {

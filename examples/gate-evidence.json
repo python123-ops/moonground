@@ -1,0 +1,4 @@
+{
+  "counting": "{\"session_id\":\"warehouse-example\",\"gates\":[{\"gate_id\":\"aisle\",\"start_m\":[1.2,0],\"end_m\":[1.2,8],\"deadband_m\":0.05},{\"gate_id\":\"cross-aisle\",\"start_m\":[0,3.6],\"end_m\":[6,3.6],\"deadband_m\":0.05}],\"max_gap_us\":\"500000\",\"max_tracks\":1000}",
+  "sigma_multiplier": 2
+}

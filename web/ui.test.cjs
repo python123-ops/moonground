@@ -2916,6 +2916,560 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       await exportJson("#download-guarded", "moonground-guarded-results.json"),
       projection,
     );
+    // The independent evidence source is raw text, including a late default
+    // configuration read which must not replace a user's draft.
+    const evidenceConfiguration = fs.readFileSync(
+      path.resolve(__dirname, "..", "examples", "gate-evidence.json"),
+      "utf8",
+    );
+    const evidenceDraft = await browser.newPage();
+    let releaseEvidenceDefault;
+    const heldEvidenceDefault = new Promise((resolve) => {
+      releaseEvidenceDefault = resolve;
+    });
+    let evidenceDefaultRequested;
+    const evidenceDefaultRequest = new Promise((resolve) => {
+      evidenceDefaultRequested = resolve;
+    });
+    await evidenceDraft.route("**/gate-evidence.json", async (route) => {
+      evidenceDefaultRequested();
+      await heldEvidenceDefault;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: evidenceConfiguration,
+      });
+    });
+    await evidenceDraft.goto(page.url());
+    await evidenceDefaultRequest;
+    await evidenceDraft
+      .locator("#gate-evidence-section")
+      .evaluate((details) => {
+        details.open = true;
+      });
+    await evidenceDraft
+      .locator("#evidence-input")
+      .fill(evidenceConfiguration + " ");
+    const evidenceDefaultResponse = evidenceDraft.waitForResponse((response) =>
+      response.url().endsWith("/gate-evidence.json"),
+    );
+    releaseEvidenceDefault();
+    await evidenceDefaultResponse;
+    await evidenceDraft.evaluate(
+      () => new Promise((resolve) => setTimeout(resolve, 0)),
+    );
+    assert.equal(
+      await evidenceDraft.locator("#evidence-input").inputValue(),
+      evidenceConfiguration + " ",
+    );
+    await evidenceDraft.close();
+    assert.equal(
+      await page
+        .locator("#gate-evidence-section")
+        .evaluate((details) => details.open),
+      false,
+    );
+    await page.locator("#gate-evidence-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page
+      .locator("#gate-input")
+      .fill(
+        fs.readFileSync(
+          path.resolve(__dirname, "..", "examples", "gates.json"),
+          "utf8",
+        ),
+      );
+    await page.locator("#analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#message")
+        .textContent.includes("已测量并统计 10 帧"),
+    );
+    const legacyBeforeEvidence = await exportJson(
+      "#download-analysis",
+      "moonground-analysis-results.json",
+    );
+    await page.locator("#transit-input").fill(transitConfiguration);
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已处理 10 帧"),
+    );
+    const transitBeforeEvidence = await exportJson(
+      "#download-transit",
+      "moonground-transit-results.json",
+    );
+    await page.locator("#evidence-input").fill(evidenceConfiguration);
+    await page.locator("#evidence-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已处理 10 帧"),
+    );
+    const warehouseEvidence = await exportJson(
+      "#download-evidence",
+      "moonground-gate-evidence-results.json",
+    );
+    assert.equal(
+      warehouseEvidence.checkpoint.format,
+      "moonground.gate-evidence",
+    );
+    assert.equal(warehouseEvidence.frames[0].kind, "gate_evidence_frame");
+    assert.equal(
+      warehouseEvidence.frames[0].evidence_scope,
+      "normal_band_on_filtered_mean_chord",
+    );
+    assert.ok(warehouseEvidence.frames[0].evidence.length > 0);
+    assert.deepEqual(
+      await exportJson(
+        "#download-analysis",
+        "moonground-analysis-results.json",
+      ),
+      legacyBeforeEvidence,
+    );
+    assert.deepEqual(
+      await exportJson("#download-transit", "moonground-transit-results.json"),
+      transitBeforeEvidence,
+    );
+    await page
+      .locator("#gate-input")
+      .fill((await page.locator("#gate-input").inputValue()) + " ");
+    assert.equal(await page.locator("#download-evidence").isDisabled(), false);
+    assert.equal(await page.locator("#download-transit").isDisabled(), false);
+    // Equal means and equal worst-axis sigma, but different normal variances.
+    // The whole path is measured by the existing ground session, not fabricated
+    // as measurement JSON in the browser test.
+    const directionalGates = {
+      session_id: "evidence-direction",
+      max_gap_us: "500000",
+      max_tracks: 10,
+      gates: [
+        {
+          gate_id: "vertical",
+          start_m: [0, -2],
+          end_m: [0, 2],
+          deadband_m: 0.05,
+        },
+        {
+          gate_id: "horizontal",
+          start_m: [-2, 0],
+          end_m: [2, 0],
+          deadband_m: 0.05,
+        },
+      ],
+    };
+    const directionalConfiguration = {
+      counting: JSON.stringify(directionalGates),
+      sigma_multiplier: 2,
+    };
+    const directionalFrame = (timestamp, x) => ({
+      timestamp_us: timestamp,
+      observations: [
+        { track_id: 1, point: [x, x], covariance: [0.0001, 0, 1] },
+        { track_id: 2, point: [x, x], covariance: [1, 0, 0.0001] },
+      ],
+    });
+    const directionalFrames = [
+      directionalFrame("0", 0.3),
+      directionalFrame("200000", 0.01),
+      directionalFrame("400000", -0.3),
+    ];
+    const directionalHeader = {
+      session_id: "evidence-direction",
+      mode: "ground",
+      motion: { q: 0.01, gate: 1e12 },
+    };
+    const directionalSource =
+      [directionalHeader, ...directionalFrames].map(JSON.stringify).join("\n") +
+      "\n";
+    await page.locator("#source").fill(directionalSource);
+    assert.equal(await page.locator("#download-evidence").isDisabled(), true);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 3 帧"),
+    );
+    const directionalMeasurement = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    assert.equal(
+      directionalMeasurement.frames[0].tracks[0].position_std_m,
+      directionalMeasurement.frames[0].tracks[1].position_std_m,
+    );
+    await page.locator("#gate-input").fill(JSON.stringify(directionalGates));
+    await page.locator("#analyze-gates").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#gate-message")
+        .textContent.includes("已统计 3 帧"),
+    );
+    const directionalLegacy = await exportJson(
+      "#download-gates",
+      "moonground-gate-results.json",
+    );
+    assert.equal(directionalLegacy.checkpoint.checkpoint_version, "1");
+    await page
+      .locator("#evidence-input")
+      .fill(JSON.stringify(directionalConfiguration));
+    await page.locator("#evidence-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已处理 3 帧"),
+    );
+    const directional = await exportJson(
+      "#download-evidence",
+      "moonground-gate-evidence-results.json",
+    );
+    const initialEvidence = (id, gate) =>
+      directional.frames[0].evidence.find(
+        (item) => item.track_id === id && item.gate_id === gate,
+      );
+    assert.equal(initialEvidence(1, "vertical").normal_std_m, 0.01);
+    assert.equal(initialEvidence(1, "vertical").side, "negative");
+    assert.equal(initialEvidence(1, "horizontal").normal_std_m, 1);
+    assert.equal(initialEvidence(1, "horizontal").side, "unconfirmed");
+    assert.equal(initialEvidence(2, "vertical").normal_std_m, 1);
+    assert.equal(initialEvidence(2, "vertical").side, "unconfirmed");
+    assert.equal(initialEvidence(2, "horizontal").normal_std_m, 0.01);
+    assert.equal(initialEvidence(2, "horizontal").side, "positive");
+    assert.equal(directional.frames.at(-1).counting.crossings.length, 2);
+    assert.equal(directionalLegacy.frames.at(-1).crossings.length, 4);
+    assert.deepEqual(
+      await exportJson("#download-gates", "moonground-gate-results.json"),
+      directionalLegacy,
+    );
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "0";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.match(
+      await page.locator("#evidence-summary").textContent(),
+      /4 项，2 项侧别未确认/,
+    );
+    assert.match(
+      await page.locator("#evidence-rows").textContent(),
+      /0\.0100000/,
+    );
+    assert.equal(await page.locator("#evidence-rows tr").count(), 4);
+    await page.locator("#gate-evidence-section").evaluate((details) => {
+      details.open = false;
+    });
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "1";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.equal(await page.locator("#evidence-rows tr").count(), 0);
+    await page.locator("#gate-evidence-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#evidence-rows tr").length === 4,
+    );
+    assert.match(
+      await page.locator("#evidence-rows").textContent(),
+      /侧别未确认/,
+    );
+    await page.locator("#frame").evaluate((input) => {
+      input.value = "0";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const evidenceCheckpoint = await exportJson(
+      "#save-evidence-checkpoint",
+      "moonground-gate-evidence-checkpoint.json",
+    );
+    assert.equal(evidenceCheckpoint.state.last_timestamp_us, "400000");
+    assert.ok(
+      evidenceCheckpoint.state.tracks.some((track) =>
+        track.anchors.some((anchor) => anchor?.covariance),
+      ),
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#gate-evidence-section").screenshot({
+      path: path.join(directory, "gate-evidence-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator("#gate-evidence-section").screenshot({
+      path: path.join(directory, "gate-evidence-desktop-preview.png"),
+    });
+    const badEvidenceCovariance = JSON.parse(
+      JSON.stringify(evidenceCheckpoint),
+    );
+    badEvidenceCovariance.state.tracks[0].anchors.find(Boolean).covariance = [
+      1, 2, 1,
+    ];
+    for (const invalid of [
+      { ...evidenceCheckpoint, checkpoint_version: "2" },
+      badEvidenceCovariance,
+      directionalLegacy.checkpoint,
+    ]) {
+      await page.locator("#evidence-checkpoint-file").setInputFiles({
+        name: "invalid-evidence.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(invalid)),
+      });
+      await page.waitForFunction(
+        () => document.querySelector("#evidence-checkpoint-file").value === "",
+      );
+      assert.equal(await page.locator("#evidence-message.error").count(), 1);
+      assert.equal(
+        await page.locator("#evidence-input").inputValue(),
+        JSON.stringify(directionalConfiguration),
+      );
+      assert.deepEqual(
+        await exportJson(
+          "#download-evidence",
+          "moonground-gate-evidence-results.json",
+        ),
+        directional,
+      );
+    }
+    // A wrong explicit source fails without replacing the currently valid result.
+    await page.locator("#evidence-guarded").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#evidence-message").classList.contains("error"),
+    );
+    assert.deepEqual(
+      await exportJson(
+        "#download-evidence",
+        "moonground-gate-evidence-results.json",
+      ),
+      directional,
+    );
+    await page.locator("#frame").evaluate((input) => {
+      input.value = input.max;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const evidenceMotionCheckpoint = await exportJson(
+      "#save-checkpoint",
+      "moonground-checkpoint.json",
+    );
+    const nextEvidenceObservation = directionalFrame("600000", -0.5);
+    await page
+      .locator("#source")
+      .fill(directionalSource + JSON.stringify(nextEvidenceObservation) + "\n");
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 4 帧"),
+    );
+    await page.locator("#evidence-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已处理 4 帧"),
+    );
+    const extendedEvidence = await exportJson(
+      "#download-evidence",
+      "moonground-gate-evidence-results.json",
+    );
+    await page
+      .locator("#source")
+      .fill(
+        JSON.stringify({ resume: evidenceMotionCheckpoint }) +
+          "\n" +
+          JSON.stringify(nextEvidenceObservation) +
+          "\n",
+      );
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 1 帧"),
+    );
+    await page.locator("#evidence-checkpoint-file").setInputFiles({
+      name: "evidence.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(evidenceCheckpoint)),
+    });
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已载入独立法向证据检查点"),
+    );
+    await page.locator("#evidence-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已处理 1 帧"),
+    );
+    const resumedEvidence = await exportJson(
+      "#download-evidence",
+      "moonground-gate-evidence-results.json",
+    );
+    assert.deepEqual(resumedEvidence.frames[0], extendedEvidence.frames.at(-1));
+    assert.deepEqual(resumedEvidence.checkpoint, extendedEvidence.checkpoint);
+    // k=0 still reports the actual normal sigma, and never substitutes the
+    // scalar worst-axis sigma for the directional covariance.
+    await page
+      .locator("#evidence-input")
+      .fill(
+        JSON.stringify({ ...directionalConfiguration, sigma_multiplier: 0 }),
+      );
+    await page.locator("#evidence-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已处理 1 帧"),
+    );
+    const zeroBand = await exportJson(
+      "#download-evidence",
+      "moonground-gate-evidence-results.json",
+    );
+    assert.ok(
+      zeroBand.frames[0].evidence.every((item) => item.normal_std_m > 0),
+    );
+    assert.ok(
+      zeroBand.frames[0].evidence.every(
+        (item) => item.lower_m === item.upper_m,
+      ),
+    );
+    const rawEvidenceSources = [
+      JSON.stringify({
+        ...directionalConfiguration,
+        counting: directionalConfiguration.counting.replace(
+          '"max_tracks":10',
+          '"max_tracks":10.0000000000000001',
+        ),
+      }),
+      '{"counting":' +
+        JSON.stringify(directionalConfiguration.counting) +
+        ',"sigma_multiplier":2,"sigma_multiplier":0}',
+      JSON.stringify({
+        ...directionalConfiguration,
+        counting: JSON.stringify({ resume: directionalLegacy.checkpoint }),
+      }),
+    ];
+    for (const rawConfiguration of rawEvidenceSources) {
+      await page.locator("#evidence-input").fill(rawConfiguration);
+      await page.locator("#evidence-ordinary").click();
+      await page.waitForFunction(() =>
+        document.querySelector("#evidence-message").classList.contains("error"),
+      );
+      assert.equal(await page.locator("#download-evidence").isDisabled(), true);
+      assert.equal(await page.locator("#download").isDisabled(), false);
+    }
+    // Empty guarded frames, including projection barriers, clear confidence
+    // anchors without changing the previous cumulative counts.
+    await page.locator("#guarded-input").fill(twiceProjectionSource);
+    await page.locator("#run-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#guarded-message")
+        .textContent.includes("含 2 次标定切换"),
+    );
+    const evidenceGuardedGates = JSON.parse(
+      JSON.parse(JSON.parse(projectionLines[0]).analysis).counting,
+    );
+    await page.locator("#evidence-input").fill(
+      JSON.stringify({
+        counting: JSON.stringify(evidenceGuardedGates),
+        sigma_multiplier: 2,
+      }),
+    );
+    await page.locator("#evidence-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已处理 17 帧"),
+    );
+    const guardedEvidence = await exportJson(
+      "#download-evidence",
+      "moonground-gate-evidence-results.json",
+    );
+    assert.equal(guardedEvidence.frames[6].evidence.length, 0);
+    assert.equal(guardedEvidence.frames[9].evidence.length, 0);
+    assert.equal(guardedEvidence.frames[16].evidence.length, 0);
+    assert.equal(
+      guardedEvidence.frames.at(-1).counting.counts[0].positive_to_negative,
+      "2",
+    );
+    assert.deepEqual(guardedEvidence.checkpoint.state.tracks, []);
+    await page.locator("#guarded-frame").evaluate((input) => {
+      input.value = "15";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.match(await page.locator("#evidence-rows").textContent(), /aisle/);
+    await page.locator("#guarded-frame").evaluate((input) => {
+      input.value = "16";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.match(
+      await page.locator("#evidence-rows").textContent(),
+      /本帧无可用/,
+    );
+    await page
+      .locator("#source")
+      .fill((await page.locator("#source").inputValue()) + " ");
+    assert.equal(await page.locator("#download-evidence").isDisabled(), false);
+    // New source choice supersedes an older preparation without a busy lock.
+    await page.locator("#example").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 10 帧"),
+    );
+    await page.evaluate(() => {
+      const original = window.setTimeout;
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 0) {
+          window.setTimeout = original;
+          window.releaseEvidencePreparation = () => callback(...args);
+          return -1;
+        }
+        return original.call(window, callback, delay, ...args);
+      };
+    });
+    await page.locator("#evidence-ordinary").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidencePreparation === "function",
+    );
+    await page.locator("#evidence-guarded").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已处理 17 帧"),
+    );
+    await page.evaluate(() => {
+      window.releaseEvidencePreparation();
+      delete window.releaseEvidencePreparation;
+    });
+    assert.equal(await page.locator("#evidence-message.error").count(), 0);
+    assert.deepEqual(
+      await exportJson(
+        "#download-evidence",
+        "moonground-gate-evidence-results.json",
+      ),
+      guardedEvidence,
+    );
+    await page.locator("#guarded-input").fill(twiceProjectionSource + " ");
+    assert.equal(await page.locator("#download-evidence").isDisabled(), true);
+    await page.locator("#evidence-input").fill(evidenceConfiguration);
+    await page.evaluate(() => {
+      const original = window.setTimeout;
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 0) {
+          window.setTimeout = original;
+          window.releaseEvidenceEdit = () => callback(...args);
+          return -1;
+        }
+        return original.call(window, callback, delay, ...args);
+      };
+    });
+    await page.locator("#evidence-ordinary").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceEdit === "function",
+    );
+    await page.locator("#evidence-input").fill(evidenceConfiguration + " ");
+    await page.evaluate(() => {
+      window.releaseEvidenceEdit();
+      delete window.releaseEvidenceEdit;
+    });
+    assert.equal(await page.locator("#download-evidence").isDisabled(), true);
+    assert.equal(await page.locator("#download").isDisabled(), false);
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

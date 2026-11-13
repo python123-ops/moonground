@@ -13,6 +13,10 @@ if (built.status !== 0) process.exit(built.status ?? 1);
 const output = path.join(root, "_build", "site");
 mkdirSync(output, { recursive: true });
 copyFileSync(
+  path.join(root, "examples", "gate-evidence.json"),
+  path.join(output, "gate-evidence.json"),
+);
+copyFileSync(
   path.join(root, "examples", "transit.json"),
   path.join(output, "transit.json"),
 );

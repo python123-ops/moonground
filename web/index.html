@@ -231,6 +231,83 @@
             <ul id="gate-events" aria-label="所选帧过线事件"></ul>
           </div>
         </div>
+        <details id="gate-evidence-section">
+          <summary id="evidence-summary">法向协方差证据</summary>
+          <p class="hint">
+            这是独立的过线统计：沿每个通道法向，将滤波位置均值的带符号距离扩展为
+            d ± kσ。
+            整个带越过闭合死区才确认侧别；侧别未确认时保留既有参考点。法向 σ
+            来自位置协方差， 与“本帧测量”中的最坏方向 σ
+            不同。有限通道交点仍采用均值连线，不表示端点或通行时间的置信范围。
+          </p>
+          <p class="hint">
+            门定义独立于上方通道和区间统计；首个 counting
+            为原始新建通道配置字符串，不能使用旧通道恢复起点。
+            独立检查点保留参考点协方差；恢复时须先将上游恢复至同一水位，再处理更晚的测量。
+          </p>
+          <label for="evidence-input" class="hint"
+            >独立法向证据配置或恢复起点 JSON</label
+          >
+          <textarea id="evidence-input" spellcheck="false"></textarea>
+          <div class="actions">
+            <button id="evidence-ordinary" disabled>
+              按普通测量的法向证据统计
+            </button>
+            <button id="evidence-guarded" disabled>
+              按健康门控测量的法向证据统计
+            </button>
+            <button id="download-evidence" class="quiet" disabled>
+              下载法向证据结果
+            </button>
+            <button id="save-evidence-checkpoint" class="quiet" disabled>
+              保存末帧证据检查点
+            </button>
+            <label class="file-button"
+              >载入证据检查点<input
+                id="evidence-checkpoint-file"
+                type="file"
+                accept=".json"
+            /></label>
+          </div>
+          <p
+            id="evidence-message"
+            class="hint"
+            role="status"
+            aria-live="polite"
+          >
+            先生成测量，再显式选择来源。
+          </p>
+          <p id="evidence-source" class="hint">尚未选择测量来源</p>
+          <p id="evidence-policy" class="hint"></p>
+          <div class="table-wrap">
+            <table class="gate-table">
+              <thead>
+                <tr>
+                  <th>通道</th>
+                  <th>累计负 → 正</th>
+                  <th>累计正 → 负</th>
+                </tr>
+              </thead>
+              <tbody id="evidence-counts"></tbody>
+            </table>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>通道</th>
+                  <th>目标 / 片段</th>
+                  <th>带符号距离 · m</th>
+                  <th>法向 σ · m</th>
+                  <th>法向带 · m</th>
+                  <th>侧别</th>
+                </tr>
+              </thead>
+              <tbody id="evidence-rows"></tbody>
+            </table>
+          </div>
+          <ul id="evidence-events" aria-label="所选帧按法向证据确认的过线"></ul>
+        </details>
         <details id="transit-section">
           <summary>两通道之间的区间通行时间</summary>
           <p class="hint">

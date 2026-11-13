@@ -12,6 +12,7 @@ import {
   moonground_health,
   moonground_guarded,
   moonground_transit,
+  moonground_gate_evidence,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -21,6 +22,7 @@ const gateInput = $("gate-input");
 const healthInput = $("health-input");
 const guardedInput = $("guarded-input");
 const transitInput = $("transit-input");
+const evidenceInput = $("evidence-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -66,6 +68,15 @@ let transitOrigin = null;
 let transitPendingOrigin = null;
 let transitSourceReference = null;
 let transitLoadedConfiguration = "";
+let evidenceRevision = 0;
+let evidenceRunToken = 0;
+let evidenceEdited = false;
+let evidenceReport = null;
+let evidenceResponse = null;
+let evidenceOrigin = null;
+let evidencePendingOrigin = null;
+let evidenceSourceReference = null;
+let evidenceLoadedConfiguration = "";
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -92,6 +103,7 @@ function invalidate() {
   results = [];
   measurementLines = [];
   invalidateTransitSource("ordinary");
+  invalidateEvidenceSource("ordinary");
   clearGateResult();
   configuration = null;
   loadedSource = "";
@@ -534,6 +546,7 @@ function render() {
   $("tracks").replaceChildren(...rows);
   renderGates(index);
   renderTransit("ordinary");
+  renderEvidence("ordinary");
   draw();
 }
 
@@ -576,6 +589,7 @@ async function run() {
     $("analyze-gates").disabled = gatesBusy;
     loadedSource = input;
     refreshTransitSources();
+    refreshEvidenceSources();
     slider.max = String(results.length - 1);
     slider.value = "0";
     slider.disabled = false;
@@ -624,6 +638,7 @@ $("analyze").addEventListener("click", async () => {
     results = report.frames.map((frame) => frame.measurement);
     measurementLines = results.map((frame) => JSON.stringify(frame));
     invalidateTransitSource("ordinary");
+    invalidateEvidenceSource("ordinary");
     gateReport = {
       frames: report.frames.map((frame) => frame.counting),
       checkpoint: report.checkpoint.counting,
@@ -632,6 +647,7 @@ $("analyze").addEventListener("click", async () => {
     gateResponse = JSON.stringify(gateReport);
     loadedSource = input;
     refreshTransitSources();
+    refreshEvidenceSources();
     analysisHeader = header;
     analysisGateInput = gates;
     analysisResponse = response;
@@ -1350,6 +1366,7 @@ function clearGuardedResult() {
   guardedResponse = null;
   guardedLoadedSource = "";
   invalidateTransitSource("guarded");
+  invalidateEvidenceSource("guarded");
   $("download-guarded").disabled = true;
   $("save-guarded-checkpoint").disabled = true;
   $("guarded-frame").disabled = true;
@@ -1486,6 +1503,7 @@ function renderGuarded() {
   );
   drawGuardedTimeline();
   renderTransit("guarded");
+  renderEvidence("guarded");
 }
 
 function requestGuarded(header, observations) {
@@ -1525,10 +1543,12 @@ async function runGuarded(
     if (current !== guardedRevision) return;
     guardedInput.value = input;
     invalidateTransitSource("guarded");
+    invalidateEvidenceSource("guarded");
     guardedLoadedSource = input;
     guardedReport = report;
     guardedResponse = response;
     refreshTransitSources();
+    refreshEvidenceSources();
     $("guarded-frame").max = String(report.frames.length - 1);
     $("guarded-frame").value = String(report.frames.length - 1);
     $("guarded-frame").disabled = false;
@@ -1664,15 +1684,16 @@ function invalidateTransitSource(origin) {
     transitMessage("所选来源的测量结果已更新，请重新统计区间通行。");
   } else if (transitPendingOrigin === origin) transitRevision++;
   refreshTransitSources();
+  refreshEvidenceSources();
 }
 
-function transitReference(origin) {
+function measurementReference(origin) {
   return origin === "ordinary" ? measurementLines : guardedReport;
 }
 
-function transitSourceCurrent(origin, reference) {
+function measurementSourceCurrent(origin, reference) {
   return (
-    transitReference(origin) === reference &&
+    measurementReference(origin) === reference &&
     (origin === "ordinary"
       ? results.length > 0 && source.value === loadedSource
       : !!guardedReport?.frames.length &&
@@ -1682,7 +1703,7 @@ function transitSourceCurrent(origin, reference) {
 
 function renderTransit(changedOrigin = transitOrigin) {
   if (!transitReport || changedOrigin !== transitOrigin) return;
-  if (!transitSourceCurrent(transitOrigin, transitSourceReference)) {
+  if (!measurementSourceCurrent(transitOrigin, transitSourceReference)) {
     clearTransitResult();
     return;
   }
@@ -1767,8 +1788,8 @@ function requestTransit(configuration, measurements) {
 }
 
 async function runTransit(origin) {
-  const reference = transitReference(origin);
-  if (!transitSourceCurrent(origin, reference)) return;
+  const reference = measurementReference(origin);
+  if (!measurementSourceCurrent(origin, reference)) return;
   const current = ++transitRevision,
     runToken = ++transitRunToken,
     configuration = transitInput.value;
@@ -1784,13 +1805,19 @@ async function runTransit(origin) {
             JSON.stringify(frame.analysis.measurement),
           );
     await new Promise((resolve) => setTimeout(resolve, 0));
-    if (current !== transitRevision || !transitSourceCurrent(origin, reference))
+    if (
+      current !== transitRevision ||
+      !measurementSourceCurrent(origin, reference)
+    )
       return;
     const { response, report } = requestTransit(
       configuration,
       lines.join("\n") + "\n",
     );
-    if (current !== transitRevision || !transitSourceCurrent(origin, reference))
+    if (
+      current !== transitRevision ||
+      !measurementSourceCurrent(origin, reference)
+    )
       return;
     transitReport = report;
     transitResponse = response;
@@ -1825,7 +1852,7 @@ $("download-transit").addEventListener("click", () => {
   if (
     !transitReport ||
     transitInput.value !== transitLoadedConfiguration ||
-    !transitSourceCurrent(transitOrigin, transitSourceReference)
+    !measurementSourceCurrent(transitOrigin, transitSourceReference)
   )
     return;
   saveFile(transitResponse + "\n", "moonground-transit-results.json");
@@ -1834,7 +1861,7 @@ $("save-transit-checkpoint").addEventListener("click", () => {
   if (
     !transitReport ||
     transitInput.value !== transitLoadedConfiguration ||
-    !transitSourceCurrent(transitOrigin, transitSourceReference)
+    !measurementSourceCurrent(transitOrigin, transitSourceReference)
   )
     return;
   saveFile(
@@ -1888,6 +1915,265 @@ fetch("./transit.json")
   .catch((error) => {
     if (!transitEdited && transitRevision === initialTransitRevision)
       transitMessage(error.message, true);
+  });
+
+function evidenceMessage(text, error = false) {
+  $("evidence-message").textContent = text;
+  $("evidence-message").classList.toggle("error", error);
+}
+
+function refreshEvidenceSources() {
+  $("evidence-ordinary").disabled =
+    !results.length || source.value !== loadedSource;
+  $("evidence-guarded").disabled =
+    !guardedReport?.frames.length || guardedInput.value !== guardedLoadedSource;
+}
+
+function clearEvidenceResult() {
+  evidenceRevision++;
+  evidenceReport = null;
+  evidenceResponse = null;
+  evidenceOrigin = null;
+  evidenceSourceReference = null;
+  evidenceLoadedConfiguration = "";
+  $("download-evidence").disabled = true;
+  $("save-evidence-checkpoint").disabled = true;
+  $("evidence-source").textContent = "尚未选择测量来源";
+  $("evidence-policy").textContent = "";
+  $("evidence-rows").replaceChildren();
+  $("evidence-counts").replaceChildren();
+  $("evidence-events").replaceChildren();
+  $("evidence-summary").textContent = "法向协方差证据";
+}
+
+function invalidateEvidenceSource(origin) {
+  if (evidenceOrigin === origin) {
+    clearEvidenceResult();
+    evidenceMessage("所选来源的测量结果已更新，请重新按法向证据统计。");
+  } else if (evidencePendingOrigin === origin) evidenceRevision++;
+  refreshEvidenceSources();
+}
+
+function renderEvidence(changedOrigin = evidenceOrigin) {
+  if (!evidenceReport || changedOrigin !== evidenceOrigin) return;
+  if (!measurementSourceCurrent(evidenceOrigin, evidenceSourceReference)) {
+    clearEvidenceResult();
+    return;
+  }
+  const index = Number(
+    $(evidenceOrigin === "ordinary" ? "frame" : "guarded-frame").value,
+  );
+  const frame = evidenceReport.frames[index];
+  if (!frame) return;
+  const unconfirmed = frame.evidence.filter(
+    (item) => item.side === "unconfirmed",
+  ).length;
+  $("evidence-summary").textContent =
+    `法向协方差证据 · 本帧 ${frame.evidence.length} 项，${unconfirmed} 项侧别未确认`;
+  $("evidence-source").textContent =
+    `${evidenceOrigin === "ordinary" ? "普通测量" : "健康门控测量"} · ${index + 1} / ${evidenceReport.frames.length} · ${frame.counting.timestamp_us} μs`;
+  $("evidence-policy").textContent =
+    `k = ${frame.sigma_multiplier}；按法向带判断侧别，有限通道交点仍取滤波均值连线。`;
+  $("evidence-rows").replaceChildren();
+  $("evidence-counts").replaceChildren();
+  $("evidence-events").replaceChildren();
+  // Avoid building a potentially large hidden table while another source's
+  // playback advances. Only the current selected frame is rendered on open.
+  if (!$("gate-evidence-section").open) return;
+  const row = (values) => {
+    const element = document.createElement("tr");
+    for (const value of values) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      element.append(cell);
+    }
+    return element;
+  };
+  const number = (value) => (value === 0 ? "0" : value.toPrecision(6));
+  const side = {
+    positive: "正侧已确认",
+    negative: "负侧已确认",
+    unconfirmed: "侧别未确认",
+  };
+  $("evidence-rows").replaceChildren(
+    ...frame.evidence.map((item) =>
+      row([
+        item.gate_id,
+        `${item.track_id} / ${item.segment_id}`,
+        number(item.distance_m),
+        number(item.normal_std_m),
+        `[${number(item.lower_m)}, ${number(item.upper_m)}]`,
+        side[item.side],
+      ]),
+    ),
+  );
+  if (!frame.evidence.length) {
+    const empty = row(["本帧无可用的法向侧别证据。"]);
+    empty.firstChild.colSpan = 6;
+    $("evidence-rows").append(empty);
+  }
+  $("evidence-counts").replaceChildren(
+    ...frame.counting.counts.map((count) =>
+      row([
+        count.gate_id,
+        count.negative_to_positive,
+        count.positive_to_negative,
+      ]),
+    ),
+  );
+  $("evidence-events").replaceChildren(
+    ...frame.counting.crossings.map((event) => {
+      const item = document.createElement("li");
+      item.textContent = `${event.gate_id} · 目标 ${event.track_id} / 片段 ${event.segment_id} · ${event.direction === "negative_to_positive" ? "负侧 → 正侧" : "正侧 → 负侧"} · 观测区间 [${event.from_timestamp_us}, ${event.to_timestamp_us}] μs`;
+      return item;
+    }),
+  );
+}
+
+function requestEvidence(configuration, measurements) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(configuration).length + encoder.encode(measurements).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器法向证据输入上限为 8 MiB；更大的流请使用原生命令。");
+  const request = JSON.stringify({ source: configuration, measurements });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("法向证据请求超过 16 Mi 字符上限。");
+  const response = moonground_gate_evidence(request),
+    report = unpack(response);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器法向证据结果超过 8 MiB；请使用原生命令保存。");
+  return { response, report };
+}
+
+async function runEvidence(origin) {
+  const reference = measurementReference(origin);
+  if (!measurementSourceCurrent(origin, reference)) return;
+  const current = ++evidenceRevision,
+    runToken = ++evidenceRunToken,
+    configuration = evidenceInput.value;
+  evidencePendingOrigin = origin;
+  evidenceMessage("正在按位置协方差的法向证据统计…");
+  try {
+    const lines =
+      origin === "ordinary"
+        ? reference
+        : reference.frames.map((frame) =>
+            JSON.stringify(frame.analysis.measurement),
+          );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (
+      current !== evidenceRevision ||
+      !measurementSourceCurrent(origin, reference)
+    )
+      return;
+    const { response, report } = requestEvidence(
+      configuration,
+      lines.join("\n") + "\n",
+    );
+    if (
+      current !== evidenceRevision ||
+      !measurementSourceCurrent(origin, reference)
+    )
+      return;
+    evidenceReport = report;
+    evidenceResponse = response;
+    evidenceOrigin = origin;
+    evidenceSourceReference = reference;
+    evidenceLoadedConfiguration = configuration;
+    $("download-evidence").disabled = false;
+    $("save-evidence-checkpoint").disabled = false;
+    const crossings = report.frames.reduce(
+      (total, frame) => total + frame.counting.crossings.length,
+      0,
+    );
+    evidenceMessage(
+      `已处理 ${report.frames.length} 帧，确认 ${crossings} 次过线。下表随所选来源的回放滑块显示；结果和状态独立保存。`,
+    );
+    renderEvidence();
+  } catch (error) {
+    if (current === evidenceRevision) evidenceMessage(error.message, true);
+  } finally {
+    if (runToken === evidenceRunToken) evidencePendingOrigin = null;
+  }
+}
+
+evidenceInput.addEventListener("input", () => {
+  evidenceEdited = true;
+  clearEvidenceResult();
+  evidenceMessage("法向证据配置已修改，请选择测量来源重新统计。");
+});
+$("gate-evidence-section").addEventListener("toggle", () => renderEvidence());
+$("evidence-ordinary").addEventListener("click", () => runEvidence("ordinary"));
+$("evidence-guarded").addEventListener("click", () => runEvidence("guarded"));
+$("download-evidence").addEventListener("click", () => {
+  if (
+    !evidenceReport ||
+    evidenceInput.value !== evidenceLoadedConfiguration ||
+    !measurementSourceCurrent(evidenceOrigin, evidenceSourceReference)
+  )
+    return;
+  saveFile(evidenceResponse + "\n", "moonground-gate-evidence-results.json");
+});
+$("save-evidence-checkpoint").addEventListener("click", () => {
+  if (
+    !evidenceReport ||
+    evidenceInput.value !== evidenceLoadedConfiguration ||
+    !measurementSourceCurrent(evidenceOrigin, evidenceSourceReference)
+  )
+    return;
+  saveFile(
+    JSON.stringify(evidenceReport.checkpoint) + "\n",
+    "moonground-gate-evidence-checkpoint.json",
+  );
+  evidenceMessage(
+    `已保存整批末帧 ${evidenceReport.checkpoint.state.last_timestamp_us} μs 的独立法向证据检查点。它不包含上游测量状态。`,
+  );
+});
+$("evidence-checkpoint-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const current = ++evidenceRevision;
+  try {
+    if (file.size > 8 * 1024 * 1024)
+      throw new Error("浏览器法向证据检查点文件上限为 8 MiB。");
+    const text = await file.text();
+    if (current !== evidenceRevision) return;
+    const { report } = requestEvidence('{"resume":' + text + "}", "");
+    const nextInput = JSON.stringify({ resume: report.checkpoint });
+    if (new TextEncoder().encode(nextInput).length > 8 * 1024 * 1024)
+      throw new Error("法向证据恢复起点超过浏览器 8 MiB 输入上限。");
+    if (current !== evidenceRevision) return;
+    clearEvidenceResult();
+    evidenceEdited = true;
+    evidenceInput.value = nextInput;
+    evidenceMessage(
+      `已载入独立法向证据检查点（末帧 ${report.checkpoint.state.last_timestamp_us ?? "尚无观测"} μs）。先将上游恢复至同一水位，再选择更晚的测量结果。`,
+    );
+  } catch (error) {
+    if (current === evidenceRevision) evidenceMessage(error.message, true);
+  } finally {
+    event.target.value = "";
+  }
+});
+const initialEvidenceRevision = evidenceRevision;
+fetch("./gate-evidence.json")
+  .then((response) => {
+    if (!response.ok) throw new Error("法向证据示例读取失败。");
+    return response.text();
+  })
+  .then((text) => {
+    if (
+      !evidenceEdited &&
+      evidenceRevision === initialEvidenceRevision &&
+      evidenceInput.value === ""
+    )
+      evidenceInput.value = text;
+  })
+  .catch((error) => {
+    if (!evidenceEdited && evidenceRevision === initialEvidenceRevision)
+      evidenceMessage(error.message, true);
   });
 
 drawGuardedTimeline();
