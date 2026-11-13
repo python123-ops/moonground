@@ -22,6 +22,8 @@ pub fn evidence_transit_analysis_json(String) -> String raise @types.GroundError
 
 pub fn evidence_transit_json(String) -> String raise @types.GroundError
 
+pub fn evidence_transit_window_analysis_json(String) -> String raise @types.GroundError
+
 pub fn gate_evidence_json(String) -> String raise @types.GroundError
 
 pub fn gates_json(String) -> String raise @types.GroundError
@@ -89,6 +91,13 @@ pub struct EvidenceTransitReplay {
 pub fn EvidenceTransitReplay::checkpoint_json(Self) -> String raise @types.GroundError
 pub fn EvidenceTransitReplay::open(String) -> Self raise @types.GroundError
 pub fn EvidenceTransitReplay::process_line(Self, String) -> String raise @types.GroundError
+
+pub struct EvidenceTransitWindowAnalysisReplay {
+  // private fields
+}
+pub fn EvidenceTransitWindowAnalysisReplay::checkpoint_json(Self) -> String raise @types.GroundError
+pub fn EvidenceTransitWindowAnalysisReplay::open(String) -> Self raise @types.GroundError
+pub fn EvidenceTransitWindowAnalysisReplay::process_line(Self, String) -> String raise @types.GroundError
 
 pub struct EvidenceTransitWindowReplay {
   // private fields
