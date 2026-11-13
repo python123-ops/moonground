@@ -1282,3 +1282,137 @@ test "packaged replacement barrier clears restored transit entry before a new se
   assert_eq(exit_only.counts[0].completed, 0L)
   assert_eq(transit.checkpoint().pending.length(), 1)
 }
+
+///|
+test "packaged motion covariance distinguishes normal evidence and resumes both checkpoints" {
+  let motion = @motion.MotionEstimator::new(
+    "consumer-evidence",
+    @moonground.MotionConfig::new(gate=1.0e12, max_tracks=10),
+  )
+  let counter = @events.EvidenceGateCounter::new(
+    "consumer-evidence",
+    [
+      @events.LineGate::new("horizontal", { x: 0.0, y: 0.0, }, {
+        x: 10.0,
+        y: 0.0,
+      }),
+      @events.LineGate::new("vertical", { x: 0.0, y: -10.0, }, {
+        x: 0.0,
+        y: 10.0,
+      }),
+    ],
+    @events.GateConfig::new(max_tracks=10),
+  )
+  let observation = (y : Double) => {
+    @moonground.GroundObservation::new(
+      7,
+      { x: 1.0, y, },
+      @moonground.Covariance2::new(100.0, 0.0, 0.01),
+    )
+  }
+  let first = counter.update(motion.update(0L, [observation(-1.0)]))
+  assert_eq(first.evidence[0].side, -1)
+  assert_true((first.evidence[0].normal_std_m - 0.1).abs() < 1.0e-12)
+  assert_eq(first.evidence[1].side, 0)
+  assert_eq(first.evidence[1].normal_std_m, 10.0)
+  let saved_motion = motion.checkpoint()
+  let saved_counter = counter.checkpoint()
+  assert_eq(saved_counter.last_timestamp_us, saved_motion.last_timestamp_us)
+  let resumed_motion = @motion.MotionEstimator::from_checkpoint(saved_motion)
+  let resumed_counter = @events.EvidenceGateCounter::from_checkpoint(
+    saved_counter,
+  )
+  let live = counter.update(motion.update(100000L, [observation(1.0)]))
+  let measured = resumed_motion.update(100000L, [observation(1.0)])
+  let resumed = resumed_counter.update(measured)
+  assert_eq(resumed.counting.crossings.length(), 1)
+  assert_eq(resumed.counting.crossings[0].gate_id, "horizontal")
+  assert_eq(
+    resumed.counting.counts[0].negative_to_positive,
+    live.counting.counts[0].negative_to_positive,
+  )
+  assert_eq(resumed.evidence[0].normal_std_m, live.evidence[0].normal_std_m)
+  assert_eq(resumed.evidence[0].lower_m, live.evidence[0].lower_m)
+  assert_eq(resumed.evidence[1].side, 0)
+  let anchor = resumed_counter.checkpoint().tracks[0].anchors[0].unwrap()
+  let covariance = measured.tracks[0].position_covariance.unwrap()
+  assert_eq(anchor.covariance.xx, covariance.xx)
+  assert_eq(anchor.covariance.xy, covariance.xy)
+  assert_eq(anchor.covariance.yy, covariance.yy)
+  assert_eq(saved_counter.last_timestamp_us, Some(0L))
+  assert_eq(saved_counter.tracks[0].anchors[0].unwrap().timestamp_us, 0L)
+  assert_true(saved_counter.tracks[0].anchors[1] is None)
+}
+
+///|
+test "packaged evidence forwards guarded blocked and projection replacement barriers" {
+  let (session, gates, landmarks, left, middle, _) = consumer_brown_guarded()
+  let definition = gates.checkpoint()
+  let evidence = @events.EvidenceGateCounter::new(
+    definition.session_id,
+    definition.gates,
+    definition.config,
+  )
+  ignore(
+    evidence.update(
+      session.update(0L, landmarks, [left]).analysis.measurement.motion,
+    ),
+  )
+  let crossed = evidence.update(
+    session.update(100000L, landmarks, [middle]).analysis.measurement.motion,
+  )
+  assert_eq(crossed.counting.counts[0].positive_to_negative, 1L)
+  let blocked = session.update(150000L, [], [])
+  assert_eq(blocked.decision, @guarded.Blocked)
+  assert_eq(evidence.checkpoint().tracks.length(), 1)
+  let interrupted = evidence.update(blocked.analysis.measurement.motion)
+  assert_eq(interrupted.counting.crossings.length(), 0)
+  assert_eq(evidence.checkpoint().tracks.length(), 0)
+  ignore(
+    evidence.update(
+      session.update(200000L, landmarks, [left]).analysis.measurement.motion,
+    ),
+  )
+  let recrossed = evidence.update(
+    session.update(300000L, landmarks, [middle]).analysis.measurement.motion,
+  )
+  assert_eq(recrossed.counting.counts[0].positive_to_negative, 2L)
+  guard session.checkpoint().analysis.measurement is Pixel(pixel) else {
+    fail("pixel state missing")
+  }
+  let barrier = session.replace_projection(
+    350000L,
+    pixel.calibration,
+    camera=pixel.camera,
+  )
+  assert_eq(barrier.decision, @guarded.Blocked)
+  assert_eq(barrier.analysis.measurement.motion.closed_segment_ids, ["2"])
+  // The downstream owner changes only when this complete empty frame arrives.
+  assert_eq(evidence.checkpoint().last_timestamp_us, Some(300000L))
+  assert_eq(evidence.checkpoint().tracks.length(), 1)
+  let cleared = evidence.update(barrier.analysis.measurement.motion)
+  assert_eq(cleared.counting.counts[0].positive_to_negative, 2L)
+  assert_eq(evidence.checkpoint().tracks.length(), 0)
+  let restored_session = @guarded.GuardedSession::from_checkpoint(
+    session.checkpoint(),
+  )
+  let restored_evidence = @events.EvidenceGateCounter::from_checkpoint(
+    evidence.checkpoint(),
+  )
+  assert_eq(
+    restored_evidence.checkpoint().last_timestamp_us,
+    restored_session.checkpoint().health.last_timestamp_us,
+  )
+  let new_segment = restored_session.update(400000L, landmarks, [middle])
+  assert_eq(new_segment.analysis.measurement.motion.tracks[0].segment_id, "3")
+  assert_eq(
+    restored_evidence.update(new_segment.analysis.measurement.motion).counting.crossings.length(),
+    0,
+  )
+  let reverse = restored_evidence.update(
+    restored_session.update(500000L, landmarks, [left]).analysis.measurement.motion,
+  )
+  assert_eq(reverse.counting.counts[0].positive_to_negative, 2L)
+  assert_eq(reverse.counting.counts[0].negative_to_positive, 1L)
+  assert_eq(evidence.checkpoint().last_timestamp_us, Some(350000L))
+}
