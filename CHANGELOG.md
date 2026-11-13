@@ -1,5 +1,13 @@
 # 更新记录
 
+## 0.13.0 — 本地开发版本，尚未发布
+
+- 新增与原会话并列的 `analysis.EvidenceAnalysisSession`，直接拥有像素／米制测量与法向证据计数器。证据数值域、几何、容量或累计失败时，两侧状态、协方差、路径、水位及段号分配均回滚，可修正后使用同一时刻重试。
+- 新增完整 `EvidenceAnalysisCheckpoint`，保存原测量检查点和完整证据检查点，验证共同会话、水位、当前合格目标集合及片段。当前确认参考点须逐值匹配滤波位置和原位置协方差；未确认时可无参考点或保留合法历史参考点，首帧参考点还须匹配已保存的片段首点。旧公开 record、均值分析与独立证据入口保持。
+- 支持独立 `fork()`、pixel `reframed()` 及两模式 `interrupt()`；中断关闭全部活跃片段，包括上一帧未输出的对象，清除证据参考点并保留累计与下一段号。新增带输入校验的 `LineGate::evidence_side`，与原诊断共用同一数值核。
+- 新增 `codec.EvidenceAnalysisReplay`、CLI `--analyze-evidence`／`--analyze-evidence-checkpoint`、纯函数 `evidence_analysis_json` 与 JavaScript `moonground_evidence_analysis`，从原始观测直接输出联合帧与单一完整检查点。浏览器提供独立联合回放、完整结果、选定帧检查点及共同恢复，不需手工配对两侧水位。
+- 本入口采用 v0.12 的法向侧别证据与数值支持域；它不改变 `GuardedSession`、`TransitCounter` 的原策略，不增加标定健康保证或外部存储事务。
+
 ## 0.12.0 — 本地开发版本，尚未发布
 
 - 新增独立 `events.EvidenceGateCounter`，直接消费原运动帧，以位置协方差沿通道法向的标准差构造 `d ± kσ`。整带越过闭死区才确认侧别；有限通道交点仍沿两次确认位置的均值弦计算，不赋予概率、端点或过线时间置信含义。

@@ -1416,3 +1416,127 @@ test "packaged evidence forwards guarded blocked and projection replacement barr
   assert_eq(reverse.counting.counts[0].negative_to_positive, 1L)
   assert_eq(evidence.checkpoint().last_timestamp_us, Some(350000L))
 }
+
+///|
+test "packaged Brown evidence analysis reframes and resumes one complete warm checkpoint" {
+  let (guarded, gates, _, left, middle, right) = consumer_brown_guarded()
+  guard guarded.checkpoint().analysis.measurement is Pixel(pixel) else {
+    fail("pixel state missing")
+  }
+  let definition = gates.checkpoint()
+  let session = @analysis.EvidenceAnalysisSession::from_pixel(
+    @moonground.MeasurementSession::from_checkpoint(pixel),
+    @events.EvidenceGateCounter::new(
+      definition.session_id,
+      definition.gates,
+      definition.config,
+    ),
+  )
+  ignore(session.update_pixel(0L, [left]))
+  let entered = session.update_pixel(100000L, [middle])
+  assert_eq(entered.counting.counting.counts[0].positive_to_negative, 1L)
+  guard session.checkpoint().measurement is Pixel(warm) else {
+    fail("pixel state missing")
+  }
+  let transform = @moonground.PixelTransform::new(
+    scale_x=0.5,
+    scale_y=1.25,
+    offset_x=-15.0,
+    offset_y=8.0,
+  )
+  let adapted = session.reframed(transform)
+  let saved = adapted.checkpoint()
+  let restored = @analysis.EvidenceAnalysisSession::from_checkpoint(saved)
+  guard saved.measurement is Pixel(reframed) else {
+    fail("pixel state missing")
+  }
+  assert_eq(reframed.motion.last_timestamp_us, saved.counting.last_timestamp_us)
+  assert_eq(saved.counting.sigma_multiplier, 2.0)
+  assert_eq(@debug.to_string(reframed.motion), @debug.to_string(warm.motion))
+  let original_next = session.update_pixel(200000L, [right])
+  let transformed_next = adapted.update_pixel(200000L, [
+    right.reframed(transform),
+  ])
+  let resumed_next = restored.update_pixel(200000L, [right.reframed(transform)])
+  assert_eq(@debug.to_string(transformed_next), @debug.to_string(resumed_next))
+  assert_eq(resumed_next.counting.counting.counts[1].positive_to_negative, 1L)
+  let a = original_next.measurement.motion.tracks[0]
+  let b = resumed_next.measurement.motion.tracks[0]
+  assert_eq(a.segment_id, b.segment_id)
+  assert_eq(a.accepted_count, b.accepted_count)
+  assert_true((a.position.unwrap().x - b.position.unwrap().x).abs() < 1.0e-8)
+  assert_true(
+    (a.observed_path_length_m - b.observed_path_length_m).abs() < 1.0e-8,
+  )
+  assert_eq(saved.counting.last_timestamp_us, Some(100000L))
+}
+
+///|
+test "packaged evidence count overflow preserves whole checkpoint and new identity on same-time retry" {
+  let session = @analysis.EvidenceAnalysisSession::from_ground(
+    @motion.MotionEstimator::new(
+      "consumer-evidence-atomic",
+      @moonground.MotionConfig::new(gate=1.0e12, max_tracks=10),
+    ),
+    @events.EvidenceGateCounter::new(
+      "consumer-evidence-atomic",
+      [
+        @events.LineGate::new("aisle", { x: 0.0, y: 0.0, }, { x: 10.0, y: 0.0, }),
+      ],
+      @events.GateConfig::new(max_tracks=10),
+    ),
+  )
+  let observe = (id : Int32, y : Double) => {
+    @moonground.GroundObservation::new(
+      id,
+      { x: 5.0, y, },
+      @moonground.Covariance2::isotropic(0.01),
+    )
+  }
+  ignore(session.update_ground(0L, [observe(7, -1.0)]))
+  let saved = session.checkpoint()
+  let exhausted = @analysis.EvidenceAnalysisSession::from_checkpoint({
+    ..saved,
+    counting: {
+      ..saved.counting,
+      counts: [
+        {
+          ..saved.counting.counts[0],
+          negative_to_positive: 9223372036854775807L,
+        },
+      ],
+    },
+  })
+  let before = @debug.to_string(exhausted.checkpoint())
+  try
+    exhausted.update_ground(100000L, [observe(7, 1.0), observe(9, -1.0)])
+  catch {
+    _ => ()
+  } noraise {
+    _ => fail("counter overflow must reject the complete frame")
+  }
+  assert_eq(@debug.to_string(exhausted.checkpoint()), before)
+  let retry = exhausted.update_ground(100000L, [
+    observe(7, -2.0),
+    observe(9, -1.0),
+  ])
+  assert_eq(retry.measurement.motion.tracks[0].accepted_count, 2)
+  assert_eq(retry.measurement.motion.tracks[1].segment_id, "2")
+  assert_eq(
+    retry.counting.counting.counts[0].negative_to_positive,
+    9223372036854775807L,
+  )
+  let resumed = @analysis.EvidenceAnalysisSession::from_checkpoint(
+    exhausted.checkpoint(),
+  )
+  let next = exhausted.update_ground(200000L, [
+    observe(7, -2.0),
+    observe(9, -1.0),
+  ])
+  assert_eq(
+    @debug.to_string(next),
+    @debug.to_string(
+      resumed.update_ground(200000L, [observe(7, -2.0), observe(9, -1.0)]),
+    ),
+  )
+}

@@ -1,0 +1,412 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.13-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "ec04a68832baf8aefe60f13992685f9a1c248c959382cdaa59dc8bed1c911175",
+  "health_reference_sha256": "de503a5fe49be912176c0af2ac1c509d99059e464f9c08655c5ce43b52233188",
+  "binary_sha256": "d984bbc977a646d438dd27bfb6fa4f4dde731ebb28e756a2f76caf3b23d3f40a",
+  "independent_host_composition": {
+    "cases": 6,
+    "frames": 108,
+    "allowed": 54,
+    "blocked": 54,
+    "closed_segments": 24,
+    "crossings": 47,
+    "resume_cut_points": 114,
+    "resume_source_forms": 2,
+    "maximum_absolute_oracle_errors": {
+      "$.landmarks[].projected_position_m[]": 7.419842518174846e-12,
+      "$.landmarks[].projected_covariance[]": 2.588532686809142e-18,
+      "$.landmarks[].residual_m[]": 7.419842518174846e-12,
+      "$.landmarks[].error_m": 9.16194897726541e-12,
+      "$.landmarks[].position_std_m": 1.8474805019152996e-16,
+      "$.rms_error_m": 4.648848465775547e-12,
+      "$.max_error_m": 9.16194897726541e-12,
+      "$.crossings[].from_position_m[]": 0,
+      "$.crossings[].to_position_m[]": 0,
+      "$.crossings[].position_m[]": 4.440892098500626e-16,
+      "$.crossings[].crossing_fraction": 1.1102230246251565e-16
+    },
+    "full_motion_covariance_paths_counters_and_anchors_equal": true,
+    "records": [
+      {
+        "name": "healthy_drift_missing_gap_recovery",
+        "frames": 18,
+        "checkpoint_sha256": "2bb3b5a0512b839816ba84b15a5a8dd2ff22ff3b3df4641e4ab6894d9238d0e6"
+      },
+      {
+        "name": "brown_0",
+        "frames": 18,
+        "checkpoint_sha256": "dfa58fa352e76ffe264133ffffa5bb95306fb04fd2ea45459a5ba8e750d305d2"
+      },
+      {
+        "name": "brown_1",
+        "frames": 18,
+        "checkpoint_sha256": "30251ea7e6449861bc69d5b8af67631f672d1c5d7513429a18e8bb27dc99aca8"
+      },
+      {
+        "name": "exact_time_above_2pow53",
+        "frames": 18,
+        "checkpoint_sha256": "dbda6a295286c59a72db26198002a6b5fb17fccc6ddddd328bce191a38472c37"
+      },
+      {
+        "name": "int64_maximum_time",
+        "frames": 18,
+        "checkpoint_sha256": "837e4e3eb607029d4aa036492680ea9633ed3b9a7422cf03ace56ee84b845726"
+      },
+      {
+        "name": "immediate_health",
+        "frames": 18,
+        "checkpoint_sha256": "758bb5a4fc3ea8395e1745e7e8919656d7a64edaf33bfd62f8e46d9d2da53cde"
+      }
+    ]
+  },
+  "strict_transport": {
+    "rejected_cases": 37,
+    "cases": [
+      {
+        "name": "missing_health_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field health"
+      },
+      {
+        "name": "source_object_instead_raw_text",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis must be a string"
+      },
+      {
+        "name": "unknown_source_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded source: unknown field extra"
+      },
+      {
+        "name": "duplicate_source_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"analysis\" at line 1, column 18"
+      },
+      {
+        "name": "ground_mode_forbidden",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded analysis requires pixel measurements"
+      },
+      {
+        "name": "calibration_matrix_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded health and analysis projection configurations differ"
+      },
+      {
+        "name": "calibration_roi_order_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded health and analysis projection configurations differ"
+      },
+      {
+        "name": "calibration_noise_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded health and analysis projection configurations differ"
+      },
+      {
+        "name": "calibration_maximum_scale_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded health and analysis projection configurations differ"
+      },
+      {
+        "name": "watermark_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded health and analysis watermarks differ"
+      },
+      {
+        "name": "wrong_guard_format",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported guarded checkpoint format or version"
+      },
+      {
+        "name": "wrong_guard_version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported guarded checkpoint format or version"
+      },
+      {
+        "name": "unknown_guard_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded checkpoint: unknown field extra"
+      },
+      {
+        "name": "nonhealthy_with_active_analysis",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: blocked guarded checkpoint retains active object state"
+      },
+      {
+        "name": "active_segment_predates_health_confirmation",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded object segment predates possible health confirmation"
+      },
+      {
+        "name": "gate_capacity_smaller_than_motion",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded gate capacity must cover the measurement capacity"
+      },
+      {
+        "name": "camera_parameters_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded health and analysis projection configurations differ"
+      },
+      {
+        "name": "resume_override",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded resume envelope: unknown field health"
+      },
+      {
+        "name": "blocked_duplicate_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: guarded object identities must be positive, unique and disjoint"
+      },
+      {
+        "name": "blocked_observation_lost_conflict",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: guarded object identities must be positive, unique and disjoint"
+      },
+      {
+        "name": "blocked_observation_removed_conflict",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: guarded object identities must be positive, unique and disjoint"
+      },
+      {
+        "name": "blocked_invalid_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "blocked_unknown_measurement_field",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: frame: unknown field extra"
+      },
+      {
+        "name": "blocked_too_many_observations",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: observations exceeds its record limit"
+      },
+      {
+        "name": "blocked_fractional_track_token",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "inner_timestamp_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: guarded measurement and landmark timestamps differ"
+      },
+      {
+        "name": "unknown_wrapper_field",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: guarded frame: unknown field extra"
+      },
+      {
+        "name": "inner_object_instead_raw_text",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: measurement must be a string"
+      },
+      {
+        "name": "duplicate_wrapper_key",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: invalid JSON: Duplicate key \"health\" at line 1, column 250"
+      },
+      {
+        "name": "late_error_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: guarded frame: unknown field extra"
+      },
+      {
+        "name": "invalid_utf8",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "2aa9bbf26c262f135245d8dc24301717d658a938b8eec445b46cd73824c4325c",
+        "stdout_bytes": 1798,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "admitted_fatal_landmark_identity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: unknown landmark identity"
+      },
+      {
+        "name": "admitted_fatal_landmark_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: unknown landmark identity"
+      },
+      {
+        "name": "admitted_active_capacity_exhaustion",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: active track capacity exceeded"
+      },
+      {
+        "name": "admitted_capacity_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: active track capacity exceeded"
+      },
+      {
+        "name": "admitted_counter_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: gate crossing counter exhausted"
+      },
+      {
+        "name": "admitted_counter_overflow_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: gate crossing counter exhausted"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "same_time_correction_from_saturated_checkpoint": "passed",
+    "same_time_correction_from_saved_health_and_measurement_failure": "passed"
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "exact_physical_line_bytes": 1391,
+    "exact_source_utf16_units": 8388619,
+    "source_one_unit_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+    }
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/guarded.test.mjs",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 19,
+      "continuations": 76,
+      "directions": [
+        "native-native",
+        "native-javascript",
+        "javascript-native",
+        "javascript-javascript"
+      ]
+    },
+    "test_script_sha256": "a13fbcb5e6e6447de509e0e3eda0552e9871661a4c58adcc2bac1596399ed3c2",
+    "bridge_sha256": "0dd978d82a493040f38bdaf0b6321d4c5a68bf11b76921b86d5129cf366be0d7",
+    "stdout_sha256": "d128c52418912727fb2e814616428eb72742f21f3aa98adcb9575eddf1bb6ac0",
+    "stderr": ""
+  },
+  "elapsed_seconds": 34.1396667,
+  "status": "passed"
+}

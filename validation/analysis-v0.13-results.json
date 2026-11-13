@@ -1,0 +1,474 @@
+{
+  "format_version": "1",
+  "seed": 20261117,
+  "tolerance": 2e-10,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.13-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "50f25a5129927e7cb628393d5649e29ba2e977396bbe123227599b712eecbce0",
+  "oracle_sha256": "e295e92f0345e182d0cac50fb23535c7134d3046cc029bafd8c0dff982e50416",
+  "fixture_source_sha256": "839fd5ab2dd317ec81f36aa17e7db71707eb52d44d4ab0fd165b502078acf719",
+  "binary_sha256": "d984bbc977a646d438dd27bfb6fa4f4dde731ebb28e756a2f76caf3b23d3f40a",
+  "separate_paths_and_reference": {
+    "cases": 10,
+    "frames": 89,
+    "crossings": 8,
+    "resume_cut_points": 99,
+    "resume_source_forms": 2,
+    "full_state_and_covariance_equal": true,
+    "statuses": [
+      "initializing",
+      "numerical_failure",
+      "ready",
+      "rejected_innovation",
+      "rejected_projection",
+      "uncertain"
+    ],
+    "maximum_absolute_oracle_errors": {
+      "$.crossings[].from_position_m[]": 0.0,
+      "$.crossings[].to_position_m[]": 0.0,
+      "$.crossings[].position_m[]": 5.551115123125783e-17,
+      "$.crossings[].crossing_fraction": 1.1102230246251565e-16
+    },
+    "records": [
+      {
+        "name": "identity_path_lifecycle",
+        "frames": 11,
+        "crossings": 1,
+        "restart_points": 12,
+        "checkpoint_sha256": "48a04ece1f3c3039cc0cc5170d4f53dda1644e741d00be597fadd91fa4d5d23e"
+      },
+      {
+        "name": "raw_camera_projection_rejection",
+        "frames": 10,
+        "crossings": 0,
+        "restart_points": 11,
+        "checkpoint_sha256": "3ce53cd7dbea6a7cd0886dd0bd498b25a5252d3d8203a4579fb0f17740ce3778"
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 4,
+        "crossings": 1,
+        "restart_points": 5,
+        "checkpoint_sha256": "efe7e05a96b99197d76b4524de4b29f2889734232c1c8edd1fef169bef758802"
+      },
+      {
+        "name": "effective_defaults",
+        "frames": 4,
+        "crossings": 1,
+        "restart_points": 5,
+        "checkpoint_sha256": "a7979fedc40984664a8e834700ded045e49c9adcc6cdaf4b10b9de1201be5f07"
+      },
+      {
+        "name": "extreme_scale_failure_retains_restorable_state",
+        "frames": 2,
+        "crossings": 0,
+        "restart_points": 3,
+        "checkpoint_sha256": "3a050a49bc6281b79a07227dc0fc3afc02dff948877be4fa14b15f3dbb71ccf4"
+      },
+      {
+        "name": "warehouse",
+        "frames": 10,
+        "crossings": 1,
+        "restart_points": 11,
+        "checkpoint_sha256": "10b39bf781b9b5a61be15641a18b3804db813164884a186cf70da3e6a8b4892f"
+      },
+      {
+        "name": "distorted-camera",
+        "frames": 15,
+        "crossings": 0,
+        "restart_points": 16,
+        "checkpoint_sha256": "5839e54d4a46b4a2f491ea0f63b3ad05f68894cdd4b0e9e15720b52d5e8d7ff7"
+      },
+      {
+        "name": "reframe",
+        "frames": 15,
+        "crossings": 0,
+        "restart_points": 16,
+        "checkpoint_sha256": "740caf9c9d630abf27c9460a897fdddca6d5fbc6949892aedebf74264800b746"
+      },
+      {
+        "name": "repeated_crossings",
+        "frames": 9,
+        "crossings": 4,
+        "restart_points": 10,
+        "checkpoint_sha256": "01c0d77064ea90a24f79268855b187f8869a12f70e7a708d31a11cc32ff699b5"
+      },
+      {
+        "name": "quality_rejects_current_positions",
+        "frames": 9,
+        "crossings": 0,
+        "restart_points": 10,
+        "checkpoint_sha256": "6a49cfb839238d3056a5245e925455d23d46a92ffacd1322cc4220547ca1c2b3"
+      }
+    ]
+  },
+  "strict_transport": {
+    "rejected_cases": 36,
+    "cases": [
+      {
+        "name": "source_missing_counting",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field counting"
+      },
+      {
+        "name": "source_object_instead_raw_text",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: measurement must be a string"
+      },
+      {
+        "name": "source_unknown_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis source: unknown field extra"
+      },
+      {
+        "name": "source_duplicate_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"measurement\" at line 1, column 21"
+      },
+      {
+        "name": "measurement_duplicate_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"mode\" at line 1, column 48"
+      },
+      {
+        "name": "gate_duplicate_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"max_tracks\" at line 1, column 151"
+      },
+      {
+        "name": "gate_fractional_capacity_token",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      {
+        "name": "different_initial_session",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint session or watermark differs"
+      },
+      {
+        "name": "measurement_only_warm_start",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint session or watermark differs"
+      },
+      {
+        "name": "counting_only_warm_start",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint session or watermark differs"
+      },
+      {
+        "name": "joint_wrong_format",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported analysis checkpoint format or version"
+      },
+      {
+        "name": "joint_wrong_version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported analysis checkpoint format or version"
+      },
+      {
+        "name": "joint_unknown_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint: unknown field extra"
+      },
+      {
+        "name": "checkpoint_session_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint session or watermark differs"
+      },
+      {
+        "name": "checkpoint_watermark_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint session or watermark differs"
+      },
+      {
+        "name": "checkpoint_missing_gate_track",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint accepted gate tracks differ"
+      },
+      {
+        "name": "checkpoint_extra_gate_track",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate checkpoint track and segment identities must be unique"
+      },
+      {
+        "name": "checkpoint_wrong_segment",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint gate segment differs"
+      },
+      {
+        "name": "checkpoint_missing_stable_anchor",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint stable point lacks its current gate anchor"
+      },
+      {
+        "name": "checkpoint_anchor_current_position_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint current gate anchor differs from filtered position"
+      },
+      {
+        "name": "checkpoint_anchor_predates_motion_segment",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint gate anchor predates its motion segment"
+      },
+      {
+        "name": "checkpoint_quality_forged_track",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis checkpoint accepted gate tracks differ"
+      },
+      {
+        "name": "resume_override",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis resume envelope: unknown field measurement"
+      },
+      {
+        "name": "raw_fractional_track_token",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "69d50ccb5e87e05b81057fc283f6c83660d272062cd3c6c00908bc825625c47c",
+        "stdout_bytes": 958,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_observation_key",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "69d50ccb5e87e05b81057fc283f6c83660d272062cd3c6c00908bc825625c47c",
+        "stdout_bytes": 958,
+        "stderr": "line 3: invalid JSON: Duplicate key \"timestamp_us\" at line 1, column 25"
+      },
+      {
+        "name": "same_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "69d50ccb5e87e05b81057fc283f6c83660d272062cd3c6c00908bc825625c47c",
+        "stdout_bytes": 958,
+        "stderr": "line 3: frame timestamps must strictly increase"
+      },
+      {
+        "name": "unknown_frame_key",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "69d50ccb5e87e05b81057fc283f6c83660d272062cd3c6c00908bc825625c47c",
+        "stdout_bytes": 958,
+        "stderr": "line 3: frame: unknown field extra"
+      },
+      {
+        "name": "duplicate_observation",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "69d50ccb5e87e05b81057fc283f6c83660d272062cd3c6c00908bc825625c47c",
+        "stdout_bytes": 958,
+        "stderr": "line 3: duplicate, conflicting, or nonpositive track identity"
+      },
+      {
+        "name": "conflicting_lost_identity",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "69d50ccb5e87e05b81057fc283f6c83660d272062cd3c6c00908bc825625c47c",
+        "stdout_bytes": 958,
+        "stderr": "line 3: duplicate, conflicting, or nonpositive track identity"
+      },
+      {
+        "name": "blank_observation",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "69d50ccb5e87e05b81057fc283f6c83660d272062cd3c6c00908bc825625c47c",
+        "stdout_bytes": 958,
+        "stderr": "line 3: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "invalid_utf8",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "69d50ccb5e87e05b81057fc283f6c83660d272062cd3c6c00908bc825625c47c",
+        "stdout_bytes": 958,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "checkpoint_mode_late_failure",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: frame: unknown field extra"
+      },
+      {
+        "name": "counter_overflow_on_crossing",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: gate crossing counter exhausted"
+      },
+      {
+        "name": "counter_overflow_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: gate crossing counter exhausted"
+      },
+      {
+        "name": "late_gate_geometry_failure_preserves_prefix",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "f7a9629bed37fccdbda61da42bd2897a8a90b39c219804258a89a372dbc7e1f1",
+        "stdout_bytes": 506,
+        "stderr": "line 3: gate geometry is not representable"
+      },
+      {
+        "name": "late_gate_geometry_failure_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: gate geometry is not representable"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "failed_checkpoint_has_no_output": true,
+    "saturated_checkpoint_same_time_correction": "passed",
+    "mathematical_integer_token": "passed"
+  },
+  "anchors_and_int64_counters": {
+    "legal_band_anchor_timestamp_us": "100000",
+    "current_motion_timestamp_us": "200000",
+    "before_negative_to_positive": "9007199254740993",
+    "after_negative_to_positive": "9007199254740994",
+    "crossing_continues_from_retained_anchor": true
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "exact_physical_line_bytes": 511,
+    "physical_one_byte_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "c8ff5bc126529ccb8c33ac50288956440e82e0901c455240f8ddd2ee01c47e45",
+      "stdout_bytes": 964,
+      "stderr": "line 3: line byte limit exceeded"
+    },
+    "observation_text_limit": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "c8ff5bc126529ccb8c33ac50288956440e82e0901c455240f8ddd2ee01c47e45",
+      "stdout_bytes": 964,
+      "stderr": "line 3: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "exact_source_utf16_units": 8388619,
+    "source_one_unit_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+    },
+    "joint_checkpoint_near_boundary_utf16_units": 8388608,
+    "joint_checkpoint_two_unit_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+    }
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/analysis.test.mjs",
+    "summary": {
+      "tests": 9,
+      "pass": 9,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 55,
+      "continuations": 220,
+      "directions": [
+        "native-native",
+        "native-javascript",
+        "javascript-native",
+        "javascript-javascript"
+      ]
+    },
+    "test_script_sha256": "87a62e70d26ae2bd268c7b7437062ce1f8f139d011477a7fcc2e75a6d1d44674",
+    "bridge_sha256": "0dd978d82a493040f38bdaf0b6321d4c5a68bf11b76921b86d5129cf366be0d7",
+    "stdout_sha256": "260cdd5d9cdaff66177acf5ff73a86fdbd1d530bbe37d2e2745c2c2c563f3246",
+    "stderr": ""
+  },
+  "elapsed_seconds": 30.360514700000003,
+  "status": "passed"
+}

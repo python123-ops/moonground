@@ -11,4 +11,5 @@ import {
   "python123-ops/moonground/guarded",
   "python123-ops/moonground/transit",
   "python123-ops/moondeteval",
+  "moonbitlang/core/debug",
 } for "test"
