@@ -31,6 +31,7 @@ options(
         "moonground_evidence_guarded_transit",
         "moonground_transit_windows",
         "moonground_evidence_transit_window_analysis",
+        "moonground_evidence_guarded_transit_window",
       ],
       "format": "esm",
     },
