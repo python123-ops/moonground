@@ -1,5 +1,13 @@
 # 更新记录
 
+## 0.14.0 — 本地开发版本，尚未发布
+
+- 新增并列的 `guarded.EvidenceGuardedSession`，仅当前地标确认健康时执行像素测量与法向证据计数；其他状态原子结束全部活跃片段并清除参考点。健康确认进度、运动和证据计数共同提交，下游数值或累计失败也回滚本帧刚增加的地标样本和水位。
+- 新增完整 `EvidenceGuardedCheckpoint`，内嵌 v0.13 证据分析与原健康检查点，严格绑定 pixel 模式、共同水位、投影、完整相机配置和容量；继承当前／历史证据参考点验证，拒绝非健康状态残留轨迹及早于可能健康确认的片段。
+- 支持独立 `fork()`、共同 `reframed()` 和显式 `replace_projection()`。投影切换使用严格更晚的空帧屏障，保留原倍率、通道累计、下一段号及地标真值，并重新采样确认健康。旧 `GuardedSession`、公开 record 和原格式保持。
+- 新增 `codec.EvidenceGuardedReplay`、CLI `--guarded-evidence`／`--guarded-evidence-checkpoint`、纯函数 `evidence_guarded_json` 与 JavaScript `moonground_evidence_guarded`。独立浏览器入口直接读取新格式原文，显示健康、法向证据及投影切换，保存完整结果与检查点；不自动转换旧均值门控来源。
+- 阻断仍先验证原对象身份、有限像素、正定协方差及容量，随后不投影、不运行法向数值核。健康覆盖与协方差条件保持原含义，外部日志、存储及交付由宿主协调。
+
 ## 0.13.0 — 本地开发版本，尚未发布
 
 - 新增与原会话并列的 `analysis.EvidenceAnalysisSession`，直接拥有像素／米制测量与法向证据计数器。证据数值域、几何、容量或累计失败时，两侧状态、协方差、路径、水位及段号分配均回滚，可修正后使用同一时刻重试。

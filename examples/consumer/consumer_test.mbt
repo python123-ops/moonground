@@ -1540,3 +1540,189 @@ test "packaged evidence count overflow preserves whole checkpoint and new identi
     ),
   )
 }
+
+///|
+fn consumer_evidence_guarded(
+  config : @health.HealthConfig,
+  multiplier~ : Double = 3.0,
+) -> (
+  @guarded.EvidenceGuardedSession,
+  Array[@health.LandmarkObservation],
+  @moonground.PixelObservation,
+  @moonground.PixelObservation,
+  @moonground.PixelObservation,
+) raise @moonground.GroundError {
+  let (legacy, gates, landmarks, left, middle, right) = consumer_brown_guarded()
+  let source = legacy.checkpoint()
+  guard source.analysis.measurement is Pixel(pixel) else {
+    raise @moonground.GroundError::InvalidInput("missing pixel fixture")
+  }
+  let definition = gates.checkpoint()
+  let analysis = @analysis.EvidenceAnalysisSession::from_pixel(
+    @moonground.MeasurementSession::from_checkpoint(pixel),
+    @events.EvidenceGateCounter::new(
+      definition.session_id,
+      definition.gates,
+      definition.config,
+      sigma_multiplier=multiplier,
+    ),
+  )
+  let health = @health.CalibrationMonitor::new(
+    pixel.calibration,
+    source.health.landmarks,
+    config,
+    camera?=pixel.camera,
+  )
+  (
+    @guarded.EvidenceGuardedSession::new(analysis, health),
+    landmarks,
+    left,
+    middle,
+    right,
+  )
+}
+
+///|
+test "packaged evidence guard rolls back the sample newly confirming healthy after numeric failure" {
+  let (session, landmarks, left, _, _) = consumer_evidence_guarded(
+    @health.HealthConfig::new(confirmation_us=300000L, min_observations=3),
+    multiplier=1.0e308,
+  )
+  assert_eq(
+    session.update(0L, landmarks, [left]).health.status,
+    @health.Pending,
+  )
+  assert_eq(
+    session.update(150000L, landmarks, [left]).health.streak_observations,
+    2,
+  )
+  let before = @debug.to_string(session.checkpoint())
+  let large_covariance = {
+    ..left,
+    covariance: @moonground.Covariance2::isotropic(1000.0),
+  }
+  try session.update(300000L, landmarks, [large_covariance]) catch {
+    _ => ()
+  } noraise {
+    _ => fail("normal radius overflow must roll back the confirmation sample")
+  }
+  assert_eq(@debug.to_string(session.checkpoint()), before)
+  assert_eq(session.checkpoint().health.streak.unwrap().observations, 2)
+  assert_eq(session.checkpoint().health.last_timestamp_us, Some(150000L))
+  guard session.checkpoint().analysis.measurement is Pixel(pixel) else {
+    fail("pixel state missing")
+  }
+  assert_eq(pixel.motion.next_segment_id, 1L)
+  let retry = session.update(300000L, landmarks, [left])
+  assert_eq(retry.decision, @guarded.Allowed)
+  assert_eq(retry.health.streak_observations, 3)
+  assert_eq(retry.analysis.measurement.motion.tracks[0].segment_id, "1")
+  assert_eq(retry.analysis.counting.evidence[0].side, 0)
+  let restored = @guarded.EvidenceGuardedSession::from_checkpoint(
+    session.checkpoint(),
+  )
+  assert_eq(
+    @debug.to_string(restored.checkpoint()),
+    @debug.to_string(session.checkpoint()),
+  )
+}
+
+///|
+test "packaged Brown evidence guard warm reframe and cold projection replacement share complete recovery" {
+  let (session, landmarks, left, middle, right) = consumer_evidence_guarded(
+    @health.HealthConfig::new(confirmation_us=100000L, min_observations=2),
+  )
+  ignore(session.update(0L, landmarks, [left]))
+  ignore(session.update(100000L, landmarks, [left]))
+  let entry = session.update(200000L, landmarks, [middle])
+  assert_eq(entry.analysis.counting.counting.counts[0].positive_to_negative, 1L)
+  let transform = @moonground.PixelTransform::new(
+    scale_x=0.5,
+    scale_y=1.25,
+    offset_x=-15.0,
+    offset_y=8.0,
+  )
+  let adapted = session.reframed(transform)
+  let saved = adapted.checkpoint()
+  assert_eq(
+    @debug.to_string(saved.analysis.counting),
+    @debug.to_string(session.checkpoint().analysis.counting),
+  )
+  let resumed = @guarded.EvidenceGuardedSession::from_checkpoint(saved)
+  let references = landmarks.map(item => item.reframed(transform))
+  let continued = adapted.update(300000L, references, [
+    right.reframed(transform),
+  ])
+  assert_eq(
+    @debug.to_string(continued),
+    @debug.to_string(
+      resumed.update(300000L, references, [right.reframed(transform)]),
+    ),
+  )
+  let ordinary = session.update(300000L, landmarks, [right])
+  assert_eq(
+    continued.analysis.counting.counting.counts[1].positive_to_negative,
+    ordinary.analysis.counting.counting.counts[1].positive_to_negative,
+  )
+  assert_true(
+    (continued.analysis.measurement.motion.tracks[0].position.unwrap().x -
+    ordinary.analysis.measurement.motion.tracks[0].position.unwrap().x).abs() <
+    1.0e-8,
+  )
+  let projection = @moonground.GroundCalibration::from_homography(
+    [0.025, 0.0, 0.0, 0.0, 0.025, 0.0, 0.0, 0.0, 1.0],
+    [
+      { x: 0.0, y: 0.0, },
+      { x: 640.0, y: 0.0, },
+      { x: 640.0, y: 480.0, },
+      { x: 0.0, y: 480.0, },
+    ],
+    ground_noise_floor_m=0.015,
+  )
+  let barrier = resumed.replace_projection(350000L, projection, camera=None)
+  assert_eq(barrier.health.status, @health.Insufficient)
+  assert_eq(barrier.analysis.measurement.motion.closed_segment_ids, ["1"])
+  let after = resumed.checkpoint()
+  assert_eq(after.analysis.counting.sigma_multiplier, 3.0)
+  assert_eq(after.analysis.counting.counts[0].positive_to_negative, 1L)
+  assert_eq(after.analysis.counting.counts[1].positive_to_negative, 1L)
+  guard after.analysis.measurement is Pixel(pixel) else {
+    fail("pixel state missing")
+  }
+  assert_eq(pixel.motion.next_segment_id, 2L)
+  assert_true(pixel.camera is None)
+  let restored = @guarded.EvidenceGuardedSession::from_checkpoint(after)
+  let new_landmarks = after.health.landmarks.map(item => {
+    @health.LandmarkObservation::new(
+      item.landmark_id,
+      { x: item.ground_m.x / 0.025, y: item.ground_m.y / 0.025, },
+      @moonground.Covariance2::isotropic(2.0),
+    )
+  })
+  let new_object = (x : Double) => {
+    @moonground.PixelObservation::new(
+      7,
+      { x: x / 0.025, y: 6.0 / 0.025, },
+      @moonground.Covariance2::isotropic(2.0),
+    )
+  }
+  for (time, x) in [(400000L, 6.4), (500000L, 6.4), (600000L, 5.6)] {
+    let result = resumed.update(time, new_landmarks, [new_object(x)])
+    assert_eq(
+      @debug.to_string(result),
+      @debug.to_string(restored.update(time, new_landmarks, [new_object(x)])),
+    )
+    if time == 400000L {
+      assert_eq(result.decision, @guarded.Blocked)
+    } else if time == 500000L {
+      assert_eq(result.analysis.measurement.motion.tracks[0].segment_id, "2")
+      assert_eq(result.analysis.measurement.motion.tracks[0].accepted_count, 1)
+      assert_eq(result.analysis.counting.counting.crossings.length(), 0)
+    }
+  }
+  assert_eq(
+    resumed.checkpoint().analysis.counting.counts[0].negative_to_positive,
+    1L,
+  )
+  assert_eq(saved.health.last_timestamp_us, Some(200000L))
+}

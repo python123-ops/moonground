@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "archive_sha256": "053a23c5d047958d2387198cc0c0f018f74a58e68285031d5b9b610dfab6389f",
+  "archive_files": 175,
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.14.0.zip --output validation/package-v0.14-results.json",
+  "targets": [
+    "wasm",
+    "wasm-gc",
+    "js",
+    "native"
+  ],
+  "test_summaries": [
+    "Total tests: 383, passed: 383, failed: 0. [wasm]",
+    "Total tests: 383, passed: 383, failed: 0. [wasm-gc]",
+    "Total tests: 383, passed: 383, failed: 0. [js]",
+    "Total tests: 383, passed: 383, failed: 0. [native]"
+  ],
+  "test_output_sha256": "e7908a40c122c04060724e7aaca72831eedafd48067caff41c6477ee4e039ca8",
+  "dependency": "Mooncakes MBMOT 0.3.0 and MoonDetEval 0.2.1; MoonGround exclusively from the ZIP",
+  "detector_fixture_ap50": 1.0,
+  "detector_fixture_scope": "bbox coordinates and category only; no speed accuracy claim",
+  "source_checkout_linked": false
+}
