@@ -3470,6 +3470,460 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     });
     assert.equal(await page.locator("#download-evidence").isDisabled(), true);
     assert.equal(await page.locator("#download").isDisabled(), false);
+    // Joint evidence analysis owns a separate replay. It never replaces an
+    // already displayed ordinary measurement, legacy analysis or transit run.
+    await page
+      .locator("#gate-input")
+      .fill(
+        fs.readFileSync(
+          path.resolve(__dirname, "..", "examples", "gates.json"),
+          "utf8",
+        ),
+      );
+    await page.locator("#analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#message")
+        .textContent.includes("已测量并统计 10 帧"),
+    );
+    const jointBase = await exportJson("#download", "moonground-results.json");
+    const jointLegacy = await exportJson(
+      "#download-analysis",
+      "moonground-analysis-results.json",
+    );
+    await page.locator("#transit-input").fill(transitConfiguration);
+    await page.locator("#transit-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#transit-message")
+        .textContent.includes("已处理 10 帧"),
+    );
+    const jointTransit = await exportJson(
+      "#download-transit",
+      "moonground-transit-results.json",
+    );
+    await page.locator("#evidence-input").fill(evidenceConfiguration);
+    await page.locator("#evidence-ordinary").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已处理 10 帧"),
+    );
+    const independentBeforeJoint = await exportJson(
+      "#download-evidence",
+      "moonground-gate-evidence-results.json",
+    );
+    const ordinaryCounterBeforeJoint = await page
+      .locator("#counter")
+      .textContent();
+    const jointInput = await page.locator("#source").inputValue();
+    await page.locator("#evidence-analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已联合计算 10 帧"),
+    );
+    const evidenceJoint = await exportJson(
+      "#download-evidence-analysis",
+      "moonground-evidence-analysis-results.json",
+    );
+    assert.equal(
+      evidenceJoint.checkpoint.format,
+      "moonground.evidence-analysis",
+    );
+    assert.ok(
+      evidenceJoint.frames.every(
+        (frame) => frame.kind === "evidence_analysis_frame",
+      ),
+    );
+    assert.deepEqual(
+      evidenceJoint.frames.map((frame) => frame.measurement),
+      jointBase.frames,
+    );
+    assert.deepEqual(
+      evidenceJoint.frames.map((frame) => frame.counting),
+      independentBeforeJoint.frames,
+    );
+    assert.deepEqual(
+      evidenceJoint.checkpoint.counting,
+      independentBeforeJoint.checkpoint,
+    );
+    assert.equal(await page.locator("#download-evidence").isDisabled(), true);
+    assert.equal(
+      await page.locator("#save-evidence-checkpoint").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#counter").textContent(),
+      ordinaryCounterBeforeJoint,
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      jointBase,
+    );
+    assert.deepEqual(
+      await exportJson(
+        "#download-analysis",
+        "moonground-analysis-results.json",
+      ),
+      jointLegacy,
+    );
+    assert.deepEqual(
+      await exportJson("#download-transit", "moonground-transit-results.json"),
+      jointTransit,
+    );
+    await page.locator("#evidence-joint-frame").evaluate((input) => {
+      input.value = "2";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.equal(
+      await page.locator("#evidence-joint-counter").textContent(),
+      "3 / 10",
+    );
+    assert.equal(
+      await page.locator("#counter").textContent(),
+      ordinaryCounterBeforeJoint,
+    );
+    assert.match(
+      await page.locator("#evidence-joint-tracks").textContent(),
+      /1 \/ 1/,
+    );
+    const evidenceJointCheckpoint = await exportJson(
+      "#save-evidence-analysis-checkpoint",
+      "moonground-evidence-analysis-checkpoint.json",
+    );
+    assert.equal(
+      evidenceJointCheckpoint.measurement.motion.last_timestamp_us,
+      "400000",
+    );
+    assert.equal(
+      evidenceJointCheckpoint.counting.state.last_timestamp_us,
+      "400000",
+    );
+    assert.equal(
+      evidenceJoint.checkpoint.counting.state.last_timestamp_us,
+      "1800000",
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#gate-evidence-section").screenshot({
+      path: path.join(directory, "evidence-analysis-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator("#gate-evidence-section").screenshot({
+      path: path.join(directory, "evidence-analysis-desktop-preview.png"),
+    });
+    const mismatchedEvidenceJoint = JSON.parse(
+      JSON.stringify(evidenceJointCheckpoint),
+    );
+    mismatchedEvidenceJoint.counting.state.last_timestamp_us = "500000";
+    const fractionalEvidenceJoint = JSON.stringify(
+      evidenceJointCheckpoint,
+    ).replace('"track_id":1', '"track_id":1.0000000000000001');
+    for (const invalid of [
+      JSON.stringify({ ...evidenceJointCheckpoint, checkpoint_version: "999" }),
+      JSON.stringify(mismatchedEvidenceJoint),
+      fractionalEvidenceJoint,
+      JSON.stringify(independentBeforeJoint.checkpoint),
+    ]) {
+      await page.locator("#evidence-analysis-checkpoint-file").setInputFiles({
+        name: "invalid-joint-evidence.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(invalid),
+      });
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#evidence-analysis-checkpoint-file").value ===
+          "",
+      );
+      assert.equal(await page.locator("#evidence-message.error").count(), 1);
+      assert.equal(await page.locator("#source").inputValue(), jointInput);
+      assert.equal(
+        await page.locator("#evidence-input").inputValue(),
+        evidenceConfiguration,
+      );
+      assert.deepEqual(
+        await exportJson(
+          "#download-evidence-analysis",
+          "moonground-evidence-analysis-results.json",
+        ),
+        evidenceJoint,
+      );
+    }
+    // One full checkpoint restores both watermarks; only later observations
+    // are needed, without a separate measurement/checkpoint pairing step.
+    await page.locator("#evidence-analysis-checkpoint-file").setInputFiles({
+      name: "joint-evidence.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(evidenceJointCheckpoint)),
+    });
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已载入完整联合证据检查点"),
+    );
+    assert.equal(await page.locator("#counter").textContent(), "0 / 0");
+    assert.equal(
+      await page.locator("#download-evidence-analysis").isDisabled(),
+      true,
+    );
+    const jointTail =
+      jointInput.trimEnd().split("\n").slice(4).join("\n") + "\n";
+    await page
+      .locator("#source")
+      .fill((await page.locator("#source").inputValue()) + jointTail);
+    await page.locator("#evidence-analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已联合计算 7 帧"),
+    );
+    const resumedEvidenceJoint = await exportJson(
+      "#download-evidence-analysis",
+      "moonground-evidence-analysis-results.json",
+    );
+    assert.deepEqual(
+      resumedEvidenceJoint.frames,
+      evidenceJoint.frames.slice(3),
+    );
+    assert.deepEqual(resumedEvidenceJoint.checkpoint, evidenceJoint.checkpoint);
+    assert.equal(await page.locator("#counter").textContent(), "0 / 0");
+    assert.equal(await page.locator("#download").isDisabled(), true);
+    // Ground mode uses the same independent joint view and directional
+    // covariance evidence, even before ordinary measurements are calculated.
+    await page.locator("#source").fill(directionalSource);
+    await page
+      .locator("#evidence-input")
+      .fill(JSON.stringify(directionalConfiguration));
+    await page.locator("#evidence-analyze").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#evidence-message")
+        .textContent.includes("已联合计算 3 帧"),
+    );
+    const groundEvidenceJoint = await exportJson(
+      "#download-evidence-analysis",
+      "moonground-evidence-analysis-results.json",
+    );
+    assert.deepEqual(
+      groundEvidenceJoint.frames.map((frame) => frame.measurement),
+      directionalMeasurement.frames,
+    );
+    assert.deepEqual(
+      groundEvidenceJoint.frames.map((frame) => frame.counting),
+      directional.frames,
+    );
+    assert.equal(await page.locator("#counter").textContent(), "0 / 0");
+    assert.equal(await page.locator("#download").isDisabled(), true);
+    // Both numeric source layers reach core unchanged. Neither nested capacity
+    // tokens nor frame identity tokens are rounded through JavaScript parsing.
+    await page.locator("#evidence-input").fill(rawEvidenceSources[0]);
+    await page.locator("#evidence-analyze").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#evidence-message").classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#download-evidence-analysis").isDisabled(),
+      true,
+    );
+    await page
+      .locator("#evidence-input")
+      .fill(JSON.stringify(directionalConfiguration));
+    await page
+      .locator("#source")
+      .fill(
+        directionalSource.replace(
+          '"track_id":1',
+          '"track_id":1.0000000000000001',
+        ),
+      );
+    await page.locator("#evidence-analyze").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#evidence-message").classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#download-evidence-analysis").isDisabled(),
+      true,
+    );
+    // Evidence geometry can fail after the first measurement is valid. The
+    // failed joint batch preserves the already displayed ordinary result.
+    const jointGeometrySource =
+      '{"session_id":"joint-evidence-geometry","mode":"ground"}\n{"timestamp_us":"0","observations":[{"track_id":1,"point":[-1e308,0],"covariance":[1,0,1]}]}\n';
+    await page.locator("#source").fill(jointGeometrySource);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 1 帧"),
+    );
+    const beforeJointGeometryFailure = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    await page.locator("#evidence-input").fill(
+      JSON.stringify({
+        counting: JSON.stringify({
+          session_id: "joint-evidence-geometry",
+          gates: [
+            {
+              gate_id: "extreme",
+              start_m: [1e308, 0],
+              end_m: [1e308, 1],
+              deadband_m: 0,
+            },
+          ],
+        }),
+        sigma_multiplier: 2,
+      }),
+    );
+    await page.locator("#evidence-analyze").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#evidence-message").classList.contains("error"),
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      beforeJointGeometryFailure,
+    );
+    assert.equal(
+      await page.locator("#download-evidence-analysis").isDisabled(),
+      true,
+    );
+    // New independent choice cancels old joint preparation, and the reverse
+    // choice is equally explicit. Neither older callback may overwrite it.
+    await page.locator("#source").fill(directionalSource);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 3 帧"),
+    );
+    await page
+      .locator("#evidence-input")
+      .fill(JSON.stringify(directionalConfiguration));
+    for (const older of ["joint", "independent"]) {
+      await page.evaluate(() => {
+        const original = window.setTimeout;
+        window.setTimeout = function (callback, delay, ...args) {
+          if (delay === 0) {
+            window.setTimeout = original;
+            window.releaseJointEvidenceRun = () => callback(...args);
+            return -1;
+          }
+          return original.call(window, callback, delay, ...args);
+        };
+      });
+      await page
+        .locator(older === "joint" ? "#evidence-analyze" : "#evidence-ordinary")
+        .click();
+      await page.waitForFunction(
+        () => typeof window.releaseJointEvidenceRun === "function",
+      );
+      await page
+        .locator(older === "joint" ? "#evidence-ordinary" : "#evidence-analyze")
+        .click();
+      await page.waitForFunction(
+        (joint) =>
+          document
+            .querySelector("#evidence-message")
+            .textContent.includes(joint ? "已联合计算 3 帧" : "已处理 3 帧"),
+        older !== "joint",
+      );
+      await page.evaluate(() => {
+        window.releaseJointEvidenceRun();
+        delete window.releaseJointEvidenceRun;
+      });
+      assert.equal(await page.locator("#evidence-message.error").count(), 0);
+      assert.equal(
+        await page.locator("#download-evidence-analysis").isDisabled(),
+        older === "joint",
+      );
+      assert.equal(
+        await page.locator("#download-evidence").isDisabled(),
+        older !== "joint",
+      );
+    }
+    assert.deepEqual(
+      await exportJson(
+        "#download-evidence-analysis",
+        "moonground-evidence-analysis-results.json",
+      ),
+      groundEvidenceJoint,
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      directionalMeasurement,
+    );
+    // A later source edit cancels an asynchronous full checkpoint import.
+    await page.evaluate(() => {
+      const original = File.prototype.text;
+      File.prototype.text = function () {
+        if (this.name !== "joint-late.json") return original.call(this);
+        File.prototype.text = original;
+        const file = this;
+        return new Promise((resolve) => {
+          window.releaseJointEvidenceRead = async () =>
+            resolve(await original.call(file));
+        });
+      };
+    });
+    await page.locator("#evidence-analysis-checkpoint-file").setInputFiles({
+      name: "joint-late.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(evidenceJointCheckpoint)),
+    });
+    await page.waitForFunction(
+      () => typeof window.releaseJointEvidenceRead === "function",
+    );
+    await page.locator("#source").fill(directionalSource + " ");
+    await page.evaluate(() => {
+      window.releaseJointEvidenceRead();
+      delete window.releaseJointEvidenceRead;
+    });
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#evidence-analysis-checkpoint-file").value ===
+        "",
+    );
+    assert.equal(
+      await page.locator("#source").inputValue(),
+      directionalSource + " ",
+    );
+    assert.equal(
+      await page.locator("#evidence-input").inputValue(),
+      JSON.stringify(directionalConfiguration),
+    );
+    assert.equal(
+      await page.locator("#download-evidence-analysis").isDisabled(),
+      true,
+    );
+    // Configuration edits also cancel a prepared raw joint request.
+    await page.evaluate(() => {
+      const original = window.setTimeout;
+      window.setTimeout = function (callback, delay, ...args) {
+        if (delay === 0) {
+          window.setTimeout = original;
+          window.releaseJointEvidenceEdit = () => callback(...args);
+          return -1;
+        }
+        return original.call(window, callback, delay, ...args);
+      };
+    });
+    await page.locator("#evidence-analyze").click();
+    await page.waitForFunction(
+      () => typeof window.releaseJointEvidenceEdit === "function",
+    );
+    await page
+      .locator("#evidence-input")
+      .fill(JSON.stringify(directionalConfiguration) + " ");
+    await page.evaluate(() => {
+      window.releaseJointEvidenceEdit();
+      delete window.releaseJointEvidenceEdit;
+    });
+    assert.equal(
+      await page.locator("#download-evidence-analysis").isDisabled(),
+      true,
+    );
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

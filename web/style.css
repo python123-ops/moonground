@@ -369,3 +369,7 @@ summary {
   margin: 8px 0;
   font-size: 11px;
 }
+
+[hidden] {
+  display: none !important;
+}

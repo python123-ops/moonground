@@ -234,22 +234,22 @@
         <details id="gate-evidence-section">
           <summary id="evidence-summary">法向协方差证据</summary>
           <p class="hint">
-            这是独立的过线统计：沿每个通道法向，将滤波位置均值的带符号距离扩展为
-            d ± kσ。
+            沿每个通道法向，将滤波位置均值的带符号距离扩展为 d ± kσ。
             整个带越过闭合死区才确认侧别；侧别未确认时保留既有参考点。法向 σ
             来自位置协方差， 与“本帧测量”中的最坏方向 σ
             不同。有限通道交点仍采用均值连线，不表示端点或通行时间的置信范围。
           </p>
           <p class="hint">
-            门定义独立于上方通道和区间统计；首个 counting
-            为原始新建通道配置字符串，不能使用旧通道恢复起点。
-            独立检查点保留参考点协方差；恢复时须先将上游恢复至同一水位，再处理更晚的测量。
+            门定义独立于上方通道和区间统计；新建时 counting
+            为原始通道配置字符串，不能使用旧通道恢复起点。
+            独立证据检查点保留参考点协方差，继续时上游须处于同一水位；联合入口可直接恢复完整检查点。
           </p>
           <label for="evidence-input" class="hint"
-            >独立法向证据配置或恢复起点 JSON</label
+            >法向证据配置或独立恢复起点 JSON</label
           >
           <textarea id="evidence-input" spellcheck="false"></textarea>
           <div class="actions">
+            <button id="evidence-analyze">测量并按法向证据统计</button>
             <button id="evidence-ordinary" disabled>
               按普通测量的法向证据统计
             </button>
@@ -277,6 +277,38 @@
           >
             先生成测量，再显式选择来源。
           </p>
+          <div class="actions">
+            <button id="download-evidence-analysis" class="quiet" disabled>
+              下载完整联合证据结果
+            </button>
+            <button
+              id="save-evidence-analysis-checkpoint"
+              class="quiet"
+              disabled
+            >
+              保存当前帧联合证据检查点
+            </button>
+            <label class="file-button"
+              >载入完整联合证据检查点<input
+                id="evidence-analysis-checkpoint-file"
+                type="file"
+                accept=".json"
+            /></label>
+          </div>
+          <p class="hint">
+            联合入口直接读取上方原始观测与本区配置，使用独立回放。完整检查点共同恢复两侧；原有两个来源按钮仍单独统计已算出的测量。
+          </p>
+          <div id="evidence-joint-playback" class="playback" hidden>
+            <input
+              id="evidence-joint-frame"
+              aria-label="联合证据回放帧"
+              type="range"
+              min="0"
+              max="0"
+              value="0"
+            />
+            <span id="evidence-joint-counter" class="mono">0 / 0</span>
+          </div>
           <p id="evidence-source" class="hint">尚未选择测量来源</p>
           <p id="evidence-policy" class="hint"></p>
           <div class="table-wrap">
@@ -305,6 +337,22 @@
               </thead>
               <tbody id="evidence-rows"></tbody>
             </table>
+          </div>
+          <div id="evidence-joint-measurement" hidden>
+            <p id="evidence-joint-closed" class="hint"></p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>联合测量目标 / 片段</th>
+                    <th>测量状态</th>
+                    <th>位置 x, y · m</th>
+                    <th>速度 · m/s</th>
+                  </tr>
+                </thead>
+                <tbody id="evidence-joint-tracks"></tbody>
+              </table>
+            </div>
           </div>
           <ul id="evidence-events" aria-label="所选帧按法向证据确认的过线"></ul>
         </details>

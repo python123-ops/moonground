@@ -13,6 +13,7 @@ import {
   moonground_guarded,
   moonground_transit,
   moonground_gate_evidence,
+  moonground_evidence_analysis,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -77,6 +78,12 @@ let evidenceOrigin = null;
 let evidencePendingOrigin = null;
 let evidenceSourceReference = null;
 let evidenceLoadedConfiguration = "";
+let evidenceJointReport = null;
+let evidenceJointResponse = null;
+let evidenceJointHeader = null;
+let evidenceJointSource = "";
+let evidenceJointConfiguration = "";
+let evidenceJointCheckpointBusy = false;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -1929,7 +1936,31 @@ function refreshEvidenceSources() {
     !guardedReport?.frames.length || guardedInput.value !== guardedLoadedSource;
 }
 
+function clearEvidenceJoint() {
+  evidenceJointReport = null;
+  evidenceJointResponse = null;
+  evidenceJointHeader = null;
+  evidenceJointSource = "";
+  evidenceJointConfiguration = "";
+  $("evidence-joint-playback").hidden = true;
+  $("evidence-joint-measurement").hidden = true;
+  $("evidence-joint-tracks").replaceChildren();
+  $("evidence-joint-closed").textContent = "";
+  $("download-evidence-analysis").disabled = true;
+  $("save-evidence-analysis-checkpoint").disabled = true;
+}
+
+function evidenceJointIsCurrent() {
+  return (
+    evidenceOrigin === "joint" &&
+    evidenceJointReport !== null &&
+    source.value === evidenceJointSource &&
+    evidenceInput.value === evidenceJointConfiguration
+  );
+}
+
 function clearEvidenceResult() {
+  clearEvidenceJoint();
   evidenceRevision++;
   evidenceReport = null;
   evidenceResponse = null;
@@ -1947,21 +1978,38 @@ function clearEvidenceResult() {
 }
 
 function invalidateEvidenceSource(origin) {
-  if (evidenceOrigin === origin) {
+  if (
+    evidenceOrigin === origin ||
+    (origin === "ordinary" && evidenceOrigin === "joint")
+  ) {
     clearEvidenceResult();
     evidenceMessage("所选来源的测量结果已更新，请重新按法向证据统计。");
-  } else if (evidencePendingOrigin === origin) evidenceRevision++;
+  } else if (
+    evidencePendingOrigin === origin ||
+    (origin === "ordinary" && evidencePendingOrigin === "joint")
+  )
+    evidenceRevision++;
   refreshEvidenceSources();
 }
 
 function renderEvidence(changedOrigin = evidenceOrigin) {
   if (!evidenceReport || changedOrigin !== evidenceOrigin) return;
-  if (!measurementSourceCurrent(evidenceOrigin, evidenceSourceReference)) {
+  if (
+    evidenceOrigin === "joint"
+      ? !evidenceJointIsCurrent()
+      : !measurementSourceCurrent(evidenceOrigin, evidenceSourceReference)
+  ) {
     clearEvidenceResult();
     return;
   }
   const index = Number(
-    $(evidenceOrigin === "ordinary" ? "frame" : "guarded-frame").value,
+    $(
+      evidenceOrigin === "joint"
+        ? "evidence-joint-frame"
+        : evidenceOrigin === "ordinary"
+          ? "frame"
+          : "guarded-frame",
+    ).value,
   );
   const frame = evidenceReport.frames[index];
   if (!frame) return;
@@ -1971,12 +2019,16 @@ function renderEvidence(changedOrigin = evidenceOrigin) {
   $("evidence-summary").textContent =
     `法向协方差证据 · 本帧 ${frame.evidence.length} 项，${unconfirmed} 项侧别未确认`;
   $("evidence-source").textContent =
-    `${evidenceOrigin === "ordinary" ? "普通测量" : "健康门控测量"} · ${index + 1} / ${evidenceReport.frames.length} · ${frame.counting.timestamp_us} μs`;
+    `${evidenceOrigin === "joint" ? "原始观测联合计算" : evidenceOrigin === "ordinary" ? "普通测量" : "健康门控测量"} · ${index + 1} / ${evidenceReport.frames.length} · ${frame.counting.timestamp_us} μs`;
+  if (evidenceOrigin === "joint")
+    $("evidence-joint-counter").textContent =
+      `${index + 1} / ${evidenceReport.frames.length}`;
   $("evidence-policy").textContent =
     `k = ${frame.sigma_multiplier}；按法向带判断侧别，有限通道交点仍取滤波均值连线。`;
   $("evidence-rows").replaceChildren();
   $("evidence-counts").replaceChildren();
   $("evidence-events").replaceChildren();
+  $("evidence-joint-tracks").replaceChildren();
   // Avoid building a potentially large hidden table while another source's
   // playback advances. Only the current selected frame is rendered on open.
   if (!$("gate-evidence-section").open) return;
@@ -1990,6 +2042,26 @@ function renderEvidence(changedOrigin = evidenceOrigin) {
     return element;
   };
   const number = (value) => (value === 0 ? "0" : value.toPrecision(6));
+  if (evidenceOrigin === "joint") {
+    const measurement = evidenceJointReport.frames[index].measurement;
+    $("evidence-joint-closed").textContent =
+      `关闭的测量片段：${measurement.closed_segment_ids.join("、") || "无"}。`;
+    $("evidence-joint-tracks").replaceChildren(
+      ...measurement.tracks.map((track) =>
+        row([
+          `${track.track_id} / ${track.segment_id ?? "—"}`,
+          states[track.status] ?? track.status,
+          track.position_m?.map(number).join(", ") ?? "—",
+          track.speed_mps == null ? "—" : number(track.speed_mps),
+        ]),
+      ),
+    );
+    if (!measurement.tracks.length) {
+      const empty = row(["本帧无目标测量。"]);
+      empty.firstChild.colSpan = 4;
+      $("evidence-joint-tracks").append(empty);
+    }
+  }
   const side = {
     positive: "正侧已确认",
     negative: "负侧已确认",
@@ -2077,6 +2149,7 @@ async function runEvidence(origin) {
       !measurementSourceCurrent(origin, reference)
     )
       return;
+    clearEvidenceJoint();
     evidenceReport = report;
     evidenceResponse = response;
     evidenceOrigin = origin;
@@ -2110,6 +2183,7 @@ $("evidence-guarded").addEventListener("click", () => runEvidence("guarded"));
 $("download-evidence").addEventListener("click", () => {
   if (
     !evidenceReport ||
+    evidenceOrigin === "joint" ||
     evidenceInput.value !== evidenceLoadedConfiguration ||
     !measurementSourceCurrent(evidenceOrigin, evidenceSourceReference)
   )
@@ -2119,6 +2193,7 @@ $("download-evidence").addEventListener("click", () => {
 $("save-evidence-checkpoint").addEventListener("click", () => {
   if (
     !evidenceReport ||
+    evidenceOrigin === "joint" ||
     evidenceInput.value !== evidenceLoadedConfiguration ||
     !measurementSourceCurrent(evidenceOrigin, evidenceSourceReference)
   )
@@ -2157,6 +2232,170 @@ $("evidence-checkpoint-file").addEventListener("change", async (event) => {
     event.target.value = "";
   }
 });
+
+function requestEvidenceAnalysis(header, observations) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(header).length + encoder.encode(observations).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器联合证据输入上限为 8 MiB；更大的流请使用原生命令。");
+  const request = JSON.stringify({ source: header, observations });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("联合证据请求超过 16 Mi 字符上限。");
+  const response = moonground_evidence_analysis(request),
+    report = unpack(response);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器联合证据结果超过 8 MiB；请使用原生命令保存。");
+  return { response, report };
+}
+
+$("evidence-analyze").addEventListener("click", async () => {
+  const current = ++evidenceRevision,
+    runToken = ++evidenceRunToken,
+    input = source.value,
+    configuration = evidenceInput.value;
+  evidencePendingOrigin = "joint";
+  evidenceMessage("正在联合计算原始测量与法向证据…");
+  try {
+    const lines = observationLines(input);
+    if (lines.length < 2 || lines.length > 5001)
+      throw new Error("请输入测量配置及 1—5000 帧观测。");
+    // Preserve both complete raw source documents, including integer tokens.
+    const header = JSON.stringify({
+      measurement: lines[0],
+      counting: configuration,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (
+      current !== evidenceRevision ||
+      input !== source.value ||
+      configuration !== evidenceInput.value
+    )
+      return;
+    const { response, report } = requestEvidenceAnalysis(
+      header,
+      lines.slice(1).join("\n") + "\n",
+    );
+    if (
+      current !== evidenceRevision ||
+      input !== source.value ||
+      configuration !== evidenceInput.value
+    )
+      return;
+    evidenceJointReport = report;
+    evidenceJointResponse = response;
+    evidenceJointHeader = header;
+    evidenceJointSource = input;
+    evidenceJointConfiguration = configuration;
+    evidenceReport = { frames: report.frames.map((frame) => frame.counting) };
+    evidenceResponse = null;
+    evidenceOrigin = "joint";
+    evidenceSourceReference = report;
+    evidenceLoadedConfiguration = configuration;
+    $("evidence-joint-frame").max = String(report.frames.length - 1);
+    $("evidence-joint-frame").value = String(report.frames.length - 1);
+    $("evidence-joint-playback").hidden = false;
+    $("evidence-joint-measurement").hidden = false;
+    $("download-evidence").disabled = true;
+    $("save-evidence-checkpoint").disabled = true;
+    $("download-evidence-analysis").disabled = false;
+    $("save-evidence-analysis-checkpoint").disabled =
+      evidenceJointCheckpointBusy;
+    evidenceMessage(
+      `已联合计算 ${report.frames.length} 帧。测量与法向证据在同一帧提交；上方普通测量与其他统计结果保持。`,
+    );
+    renderEvidence();
+  } catch (error) {
+    if (current === evidenceRevision) evidenceMessage(error.message, true);
+  } finally {
+    if (runToken === evidenceRunToken) evidencePendingOrigin = null;
+  }
+});
+$("evidence-joint-frame").addEventListener("input", () => renderEvidence());
+$("download-evidence-analysis").addEventListener("click", () => {
+  if (!evidenceJointIsCurrent()) return;
+  saveFile(
+    evidenceJointResponse + "\n",
+    "moonground-evidence-analysis-results.json",
+  );
+});
+$("save-evidence-analysis-checkpoint").addEventListener("click", async () => {
+  if (evidenceJointCheckpointBusy || !evidenceJointIsCurrent()) return;
+  const current = evidenceRevision,
+    selected = $("evidence-joint-frame").value;
+  const header = evidenceJointHeader,
+    input = evidenceJointSource;
+  evidenceJointCheckpointBusy = true;
+  $("save-evidence-analysis-checkpoint").disabled = true;
+  try {
+    const prefix =
+      observationLines(input)
+        .slice(1, Number(selected) + 2)
+        .join("\n") + "\n";
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (current !== evidenceRevision || !evidenceJointIsCurrent()) return;
+    const { report } = requestEvidenceAnalysis(header, prefix);
+    if (
+      current !== evidenceRevision ||
+      !evidenceJointIsCurrent() ||
+      selected !== $("evidence-joint-frame").value
+    )
+      return;
+    saveFile(
+      JSON.stringify(report.checkpoint) + "\n",
+      "moonground-evidence-analysis-checkpoint.json",
+    );
+    evidenceMessage(
+      `已保存所选第 ${Number(selected) + 1} 帧的完整联合证据检查点，测量与证据时间均为 ${report.checkpoint.counting.state.last_timestamp_us} μs。`,
+    );
+  } catch (error) {
+    if (current === evidenceRevision) evidenceMessage(error.message, true);
+  } finally {
+    evidenceJointCheckpointBusy = false;
+    $("save-evidence-analysis-checkpoint").disabled = !evidenceJointIsCurrent();
+  }
+});
+$("evidence-analysis-checkpoint-file").addEventListener(
+  "change",
+  async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const current = ++evidenceRevision,
+      runToken = ++evidenceRunToken;
+    evidencePendingOrigin = "joint";
+    try {
+      if (file.size > 8 * 1024 * 1024)
+        throw new Error("浏览器完整联合证据检查点文件上限为 8 MiB。");
+      const text = await file.text();
+      if (current !== evidenceRevision) return;
+      const { report } = requestEvidenceAnalysis('{"resume":' + text + "}", "");
+      const checkpoint = report.checkpoint;
+      const measurement = JSON.stringify({ resume: checkpoint.measurement });
+      const counting = JSON.stringify({ resume: checkpoint.counting }, null, 2);
+      // Only canonical components returned after complete core validation may be
+      // placed in the two existing source inputs. Recheck the bounded envelope.
+      requestEvidenceAnalysis(JSON.stringify({ measurement, counting }), "");
+      if (current !== evidenceRevision) return;
+      invalidate();
+      clearEvidenceResult();
+      source.value = measurement + "\n";
+      evidenceInput.value = counting;
+      evidenceEdited = true;
+      configuration = checkpoint.measurement.configuration;
+      draw();
+      evidenceMessage(
+        `已载入完整联合证据检查点，两侧共同恢复至 ${checkpoint.counting.state.last_timestamp_us ?? "尚无观测"} μs。添加更晚观测后点击“测量并按法向证据统计”继续。`,
+      );
+    } catch (error) {
+      if (current === evidenceRevision) evidenceMessage(error.message, true);
+    } finally {
+      if (runToken === evidenceRunToken) evidencePendingOrigin = null;
+      event.target.value = "";
+    }
+  },
+);
+
 const initialEvidenceRevision = evidenceRevision;
 fetch("./gate-evidence.json")
   .then((response) => {
