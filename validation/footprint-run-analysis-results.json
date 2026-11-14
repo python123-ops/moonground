@@ -1,0 +1,393 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/footprint_run_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-analysis-results.json",
+  "python": "3.8.7",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "pinned_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "source_sha256": "8c4161277e3f489c06eb6416b02549d78d591dc862f98d189e65ecc68a4a3546",
+  "run_reference_sha256": "a366e8aa9c465752e5fad1bacbcbed5a9b3e2c65eec0781019741eff974ba4e7",
+  "binary_sha256": "74792627079047175583bf35130f4bfebe9676a041ca828dcd641e4193c06d90",
+  "independent_reference": "Original measurement stream/checkpoint plus v26 footprint run stream/checkpoint; full frame and both component checkpoints exact; existing NumPy/Fraction geometric references remain separate",
+  "scope": "confirmed_sample_spans_under_explicit_current_footprints_not_physical_dwell",
+  "component_reference": {
+    "cases": 13,
+    "frames": 105,
+    "cut_points": 118,
+    "statuses": [
+      "initializing",
+      "numerical_failure",
+      "ready",
+      "rejected_innovation",
+      "rejected_projection",
+      "uncertain"
+    ],
+    "old_motion_plus_v26_full_frames_and_checkpoint_exact": true,
+    "preview_every_nonterminal_cut_exact_and_noncommitting": true,
+    "records": [
+      {
+        "name": "identity_path_lifecycle",
+        "frames": 11,
+        "active_rows": 0,
+        "confirmed_rows": 0,
+        "closed_rows": 0
+      },
+      {
+        "name": "raw_camera_projection_rejection",
+        "frames": 10,
+        "active_rows": 6,
+        "confirmed_rows": 1,
+        "closed_rows": 3
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 4,
+        "active_rows": 0,
+        "confirmed_rows": 0,
+        "closed_rows": 0
+      },
+      {
+        "name": "effective_defaults",
+        "frames": 4,
+        "active_rows": 1,
+        "confirmed_rows": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "extreme_scale_failure_retains_restorable_state",
+        "frames": 2,
+        "active_rows": 0,
+        "confirmed_rows": 0,
+        "closed_rows": 0
+      },
+      {
+        "name": "warehouse",
+        "frames": 10,
+        "active_rows": 5,
+        "confirmed_rows": 0,
+        "closed_rows": 4
+      },
+      {
+        "name": "distorted-camera",
+        "frames": 15,
+        "active_rows": 10,
+        "confirmed_rows": 3,
+        "closed_rows": 5
+      },
+      {
+        "name": "reframe",
+        "frames": 15,
+        "active_rows": 10,
+        "confirmed_rows": 3,
+        "closed_rows": 5
+      },
+      {
+        "name": "repeated_crossings",
+        "frames": 9,
+        "active_rows": 0,
+        "confirmed_rows": 0,
+        "closed_rows": 0
+      },
+      {
+        "name": "quality_rejects_current_positions",
+        "frames": 9,
+        "active_rows": 0,
+        "confirmed_rows": 0,
+        "closed_rows": 0
+      },
+      {
+        "name": "steady",
+        "frames": 6,
+        "active_rows": 8,
+        "confirmed_rows": 2,
+        "closed_rows": 6
+      },
+      {
+        "name": "large_clock",
+        "frames": 6,
+        "active_rows": 8,
+        "confirmed_rows": 2,
+        "closed_rows": 6
+      },
+      {
+        "name": "near_max",
+        "frames": 4,
+        "active_rows": 6,
+        "confirmed_rows": 0,
+        "closed_rows": 2
+      }
+    ]
+  },
+  "strict_restore_and_raw": {
+    "rejected_cases": 22,
+    "cases": [
+      {
+        "name": "unknown_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run analysis source: unknown field extra"
+      },
+      {
+        "name": "measurement_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: measurement must be a string"
+      },
+      {
+        "name": "runs_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: runs must be a string"
+      },
+      {
+        "name": "fresh_run_with_started_motion",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run session or committed watermark differs"
+      },
+      {
+        "name": "joint_version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported footprint run analysis checkpoint format or version"
+      },
+      {
+        "name": "watermark",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid footprint run identity time or decision"
+      },
+      {
+        "name": "session",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run session or committed watermark differs"
+      },
+      {
+        "name": "current_anchor",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run current point or upper covariance differs from motion"
+      },
+      {
+        "name": "upper_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run current point or upper covariance differs from motion"
+      },
+      {
+        "name": "wrong_segment",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run motion is not Ready or has a different segment"
+      },
+      {
+        "name": "hidden_motion",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run does not have a current accepted motion sample"
+      },
+      {
+        "name": "initializing_motion",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run motion is not Ready or has a different segment"
+      },
+      {
+        "name": "velocity_quality",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run motion is not Ready or has a different segment"
+      },
+      {
+        "name": "position_quality",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run motion is not Ready or has a different segment"
+      },
+      {
+        "name": "run_before_warmup",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run begins before its segment could be Ready"
+      },
+      {
+        "name": "run_accepted_budget",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run samples exceed the remaining accepted sample budget"
+      },
+      {
+        "name": "joint_known_witness_union",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run witnesses exceed accepted motion samples"
+      },
+      {
+        "name": "joint_known_suffix_lower_bound",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run samples exceed the remaining accepted sample budget"
+      },
+      {
+        "name": "duplicate_wrapper",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "9d3b9b97701c18897da668cdf319a6d57dc2705f76bf45a4635467de76099465",
+        "stdout_bytes": 1156,
+        "stderr": "line 3: invalid JSON: Duplicate key \"measurement\" at line 1, column 21"
+      },
+      {
+        "name": "unknown_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "9d3b9b97701c18897da668cdf319a6d57dc2705f76bf45a4635467de76099465",
+        "stdout_bytes": 1156,
+        "stderr": "line 3: footprint run analysis frame: unknown field extra"
+      },
+      {
+        "name": "fractional_id",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "9d3b9b97701c18897da668cdf319a6d57dc2705f76bf45a4635467de76099465",
+        "stdout_bytes": 1156,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "wrong_candidate_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "9d3b9b97701c18897da668cdf319a6d57dc2705f76bf45a4635467de76099465",
+        "stdout_bytes": 1156,
+        "stderr": "line 3: footprint assignment must match a reported target and segment"
+      }
+    ],
+    "independently_legal_component_cross_bindings_rejected": true,
+    "cli_complete_prefix_and_no_failed_checkpoint": true
+  },
+  "atomic_failed_candidate": {
+    "status": "passed",
+    "first_wrong_segment": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 2: footprint assignment must match a reported target and segment"
+    },
+    "first_ready_late_numeric_failure": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "a7c8fe8ebc12eab43d50f2543fe618fb2d1ba12979d0518ab52b9ab5c3ecfe0e",
+      "stdout_bytes": 1136,
+      "stderr": "line 3: disk and position radius exceed supported precision"
+    },
+    "corrected_same_timestamp": "100000",
+    "all_motion_state_P_path_next_segment_and_run_checkpoint_exact": true,
+    "live_same_preparation_retry_covered_by_core_and_consumer": true
+  },
+  "transport_and_preview": {
+    "preview_repeated_noncommitting": true,
+    "preview_missing_or_measurement_output_rejected": true,
+    "preview_extra_input_complete_prefix": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "dd97161ea768554d3bb3fcc3a8b19261581d654d62f765be82c0b5ce7fea76cd",
+      "stdout_bytes": 618,
+      "stderr": "line 3: footprint run preview accepts exactly one observation frame"
+    },
+    "frame_utf16_limit": 1048576,
+    "source_utf16_limit": 8388619,
+    "oversized_frame_complete_prefix": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "bd4de8e3f959e0b15fabae245f8a9820eaef79cbabc7a272f5dff3021a8ef036",
+      "stdout_bytes": 1142,
+      "stderr": "line 3: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "lf_crlf_unterminated_eof": "passed"
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/footprint-run-analysis.test.mjs",
+    "summary": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "details": {
+      "cross_runtime": {
+        "cut_points": 9,
+        "runtime_directions": 4,
+        "continuations": 36,
+        "original_int64_start": "9007199254740993"
+      },
+      "warm_reframe": {
+        "warm_reframe_maximum_absolute_error": 2.4683387115937566e-15,
+        "numerical_values": 954,
+        "relative_tolerance": 3e-08,
+        "absolute_tolerance": 1e-11
+      },
+      "actual_budgets": {
+        "successful_empty_frames": 5000,
+        "whole_return_utf16": 3323589,
+        "frames_limit": 5000,
+        "whole_return_limit_utf16": 8388608
+      },
+      "maximum_work": {
+        "maximum_actual_face_expansions": 65536,
+        "maximum_actual_support_vertex_projections": 2097152,
+        "ready_targets": 128,
+        "zones": 16,
+        "faces_per_zone": 32,
+        "retained_states": 2048,
+        "equivalent_whole_return_utf16": 25349493,
+        "checkpoint_utf16": 1492024
+      }
+    },
+    "test_script_sha256": "eb688d2bbeacd7ef03406b26a4905509100e73cff199529f452c4195189eb7e9",
+    "bridge_sha256": "282321eaa2f26d15bb7522926f0db98588cf2c03f84d8ad2f0976bea92ddd505",
+    "stdout_sha256": "f3fbc8e0c105edf3778621988906e4f0933dbce4f2b7178832ca3505fc646aad"
+  },
+  "status": "passed",
+  "elapsed_seconds": 30.2186028
+}
