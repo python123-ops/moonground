@@ -2279,6 +2279,90 @@ CLI `--guarded-footprint-runs` 首行为 `{analysis:<原 v0.27 联合源原文>,
 
 Web 在现序列区新增“健康门控联合”，读取原始像素流、原始健康流及现区域、分配和序列选项。专用全程身份预览覆盖阻断后的新片段，不用普通测量结果代替；结果、滑块、任务与旧两种模式独立，共用一张序列表。界面操作、控制行对齐和本批有界官方生态核查见 [`docs/footprint-run-guarded-web.md`](docs/footprint-run-guarded-web.md)。
 
+### 足迹确认与结束结果的有界分窗
+
+`zones.FootprintRunWindowMonitor` 直接拥有原 `FootprintRunMonitor`，按每帧实际输出统计各区域的 Inside／Outside 首次确认，以及八种结束原因的已确认／未确认次数。它消费原米制 `motion.FrameResult` 与精确足迹分配，不需要宿主先生成序列报告，也不重新实现足迹几何或确认状态机。窗口与原序列一起提交；分配、数值、序列或统计失败保留双方状态。
+
+```mbt check
+///|
+test "README: footprint confirmation windows count first reports once" {
+  let measurement = @motion.MotionEstimator::new(
+    "run-window-example",
+    @motion.MotionConfig::new(max_tracks=2, min_observations=2, min_span_us=0L),
+  )
+  let original = @zones.FootprintRunMonitor::new(
+    "run-window-example",
+    [
+      @zones.ConvexZone::new(
+        "area",
+        [
+          { x: 0.0, y: 0.0, },
+          { x: 1.0, y: 0.0, },
+          { x: 1.0, y: 1.0, },
+          { x: 0.0, y: 1.0, },
+        ],
+        sigma_multiplier=0.0,
+      ),
+    ],
+    @zones.FootprintRunConfig::new(confirmation_us=50L, min_samples=2L),
+    max_tracks=2,
+  )
+  let windows = @zones.FootprintRunWindowMonitor::new(original, window_us=100L)
+  let object = @moonground.GroundObservation::new(
+    7,
+    { x: 0.5, y: 0.5, },
+    @moonground.Covariance2::isotropic(0.01),
+  )
+  for time in [0L, 50L, 100L, 150L] {
+    let frame = measurement.update(time, [object])
+    let assignments = frame.tracks.map(track => {
+      @zones.FootprintAssignment::new(
+        track.track_id,
+        track.segment_id,
+        @zones.Disk(@zones.DiskFootprint::new(0.1)),
+      )
+    })
+    let result = windows.update(
+      frame,
+      @zones.FootprintAssignments::new(time, assignments),
+    )
+    if time >= 100L {
+      assert_eq(result.statistics.current_window.start_us, 100L)
+      assert_eq(result.statistics.current_window.zones[0].confirmed_inside, 1L)
+    }
+  }
+  let restored = @zones.FootprintRunWindowMonitor::from_checkpoint(
+    windows.checkpoint(),
+  )
+  let frame = measurement.update(200L, [object])
+  let assignment = @zones.FootprintAssignment::new(
+    7,
+    frame.tracks[0].segment_id,
+    @zones.Disk(@zones.DiskFootprint::new(0.1)),
+  )
+  let next = restored.update(
+    frame,
+    @zones.FootprintAssignments::new(200L, [assignment]),
+  )
+  assert_eq(next.statistics.current_window.zones[0].confirmed_inside, 0L)
+  assert_eq(next.statistics.current_window.zones[0].opening_confirmed, 1L)
+}
+```
+
+`new(monitor, window_us~, origin_us~=0)` 分离并验证原监测器。已开始的监测器以当前水位作为统计基线，不把既有确认重计为新确认；首个后续输入才建立当前窗。旧未确认序列以后达标时计入，旧已确认序列以后结束时照常计入已确认结束。上游运动水位仍由宿主协调，完整分窗检查点只保存原序列与统计状态。
+
+每帧的 `runs` 保留原完整序列结果；`statistics` 返回 `current_window`、可选的一个 `closed_window` 和 `unobserved_windows`。按报告帧的精确 Int64 时间归桶，不按序列首样本或最后确认样本回填。跨窗仍活跃的已确认序列不会重复计入首次确认；同帧关闭旧序列并确认新序列时两类结果分别计数。空输入也是一个实际统计帧，缺测和未确认证据沿原规则结束序列。
+
+窗口边界使用整数余数，恰在排他终点的帧属于下一窗；`end_exclusive_us=None` 表示数学终点超过 Int64.MAX。跨越大量空缺只返回上个观察窗与未观察窗数，不补零。`input_frames` 只描述实际收到的帧，不表示连续相机覆盖或物理停留。
+
+每区域保存 `opening_active`、`opening_confirmed` 和 `started`，分别表示首个本窗输入前的活动／已确认序列数及本窗新建数。恢复核对两条守恒关系：窗初活动加新建等于全部结束加当前活动；窗初已确认加首次确认等于已确认结束加当前已确认。各字段使用非负 Int64，合计与容量检查采用整数商余，允许数学合计超过一个 Int64 而不溢出。原形状检查点、桶界、基线、区域／原因顺序、必要输入时刻和样本计数也共同校验。它验证保存状态的一致性，不认证未保存的全部历史。
+
+CLI `--footprint-run-windows` 首行为 `{runs:<原 v0.26 序列源原文>,window:<窗口选项原文>}`，窗口选项为 `{window_us:<正的规范 Int64 字符串>,origin_us:<可选非负规范 Int64 字符串>}`。后续沿用原 `{measurement:<schema 0.2 测量原文>,assignments:<精确分配原文>}`，输出 kind 为 `footprint_run_window_frame`，字段为原 `runs` 和 `statistics`。`--footprint-run-windows-checkpoint` 只在 EOF 输出完整状态，恢复使用 `{resume:<完整对象>}`。检查点 format 为 `moonground.footprint-run-windows`、checkpoint_version 为字符串 1，保存 runs、window_us、origin_us、baseline_timestamp_us 和 current_window。
+
+`codec.FootprintRunWindowReplay::open/process_line/checkpoint_json`、纯 `codec.footprint_run_windows_json` 和 JavaScript `moonground_footprint_run_windows` 共用协议。纯请求 `{source,frames}` 返回 `{frames,checkpoint}`，Int64 计数和时刻均为十进制字符串。源限 8 Mi UTF16 单元加恢复外壳，完整检查点 8 Mi，内部原配置及每帧文档各限 1 Mi，嵌套 32；纯外层 16 Mi、帧文本 8 Mi／5000 帧、含检查点的全部输出 8 Mi。CLI 沿用物理行预算、错误退出码 2 和完整成功前缀。
+
+Web 在原足迹序列区增加小型独立分窗面板，复用普通测量、区域、分配与序列选项，跟随普通回放滑块；不依赖三种序列模式已经生成的报告。界面、可运行输入示例及本批有界官方生态核查见 [`docs/footprint-run-windows-web.md`](docs/footprint-run-windows-web.md)。通用事件时间分窗和窗口数值汇总已有 Mooncakes 实现，本批提供视觉确认／结束口径与原序列监测器的共同事务和完整恢复。
+
 ## 验证与复现
 
 以下开发命令在完整项目目录运行。Mooncakes 源码包只保留库、命令、JavaScript 桥及其必要文件，开发示例、验证脚本和网页资源保留在项目仓库中。
@@ -2291,32 +2375,33 @@ moon build --target all --deny-warn
 moon test --target all --deny-warn
 node web/build.mjs
 node --test web/parity.test.mjs
-python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.28-results.json
-python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.28-results.json
-python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.28-results.json
-python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.28-results.json
-python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.28-results.json
-python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.28-results.json
-python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.28-results.json
-python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.28-results.json
-python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.28-results.json
-python validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.28-results.json
-python validation/evidence_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-analysis-v0.28-results.json
-python validation/evidence_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-v0.28-results.json
-python validation/evidence_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-v0.28-results.json
-python validation/evidence_transit_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-analysis-v0.28-results.json
-python validation/evidence_guarded_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-v0.28-results.json
-python validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-v0.28-results.json
-python validation/evidence_transit_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-window-analysis-v0.28-results.json
-python validation/evidence_guarded_transit_window_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-window-v0.28-results.json
-python validation/velocity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/velocity-v0.28-results.json
-python validation/zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-v0.28-results.json
-python validation/disk_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/disk-zone-v0.28-results.json
-python validation/footprint_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-zone-v0.28-results.json
-python validation/assigned_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/assigned-zone-v0.28-results.json
-python validation/footprint_run_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-v0.28-results.json
-python validation/footprint_run_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-analysis-v0.28-results.json
-python validation/footprint_run_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-guarded-results.json
+python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.29-results.json
+python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.29-results.json
+python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.29-results.json
+python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.29-results.json
+python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.29-results.json
+python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.29-results.json
+python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.29-results.json
+python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.29-results.json
+python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.29-results.json
+python validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.29-results.json
+python validation/evidence_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-analysis-v0.29-results.json
+python validation/evidence_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-v0.29-results.json
+python validation/evidence_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-v0.29-results.json
+python validation/evidence_transit_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-analysis-v0.29-results.json
+python validation/evidence_guarded_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-v0.29-results.json
+python validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-v0.29-results.json
+python validation/evidence_transit_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-window-analysis-v0.29-results.json
+python validation/evidence_guarded_transit_window_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-window-v0.29-results.json
+python validation/velocity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/velocity-v0.29-results.json
+python validation/zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-v0.29-results.json
+python validation/disk_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/disk-zone-v0.29-results.json
+python validation/footprint_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-zone-v0.29-results.json
+python validation/assigned_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/assigned-zone-v0.29-results.json
+python validation/footprint_run_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-v0.29-results.json
+python validation/footprint_run_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-analysis-v0.29-results.json
+python validation/footprint_run_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-guarded-v0.29-results.json
+python validation/footprint_run_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-windows-results.json
 ```
 
 浏览器交互测试需要外部安装 Playwright 或 Playwright Core `1.62.1` 与浏览器。设置 `PLAYWRIGHT_MODULE` 为该包路径后，执行 `node --test web/ui.test.cjs`；默认使用配套 Chromium，设置 `MOONGROUND_BROWSER_CHANNEL=chrome` 可使用已安装的 Google Chrome。CI 使用 GitHub Ubuntu runner 预装的 Chrome，并从固定上游 blob 下载、校验 Noto Sans CJK SC 字体，记录实际浏览器版本与字体，避开系统软件源下载。交互用例覆盖桌面与 390 像素移动视口、本地导入、下载、旧结果失效、原始像素标定配置、选帧检查点的导出与续接、坐标变换、双向过线与死区、独立配对恢复和完整联合恢复、固定地标状态、门控阻断、标定切换与末帧完整检查点、区间统计来源选择和下游恢复、整数 token 保留、控制点草稿保护和异步操作取消。
@@ -2324,12 +2409,16 @@ python validation/footprint_run_guarded_verify.py --binary _build/native/release
 安装 NumPy 后，可执行独立参考与长流检查。固定工具链在 Linux 和 Windows 上的原生产物均命名为 `main.exe`。
 
 ```sh
-python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.28-results.json
-python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.28-results.json
+python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.29-results.json
+python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.29-results.json
 moon package
-python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.28-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.28.0.zip --output validation/package-v0.28-results.json
+python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.29-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.29.0.zip --output validation/package-v0.29-results.json
 ```
+
+v0.29.0 的分窗验证见 [`validation/footprint-run-windows-results.json`](validation/footprint-run-windows-results.json)：27 组场景、100 帧、127 个原生恢复切点；Python 从原当前足迹证据独立重算序列后缀，再用大整数离线归桶，核对 16 次首次确认、25 次结束及全部八类原因。28 项严格恢复与原文拒绝通过，包括活动／确认守恒、确认方向下界和跨区域样本后缀矛盾。Node 7/7，9 个切点四向续接共 36 次通过。可达的 Int64.MAX 新建／确认计数可恢复，下一次计数溢出保持原监测器与窗口，同时间修正输入可成功重试。
+
+本批实际运行 5000 帧空对象重放，含最终检查点的完整返回为 8,132,608 UTF16 单元。最大几何案例执行 65,536 次面展开、2,097,152 次支撑顶点投影，保留 2048 条序列；1,364,478 UTF16 单元的完整检查点在原生与纯入口均可恢复，24,712,695 UTF16 单元的等价完整输出按 8 Mi 预算拒绝。四后端库测试各 860/860，含消费者各 926/926。样本帧数与跨度不表示连续覆盖或物理停留。
 
 v0.28.0 的健康联合验证见 [`validation/footprint-run-guarded-results.json`](validation/footprint-run-guarded-results.json)：14 组场景、218 帧、232 个原生恢复切点，各验证两种恢复源形式，完整输出和共同检查点与原健康模块及原 v0.27 联合模块逐值相同。20 项原文／跨组件拒绝和另外 4 项即时健康重确认反例通过；覆盖首次健康确认的错误身份、Ready 足迹数值错误，以及即时重确认时下游失败后同时间修正。Node 8/8，10 个切点四向续接共 40 次通过。Brown 镜头预热后换算核对 1295 个数值，最大绝对误差 2.47e-15，采用既有相对 3e-8、绝对 1e-11 容差。
 

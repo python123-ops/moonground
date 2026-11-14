@@ -1,0 +1,458 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/footprint_run_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-guarded-v0.29-results.json",
+  "python": "3.8.7",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "inherited_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "source_sha256": "8f7ab8a11125658360205f4e0976b245724a74385217b8711a08c5707a4c4fd9",
+  "component_reference_sha256": "8c4161277e3f489c06eb6416b02549d78d591dc862f98d189e65ecc68a4a3546",
+  "health_reference_sha256": "de503a5fe49be912176c0af2ac1c509d99059e464f9c08655c5ce43b52233188",
+  "binary_sha256": "1af1e21fc79395f51def1b66b7be8c7bf02634c30de24898db7545e485d005a2",
+  "scope": "health_controlled_confirmed_sample_spans_not_physical_dwell",
+  "independent_reference": "Old health reports/checkpoints + old v27 measurement/run reports/checkpoints; NumPy landmark calibration reference; explicit removed-all barrier reconstructed from committed motion CP",
+  "component_reference": {
+    "cases": 14,
+    "frames": 218,
+    "cut_points": 232,
+    "resume_source_forms": 2,
+    "health_statuses": [
+      "drift",
+      "healthy",
+      "insufficient",
+      "pending"
+    ],
+    "run_close_reasons": [
+      "gap_exceeded",
+      "missing_target",
+      "segment_closed"
+    ],
+    "full_old_component_outputs_and_checkpoints_exact": true,
+    "numpy_health_maximum_absolute_errors": {
+      "$.landmarks[].projected_position_m[]": 4.1166181574681104e-11,
+      "$.landmarks[].projected_covariance[]": 3.673276960380889e-16,
+      "$.landmarks[].residual_m[]": 4.1166181574681104e-11,
+      "$.landmarks[].error_m": 4.2002048209219435e-11,
+      "$.landmarks[].position_std_m": 2.7200464103316335e-15,
+      "$.rms_error_m": 2.5484291666987142e-11,
+      "$.max_error_m": 4.192548628377644e-11
+    },
+    "records": [
+      {
+        "name": "barrier_camera_add_change_remove_equal",
+        "frames": 29,
+        "allowed": 15,
+        "blocked": 14,
+        "barriers": 4,
+        "active_rows": 12,
+        "closed_rows": 8
+      },
+      {
+        "name": "barrier_above_2pow53",
+        "frames": 29,
+        "allowed": 15,
+        "blocked": 14,
+        "barriers": 4,
+        "active_rows": 12,
+        "closed_rows": 8
+      },
+      {
+        "name": "barrier_int64_final_timestamp",
+        "frames": 29,
+        "allowed": 15,
+        "blocked": 14,
+        "barriers": 4,
+        "active_rows": 12,
+        "closed_rows": 8
+      },
+      {
+        "name": "barrier_unstarted_and_pending_replacements",
+        "frames": 5,
+        "allowed": 0,
+        "blocked": 5,
+        "barriers": 3,
+        "active_rows": 0,
+        "closed_rows": 0
+      },
+      {
+        "name": "barrier_drift_replacement_and_immediate_reconfirmation",
+        "frames": 6,
+        "allowed": 4,
+        "blocked": 2,
+        "barriers": 1,
+        "active_rows": 4,
+        "closed_rows": 2
+      },
+      {
+        "name": "health_healthy_drift_missing_gap_recovery",
+        "frames": 18,
+        "allowed": 8,
+        "blocked": 10,
+        "barriers": 0,
+        "active_rows": 6,
+        "closed_rows": 3
+      },
+      {
+        "name": "health_brown_0",
+        "frames": 18,
+        "allowed": 8,
+        "blocked": 10,
+        "barriers": 0,
+        "active_rows": 6,
+        "closed_rows": 3
+      },
+      {
+        "name": "health_brown_1",
+        "frames": 18,
+        "allowed": 8,
+        "blocked": 10,
+        "barriers": 0,
+        "active_rows": 6,
+        "closed_rows": 3
+      },
+      {
+        "name": "health_exact_time_above_2pow53",
+        "frames": 18,
+        "allowed": 8,
+        "blocked": 10,
+        "barriers": 0,
+        "active_rows": 6,
+        "closed_rows": 3
+      },
+      {
+        "name": "health_int64_maximum_time",
+        "frames": 18,
+        "allowed": 8,
+        "blocked": 10,
+        "barriers": 0,
+        "active_rows": 6,
+        "closed_rows": 3
+      },
+      {
+        "name": "health_immediate_health",
+        "frames": 18,
+        "allowed": 14,
+        "blocked": 4,
+        "barriers": 0,
+        "active_rows": 17,
+        "closed_rows": 4
+      },
+      {
+        "name": "instant-health-run",
+        "frames": 4,
+        "allowed": 4,
+        "blocked": 0,
+        "barriers": 0,
+        "active_rows": 6,
+        "closed_rows": 0
+      },
+      {
+        "name": "instant-large-clock",
+        "frames": 4,
+        "allowed": 4,
+        "blocked": 0,
+        "barriers": 0,
+        "active_rows": 6,
+        "closed_rows": 0
+      },
+      {
+        "name": "instant-max-clock",
+        "frames": 4,
+        "allowed": 4,
+        "blocked": 0,
+        "barriers": 0,
+        "active_rows": 6,
+        "closed_rows": 0
+      }
+    ]
+  },
+  "strict_restore_and_raw": {
+    "rejected_cases": 20,
+    "records": [
+      {
+        "name": "unknown_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run guarded source: unknown field extra"
+      },
+      {
+        "name": "analysis_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis must be a string"
+      },
+      {
+        "name": "missing_health",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field health"
+      },
+      {
+        "name": "version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported footprint run guarded checkpoint format or version"
+      },
+      {
+        "name": "watermark",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded health and analysis watermarks differ"
+      },
+      {
+        "name": "projection",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded health and analysis projection configurations differ"
+      },
+      {
+        "name": "noise",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded health and analysis projection configurations differ"
+      },
+      {
+        "name": "roi_order",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded health and analysis projection configurations differ"
+      },
+      {
+        "name": "nonhealthy_active",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: blocked guarded checkpoint retains active object state"
+      },
+      {
+        "name": "health_confirmation_after_segment",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded object segment predates possible health confirmation"
+      },
+      {
+        "name": "capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded gate capacity must cover the measurement capacity"
+      },
+      {
+        "name": "blocked_duplicate",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "95daf9d263006d0ab741333a53a6e5457d15bc5ab7290910a771756dedf3247c",
+        "stdout_bytes": 1982,
+        "stderr": "line 3: guarded object identities must be positive, unique and disjoint"
+      },
+      {
+        "name": "blocked_conflict",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "95daf9d263006d0ab741333a53a6e5457d15bc5ab7290910a771756dedf3247c",
+        "stdout_bytes": 1982,
+        "stderr": "line 3: guarded object identities must be positive, unique and disjoint"
+      },
+      {
+        "name": "blocked_spd",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "95daf9d263006d0ab741333a53a6e5457d15bc5ab7290910a771756dedf3247c",
+        "stdout_bytes": 1982,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "blocked_nonempty_exact_policy",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: blocked footprint run preparation requires the exact timestamp and an empty assignment bundle"
+      },
+      {
+        "name": "blocked_bundle_time",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: blocked footprint run preparation requires the exact timestamp and an empty assignment bundle"
+      },
+      {
+        "name": "blocked_fractional_raw_id",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "95daf9d263006d0ab741333a53a6e5457d15bc5ab7290910a771756dedf3247c",
+        "stdout_bytes": 1982,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "unknown_frame",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: footprint run guarded frame: unknown field extra"
+      },
+      {
+        "name": "duplicate_raw_wrapper",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: invalid JSON: Duplicate key \"measurement\" at line 1, column 21"
+      },
+      {
+        "name": "health_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: footprint run guarded measurement and landmark timestamps differ"
+      }
+    ],
+    "independently_valid_component_mismatches": true,
+    "blocked_skips_projection_and_footprint_math": true
+  },
+  "instant_restart_binding": {
+    "true_instant_restart_continues_run_and_restores": true,
+    "independently_legal_counterexamples": 4,
+    "records": [
+      {
+        "name": "restart_gap_requires_run_gap_larger",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded footprint run cannot cross the saved health restart gap"
+      },
+      {
+        "name": "forbidden_restart_gap_integer_slots",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded footprint run cannot cross the saved health restart gap"
+      },
+      {
+        "name": "health_since_target_accepted_witness",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded footprint run health witnesses exceed accepted motion samples"
+      },
+      {
+        "name": "health_since_run_suffix_lower_bound",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: guarded footprint run samples contradict saved accepted health witnesses"
+      }
+    ]
+  },
+  "atomic_failure": {
+    "status": "passed",
+    "first_Healthy_identity_first_Ready_numeric_and_instant_restart_failures": [
+      {
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "c2b6b1eb070052dc50682a8486f1443ced418c99621ed5cde05d8de6d355bb80",
+        "stdout_bytes": 3985,
+        "stderr": "line 4: footprint assignment must match a reported target and segment"
+      },
+      {
+        "exit_code": 2,
+        "complete_output_lines": 3,
+        "stdout_sha256": "72a0804bcd58baf020a65b939a40939649d893403fb0235e9ef404c13de8ed2a",
+        "stdout_bytes": 7090,
+        "stderr": "line 5: disk and position radius exceed supported precision"
+      },
+      {
+        "exit_code": 2,
+        "complete_output_lines": 2,
+        "stdout_sha256": "f283419535df05ffc6b9b9086bb9de48fe8b2d6f90bf5679d71a36ffe16ea04b",
+        "stdout_bytes": 9733,
+        "stderr": "line 4: disk and position radius exceed supported precision"
+      }
+    ],
+    "instant_health_restart_since_preserved_on_failure": true,
+    "same_timestamp_corrections_full_checkpoint_exact": true,
+    "live_same_preparation_retry_and_stale_tested_by_core_consumers": true
+  },
+  "transport": {
+    "read_only_single_preview_exactly_one_pair": true,
+    "frame_utf16": 1048576,
+    "source_utf16": 8388619,
+    "lf_crlf_unterminated_eof": "passed"
+  },
+  "web_interchange": {
+    "status": "passed",
+    "command": "node --test --test-reporter=tap web/footprint-run-guarded.test.mjs",
+    "summary": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "details": {
+      "cross_runtime": {
+        "cut_points": 10,
+        "runtime_directions": 4,
+        "continuations": 40,
+        "original_int64_timestamp": "9007199254740993"
+      },
+      "warm_reframe": {
+        "warm_reframe_maximum_absolute_error": 2.4683387115937566e-15,
+        "numerical_values": 1295,
+        "absolute_tolerance": 1e-11,
+        "relative_tolerance": 3e-08
+      },
+      "actual_budgets": {
+        "empty_frame_count": 5000,
+        "successful_formal_frames": 5000,
+        "formal_return_utf16": 8093283,
+        "preview_frames": 5000,
+        "preview_return_utf16": 5337792,
+        "whole_output_limit_utf16": 8388608
+      },
+      "maximum_work": {
+        "maximum_actual_face_expansions": 65536,
+        "maximum_actual_support_vertex_projections": 2097152,
+        "ready_targets": 128,
+        "zones": 16,
+        "retained_states": 2048,
+        "whole_equivalent_return_utf16": 25393507,
+        "checkpoint_utf16": 1491879
+      }
+    },
+    "node": "v26.2.0",
+    "source_sha256": "30903989c90699261b81cbb6bf75f44d298db5352fcd9f9a1384dfb2e5c95da4",
+    "bridge_sha256": "9dc411323a93661c5d3e79a8ea24ae1de604431c824dee6ab1581dee13cecc6f",
+    "stdout_sha256": "dca6545d5ec855f693bb9061924d79ebee4f5fc55c56eebcd1f86fefc4ca400a"
+  },
+  "status": "passed",
+  "elapsed_seconds": 105.7067675
+}
