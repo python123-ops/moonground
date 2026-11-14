@@ -238,6 +238,13 @@ fn FootprintRunWindowReplay::process_frame(
   result.runs.evidence.unavailable.sort_by((a, b) => {
     a.track_id.compare(b.track_id)
   })
+  footprint_run_window_frame_json(result)
+}
+
+///|
+fn footprint_run_window_frame_json(
+  result : @zones.FootprintRunWindowFrame,
+) -> Json {
   let stats = result.statistics
   Json::object({
     "schema_version": Json("0.1.0"),
@@ -269,7 +276,20 @@ pub fn FootprintRunWindowReplay::checkpoint_json(
   self : FootprintRunWindowReplay,
 ) -> String raise @types.GroundError {
   let saved = self.monitor.checkpoint()
-  let output = Json::object({
+  let output = footprint_run_windows_checkpoint_value(saved).stringify()
+  if output.length() > 8388608 {
+    raise invalid(
+      "footprint run windows checkpoint exceeds 8388608 UTF-16 code units",
+    )
+  }
+  output
+}
+
+///|
+fn footprint_run_windows_checkpoint_value(
+  saved : @zones.FootprintRunWindowCheckpoint,
+) -> Json {
+  Json::object({
     "format": Json("moonground.footprint-run-windows"),
     "checkpoint_version": Json("1"),
     "runs": footprint_run_checkpoint_json(saved.runs),
@@ -280,13 +300,7 @@ pub fn FootprintRunWindowReplay::checkpoint_json(
       Some(value) => footprint_run_window_json(value)
       None => Json::null()
     },
-  }).stringify()
-  if output.length() > 8388608 {
-    raise invalid(
-      "footprint run windows checkpoint exceeds 8388608 UTF-16 code units",
-    )
-  }
-  output
+  })
 }
 
 ///|
