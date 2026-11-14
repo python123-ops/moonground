@@ -36,6 +36,7 @@ options(
         "moonground_zone_evidence",
         "moonground_disk_zone_evidence",
         "moonground_footprint_zone_evidence",
+        "moonground_assigned_zone_evidence",
       ],
       "format": "esm",
     },

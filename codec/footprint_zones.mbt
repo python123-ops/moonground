@@ -38,6 +38,52 @@ pub fn FootprintZoneEvidenceReplay::open(
 }
 
 ///|
+fn footprint_zone_row_fields(
+  row : @zones.FootprintZoneEvidence,
+) -> Map[String, Json] {
+  let band = row.evidence
+  {
+    "track_id": Json(row.track_id),
+    "segment_id": Json(row.segment_id),
+    "zone_id": Json(band.zone_id),
+    "vertices_offset_m": Json(
+      band.vertices_offset_m.map(point => Json([Json(point.x), Json(point.y)])),
+    ),
+    "sigma_multiplier": Json(band.sigma_multiplier),
+    "decision": Json(
+      match band.decision {
+        @zones.Inside => "inside"
+        @zones.Outside => "outside"
+        @zones.Indeterminate => "indeterminate"
+      },
+    ),
+    "separating_edge_index": match band.separating_edge_index {
+      Some(value) => Json(value)
+      None => Json::null()
+    },
+    "faces": Json(
+      band.faces.map(face => {
+        Json::object({
+          "edge_index": Json(face.edge_index),
+          "outward_normal": Json([
+            Json(face.outward_normal.x),
+            Json(face.outward_normal.y),
+          ]),
+          "distance_m": Json(face.distance_m),
+          "normal_std_m": Json(face.normal_std_m),
+          "position_lower_m": Json(face.position_lower_m),
+          "position_upper_m": Json(face.position_upper_m),
+          "footprint_lower_m": Json(face.footprint_lower_m),
+          "footprint_upper_m": Json(face.footprint_upper_m),
+          "lower_m": Json(face.lower_m),
+          "upper_m": Json(face.upper_m),
+        })
+      }),
+    ),
+  }
+}
+
+///|
 fn footprint_zone_frame_json(frame : @zones.FootprintZoneEvidenceFrame) -> Json {
   Json::object({
     "schema_version": Json("0.1.0"),
@@ -48,50 +94,7 @@ fn footprint_zone_frame_json(frame : @zones.FootprintZoneEvidenceFrame) -> Json 
     "session_id": Json(frame.session_id),
     "timestamp_us": Json(frame.timestamp_us.to_string()),
     "evidence": Json(
-      frame.evidence.map(row => {
-        let band = row.evidence
-        Json::object({
-          "track_id": Json(row.track_id),
-          "segment_id": Json(row.segment_id),
-          "zone_id": Json(band.zone_id),
-          "vertices_offset_m": Json(
-            band.vertices_offset_m.map(point => {
-              Json([Json(point.x), Json(point.y)])
-            }),
-          ),
-          "sigma_multiplier": Json(band.sigma_multiplier),
-          "decision": Json(
-            match band.decision {
-              @zones.Inside => "inside"
-              @zones.Outside => "outside"
-              @zones.Indeterminate => "indeterminate"
-            },
-          ),
-          "separating_edge_index": match band.separating_edge_index {
-            Some(value) => Json(value)
-            None => Json::null()
-          },
-          "faces": Json(
-            band.faces.map(face => {
-              Json::object({
-                "edge_index": Json(face.edge_index),
-                "outward_normal": Json([
-                  Json(face.outward_normal.x),
-                  Json(face.outward_normal.y),
-                ]),
-                "distance_m": Json(face.distance_m),
-                "normal_std_m": Json(face.normal_std_m),
-                "position_lower_m": Json(face.position_lower_m),
-                "position_upper_m": Json(face.position_upper_m),
-                "footprint_lower_m": Json(face.footprint_lower_m),
-                "footprint_upper_m": Json(face.footprint_upper_m),
-                "lower_m": Json(face.lower_m),
-                "upper_m": Json(face.upper_m),
-              })
-            }),
-          ),
-        })
-      }),
+      frame.evidence.map(row => Json::object(footprint_zone_row_fields(row))),
     ),
     "unavailable": Json(frame.unavailable.map(zone_unavailable_json)),
   })
