@@ -51,63 +51,11 @@ pub fn VelocityProbe::new(
 }
 
 ///|
-fn velocity_product(
-  a : Double,
-  b : Double,
-) -> (Double, Double) raise @types.GroundError {
-  let product = a * b
-  if a != 0.0 && b != 0.0 && product.abs() < 3.5601181736115222e-307 {
-    raise @types.InvalidInput(
-      "velocity component product exceeds supported precision",
-    )
-  }
-  let split_a = 134217729.0 * a
-  let high_a = split_a - (split_a - a)
-  let low_a = a - high_a
-  let split_b = 134217729.0 * b
-  let high_b = split_b - (split_b - b)
-  let low_b = b - high_b
-  let error = high_a * high_b -
-    product +
-    high_a * low_b +
-    low_a * high_b +
-    low_a * low_b
-  (product, error)
-}
-
-///|
 fn velocity_component(
   direction : @types.Point2,
   velocity : @types.Point2,
 ) -> Double raise @types.GroundError {
-  velocity.validate()
-  let largest = velocity.x.abs().max(velocity.y.abs())
-  if largest == 0.0 {
-    return 0.0
-  }
-  let exponent = largest.reinterpret_as_int64() & 0x7ff0000000000000L
-  let scale = if exponent == 0L {
-    2.2250738585072014e-308
-  } else {
-    exponent.reinterpret_as_double()
-  }
-  let x = velocity.x / scale
-  let y = velocity.y / scale
-  if (direction.x != 0.0 && velocity.x != 0.0 && x == 0.0) ||
-    (direction.y != 0.0 && velocity.y != 0.0 && y == 0.0) {
-    raise @types.InvalidInput("velocity component scaling loses a nonzero term")
-  }
-  let (px, ex) = velocity_product(direction.x, x)
-  let (py, ey) = velocity_product(direction.y, y)
-  let sum = px + py
-  let displaced = sum - px
-  let error = px - (sum - displaced) + (py - displaced)
-  let normalized = sum + (error + ex + ey)
-  let component = normalized * scale
-  if !@types.is_finite(component) || (normalized != 0.0 && component == 0.0) {
-    raise @types.InvalidInput("velocity component is not representable")
-  }
-  component
+  velocity.component_along(direction)
 }
 
 ///|

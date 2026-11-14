@@ -1,0 +1,93 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/zones"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground/motion",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct ConvexZone {
+  zone_id : String
+  sigma_multiplier : Double
+  // private fields
+}
+pub fn ConvexZone::evaluate(Self, @types.Point2, @types.Covariance2) -> ZoneBand raise @types.GroundError
+pub fn ConvexZone::new(String, Array[@types.Point2], sigma_multiplier? : Double) -> Self raise @types.GroundError
+pub fn ConvexZone::vertices_m(Self) -> Array[@types.Point2]
+
+pub(all) struct ZoneBand {
+  zone_id : String
+  sigma_multiplier : Double
+  faces : Array[ZoneFaceBand]
+  decision : ZoneDecision
+  separating_edge_index : Int32?
+} derive(@debug.Debug)
+pub fn ZoneBand::to_repr(Self) -> @debug.Repr
+
+pub(all) enum ZoneDecision {
+  Inside
+  Outside
+  Indeterminate
+} derive(Eq, @debug.Debug)
+pub fn ZoneDecision::equal(Self, Self) -> Bool
+pub fn ZoneDecision::not_equal(Self, Self) -> Bool
+pub fn ZoneDecision::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ZoneEvidence {
+  track_id : Int32
+  segment_id : String
+  evidence : ZoneBand
+} derive(@debug.Debug)
+pub fn ZoneEvidence::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ZoneEvidenceFrame {
+  session_id : String
+  timestamp_us : Int64
+  evidence : Array[ZoneEvidence]
+  unavailable : Array[ZoneUnavailable]
+} derive(@debug.Debug)
+pub fn ZoneEvidenceFrame::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ZoneFaceBand {
+  edge_index : Int32
+  outward_normal : @types.Point2
+  distance_m : Double
+  normal_std_m : Double
+  lower_m : Double
+  upper_m : Double
+} derive(@debug.Debug)
+pub fn ZoneFaceBand::to_repr(Self) -> @debug.Repr
+
+pub struct ZoneProjector {
+  // private fields
+}
+pub fn ZoneProjector::evaluate(Self, @motion.FrameResult) -> ZoneEvidenceFrame raise @types.GroundError
+pub fn ZoneProjector::new(String, Array[ConvexZone], max_tracks? : Int32) -> Self raise @types.GroundError
+
+pub(all) struct ZoneUnavailable {
+  track_id : Int32
+  segment_id : String?
+  reason : ZoneUnavailableReason
+} derive(@debug.Debug)
+pub fn ZoneUnavailable::to_repr(Self) -> @debug.Repr
+
+pub(all) enum ZoneUnavailableReason {
+  Initializing
+  Uncertain
+  RejectedInnovation
+  NumericalFailure
+  RejectedProjection
+} derive(Eq, @debug.Debug)
+pub fn ZoneUnavailableReason::equal(Self, Self) -> Bool
+pub fn ZoneUnavailableReason::not_equal(Self, Self) -> Bool
+pub fn ZoneUnavailableReason::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

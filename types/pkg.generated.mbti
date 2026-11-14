@@ -53,7 +53,9 @@ pub(all) struct Point2 {
   x : Double
   y : Double
 } derive(@debug.Debug)
+pub fn Point2::component_along(Self, Self) -> Double raise GroundError
 pub fn Point2::new(Double, Double) -> Self raise GroundError
+pub fn Point2::signed_line_distance(Self, Self) -> Double raise GroundError
 pub fn Point2::to_repr(Self) -> @debug.Repr
 pub fn Point2::validate(Self) -> Unit raise GroundError
 

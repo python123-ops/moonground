@@ -1,0 +1,10 @@
+import {
+  "python123-ops/moonground/types",
+  "python123-ops/moonground/motion",
+  "moonbitlang/core/debug",
+  "moonbitlang/core/string",
+}
+
+import {
+  "python123-ops/moonground",
+} for "test"
