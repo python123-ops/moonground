@@ -158,6 +158,38 @@ pub(all) struct FootprintRunSessionFrame {
 } derive(@debug.Debug)
 pub fn FootprintRunSessionFrame::to_repr(Self) -> @debug.Repr
 
+pub struct FootprintRunWindowPreparation {
+  // private fields
+}
+pub fn FootprintRunWindowPreparation::commit(Self, @zones.FootprintAssignments) -> FootprintRunWindowSessionFrame raise @types.GroundError
+pub fn FootprintRunWindowPreparation::measurement(Self) -> @moonground.MeasurementFrame
+
+pub struct FootprintRunWindowSession {
+  // private fields
+}
+pub fn FootprintRunWindowSession::checkpoint(Self) -> FootprintRunWindowSessionCheckpoint
+pub fn FootprintRunWindowSession::fork(Self) -> Self
+pub fn FootprintRunWindowSession::from_checkpoint(FootprintRunWindowSessionCheckpoint) -> Self raise @types.GroundError
+pub fn FootprintRunWindowSession::interrupt(Self, Int64) -> FootprintRunWindowSessionFrame raise @types.GroundError
+pub fn FootprintRunWindowSession::new(FootprintRunSession, window_us~ : Int64, origin_us? : Int64) -> Self raise @types.GroundError
+pub fn FootprintRunWindowSession::prepare_ground(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunWindowPreparation raise @types.GroundError
+pub fn FootprintRunWindowSession::prepare_pixel(Self, Int64, Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunWindowPreparation raise @types.GroundError
+pub fn FootprintRunWindowSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn FootprintRunWindowSession::update_ground(Self, Int64, Array[@types.GroundObservation], @zones.FootprintAssignments, lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunWindowSessionFrame raise @types.GroundError
+pub fn FootprintRunWindowSession::update_pixel(Self, Int64, Array[@moonground.PixelObservation], @zones.FootprintAssignments, lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunWindowSessionFrame raise @types.GroundError
+
+pub(all) struct FootprintRunWindowSessionCheckpoint {
+  version : Int32
+  measurement : AnalysisMeasurement
+  windows : @zones.FootprintRunWindowCheckpoint
+}
+
+pub(all) struct FootprintRunWindowSessionFrame {
+  measurement : @moonground.MeasurementFrame
+  windows : @zones.FootprintRunWindowFrame
+} derive(@debug.Debug)
+pub fn FootprintRunWindowSessionFrame::to_repr(Self) -> @debug.Repr
+
 // Type aliases
 
 // Traits
