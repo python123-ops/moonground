@@ -8729,6 +8729,518 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.locator("#velocity-section").screenshot({
       path: path.join(directory, "velocity-evidence-desktop-preview.png"),
     });
+    // Current metric zones reuse ordinary positions/covariance. There is no
+    // inferred occupancy or exact ellipse/polygon intersection claim.
+    const zoneWide = [
+      [-10, -10],
+      [10, -10],
+      [10, 10],
+      [-10, 10],
+    ];
+    const zoneFresh = {
+      session_id: "velocity-ui",
+      zones: [
+        { zone_id: "wide", vertices_m: zoneWide },
+        {
+          zone_id: "far",
+          vertices_m: [
+            [5, 5],
+            [6, 5],
+            [6, 6],
+            [5, 6],
+          ],
+        },
+        {
+          zone_id: "strip",
+          vertices_m: [
+            [-10, -0.25],
+            [10, -0.25],
+            [10, 0.25],
+            [-10, 0.25],
+          ],
+        },
+        {
+          zone_id: "boundary",
+          vertices_m: [
+            [0, 0],
+            [3, 0],
+            [3, 1],
+            [0, 1],
+          ],
+          sigma_multiplier: 0,
+        },
+        { zone_id: "wide-cw", vertices_m: [...zoneWide].reverse() },
+      ],
+    };
+    const zoneConfiguration = JSON.stringify(zoneFresh);
+    const runZones = async (count) => {
+      await page.locator("#zone-compute").click();
+      await page.waitForFunction(() => {
+        const message = document.querySelector("#zone-message");
+        return (
+          message.textContent.includes("已计算") ||
+          message.classList.contains("error")
+        );
+      });
+      const text = await page.locator("#zone-message").textContent();
+      assert.equal(await page.locator("#zone-message.error").count(), 0, text);
+      assert.match(text, new RegExp("已计算 " + count + " 帧凸区域位置证据"));
+    };
+    const exportZones = () =>
+      exportJson("#download-zones", "moonground-zone-evidence.json");
+    await page.locator("#zone-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await runZones(7);
+    const zoneEvidence = await exportZones();
+    assert.deepEqual(Object.keys(zoneEvidence), ["frames"]);
+    zoneEvidence.frames.forEach((frame, index) => {
+      assert.equal(frame.kind, "zone_evidence_frame");
+      assert.equal(frame.evidence_scope, "model_position_halfplane_bands");
+      assert.equal(frame.session_id, "velocity-ui");
+      assert.equal(frame.timestamp_us, velocityBase.frames[index].timestamp_us);
+    });
+    assert.deepEqual(zoneEvidence.frames[0].evidence, []);
+    assert.deepEqual(zoneEvidence.frames[0].unavailable, [
+      { track_id: 1, segment_id: "1", reason: "initializing" },
+      { track_id: 2, segment_id: "2", reason: "initializing" },
+    ]);
+    const zoneLast = zoneEvidence.frames[5];
+    assert.deepEqual(
+      zoneLast.evidence.map((row) => row.track_id),
+      [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
+    );
+    assert.deepEqual(
+      zoneLast.evidence.slice(0, 5).map((row) => row.zone_id),
+      ["wide", "far", "strip", "boundary", "wide-cw"],
+    );
+    assert.deepEqual(
+      zoneLast.evidence.slice(0, 5).map((row) => row.decision),
+      ["inside", "outside", "indeterminate", "inside", "inside"],
+    );
+    assert.equal(zoneLast.evidence[7].decision, "inside");
+    zoneLast.evidence.forEach((row) => {
+      assert.equal(row.faces.length, 4);
+      assert.deepEqual(
+        row.faces.map((face) => face.edge_index),
+        [0, 1, 2, 3],
+      );
+      const first = row.faces.findIndex((face) => face.lower_m > 0);
+      assert.equal(
+        row.separating_edge_index,
+        row.decision === "outside" ? first : null,
+      );
+    });
+    assert.equal(zoneLast.evidence[1].separating_edge_index, 0);
+    closeMeasurement(zoneLast.evidence[0].faces[0].outward_normal, [0, -1]);
+    closeMeasurement(zoneLast.evidence[4].faces[0].outward_normal, [0, 1]);
+    const zoneBottom1 = zoneLast.evidence[2].faces[0];
+    const zoneBottom2 = zoneLast.evidence[7].faces[0];
+    assert.ok(zoneBottom1.normal_std_m > zoneBottom2.normal_std_m);
+    assert.equal(zoneLast.evidence[3].faces[0].upper_m, 0);
+    assert.equal(zoneLast.evidence[3].faces[0].lower_m, 0);
+    assert.ok(zoneLast.evidence[3].faces[0].normal_std_m > 0);
+    await selectVelocityFrame(0);
+    assert.match(
+      await page.locator("#zone-unavailable").textContent(),
+      /初始化/,
+    );
+    assert.match(
+      await page.locator("#zone-evidence").textContent(),
+      /没有可判定/,
+    );
+    await selectVelocityFrame(5);
+    assert.equal(await page.locator("#zone-evidence tr").count(), 10);
+    assert.match(
+      await page.locator("#zone-evidence").textContent(),
+      /确认在区域内.*确认在区域外.*区域关系未确认/,
+    );
+    await page.locator("#zone-face-selection").selectOption("1");
+    assert.equal(await page.locator("#zone-faces tr").count(), 4);
+    assert.deepEqual(
+      JSON.parse(
+        await page.locator("#zone-faces tr").first().getAttribute("title"),
+      ),
+      zoneLast.evidence[1].faces[0],
+    );
+    await page.locator("#zone-face-selection").selectOption("7");
+    await selectVelocityFrame(4);
+    assert.equal(await page.locator("#zone-face-selection").inputValue(), "7");
+    await selectVelocityFrame(6);
+    assert.deepEqual(zoneEvidence.frames[6].evidence, []);
+    assert.deepEqual(zoneEvidence.frames[6].unavailable, []);
+    assert.equal(await page.locator("#zone-face-selection").isDisabled(), true);
+    assert.equal(await page.locator("#zone-faces tr").count(), 0);
+    assert.match(
+      await page.locator("#zone-frame").textContent(),
+      /7 \/ 7.*区域证据 0 行/,
+    );
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 7 帧"),
+    );
+    assert.deepEqual(await exportZones(), zoneEvidence);
+    assert.deepEqual(await exportVelocity(), velocitySampleResult);
+
+    // Config dependencies are independent of velocity, gates and guarded input.
+    for (const selector of [
+      "#velocity-input",
+      "#gate-input",
+      "#guarded-input",
+    ]) {
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      assert.deepEqual(await exportZones(), zoneEvidence);
+      await page.locator(selector).fill(previous);
+    }
+    await runVelocity(7);
+    const zoneVelocityReference = await exportVelocity();
+    await page.locator("#zone-input").fill(zoneConfiguration + " ");
+    assert.equal(await page.locator("#download-zones").isDisabled(), true);
+    assert.deepEqual(await exportVelocity(), zoneVelocityReference);
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await runZones(7);
+
+    // Strict geometry, raw integer tokens and pre-frame facet capacity limits.
+    const zoneInvalidGeometries = [
+      [
+        [0, 0],
+        [1, 0],
+        [1, 0],
+        [0, 1],
+      ],
+      [
+        [0, 0],
+        [1, 0],
+        [2, 0],
+        [2, 1],
+        [0, 1],
+      ],
+      [
+        [0, 0],
+        [2, 0],
+        [1, 1],
+        [2, 2],
+        [0, 2],
+      ],
+      [
+        [0, 0],
+        [2, 3],
+        [4, 0],
+        [0, 2],
+        [4, 2],
+      ],
+      [
+        [0, 0],
+        [1, 0],
+      ],
+    ];
+    const zoneBadInputs = [
+      ...zoneInvalidGeometries.map((vertices_m) =>
+        JSON.stringify({
+          session_id: "velocity-ui",
+          zones: [{ zone_id: "bad", vertices_m }],
+        }),
+      ),
+      zoneConfiguration.replace('"velocity-ui"', '"wrong-session"'),
+      zoneConfiguration.replace('"zones":', '"unknown":true,"zones":'),
+      zoneConfiguration.replace(
+        '"session_id":"velocity-ui"',
+        '"session_id":"velocity-ui","session_id":"velocity-ui"',
+      ),
+      zoneConfiguration.replace('"far"', '"wide"'),
+      zoneConfiguration.replace(
+        '"zones":',
+        '"max_tracks":1000.0000000000000001,"zones":',
+      ),
+      zoneConfiguration.replace(
+        '"zone_id":"wide"',
+        '"zone_id":"wide","sigma_multiplier":5e-324',
+      ),
+      JSON.stringify({ ...zoneFresh, max_tracks: 1 }),
+      JSON.stringify({ ...zoneFresh, max_tracks: 3277 }),
+      JSON.stringify({
+        session_id: "velocity-ui",
+        zones: [{ zone_id: "x".repeat(129), vertices_m: zoneWide }],
+      }),
+      '{"resume":{}}',
+      zoneConfiguration + " ".repeat(1048577),
+    ];
+    for (const raw of zoneBadInputs) {
+      await page.locator("#zone-input").fill(raw);
+      await page.locator("#zone-compute").click();
+      await page.waitForFunction(() =>
+        document.querySelector("#zone-message").classList.contains("error"),
+      );
+      assert.equal(await page.locator("#zone-input").inputValue(), raw);
+      assert.equal(await page.locator("#download-zones").isDisabled(), true);
+      assert.deepEqual(
+        await exportJson("#download", "moonground-results.json"),
+        velocityBase,
+      );
+      assert.deepEqual(await exportVelocity(), zoneVelocityReference);
+    }
+    const zoneCapacityBoundary = {
+      session_id: "velocity-ui",
+      max_tracks: 8192,
+      zones: [
+        { zone_id: "one", vertices_m: zoneWide },
+        { zone_id: "two", vertices_m: zoneWide },
+      ],
+    };
+    await page
+      .locator("#zone-input")
+      .fill(JSON.stringify(zoneCapacityBoundary));
+    await runZones(7); // 8192 × 8 faces = 65536.
+    await page
+      .locator("#zone-input")
+      .fill(JSON.stringify({ ...zoneCapacityBoundary, max_tracks: 8193 }));
+    await page.locator("#zone-compute").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#zone-message").classList.contains("error"),
+    );
+    assert.equal(await page.locator("#download-zones").isDisabled(), true);
+
+    // The known disjoint corner example remains Indeterminate under the
+    // sufficient per-face rule; the UI must not label that as an intersection.
+    const zoneCornerHeader = { ...velocityHeader, session_id: "zones-corner" };
+    const zoneCornerInput =
+      [
+        zoneCornerHeader,
+        ...[0, 200000].map((timestamp) => ({
+          timestamp_us: String(timestamp),
+          observations: [
+            { track_id: 1, point: [1.2, 1.2], covariance: [0.0625, 0, 0.0625] },
+          ],
+        })),
+      ]
+        .map((line) => JSON.stringify(line))
+        .join("\n") + "\n";
+    const zoneUnitSquare = {
+      session_id: "zones-corner",
+      zones: [
+        {
+          zone_id: "unit-square",
+          vertices_m: [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1],
+          ],
+          sigma_multiplier: 1,
+        },
+      ],
+    };
+    await runVelocityBase(zoneCornerInput, 2);
+    await page.locator("#zone-input").fill(JSON.stringify(zoneUnitSquare));
+    await runZones(2);
+    const zoneCornerBase = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    const zoneCornerEvidence = await exportZones();
+    const zoneCorner = zoneCornerEvidence.frames[1].evidence[0];
+    assert.equal(zoneCorner.decision, "indeterminate");
+    assert.equal(zoneCorner.separating_edge_index, null);
+    assert.ok(zoneCorner.faces.every((face) => face.lower_m <= 0));
+    const cornerTrack = zoneCornerBase.frames[1].tracks[0];
+    assert.ok(
+      Math.hypot(cornerTrack.position_m[0] - 1, cornerTrack.position_m[1] - 1) >
+        cornerTrack.position_std_m,
+    );
+    await selectVelocityFrame(1);
+    assert.match(
+      await page.locator("#zone-evidence").textContent(),
+      /区域关系未确认/,
+    );
+
+    // A rounded unit normal cannot move the exact sloped vertex outside the
+    // original closed triangle. k0 retains the core's compensated edge test.
+    const zoneSlopedInput =
+      [
+        { ...velocityHeader, session_id: "zones-sloped" },
+        ...[0, 200000].map((timestamp) => ({
+          timestamp_us: String(timestamp),
+          observations: [{ track_id: 1, point: [3, 4], covariance: [1, 0, 1] }],
+        })),
+      ]
+        .map((line) => JSON.stringify(line))
+        .join("\n") + "\n";
+    await runVelocityBase(zoneSlopedInput, 2);
+    await page.locator("#zone-input").fill(
+      JSON.stringify({
+        session_id: "zones-sloped",
+        zones: [
+          {
+            zone_id: "triangle",
+            vertices_m: [
+              [0, 0],
+              [3, 4],
+              [0, 5],
+            ],
+            sigma_multiplier: 0,
+          },
+        ],
+      }),
+    );
+    await runZones(2);
+    const zoneSloped = await exportZones();
+    const zoneSlopedBand = zoneSloped.frames[1].evidence[0];
+    assert.equal(zoneSlopedBand.decision, "inside");
+    assert.equal(zoneSlopedBand.separating_edge_index, null);
+    assert.ok(
+      zoneSlopedBand.faces.slice(0, 2).every((face) => face.distance_m === 0),
+    );
+    assert.ok(zoneSlopedBand.faces.every((face) => face.upper_m <= 0));
+    await selectVelocityFrame(1);
+    assert.match(
+      await page.locator("#zone-evidence").textContent(),
+      /确认在区域内/,
+    );
+
+    // Only Ready positions are usable, despite retained accepted uncertainty.
+    await runVelocityBase(velocityUncertainInput, 7);
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await runZones(7);
+    const zoneUncertain = await exportZones();
+    assert.deepEqual(zoneUncertain.frames[5].evidence, []);
+    assert.ok(
+      zoneUncertain.frames[5].unavailable.every(
+        (row) => row.reason === "uncertain",
+      ),
+    );
+    await selectVelocityFrame(5);
+    assert.match(
+      await page.locator("#zone-unavailable").textContent(),
+      /不确定性超限/,
+    );
+    await runVelocityBase(velocityRejectedInput, 7);
+    await runZones(7);
+    const zoneRejected = await exportZones();
+    assert.deepEqual(zoneRejected.frames[5].evidence, []);
+    assert.ok(
+      zoneRejected.frames[5].unavailable.every(
+        (row) => row.reason === "rejected_innovation",
+      ),
+    );
+    await selectVelocityFrame(5);
+    assert.match(
+      await page.locator("#zone-unavailable").textContent(),
+      /异常观测/,
+    );
+    await runVelocityBase(velocityPixelInput, 11);
+    await runZones(11);
+    const zonePixel = await exportZones();
+    assert.deepEqual(zonePixel.frames[10].evidence, []);
+    assert.deepEqual(zonePixel.frames[10].unavailable, [
+      { track_id: 1, segment_id: null, reason: "rejected_projection" },
+    ]);
+    await selectVelocityFrame(10);
+    assert.match(
+      await page.locator("#zone-unavailable").textContent(),
+      /区域外 \/ 不可测/,
+    );
+
+    // Concurrent stateless tools share only the upstream payload. They do not
+    // cancel each other; edited own dependencies and new runs supersede old ones.
+    await runVelocityBase(velocitySource, 7);
+    await runZones(7);
+    await runVelocity(7);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runVelocity(7);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportZones(), zoneEvidence);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#velocity-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runZones(7);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportVelocity(), zoneVelocityReference);
+
+    for (const selector of ["#zone-input", "#source"]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#zone-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(await page.locator("#download-zones").isDisabled(), true);
+      assert.equal(await page.locator(selector).inputValue(), previous + " ");
+      await page.locator(selector).fill(previous);
+      if (selector === "#source") {
+        await page.locator("#run").click();
+        await page.waitForFunction(() =>
+          document
+            .querySelector("#message")
+            .textContent.includes("已完成 7 帧"),
+        );
+      }
+      await runZones(7);
+    }
+    await holdEvidenceTransitPreparation();
+    await page.locator("#zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#zone-example").click();
+    const zoneSampleConfig = await page.locator("#zone-input").inputValue();
+    assert.equal(JSON.parse(zoneSampleConfig).session_id, "velocity-ui");
+    await runZones(7);
+    const zoneSampleResult = await exportZones();
+    await releaseEvidenceTransitPreparation();
+    assert.equal(
+      await page.locator("#zone-input").inputValue(),
+      zoneSampleConfig,
+    );
+    assert.deepEqual(await exportZones(), zoneSampleResult);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 7 帧"),
+    );
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportZones(), zoneSampleResult);
+
+    // A valid maximum-length ID must not push the small selection control
+    // outside the 390px viewport. Tables retain their own horizontal scrolling.
+    await page.locator("#zone-input").fill(
+      JSON.stringify({
+        session_id: "velocity-ui",
+        zones: [{ zone_id: "z".repeat(128), vertices_m: zoneWide }],
+      }),
+    );
+    await runZones(7);
+    await selectVelocityFrame(5);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await runZones(7);
+    await page.locator("#zone-face-selection").selectOption("2");
+    await page.locator("#zone-section").screenshot({
+      path: path.join(directory, "zone-evidence-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    await page.locator("#zone-section").screenshot({
+      path: path.join(directory, "zone-evidence-desktop-preview.png"),
+    });
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

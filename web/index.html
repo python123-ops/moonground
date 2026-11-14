@@ -933,6 +933,86 @@
             </table>
           </div>
         </details>
+        <details id="zone-section">
+          <summary>米制凸区域的位置证据</summary>
+          <p class="hint">
+            显式使用上方普通测量的当前 Ready 位置及完整二维协方差。
+            区域使用米制顶点，独立于标定像素
+            ROI、速度证据和过线统计，不记录进入、离开或停留。
+          </p>
+          <label for="zone-input" class="hint"
+            >凸区域配置 JSON · 会话须与普通测量一致</label
+          >
+          <textarea id="zone-input" spellcheck="false">
+{"session_id":"warehouse-example","zones":[{"zone_id":"work-area","vertices_m":[[0,0],[4,0],[4,4],[0,4]],"sigma_multiplier":2}]}</textarea
+          >
+          <div class="actions">
+            <button id="zone-compute" disabled>计算凸区域位置证据</button>
+            <button id="zone-example" class="quiet" disabled>
+              载入当前会话区域示例
+            </button>
+            <button id="download-zones" class="quiet" disabled>
+              下载整批凸区域证据
+            </button>
+          </div>
+          <p id="zone-message" class="hint" role="status" aria-live="polite">
+            区域原文交核心验证；只显示模型支持区间，不解释为概率。
+          </p>
+          <p id="zone-frame" class="hint"></p>
+          <p class="hint">
+            每个外法向闭区间的上界均 ≤ 0 时确认在内，任一下界 &gt; 0
+            时确认在外。
+            其他情况为区域关系未确认；角点附近未确认不表示已相交。表内六位有效数字，行悬停查看核心原值。
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>目标 / 片段</th>
+                  <th>区域 ID</th>
+                  <th>k</th>
+                  <th>区域证据</th>
+                  <th>首条分离边 · 从 0 编号</th>
+                </tr>
+              </thead>
+              <tbody id="zone-evidence"></tbody>
+            </table>
+          </div>
+          <label class="hint result-mode"
+            >查看当前帧各边<select
+              id="zone-face-selection"
+              disabled
+              aria-label="选择目标与区域各边证据"
+            ></select
+          ></label>
+          <p id="zone-face-summary" class="hint"></p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>边编号</th>
+                  <th>外法向 x, y</th>
+                  <th>有符号距离 · m</th>
+                  <th>法向 σ · m</th>
+                  <th>支持闭区间 · m</th>
+                </tr>
+              </thead>
+              <tbody id="zone-faces"></tbody>
+            </table>
+          </div>
+          <p class="hint">本帧不可判定目标</p>
+          <div class="table-wrap">
+            <table class="gate-table">
+              <thead>
+                <tr>
+                  <th>目标 / 片段</th>
+                  <th>原测量状态</th>
+                </tr>
+              </thead>
+              <tbody id="zone-unavailable"></tbody>
+            </table>
+          </div>
+        </details>
       </section>
       <section class="panel" aria-labelledby="health-heading">
         <div class="panel-title">

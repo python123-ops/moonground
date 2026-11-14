@@ -22,6 +22,7 @@ import {
   moonground_evidence_transit_window_analysis,
   moonground_evidence_guarded_transit_window,
   moonground_velocity_evidence,
+  moonground_zone_evidence,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -35,6 +36,7 @@ const evidenceInput = $("evidence-input");
 const evidenceTransitInput = $("evidence-transit-input");
 const transitWindowsInput = $("transit-windows-input");
 const velocityInput = $("velocity-input");
+const zoneInput = $("zone-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -161,6 +163,16 @@ let velocitySource = "";
 let velocityMeasurements = "";
 let velocityReference = null;
 let velocityPending = null;
+let zoneRevision = 0;
+let zoneRunToken = 0;
+let zoneReport = null;
+let zoneResponse = null;
+let zoneConfiguration = "";
+let zoneSource = "";
+let zoneMeasurements = "";
+let zoneReference = null;
+let zonePending = null;
+let zoneSelectedKey = null;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -182,6 +194,7 @@ function stop() {
 }
 
 function invalidate() {
+  cancelZonePreparation();
   cancelVelocityPreparation();
   revision++;
   invalidateEvidenceTransitJointSource();
@@ -203,6 +216,7 @@ function invalidate() {
   for (const id of ["ready", "speed", "segments"]) $(id).textContent = "—";
   $("tracks").replaceChildren();
   renderVelocity();
+  renderZones();
   draw();
 }
 
@@ -637,6 +651,7 @@ function render() {
   renderEvidenceTransit("ordinary");
   renderEvidence("ordinary");
   renderVelocity();
+  renderZones();
   draw();
 }
 
@@ -855,6 +870,284 @@ $("download-velocity").addEventListener("click", () => {
 });
 $("velocity-section").addEventListener("toggle", renderVelocity);
 
+function zoneMessage(text, error = false) {
+  $("zone-message").textContent = text;
+  $("zone-message").classList.toggle("error", error);
+}
+function cancelZonePreparation() {
+  zoneRevision++;
+  if (zonePending !== null) zoneMessage("上一次凸区域证据准备已取消。");
+  zonePending = null;
+}
+function clearZoneResult() {
+  cancelZonePreparation();
+  zoneReport = null;
+  zoneResponse = null;
+  zoneConfiguration = "";
+  zoneSource = "";
+  zoneMeasurements = "";
+  zoneReference = null;
+  zoneSelectedKey = null;
+}
+function zoneIsCurrent() {
+  return (
+    zoneReport !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    zoneConfiguration === zoneInput.value &&
+    zoneSource === source.value &&
+    zoneReference === measurementLines
+  );
+}
+function zoneEvidenceKey(row) {
+  return JSON.stringify([row.track_id, row.segment_id, row.zone_id]);
+}
+function renderZoneFaces(frame) {
+  const selection = $("zone-face-selection");
+  const selected = frame.evidence.findIndex(
+    (row) => zoneEvidenceKey(row) === zoneSelectedKey,
+  );
+  const index = selected >= 0 ? selected : 0;
+  const row = frame.evidence[index];
+  selection.replaceChildren(
+    ...frame.evidence.map((item, itemIndex) => {
+      const option = document.createElement("option");
+      option.value = String(itemIndex);
+      option.textContent =
+        item.track_id + " / " + item.segment_id + " · " + item.zone_id;
+      return option;
+    }),
+  );
+  selection.disabled = !row;
+  if (!row) {
+    zoneSelectedKey = null;
+    $("zone-face-summary").textContent = "本帧没有可展开的区域证据。";
+    $("zone-faces").replaceChildren();
+    return;
+  }
+  selection.value = String(index);
+  zoneSelectedKey = zoneEvidenceKey(row);
+  $("zone-face-summary").textContent =
+    "边按输入顶点顺序从 0 编号；仅展开当前目标与区域的 " +
+    row.faces.length +
+    " 条核心支持区间。";
+  $("zone-faces").replaceChildren(
+    ...row.faces.map((face) => {
+      const detail = reportRow([
+        face.edge_index,
+        face.outward_normal.map(reportNumber).join(", "),
+        reportNumber(face.distance_m),
+        reportNumber(face.normal_std_m),
+        "[" +
+          reportNumber(face.lower_m) +
+          ", " +
+          reportNumber(face.upper_m) +
+          "]",
+      ]);
+      detail.title = JSON.stringify(face);
+      return detail;
+    }),
+  );
+}
+function renderZones() {
+  if (
+    zoneReport !== null &&
+    (zoneConfiguration !== zoneInput.value || zoneSource !== source.value)
+  ) {
+    clearZoneResult();
+    zoneMessage("原始测量输入或区域配置已修改，请重新计算证据。");
+  }
+  if (
+    zoneReport !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    zoneReference !== measurementLines
+  ) {
+    if (zoneMeasurements === measurementLines.join("\n") + "\n")
+      zoneReference = measurementLines;
+    else {
+      clearZoneResult();
+      zoneMessage("普通测量结果已变化，请重新计算凸区域证据。");
+    }
+  }
+  $("zone-compute").disabled =
+    !ordinaryVelocitySourceCurrent() || zonePending !== null;
+  $("zone-example").disabled = !ordinaryVelocitySourceCurrent();
+  $("download-zones").disabled = !zoneIsCurrent();
+  for (const id of ["zone-evidence", "zone-unavailable", "zone-faces"])
+    $(id).replaceChildren();
+  $("zone-face-selection").replaceChildren();
+  $("zone-face-selection").disabled = true;
+  $("zone-face-summary").textContent = "";
+  if (!zoneIsCurrent()) {
+    $("zone-frame").textContent = "先计算上方普通测量，再显式计算凸区域证据。";
+    return;
+  }
+  const index = Number(slider.value),
+    frame = zoneReport.frames[index];
+  if (!frame) return;
+  $("zone-frame").textContent =
+    index +
+    1 +
+    " / " +
+    zoneReport.frames.length +
+    " · " +
+    frame.timestamp_us +
+    " μs · 区域证据 " +
+    frame.evidence.length +
+    " 行；不可判定目标 " +
+    frame.unavailable.length +
+    " 个。";
+  if (!$("zone-section").open) return;
+  const decisions = {
+    inside: "确认在区域内",
+    outside: "确认在区域外",
+    indeterminate: "区域关系未确认",
+  };
+  const rows = frame.evidence.map((row) => {
+    const summary = reportRow([
+      row.track_id + " / " + row.segment_id,
+      row.zone_id,
+      reportNumber(row.sigma_multiplier),
+      decisions[row.decision],
+      row.separating_edge_index ?? "—",
+    ]);
+    summary.title = JSON.stringify(row);
+    return summary;
+  });
+  if (!rows.length) {
+    const empty = reportRow(["本帧没有可判定的凸区域证据。"]);
+    empty.firstChild.colSpan = 5;
+    rows.push(empty);
+  }
+  $("zone-evidence").replaceChildren(...rows);
+  $("zone-unavailable").replaceChildren(
+    ...frame.unavailable.map((row) =>
+      reportRow([
+        row.track_id + " / " + (row.segment_id ?? "—"),
+        states[row.reason] ?? row.reason,
+      ]),
+    ),
+  );
+  renderZoneFaces(frame);
+}
+function requestZones(configuration, measurements) {
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(configuration).length + encoder.encode(measurements).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器凸区域证据输入上限为 8 MiB。");
+  const request = JSON.stringify({ source: configuration, measurements });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("凸区域证据请求超过 16 Mi 字符上限。");
+  const response = moonground_zone_evidence(request);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器凸区域证据结果超过 8 MiB。");
+  return { response, report: unpack(response) };
+}
+$("zone-compute").addEventListener("click", async () => {
+  if (!ordinaryVelocitySourceCurrent()) return;
+  const current = ++zoneRevision,
+    runToken = ++zoneRunToken,
+    upstream = revision,
+    reference = measurementLines,
+    configuration = zoneInput.value,
+    input = loadedSource;
+  zonePending = { reference, configuration, input };
+  zoneMessage("正在计算当前米制模型的凸区域位置证据…");
+  renderZones();
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (
+      current !== zoneRevision ||
+      upstream !== revision ||
+      configuration !== zoneInput.value ||
+      input !== source.value ||
+      reference !== measurementLines ||
+      !ordinaryVelocitySourceCurrent()
+    )
+      return;
+    const measurements = reference.join("\n") + "\n";
+    const { response, report } = requestZones(configuration, measurements);
+    if (
+      current !== zoneRevision ||
+      upstream !== revision ||
+      configuration !== zoneInput.value ||
+      input !== source.value ||
+      reference !== measurementLines
+    )
+      return;
+    zoneReport = report;
+    zoneResponse = response;
+    zoneConfiguration = configuration;
+    zoneSource = input;
+    zoneMeasurements = measurements;
+    zoneReference = reference;
+    zoneSelectedKey = null;
+    zoneMessage(
+      "已计算 " +
+        report.frames.length +
+        " 帧凸区域位置证据；结果跟随上方普通测量回放。",
+    );
+  } catch (error) {
+    if (current === zoneRevision) zoneMessage(error.message, true);
+  } finally {
+    if (runToken === zoneRunToken) {
+      zonePending = null;
+      renderZones();
+    }
+  }
+});
+zoneInput.addEventListener("input", () => {
+  clearZoneResult();
+  zoneMessage("区域配置已修改，请显式重新计算。");
+  renderZones();
+});
+$("zone-example").addEventListener("click", () => {
+  if (!ordinaryVelocitySourceCurrent()) return;
+  clearZoneResult();
+  zoneInput.value = JSON.stringify(
+    {
+      session_id: results[0].session_id,
+      zones: [
+        {
+          zone_id: "work-area",
+          vertices_m: [
+            [0, 0],
+            [4, 0],
+            [4, 4],
+            [0, 4],
+          ],
+        },
+        {
+          zone_id: "aisle",
+          vertices_m: [
+            [0.5, 3.5],
+            [3.5, 3.5],
+            [3.5, 4.5],
+            [0.5, 4.5],
+          ],
+        },
+      ],
+    },
+    null,
+    2,
+  );
+  zoneMessage("已载入当前会话的米制区域示例；点击计算后读取证据。");
+  renderZones();
+});
+$("zone-face-selection").addEventListener("change", (event) => {
+  if (!zoneIsCurrent()) return;
+  const frame = zoneReport.frames[Number(slider.value)];
+  const row = frame?.evidence[Number(event.target.value)];
+  if (row) zoneSelectedKey = zoneEvidenceKey(row);
+  renderZones();
+});
+$("zone-section").addEventListener("toggle", renderZones);
+$("download-zones").addEventListener("click", () => {
+  if (zoneIsCurrent())
+    saveFile(zoneResponse + "\n", "moonground-zone-evidence.json");
+});
+
 async function run() {
   invalidate();
   const currentRevision = revision,
@@ -921,7 +1214,9 @@ gateInput.addEventListener("input", () => {
 $("analyze").addEventListener("click", async () => {
   if (analysisBusy) return;
   cancelVelocityPreparation();
+  cancelZonePreparation();
   renderVelocity();
+  renderZones();
   const current = ++revision,
     currentGate = ++gateRevision,
     input = source.value,
