@@ -130,13 +130,21 @@ fn FootprintRunAnalysisReplay::footprint_run_analysis_process_frame(
     self.run_capacity,
   )
   let result = prepared.commit(assignments)
+  footprint_run_analysis_frame_json(result, self.diagnostics)
+}
+
+///|
+fn footprint_run_analysis_frame_json(
+  result : @analysis.FootprintRunSessionFrame,
+  diagnostics : Bool,
+) -> Json {
   Json::object({
     "schema_version": Json("0.1.0"),
     "kind": Json("footprint_run_analysis_frame"),
     "measurement": measurement_json(
       result.measurement.motion,
       result.measurement.projection_failures,
-      self.diagnostics,
+      diagnostics,
     ),
     "runs": footprint_run_frame_json(result.runs),
   })

@@ -40,6 +40,8 @@ options(
         "moonground_footprint_runs",
         "moonground_footprint_run_analysis",
         "moonground_footprint_run_preview",
+        "moonground_footprint_run_guarded",
+        "moonground_footprint_run_guarded_preview",
       ],
       "format": "esm",
     },
