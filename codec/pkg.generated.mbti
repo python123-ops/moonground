@@ -30,6 +30,10 @@ pub fn evidence_transit_json(String) -> String raise @types.GroundError
 
 pub fn evidence_transit_window_analysis_json(String) -> String raise @types.GroundError
 
+pub fn footprint_run_analysis_json(String) -> String raise @types.GroundError
+
+pub fn footprint_run_preview_json(String) -> String raise @types.GroundError
+
 pub fn footprint_runs_json(String) -> String raise @types.GroundError
 
 pub fn footprint_zone_evidence_json(String) -> String raise @types.GroundError
@@ -138,6 +142,14 @@ pub struct EvidenceTransitWindowReplay {
 pub fn EvidenceTransitWindowReplay::checkpoint_json(Self) -> String raise @types.GroundError
 pub fn EvidenceTransitWindowReplay::open(String) -> Self raise @types.GroundError
 pub fn EvidenceTransitWindowReplay::process_line(Self, String) -> String raise @types.GroundError
+
+pub struct FootprintRunAnalysisReplay {
+  // private fields
+}
+pub fn FootprintRunAnalysisReplay::checkpoint_json(Self) -> String raise @types.GroundError
+pub fn FootprintRunAnalysisReplay::open(String) -> Self raise @types.GroundError
+pub fn FootprintRunAnalysisReplay::preview_line(Self, String) -> String raise @types.GroundError
+pub fn FootprintRunAnalysisReplay::process_line(Self, String) -> String raise @types.GroundError
 
 pub struct FootprintRunReplay {
   // private fields

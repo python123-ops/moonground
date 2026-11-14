@@ -331,6 +331,11 @@ fn FootprintRunReplay::run_process_frame(
     }
   }
   result.evidence.unavailable.sort_by((a, b) => a.track_id.compare(b.track_id))
+  footprint_run_frame_json(result)
+}
+
+///|
+fn footprint_run_frame_json(result : @zones.FootprintRunFrame) -> Json {
   Json::object({
     "schema_version": Json("0.1.0"),
     "kind": Json("footprint_run_frame"),

@@ -136,6 +136,34 @@ fn evidence_guarded_line(
 }
 
 ///|
+fn footprint_run_analysis_line(
+  state : Ref[@codec.FootprintRunAnalysisReplay?],
+  source : String,
+  preview : Bool,
+  preview_seen : Ref[Bool],
+) -> String? raise @types.GroundError {
+  match state.val {
+    None => {
+      state.val = Some(@codec.FootprintRunAnalysisReplay::open(source))
+      None
+    }
+    Some(replay) =>
+      if preview {
+        if preview_seen.val {
+          raise @types.InvalidInput(
+            "footprint run preview accepts exactly one observation frame",
+          )
+        }
+        let output = replay.preview_line(source)
+        preview_seen.val = true
+        Some(output)
+      } else {
+        Some(replay.process_line(source))
+      }
+  }
+}
+
+///|
 fn footprint_runs_line(
   state : Ref[@codec.FootprintRunReplay?],
   source : String,
@@ -308,7 +336,7 @@ async fn main {
   let args = @env.args()
   if args.length() == 2 && (args[1] == "--help" || args[1] == "-h") {
     @stdio.stdout.write(
-      "moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint | --transit-evidence | --transit-evidence-checkpoint | --analyze-transit-evidence | --analyze-transit-evidence-checkpoint | --guarded-transit-evidence | --guarded-transit-evidence-checkpoint | --transit-windows | --transit-windows-checkpoint | --analyze-transit-windows | --analyze-transit-windows-checkpoint | --guarded-transit-windows | --guarded-transit-windows-checkpoint | --velocity-evidence | --zone-evidence | --disk-zone-evidence | --footprint-zone-evidence | --assigned-zone-evidence | --footprint-runs | --footprint-runs-checkpoint) [--max-line-bytes N] | --project | --calibrate\nStream/checkpoint read configuration or {resume: checkpoint}, then frames. --checkpoint writes only the final state at EOF. --reframe reads {source: configuration_or_resume, transform: {...}}, then original frames, and writes transformed NDJSON. --count reads gate configuration or {resume: gate_checkpoint}, then schema-0.2 measurement frames; --count-checkpoint writes only final gate state at EOF. --analyze reads {measurement: raw_session_source, counting: raw_gate_source} or {resume: analysis_checkpoint}, then original observations. --analyze-checkpoint writes only final joint state. --health reads fixed-landmark calibration configuration or {resume: health_checkpoint}, then landmark observation frames; --health-checkpoint writes only final health state. --guarded reads {analysis: raw_analysis_source, health: raw_health_source} or {resume: guarded_checkpoint}, then {measurement: raw_pixel_frame, health: raw_landmark_frame}. --guarded also accepts {replace_projection: raw_replacement_JSON}; its timestamp_us, calibration and explicit camera (object or null) create a blocked barrier and require new health evidence. --guarded-checkpoint writes only final bound state. --transit reads {counting: raw_gate_source, sections: [...], max_duration_us: optional_string} or {resume: transit_checkpoint}, then schema-0.2 measurement frames. --transit-checkpoint writes only final downstream state; upstream motion must be restored separately. --count-evidence reads {counting: raw_fresh_gate_configuration, sigma_multiplier: optional_number} or {resume: evidence_checkpoint}, then schema-0.2 measurements. --evidence-checkpoint writes only final covariance-evidence state. --analyze-evidence reads {measurement: raw_session_source, counting: raw_evidence_source} or {resume: evidence_analysis_checkpoint}, then original observations. --analyze-evidence-checkpoint writes only the final complete atomic measurement and covariance-evidence state. --guarded-evidence reads {analysis: raw_evidence_analysis_source, health: raw_health_source} or {resume: evidence_guarded_checkpoint}, then the same paired raw observation or replace_projection lines as --guarded. --guarded-evidence-checkpoint writes only the final complete health, motion and evidence state. --transit-evidence reads {counting: raw_evidence_source, sections: [...], max_duration_us: optional_string} or {resume: evidence_transit_checkpoint}, then original schema-0.2 measurement frames. --transit-evidence-checkpoint writes only the final complete downstream evidence and passage state; restore the upstream clock separately. --analyze-transit-evidence reads {measurement: raw_session_source, transit: raw_evidence_transit_source} or {resume: evidence_transit_analysis_checkpoint}, then raw pixel or ground observations. --analyze-transit-evidence-checkpoint writes only the complete joint measurement and evidence-transit state. --guarded-transit-evidence reads {analysis: raw_evidence_transit_analysis_source, health: raw_health_source} or {resume: evidence_guarded_transit_checkpoint}, then paired raw pixel and landmark observation or replace_projection lines. --guarded-transit-evidence-checkpoint writes the complete health, motion, evidence and transit state. --transit-windows reads {transit: raw_evidence_transit_source, window_us: decimal_string, duration_limits_us: [decimal_string], origin_us: optional_decimal_string} or {resume: windows_checkpoint}, then original evidence_transit_frame results. --transit-windows-checkpoint writes only the downstream statistics state; restore the upstream clock separately. --analyze-transit-windows reads {analysis: raw_evidence_transit_analysis_source, windows: raw_window_options_or_resume} or {resume: complete_window_analysis_checkpoint}, then raw pixel or ground observations. --analyze-transit-windows-checkpoint writes the complete joint measurement, transit and window state. --guarded-transit-windows reads {guarded: raw_evidence_guarded_transit_source, windows: raw_window_options_or_resume} or {resume: complete_guarded_transit_windows_checkpoint}, then paired raw observations or original replace_projection control lines. --guarded-transit-windows-checkpoint writes the complete health, measurement, transit and window state. --velocity-evidence reads {session_id, probes: [{probe_id, direction: [dx,dy], threshold_mps, sigma_multiplier?: number}], max_tracks?: integer}, then original schema-0.2 measurement frames. Each frame is independent; only current Ready velocities produce threshold evidence. No checkpoint or event counters. --zone-evidence reads {session_id, zones: [{zone_id, vertices_m: [[x,y],...], sigma_multiplier?: number}], max_tracks?: integer}, then schema-0.2 measurements. Only current Ready positions produce independent convex-zone halfplane evidence. No checkpoint or region events. --disk-zone-evidence reads {position: raw_v22_zone_configuration_string, disk: raw_disk_options_string}, where disk options are {radius_m: nonnegative_finite_number}; then original schema-0.2 measurements. The explicit disk is centered on each modeled ground anchor; statistical position bounds stay separate from physical support. No footprint estimation or checkpoints. --footprint-zone-evidence reads {position: raw_v22_zone_configuration_string, footprint: raw_convex_options_string}, where options contain vertices_offset_m: [[x,y],...] in ground axes relative to the modeled anchor. The 3..32 strictly convex vertices must enclose that anchor (closed boundary allowed). Original position, signed shape support and combined bounds remain separate. No automatic heading, sizing or checkpoint. --assigned-zone-evidence reads the original zone configuration, then {measurement: raw_schema02_frame_string, assignments: raw_assignment_document_string}. Assignments contain timestamp_us and footprints: [{track_id, segment_id, shape: {kind: disk, radius_m} or {kind: convex, vertices_offset_m}}]. Exact current clock and reported target segment must match. Ready without assignment is missing_footprint; no shape map or checkpoint is retained. --footprint-runs reads {position: raw_zone_configuration, options: raw_run_options} or {resume: footprint_run_checkpoint}, then the same wrapped measurement and assignment frames. Options max_gap_us, confirmation_us and min_samples are canonical Int64 strings. Reports same-shape Inside/Outside sample runs; sample span is not continuous occupancy or physical dwell. --footprint-runs-checkpoint writes only complete downstream state; upstream motion is restored separately.\n",
+      "moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint | --transit-evidence | --transit-evidence-checkpoint | --analyze-transit-evidence | --analyze-transit-evidence-checkpoint | --guarded-transit-evidence | --guarded-transit-evidence-checkpoint | --transit-windows | --transit-windows-checkpoint | --analyze-transit-windows | --analyze-transit-windows-checkpoint | --guarded-transit-windows | --guarded-transit-windows-checkpoint | --velocity-evidence | --zone-evidence | --disk-zone-evidence | --footprint-zone-evidence | --assigned-zone-evidence | --footprint-runs | --footprint-runs-checkpoint | --analyze-footprint-runs | --analyze-footprint-runs-checkpoint | --preview-footprint-run) [--max-line-bytes N] | --project | --calibrate\nStream/checkpoint read configuration or {resume: checkpoint}, then frames. --checkpoint writes only the final state at EOF. --reframe reads {source: configuration_or_resume, transform: {...}}, then original frames, and writes transformed NDJSON. --count reads gate configuration or {resume: gate_checkpoint}, then schema-0.2 measurement frames; --count-checkpoint writes only final gate state at EOF. --analyze reads {measurement: raw_session_source, counting: raw_gate_source} or {resume: analysis_checkpoint}, then original observations. --analyze-checkpoint writes only final joint state. --health reads fixed-landmark calibration configuration or {resume: health_checkpoint}, then landmark observation frames; --health-checkpoint writes only final health state. --guarded reads {analysis: raw_analysis_source, health: raw_health_source} or {resume: guarded_checkpoint}, then {measurement: raw_pixel_frame, health: raw_landmark_frame}. --guarded also accepts {replace_projection: raw_replacement_JSON}; its timestamp_us, calibration and explicit camera (object or null) create a blocked barrier and require new health evidence. --guarded-checkpoint writes only final bound state. --transit reads {counting: raw_gate_source, sections: [...], max_duration_us: optional_string} or {resume: transit_checkpoint}, then schema-0.2 measurement frames. --transit-checkpoint writes only final downstream state; upstream motion must be restored separately. --count-evidence reads {counting: raw_fresh_gate_configuration, sigma_multiplier: optional_number} or {resume: evidence_checkpoint}, then schema-0.2 measurements. --evidence-checkpoint writes only final covariance-evidence state. --analyze-evidence reads {measurement: raw_session_source, counting: raw_evidence_source} or {resume: evidence_analysis_checkpoint}, then original observations. --analyze-evidence-checkpoint writes only the final complete atomic measurement and covariance-evidence state. --guarded-evidence reads {analysis: raw_evidence_analysis_source, health: raw_health_source} or {resume: evidence_guarded_checkpoint}, then the same paired raw observation or replace_projection lines as --guarded. --guarded-evidence-checkpoint writes only the final complete health, motion and evidence state. --transit-evidence reads {counting: raw_evidence_source, sections: [...], max_duration_us: optional_string} or {resume: evidence_transit_checkpoint}, then original schema-0.2 measurement frames. --transit-evidence-checkpoint writes only the final complete downstream evidence and passage state; restore the upstream clock separately. --analyze-transit-evidence reads {measurement: raw_session_source, transit: raw_evidence_transit_source} or {resume: evidence_transit_analysis_checkpoint}, then raw pixel or ground observations. --analyze-transit-evidence-checkpoint writes only the complete joint measurement and evidence-transit state. --guarded-transit-evidence reads {analysis: raw_evidence_transit_analysis_source, health: raw_health_source} or {resume: evidence_guarded_transit_checkpoint}, then paired raw pixel and landmark observation or replace_projection lines. --guarded-transit-evidence-checkpoint writes the complete health, motion, evidence and transit state. --transit-windows reads {transit: raw_evidence_transit_source, window_us: decimal_string, duration_limits_us: [decimal_string], origin_us: optional_decimal_string} or {resume: windows_checkpoint}, then original evidence_transit_frame results. --transit-windows-checkpoint writes only the downstream statistics state; restore the upstream clock separately. --analyze-transit-windows reads {analysis: raw_evidence_transit_analysis_source, windows: raw_window_options_or_resume} or {resume: complete_window_analysis_checkpoint}, then raw pixel or ground observations. --analyze-transit-windows-checkpoint writes the complete joint measurement, transit and window state. --guarded-transit-windows reads {guarded: raw_evidence_guarded_transit_source, windows: raw_window_options_or_resume} or {resume: complete_guarded_transit_windows_checkpoint}, then paired raw observations or original replace_projection control lines. --guarded-transit-windows-checkpoint writes the complete health, measurement, transit and window state. --velocity-evidence reads {session_id, probes: [{probe_id, direction: [dx,dy], threshold_mps, sigma_multiplier?: number}], max_tracks?: integer}, then original schema-0.2 measurement frames. Each frame is independent; only current Ready velocities produce threshold evidence. No checkpoint or event counters. --zone-evidence reads {session_id, zones: [{zone_id, vertices_m: [[x,y],...], sigma_multiplier?: number}], max_tracks?: integer}, then schema-0.2 measurements. Only current Ready positions produce independent convex-zone halfplane evidence. No checkpoint or region events. --disk-zone-evidence reads {position: raw_v22_zone_configuration_string, disk: raw_disk_options_string}, where disk options are {radius_m: nonnegative_finite_number}; then original schema-0.2 measurements. The explicit disk is centered on each modeled ground anchor; statistical position bounds stay separate from physical support. No footprint estimation or checkpoints. --footprint-zone-evidence reads {position: raw_v22_zone_configuration_string, footprint: raw_convex_options_string}, where options contain vertices_offset_m: [[x,y],...] in ground axes relative to the modeled anchor. The 3..32 strictly convex vertices must enclose that anchor (closed boundary allowed). Original position, signed shape support and combined bounds remain separate. No automatic heading, sizing or checkpoint. --assigned-zone-evidence reads the original zone configuration, then {measurement: raw_schema02_frame_string, assignments: raw_assignment_document_string}. Assignments contain timestamp_us and footprints: [{track_id, segment_id, shape: {kind: disk, radius_m} or {kind: convex, vertices_offset_m}}]. Exact current clock and reported target segment must match. Ready without assignment is missing_footprint; no shape map or checkpoint is retained. --footprint-runs reads {position: raw_zone_configuration, options: raw_run_options} or {resume: footprint_run_checkpoint}, then the same wrapped measurement and assignment frames. Options max_gap_us, confirmation_us and min_samples are canonical Int64 strings. Reports same-shape Inside/Outside sample runs; sample span is not continuous occupancy or physical dwell. --footprint-runs-checkpoint writes only complete downstream state; upstream motion is restored separately. --analyze-footprint-runs reads {measurement: raw_measurement_source, runs: raw_run_source} or {resume: complete_joint_checkpoint}, then {measurement: raw_original_observation_frame, assignments: raw_exact_assignment_document}. It commits motion and footprint sample runs together after all checks; --analyze-footprint-runs-checkpoint writes only the final complete joint state. --preview-footprint-run reads the same source and exactly one raw original observation frame, returning actual candidate measurement identities without committing. Preview is not a reservation; assignments must still match the actual commit candidate.\n",
     )
     return
   }
@@ -352,11 +380,14 @@ async fn main {
       args[1] != "--assigned-zone-evidence" &&
       args[1] != "--footprint-runs" &&
       args[1] != "--footprint-runs-checkpoint" &&
+      args[1] != "--analyze-footprint-runs" &&
+      args[1] != "--analyze-footprint-runs-checkpoint" &&
+      args[1] != "--preview-footprint-run" &&
       args[1] != "--project" &&
       args[1] != "--calibrate"
     ) {
     diagnostic(
-      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint | --transit-evidence | --transit-evidence-checkpoint | --analyze-transit-evidence | --analyze-transit-evidence-checkpoint | --guarded-transit-evidence | --guarded-transit-evidence-checkpoint | --transit-windows | --transit-windows-checkpoint | --analyze-transit-windows | --analyze-transit-windows-checkpoint | --guarded-transit-windows | --guarded-transit-windows-checkpoint | --velocity-evidence | --zone-evidence | --disk-zone-evidence | --footprint-zone-evidence | --assigned-zone-evidence | --footprint-runs | --footprint-runs-checkpoint) [--max-line-bytes N] | --project | --calibrate",
+      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint | --transit-evidence | --transit-evidence-checkpoint | --analyze-transit-evidence | --analyze-transit-evidence-checkpoint | --guarded-transit-evidence | --guarded-transit-evidence-checkpoint | --transit-windows | --transit-windows-checkpoint | --analyze-transit-windows | --analyze-transit-windows-checkpoint | --guarded-transit-windows | --guarded-transit-windows-checkpoint | --velocity-evidence | --zone-evidence | --disk-zone-evidence | --footprint-zone-evidence | --assigned-zone-evidence | --footprint-runs | --footprint-runs-checkpoint | --analyze-footprint-runs | --analyze-footprint-runs-checkpoint | --preview-footprint-run) [--max-line-bytes N] | --project | --calibrate",
     )
     return
   }
@@ -365,6 +396,9 @@ async fn main {
   let analysis_mode = args[1] == "--analyze" ||
     args[1] == "--analyze-checkpoint"
   let health_mode = args[1] == "--health" || args[1] == "--health-checkpoint"
+  let footprint_run_analysis_mode = args[1] == "--analyze-footprint-runs" ||
+    args[1] == "--analyze-footprint-runs-checkpoint" ||
+    args[1] == "--preview-footprint-run"
   let footprint_runs_mode = args[1] == "--footprint-runs" ||
     args[1] == "--footprint-runs-checkpoint"
   let assigned_zone_evidence_mode = args[1] == "--assigned-zone-evidence"
@@ -414,7 +448,8 @@ async fn main {
     disk_zone_evidence_mode ||
     footprint_zone_evidence_mode ||
     assigned_zone_evidence_mode ||
-    footprint_runs_mode
+    footprint_runs_mode ||
+    footprint_run_analysis_mode
   if args.length() == 4 && stream_mode && args[2] == "--max-line-bytes" {
     max_bytes = @string.parse_int(args[3], base=10) catch {
       _ => {
@@ -428,7 +463,7 @@ async fn main {
     }
   } else if args.length() != 2 {
     diagnostic(
-      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint | --transit-evidence | --transit-evidence-checkpoint | --analyze-transit-evidence | --analyze-transit-evidence-checkpoint | --guarded-transit-evidence | --guarded-transit-evidence-checkpoint | --transit-windows | --transit-windows-checkpoint | --analyze-transit-windows | --analyze-transit-windows-checkpoint | --guarded-transit-windows | --guarded-transit-windows-checkpoint | --velocity-evidence | --zone-evidence | --disk-zone-evidence | --footprint-zone-evidence | --assigned-zone-evidence | --footprint-runs | --footprint-runs-checkpoint) [--max-line-bytes N] | --project | --calibrate",
+      "usage: moonground (--stream | --checkpoint | --reframe | --count | --count-checkpoint | --analyze | --analyze-checkpoint | --health | --health-checkpoint | --guarded | --guarded-checkpoint | --transit | --transit-checkpoint | --count-evidence | --evidence-checkpoint | --analyze-evidence | --analyze-evidence-checkpoint | --guarded-evidence | --guarded-evidence-checkpoint | --transit-evidence | --transit-evidence-checkpoint | --analyze-transit-evidence | --analyze-transit-evidence-checkpoint | --guarded-transit-evidence | --guarded-transit-evidence-checkpoint | --transit-windows | --transit-windows-checkpoint | --analyze-transit-windows | --analyze-transit-windows-checkpoint | --guarded-transit-windows | --guarded-transit-windows-checkpoint | --velocity-evidence | --zone-evidence | --disk-zone-evidence | --footprint-zone-evidence | --assigned-zone-evidence | --footprint-runs | --footprint-runs-checkpoint | --analyze-footprint-runs | --analyze-footprint-runs-checkpoint | --preview-footprint-run) [--max-line-bytes N] | --project | --calibrate",
     )
     return
   }
@@ -442,6 +477,10 @@ async fn main {
   let footprint_zone_evidence : Ref[@codec.FootprintZoneEvidenceReplay?] = Ref(
     None,
   )
+  let footprint_run_analysis : Ref[@codec.FootprintRunAnalysisReplay?] = Ref(
+    None,
+  )
+  let footprint_run_preview_seen : Ref[Bool] = Ref(false)
   let footprint_runs : Ref[@codec.FootprintRunReplay?] = Ref(None)
   let assigned_zone_evidence : Ref[@codec.AssignedZoneEvidenceReplay?] = Ref(
     None,
@@ -484,7 +523,23 @@ async fn main {
             return
           }
         }
-        if footprint_runs_mode {
+        if footprint_run_analysis_mode {
+          let output = footprint_run_analysis_line(
+            footprint_run_analysis,
+            line,
+            args[1] == "--preview-footprint-run",
+            footprint_run_preview_seen,
+          ) catch {
+            error => {
+              diagnostic("line \{line_number}: " + error.message())
+              return
+            }
+          }
+          if args[1] != "--analyze-footprint-runs-checkpoint" &&
+            output is Some(output) {
+            @stdio.stdout.write(output + "\n")
+          }
+        } else if footprint_runs_mode {
           let output = footprint_runs_line(footprint_runs, line) catch {
             error => {
               diagnostic("line \{line_number}: " + error.message())
@@ -763,7 +818,23 @@ async fn main {
         return
       }
     }
-    if footprint_runs_mode {
+    if footprint_run_analysis_mode {
+      let output = footprint_run_analysis_line(
+        footprint_run_analysis,
+        line,
+        args[1] == "--preview-footprint-run",
+        footprint_run_preview_seen,
+      ) catch {
+        error => {
+          diagnostic("line \{line_number}: " + error.message())
+          return
+        }
+      }
+      if args[1] != "--analyze-footprint-runs-checkpoint" &&
+        output is Some(output) {
+        @stdio.stdout.write(output + "\n")
+      }
+    } else if footprint_runs_mode {
       let output = footprint_runs_line(footprint_runs, line) catch {
         error => {
           diagnostic("line \{line_number}: " + error.message())
@@ -1017,7 +1088,14 @@ async fn main {
       }
     }
   }
-  if footprint_runs_mode {
+  if footprint_run_analysis_mode {
+    if footprint_run_analysis.val is None {
+      diagnostic("missing footprint run analysis source")
+    }
+    if args[1] == "--preview-footprint-run" && !footprint_run_preview_seen.val {
+      diagnostic("missing footprint run preview observation frame")
+    }
+  } else if footprint_runs_mode {
     if footprint_runs.val is None {
       diagnostic("missing footprint run source")
     }
@@ -1105,6 +1183,16 @@ async fn main {
     diagnostic("missing configuration line")
   } else if !stream_mode && !projection_done {
     diagnostic("missing stateless request")
+  }
+  if args[1] == "--analyze-footprint-runs-checkpoint" &&
+    footprint_run_analysis.val is Some(replay) {
+    let checkpoint = replay.checkpoint_json() catch {
+      error => {
+        diagnostic("footprint run analysis checkpoint: " + error.message())
+        return
+      }
+    }
+    @stdio.stdout.write(checkpoint + "\n")
   }
   if args[1] == "--footprint-runs-checkpoint" &&
     footprint_runs.val is Some(replay) {

@@ -38,6 +38,8 @@ options(
         "moonground_footprint_zone_evidence",
         "moonground_assigned_zone_evidence",
         "moonground_footprint_runs",
+        "moonground_footprint_run_analysis",
+        "moonground_footprint_run_preview",
       ],
       "format": "esm",
     },
