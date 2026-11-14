@@ -34,6 +34,7 @@ options(
         "moonground_evidence_guarded_transit_window",
         "moonground_velocity_evidence",
         "moonground_zone_evidence",
+        "moonground_zone_intersection",
         "moonground_disk_zone_evidence",
         "moonground_footprint_zone_evidence",
         "moonground_assigned_zone_evidence",
