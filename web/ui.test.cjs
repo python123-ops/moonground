@@ -12294,6 +12294,493 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
         });
       }
     }
+
+    {
+      // The Web example is the actual input fixture, not an unexecuted sketch.
+      const document = fs.readFileSync(
+        path.resolve(__dirname, "..", "docs", "footprint-run-windows-web.md"),
+        "utf8",
+      );
+      const code = document.match(/```javascript\r?\n([\s\S]*?)\r?\n```/)[1];
+      const inputs = JSON.parse(
+        JSON.stringify(require("node:vm").runInNewContext(code)),
+      );
+      const windowSelectors = {
+        position: "#zone-input",
+        assignments: "#assigned-zone-input",
+        options: "#footprint-run-input",
+        window: "#footprint-run-window-input",
+      };
+      const showRunWindows = async () => {
+        await physicalMode("assigned");
+        for (const selector of [
+          "#zone-section",
+          "#footprint-run-section",
+          "#footprint-run-window-section",
+        ])
+          await page.locator(selector).evaluate((details) => {
+            details.open = true;
+          });
+      };
+      const computeRunWindows = async (count = 9) => {
+        await showRunWindows();
+        await page.locator("#footprint-run-window-compute").click();
+        await page.waitForFunction((count) => {
+          const message = document.querySelector(
+            "#footprint-run-window-message",
+          );
+          return (
+            message.classList.contains("error") ||
+            message.textContent.includes("已分窗 " + count + " 帧")
+          );
+        }, count);
+        assert.equal(
+          await page.locator("#footprint-run-window-message.error").count(),
+          0,
+          await page.locator("#footprint-run-window-message").textContent(),
+        );
+      };
+      const exportRunWindows = () =>
+        exportJson(
+          "#download-footprint-run-windows",
+          "moonground-footprint-run-windows.json",
+        );
+      const fillRunWindows = async () => {
+        await runVelocityBase(inputs.measurement, 9);
+        await showRunWindows();
+        for (const [key, selector] of Object.entries(windowSelectors))
+          await page.locator(selector).fill(inputs[key]);
+      };
+      await fillRunWindows();
+      assert.equal(
+        await page.locator("#download-footprint-runs").isDisabled(),
+        true,
+      );
+      assert.equal(
+        await page.locator("#download-footprint-run-analysis").isDisabled(),
+        true,
+      );
+      assert.equal(
+        await page.locator("#download-footprint-run-guarded").isDisabled(),
+        true,
+      );
+      await computeRunWindows();
+      const windows = await exportRunWindows();
+      assert.equal(windows.frames.length, 9);
+      assert.equal(
+        windows.checkpoint.format,
+        "moonground.footprint-run-windows",
+      );
+      assert.equal(windows.checkpoint.runs.last_timestamp_us, "2400000");
+      assert.equal(windows.checkpoint.baseline_timestamp_us, null);
+      assert.equal(windows.frames[0].kind, "footprint_run_window_frame");
+      assert.equal(windows.frames[0].statistics.closed_window, null);
+      assert.equal(
+        windows.frames[0].statistics.current_window.input_frames,
+        "1",
+      );
+      const zone = (index) =>
+        windows.frames[index].statistics.current_window.zones[0];
+      const ending = (index, reason) =>
+        zone(index).endings.find((item) => item.reason === reason);
+      assert.equal(zone(2).confirmed_inside, "1");
+      assert.equal(zone(2).confirmed_outside, "1");
+      assert.equal(zone(3).confirmed_inside, "0");
+      assert.equal(zone(3).confirmed_outside, "0");
+      assert.equal(zone(3).opening_active, "2");
+      assert.equal(zone(3).opening_confirmed, "2");
+      assert.equal(zone(3).started, "1");
+      assert.equal(ending(3, "shape_changed").confirmed, "1");
+      assert.equal(ending(4, "unavailable_evidence").unconfirmed, "1");
+      assert.equal(ending(5, "segment_closed").confirmed, "1");
+      assert.equal(
+        windows.frames[5].statistics.current_window.start_us,
+        "1000000",
+      );
+      assert.equal(
+        windows.frames[5].statistics.closed_window.start_us,
+        "500000",
+      );
+      assert.equal(windows.frames[6].statistics.unobserved_windows, "1");
+      assert.equal(
+        windows.frames[6].statistics.closed_window.start_us,
+        "1000000",
+      );
+      assert.equal(
+        windows.frames[6].statistics.current_window.start_us,
+        "2000000",
+      );
+      assert.equal(
+        windows.frames[6].statistics.current_window.input_frames,
+        "1",
+      );
+      assert.equal(zone(8).confirmed_inside, "1");
+      assert.equal(zone(8).confirmed_outside, "1");
+      await selectVelocityFrame(3);
+      assert.match(
+        await page.locator("#footprint-run-window-current").textContent(),
+        /\[500000, 1000000\)/,
+      );
+      assert.match(
+        await page.locator("#footprint-run-window-closed").textContent(),
+        /\[0, 500000\)/,
+      );
+      assert.equal(
+        await page.locator("#footprint-run-window-rows tr").count(),
+        2,
+      );
+      const row = await page
+        .locator("#footprint-run-window-rows tr")
+        .first()
+        .locator("td")
+        .allTextContents();
+      assert.deepEqual(row.slice(0, 7), [
+        "当前",
+        "floor",
+        "2",
+        "2",
+        "1",
+        "0",
+        "0",
+      ]);
+      assert.equal(row[12], "1 / 0");
+      // Old sequence outputs remain byte-equivalent and do not seed windows.
+      await atomicMode("independent");
+      await runFootprintRuns(9);
+      const runBaseline = await exportFootprintRuns();
+      assert.deepEqual(
+        windows.frames.map((frame) => frame.runs),
+        runBaseline.frames,
+      );
+      assert.deepEqual(windows.checkpoint.runs, runBaseline.checkpoint);
+      await runAtomicFootprints(9);
+      const jointBaseline = await exportAtomicFootprints();
+      for (const mode of ["independent", "joint", "guarded"]) {
+        await atomicMode(mode);
+        assert.deepEqual(await exportRunWindows(), windows);
+      }
+      await page
+        .locator("#footprint-run-window-input")
+        .fill('{"window_us":"400000","origin_us":"0"}');
+      await atomicMode("independent");
+      assert.deepEqual(await exportFootprintRuns(), runBaseline);
+      await atomicMode("joint");
+      assert.deepEqual(await exportAtomicFootprints(), jointBaseline);
+      await page.locator("#footprint-run-window-input").fill(inputs.window);
+      await computeRunWindows();
+      await selectVelocityFrame(8);
+      const measurementCheckpoint = await exportJson(
+        "#save-checkpoint",
+        "moonground-checkpoint.json",
+      );
+      const restored = await page.evaluate(
+        async ({ checkpoint, measurement }) => {
+          const api = await import("./moonground.mjs");
+          const source = JSON.stringify({ resume: checkpoint });
+          const empty = JSON.parse(
+            api.moonground_footprint_run_windows(
+              JSON.stringify({ source, frames: "" }),
+            ),
+          );
+          const assignments = JSON.stringify({
+            timestamp_us: "2600000",
+            footprints: [
+              {
+                track_id: 1,
+                segment_id: "3",
+                shape: { kind: "disk", radius_m: 0.1 },
+              },
+              {
+                track_id: 2,
+                segment_id: "4",
+                shape: {
+                  kind: "convex",
+                  vertices_offset_m: [
+                    [-0.1, -0.1],
+                    [0.1, -0.1],
+                    [0.1, 0.1],
+                    [-0.1, 0.1],
+                  ],
+                },
+              },
+            ],
+          });
+          const raw = JSON.stringify({
+            timestamp_us: "2600000",
+            observations: [
+              { track_id: 1, point: [0, 0], covariance: [0.0001, 0, 0.0001] },
+              { track_id: 2, point: [5, 0], covariance: [0.0001, 0, 0.0001] },
+            ],
+          });
+          const next = JSON.parse(
+            api.moonground_footprint_run_analysis(
+              JSON.stringify({
+                source: JSON.stringify({
+                  resume: {
+                    format: "moonground.footprint-run-analysis",
+                    checkpoint_version: "1",
+                    measurement,
+                    runs: checkpoint.runs,
+                  },
+                }),
+                frames:
+                  JSON.stringify({ measurement: raw, assignments }) + "\n",
+              }),
+            ),
+          );
+          const suffix = JSON.parse(
+            api.moonground_footprint_run_windows(
+              JSON.stringify({
+                source,
+                frames:
+                  JSON.stringify({
+                    measurement: JSON.stringify(next.frames[0].measurement),
+                    assignments,
+                  }) + "\n",
+              }),
+            ),
+          );
+          return { empty, suffix, next };
+        },
+        { checkpoint: windows.checkpoint, measurement: measurementCheckpoint },
+      );
+      assert.deepEqual(restored.empty.checkpoint, windows.checkpoint);
+      assert.deepEqual(restored.empty.frames, []);
+      assert.deepEqual(
+        restored.suffix.frames[0].runs,
+        restored.next.frames[0].runs,
+      );
+      assert.equal(
+        restored.suffix.frames[0].statistics.closed_window.start_us,
+        "2000000",
+      );
+      assert.equal(
+        restored.suffix.frames[0].statistics.current_window.start_us,
+        "2500000",
+      );
+      assert.equal(
+        restored.suffix.frames[0].statistics.current_window.zones[0]
+          .confirmed_inside,
+        "0",
+      );
+      // A failure without a dependency edit preserves the last success.
+      await page.evaluate(() => {
+        window.runWindowEncoder = window.TextEncoder;
+        window.TextEncoder = class {
+          encode() {
+            throw new Error("window preparation failed");
+          }
+        };
+      });
+      await page.locator("#footprint-run-window-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-run-window-message")
+          .classList.contains("error"),
+      );
+      await page.evaluate(() => {
+        window.TextEncoder = window.runWindowEncoder;
+        delete window.runWindowEncoder;
+      });
+      assert.deepEqual(await exportRunWindows(), windows);
+      for (const invalid of [
+        '{"window_us":500000}',
+        '{"window_us":"0"}',
+        '{"window_us":"500000","origin_us":"1"}',
+        '{"window_us":"500000","unknown":true}',
+        '{"window_us":"500000","window_us":"1"}',
+        '{"window_us":"500000.0"}',
+      ]) {
+        await page.locator("#footprint-run-window-input").fill(invalid);
+        await page.locator("#footprint-run-window-compute").click();
+        await page.waitForFunction(() =>
+          document
+            .querySelector("#footprint-run-window-message")
+            .classList.contains("error"),
+        );
+        assert.equal(
+          await page.locator("#download-footprint-run-windows").isDisabled(),
+          true,
+        );
+        assert.equal(
+          await page.locator("#footprint-run-window-input").inputValue(),
+          invalid,
+        );
+      }
+      await page.locator("#footprint-run-window-input").fill(inputs.window);
+      for (const invalid of [
+        inputs.assignments.replace(
+          '"track_id":1',
+          '"track_id":1.00000000000000001',
+        ),
+        inputs.assignments.replace('"timestamp_us":"0"', '"timestamp_us":"1"'),
+        inputs.assignments.replace('"segment_id":"3"', '"segment_id":"1"'),
+      ]) {
+        await page.locator("#assigned-zone-input").fill(invalid);
+        await page.locator("#footprint-run-window-compute").click();
+        await page.waitForFunction(() =>
+          document
+            .querySelector("#footprint-run-window-message")
+            .classList.contains("error"),
+        );
+        assert.equal(
+          await page.locator("#download-footprint-run-windows").isDisabled(),
+          true,
+        );
+        assert.equal(
+          await page.locator("#assigned-zone-input").inputValue(),
+          invalid,
+        );
+      }
+      await page.locator("#assigned-zone-input").fill(inputs.assignments);
+      await computeRunWindows();
+      // Both same-frame outcomes count when a shape change instantly confirms.
+      await page
+        .locator("#footprint-run-input")
+        .fill(
+          '{"max_gap_us":"500000","confirmation_us":"0","min_samples":"1"}',
+        );
+      await computeRunWindows();
+      const instant = await exportRunWindows();
+      const instantZone = instant.frames[3].statistics.current_window.zones[0];
+      assert.equal(instantZone.confirmed_inside, "1");
+      assert.equal(
+        instantZone.endings.find((e) => e.reason === "shape_changed").confirmed,
+        "1",
+      );
+      await page.locator("#footprint-run-input").fill(inputs.options);
+      await computeRunWindows();
+      // Current ordinary payload, not another result slot, owns the selection.
+      await selectAtomicFrame(0);
+      await page.locator("#footprint-run-guarded-frame").evaluate((slider) => {
+        slider.value = "0";
+        slider.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      await selectVelocityFrame(6);
+      assert.match(
+        await page.locator("#footprint-run-window-frame").textContent(),
+        /2000000 μs.*未观察窗口 1/,
+      );
+      for (const selector of [
+        "#health-input",
+        "#guarded-input",
+        "#velocity-input",
+      ]) {
+        const value = await page.locator(selector).inputValue();
+        await page.locator(selector).fill(value + " ");
+        assert.deepEqual(await exportRunWindows(), windows);
+        await page.locator(selector).fill(value);
+      }
+      await runVelocityBase(inputs.measurement, 9);
+      assert.deepEqual(await exportRunWindows(), windows);
+      for (const selector of ["#source", ...Object.values(windowSelectors)]) {
+        await holdEvidenceTransitPreparation();
+        await page.locator("#footprint-run-window-compute").click();
+        await page.waitForFunction(
+          () => typeof window.releaseEvidenceTransitRun === "function",
+        );
+        const old = await page.locator(selector).inputValue();
+        await page.locator(selector).fill(old + " ");
+        await releaseEvidenceTransitPreparation();
+        assert.equal(
+          await page.locator("#download-footprint-run-windows").isDisabled(),
+          true,
+        );
+        await page.locator(selector).fill(old);
+        if (selector === "#source")
+          await runVelocityBase(inputs.measurement, 9);
+        await computeRunWindows();
+      }
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await runVelocityBase(inputs.measurement, 9);
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await exportRunWindows(), windows);
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page
+        .locator("#footprint-run-window-input")
+        .fill('{"window_us":"400000"}');
+      await computeRunWindows();
+      const newest = await exportRunWindows();
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await exportRunWindows(), newest);
+      await page.locator("#footprint-run-window-input").fill(inputs.window);
+      await computeRunWindows();
+      // Large exact clocks are not converted to browser Numbers.
+      await runVelocityBase(assignedLargeInput, 2);
+      await page.locator("#zone-input").fill(zoneConfiguration);
+      await page.locator("#assigned-zone-input").fill(largeAssignments);
+      await page
+        .locator("#footprint-run-window-input")
+        .fill('{"window_us":"1"}');
+      await computeRunWindows(2);
+      const largeWindows = await exportRunWindows();
+      assert.equal(
+        largeWindows.frames[1].statistics.timestamp_us,
+        "9007199254940993",
+      );
+      assert.equal(
+        largeWindows.frames[1].statistics.current_window.end_exclusive_us,
+        "9007199254940994",
+      );
+      assert.equal(
+        largeWindows.frames[1].statistics.unobserved_windows,
+        "199999",
+      );
+      await fillRunWindows();
+      await computeRunWindows();
+      await selectVelocityFrame(3);
+      await page
+        .locator("#footprint-run-window-section")
+        .evaluate((details) => {
+          details.open = false;
+        });
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll("#footprint-run-window-rows tr").length ===
+          0,
+      );
+      assert.equal(
+        await page.locator("#download-footprint-run-windows").isDisabled(),
+        false,
+      );
+      await page
+        .locator("#footprint-run-window-section")
+        .evaluate((details) => {
+          details.open = true;
+        });
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll("#footprint-run-window-rows tr").length ===
+          2,
+      );
+      for (const [width, height, name] of [
+        [390, 844, "mobile"],
+        [1440, 1050, "desktop"],
+      ]) {
+        await page.setViewportSize({ width, height });
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+          true,
+        );
+        await page.locator("#footprint-run-window-section").screenshot({
+          path: path.join(
+            directory,
+            "footprint-run-windows-" + name + "-preview.png",
+          ),
+        });
+      }
+    }
+
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

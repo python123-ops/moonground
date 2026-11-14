@@ -1414,6 +1414,74 @@
                       <tbody id="footprint-run-rows"></tbody>
                     </table>
                   </div>
+                  <details id="footprint-run-window-section">
+                    <summary>普通测量的确认序列分窗</summary>
+                    <p class="hint">
+                      直接使用普通测量、当前区域、显式分配和序列选项，共同计算序列与分窗；
+                      无需先运行其他序列入口，也不读取原始联合或健康门控结果。
+                      按首次确认／结束的报告帧时间归窗，不表示到访、连续占用或实际停留。
+                    </p>
+                    <label for="footprint-run-window-input" class="hint"
+                      >固定窗口 JSON · μs，规范 Int64 十进制字符串</label
+                    >
+                    <textarea
+                      id="footprint-run-window-input"
+                      spellcheck="false"
+                    >
+{"window_us":"500000","origin_us":"0"}</textarea
+                    >
+                    <div class="actions">
+                      <button id="footprint-run-window-compute" disabled>
+                        按普通测量分窗确认序列
+                      </button>
+                      <button
+                        id="download-footprint-run-windows"
+                        class="quiet"
+                        disabled
+                      >
+                        下载整批分窗与完整最终检查点
+                      </button>
+                    </div>
+                    <p
+                      id="footprint-run-window-message"
+                      class="hint"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      保留当前窗和最近关闭的有输入窗口；间隔中的未观察窗口只计数。
+                    </p>
+                    <p id="footprint-run-window-frame" class="hint"></p>
+                    <p id="footprint-run-window-current" class="hint"></p>
+                    <p id="footprint-run-window-closed" class="hint"></p>
+                    <p class="hint">
+                      表跟随上方普通滑块。每种结束原因显示“已确认 /
+                      未确认”次数；开窗池与新起序列用于核对流守恒，不是占用率。
+                    </p>
+                    <div class="table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>窗口</th>
+                            <th>区域</th>
+                            <th>开窗活动</th>
+                            <th>开窗已确认</th>
+                            <th>新起序列</th>
+                            <th>首次确认在内</th>
+                            <th>首次确认在外</th>
+                            <th>间隔超限</th>
+                            <th>片段关闭</th>
+                            <th>片段改变</th>
+                            <th>缺少目标</th>
+                            <th>证据不可用</th>
+                            <th>形状改变</th>
+                            <th>区域关系未确认</th>
+                            <th>在内／在外改变</th>
+                          </tr>
+                        </thead>
+                        <tbody id="footprint-run-window-rows"></tbody>
+                      </table>
+                    </div>
+                  </details>
                 </details>
               </div>
               <div class="table-wrap">

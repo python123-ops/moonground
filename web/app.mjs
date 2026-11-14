@@ -31,6 +31,7 @@ import {
   moonground_footprint_run_preview,
   moonground_footprint_run_guarded,
   moonground_footprint_run_guarded_preview,
+  moonground_footprint_run_windows,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -49,6 +50,7 @@ const diskZoneInput = $("disk-zone-input");
 const footprintZoneInput = $("footprint-zone-input");
 const assignedZoneInput = $("assigned-zone-input");
 const footprintRunInput = $("footprint-run-input");
+const footprintRunWindowInput = $("footprint-run-window-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -241,6 +243,16 @@ let footprintRunPreviewRunToken = 0;
 let footprintRunPreviewReport = null;
 let footprintRunPreviewInputs = null;
 let footprintRunPreviewPending = null;
+const footprintRunWindowState = {
+  revision: 0,
+  runToken: 0,
+  report: null,
+  response: null,
+  inputs: null,
+  pending: null,
+  reference: null,
+  measurements: "",
+};
 const footprintRunGuarded = {
   revision: 0,
   runToken: 0,
@@ -279,6 +291,7 @@ function stop() {
 
 function invalidate() {
   cancelFootprintRunPreparation();
+  cancelFootprintRunWindowPreparation();
   cancelAssignedZonePreparation();
   cancelFootprintZonePreparation();
   cancelDiskZonePreparation();
@@ -2089,6 +2102,7 @@ function footprintRunKey(run) {
   ]);
 }
 function renderFootprintRuns() {
+  renderFootprintRunWindows();
   if (
     footprintRunReport !== null &&
     (footprintRunConfiguration !== zoneInput.value ||
@@ -2200,6 +2214,238 @@ function renderFootprintRunRows(frame) {
   }
   $("footprint-run-rows").replaceChildren(...rows);
 }
+
+function currentFootprintRunWindowInputs() {
+  return {
+    input: source.value,
+    position: zoneInput.value,
+    assignments: assignedZoneInput.value,
+    options: footprintRunInput.value,
+    window: footprintRunWindowInput.value,
+  };
+}
+function sameFootprintRunWindowInputs(left, right) {
+  return (
+    left !== null &&
+    right !== null &&
+    ["input", "position", "assignments", "options", "window"].every(
+      (key) => left[key] === right[key],
+    )
+  );
+}
+function footprintRunWindowMessage(text, error = false) {
+  $("footprint-run-window-message").textContent = text;
+  $("footprint-run-window-message").classList.toggle("error", error);
+}
+function cancelFootprintRunWindowPreparation() {
+  footprintRunWindowState.revision++;
+  if (footprintRunWindowState.pending !== null)
+    footprintRunWindowMessage("上一次普通测量分窗准备已取消。");
+  footprintRunWindowState.pending = null;
+}
+function clearFootprintRunWindows() {
+  cancelFootprintRunWindowPreparation();
+  Object.assign(footprintRunWindowState, {
+    report: null,
+    response: null,
+    inputs: null,
+    reference: null,
+    measurements: "",
+  });
+}
+function footprintRunWindowsIsCurrent() {
+  return (
+    footprintRunWindowState.report !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    sameFootprintRunWindowInputs(
+      footprintRunWindowState.inputs,
+      currentFootprintRunWindowInputs(),
+    ) &&
+    footprintRunWindowState.reference === measurementLines
+  );
+}
+function footprintRunWindowSummary(window) {
+  if (window === null) return "无；尚未跨过一个有输入的窗口。";
+  return (
+    "[" +
+    window.start_us +
+    ", " +
+    (window.end_exclusive_us ?? "超出 Int64 上界") +
+    ") μs · 输入 " +
+    window.input_frames +
+    " 帧 · 首末输入 " +
+    window.first_timestamp_us +
+    "—" +
+    window.last_timestamp_us +
+    " μs"
+  );
+}
+function renderFootprintRunWindows() {
+  const state = footprintRunWindowState,
+    inputs = currentFootprintRunWindowInputs();
+  if (
+    (state.report !== null &&
+      !sameFootprintRunWindowInputs(state.inputs, inputs)) ||
+    (state.pending !== null &&
+      !sameFootprintRunWindowInputs(state.pending, inputs))
+  ) {
+    clearFootprintRunWindows();
+    footprintRunWindowMessage(
+      "普通原始输入、区域、分配、序列或窗口选项已修改，请重新分窗。",
+    );
+  }
+  if (
+    state.report !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    state.reference !== measurementLines
+  ) {
+    if (state.measurements === measurementLines.join("\n") + "\n")
+      state.reference = measurementLines;
+    else {
+      clearFootprintRunWindows();
+      footprintRunWindowMessage("普通测量载荷已变化，请重新分窗。");
+    }
+  }
+  $("footprint-run-window-compute").disabled =
+    !ordinaryVelocitySourceCurrent() || state.pending !== null;
+  $("download-footprint-run-windows").disabled =
+    !footprintRunWindowsIsCurrent();
+  $("footprint-run-window-rows").replaceChildren();
+  $("footprint-run-window-current").textContent = "";
+  $("footprint-run-window-closed").textContent = "";
+  if (!footprintRunWindowsIsCurrent()) {
+    $("footprint-run-window-frame").textContent =
+      "仅使用普通测量；无需先计算任一种足迹序列结果。";
+    return;
+  }
+  const index = Number(slider.value),
+    frame = state.report.frames[index];
+  if (!frame) return;
+  $("footprint-run-window-frame").textContent =
+    index +
+    1 +
+    " / " +
+    state.report.frames.length +
+    " · " +
+    frame.statistics.timestamp_us +
+    " μs · 本帧跨过的未观察窗口 " +
+    frame.statistics.unobserved_windows +
+    "。";
+  if (
+    !$("zone-section").open ||
+    !$("footprint-run-section").open ||
+    !$("footprint-run-window-section").open ||
+    $("physical-zone-mode").value !== "assigned"
+  )
+    return;
+  $("footprint-run-window-current").textContent =
+    "当前窗 " + footprintRunWindowSummary(frame.statistics.current_window);
+  $("footprint-run-window-closed").textContent =
+    "本帧关闭窗 " + footprintRunWindowSummary(frame.statistics.closed_window);
+  const rows = [];
+  for (const [label, window] of [
+    ["当前", frame.statistics.current_window],
+    ["本帧关闭", frame.statistics.closed_window],
+  ]) {
+    if (window === null) continue;
+    for (const zone of window.zones) {
+      const row = reportRow([
+        label,
+        zone.zone_id,
+        zone.opening_active,
+        zone.opening_confirmed,
+        zone.started,
+        zone.confirmed_inside,
+        zone.confirmed_outside,
+        ...zone.endings.map(
+          (ending) => ending.confirmed + " / " + ending.unconfirmed,
+        ),
+      ]);
+      row.title = JSON.stringify({
+        window: label,
+        start_us: window.start_us,
+        end_exclusive_us: window.end_exclusive_us,
+        zone,
+      });
+      rows.push(row);
+    }
+  }
+  $("footprint-run-window-rows").replaceChildren(...rows);
+}
+$("footprint-run-window-compute").addEventListener("click", async () => {
+  renderFootprintRunWindows();
+  if (!ordinaryVelocitySourceCurrent()) return;
+  const state = footprintRunWindowState,
+    current = ++state.revision,
+    runToken = ++state.runToken,
+    upstream = revision,
+    reference = measurementLines,
+    inputs = currentFootprintRunWindowInputs();
+  state.pending = inputs;
+  footprintRunWindowMessage("正在共同计算足迹确认序列与报告帧分窗…");
+  renderFootprintRunWindows();
+  const isCurrent = () =>
+    current === state.revision &&
+    upstream === revision &&
+    reference === measurementLines &&
+    ordinaryVelocitySourceCurrent() &&
+    sameFootprintRunWindowInputs(inputs, currentFootprintRunWindowInputs());
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (!isCurrent()) return;
+    const source = JSON.stringify({
+      runs: JSON.stringify({
+        position: inputs.position,
+        options: inputs.options,
+      }),
+      window: inputs.window,
+    });
+    const frames = wrapAssignedZoneFrames(inputs.assignments, reference);
+    const { response, report } = footprintRunPureRequest(
+      source,
+      "frames",
+      frames,
+      moonground_footprint_run_windows,
+    );
+    if (!isCurrent()) return;
+    Object.assign(state, {
+      report,
+      response,
+      inputs,
+      reference,
+      measurements: reference.join("\n") + "\n",
+    });
+    footprintRunWindowMessage(
+      "已分窗 " +
+        report.frames.length +
+        " 帧；下载包含原序列与窗口的完整最终检查点。",
+    );
+  } catch (error) {
+    if (isCurrent()) footprintRunWindowMessage(error.message, true);
+  } finally {
+    if (runToken === state.runToken) {
+      state.pending = null;
+      renderFootprintRunWindows();
+    }
+  }
+});
+footprintRunWindowInput.addEventListener("input", () => {
+  clearFootprintRunWindows();
+  footprintRunWindowMessage("窗口选项已修改，请重新分窗；原序列结果保留。");
+  renderFootprintRunWindows();
+});
+$("footprint-run-window-section").addEventListener(
+  "toggle",
+  renderFootprintRunWindows,
+);
+$("download-footprint-run-windows").addEventListener("click", () => {
+  if (footprintRunWindowsIsCurrent())
+    saveFile(
+      footprintRunWindowState.response + "\n",
+      "moonground-footprint-run-windows.json",
+    );
+});
+
 function currentFootprintRunJointInputs() {
   return {
     measurement: source.value,
@@ -3034,6 +3280,7 @@ $("analyze").addEventListener("click", async () => {
   cancelFootprintZonePreparation();
   cancelAssignedZonePreparation();
   cancelFootprintRunPreparation();
+  cancelFootprintRunWindowPreparation();
   renderVelocity();
   renderZones();
   const current = ++revision,
