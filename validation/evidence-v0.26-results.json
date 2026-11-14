@@ -1,0 +1,778 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "seed": 20261123,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.26-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "38979c33c25cbe00b0e0c412a3015080426b5097873a748fb1acc0c773ef77b3",
+  "gate_reference_sha256": "e295e92f0345e182d0cac50fb23535c7134d3046cc029bafd8c0dff982e50416",
+  "projection_fixture_sha256": "6f8c0421bdc4feb270195d5d8477c8a27e72b76d102fb300907ff6e73d7c36ba",
+  "binary_sha256": "5f4e22ce423da64a9e431a1b4e28dc66371b1179df55174b4f29e91750b6c14d",
+  "independent_reference": {
+    "cases": 41,
+    "frames": 132,
+    "evidence_records": 233,
+    "crossings": 135,
+    "resume_cut_points": 173,
+    "zero_multiplier_legacy_frames": 8,
+    "maximum_absolute_oracle_errors": {
+      "distance_m": 6.661338147750939e-16,
+      "normal_std_m": 1.3863348470604074e+129,
+      "lower_m": 1.8170968107390172e+134,
+      "upper_m": 1.8170968107390172e+134,
+      "$.counting.crossings[].position_m[]": 8.881784197001252e-16,
+      "$.counting.crossings[].crossing_fraction": 3.3306690738754696e-16,
+      "$.counting.crossings[].to_position_m[]": 0.0,
+      "$.counting.crossings[].from_position_m[]": 0.0
+    },
+    "maximum_relative_or_scaled_evidence_errors": {
+      "distance_m": 6.661338147750941e-16,
+      "normal_std_m": 4.163336342344337e-16,
+      "lower_m": 6.661338147750941e-16,
+      "upper_m": 6.661338147750941e-16
+    },
+    "reference": "exact binary64 Fraction quadratic form; Decimal120 square root; NumPy finite-chord solve",
+    "full_counts_anchor_times_points_and_original_covariances_equal": true,
+    "records": [
+      {
+        "name": "band_and_covariance_confirmation",
+        "frames": 5,
+        "crossings": 2,
+        "checkpoint_sha256": "eff878ca3fc5ab5935446be0ebc43c870306c2517b1a15f6fa8ac9d9d574cde3"
+      },
+      {
+        "name": "unconfirmed_anchor_ttl_499999",
+        "frames": 3,
+        "crossings": 1,
+        "checkpoint_sha256": "bbea73df88b6852a86d5a4bc6a4621e9becc54e8c7f9af370d073678ae4e34b9"
+      },
+      {
+        "name": "unconfirmed_anchor_ttl_500000",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "ca5ab3ed2c1569944b5cd5e7f344605aac47e8fc194e34d9a40e9d9531bd61a9"
+      },
+      {
+        "name": "unconfirmed_anchor_ttl_500001",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "ee1e1baa78f0eb13fa631a20d5b0c42777d6e6d453c914fb98aa460bc5af597b"
+      },
+      {
+        "name": "finite_extension_and_endpoint",
+        "frames": 5,
+        "crossings": 2,
+        "checkpoint_sha256": "c8a005aa7da20e226c7b2678b66d3130c10f824c46a92007aa15fb68c8c21770"
+      },
+      {
+        "name": "closed_band_exact_and_adjacent_floats",
+        "frames": 4,
+        "crossings": 1,
+        "checkpoint_sha256": "4cc2273b2e5c76304c6e893e933d51b69e498afa3b61c4b84a63055d8c693227"
+      },
+      {
+        "name": "accepted_motion_initializing",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "1ab6d577e22aaf4d52c401e91c633116b80abfd701b27cc80a63e6c4fca509f2"
+      },
+      {
+        "name": "accepted_motion_uncertain",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "1ab6d577e22aaf4d52c401e91c633116b80abfd701b27cc80a63e6c4fca509f2"
+      },
+      {
+        "name": "missing_clears_anchor",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "2c3c16f138782bba151b04c20b80ad1df773ffb2a625632834461e8e0721131a"
+      },
+      {
+        "name": "rejected_projection_clears_anchor",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "ce25b0babb6af9cb6cbf7af3bd374728b2b9508d150a1187e2d75cf2388ea573"
+      },
+      {
+        "name": "rejected_innovation_clears_anchor",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "6696c883cddac9dffd283f6d54880a0876d9fdd9346feec067b37f2f921bda0d"
+      },
+      {
+        "name": "numerical_failure_clears_anchor",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "510a233bd2f8313dab89c576d10f451f59ab873e041050a74dec151514892fec"
+      },
+      {
+        "name": "segment_clears_anchor",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "78f0d241d290666d6ce5721351040e5e98845159340477b364b652e64eb958fc"
+      },
+      {
+        "name": "closed_clears_anchor",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "1d130ea05008a332e05be8cc38e96ffcd0d4069fb64c0a861af33f954636e842"
+      },
+      {
+        "name": "quality_clears_anchor",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "82ddffd001a9708a513863ea82e8d153fde15819a9dccddac6b19f1dac4bd955"
+      },
+      {
+        "name": "exact_clock_9007199254740993",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "24cc85a248b5d42bd2daf09d9583aa710b0df5c44633a48475a6c688b38b470b"
+      },
+      {
+        "name": "exact_clock_9223372036854275807",
+        "frames": 3,
+        "crossings": 0,
+        "checkpoint_sha256": "028466f93d11a73a4d95f99f060c9e9cb2aedc683d8a8456ce6fd6e7ce920a4b"
+      },
+      {
+        "name": "scaled_covariance_1e-150_-1",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "2ee4fd25c35aba64d0f1eedaee3ebda28b0952b7ad90ad6d8256addfbd0e6645"
+      },
+      {
+        "name": "scaled_covariance_1e-150_1",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "d488398e0506d02efe2ab908b5feb5fcc61b1b22016317dbd5c806a5a480d6db"
+      },
+      {
+        "name": "supported_near_correlation_1e-150",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "527f5aa45a7905fd082bb4a06de9e0c5053209553c9270cdf37b8a3f3a840702"
+      },
+      {
+        "name": "scaled_covariance_1_-1",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "5ded53f31f8a90f02ff2d5a75a82087f0e23a115cb5a9b77e4284efa0ebf6597"
+      },
+      {
+        "name": "scaled_covariance_1_1",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "bacee1853490d09e2d7b131cd8ffcb7f592c250401e245333eddf17fa68823b5"
+      },
+      {
+        "name": "supported_near_correlation_1",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "b46bdeddb76c35451874eacad226a8d06ba1824cced468fb77365768200de78f"
+      },
+      {
+        "name": "scaled_covariance_1e+150_-1",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "18f83e35fb9f9e278b5b35fe65b7ca06b86a27645e42e806a2e0c4ad25c926e2"
+      },
+      {
+        "name": "scaled_covariance_1e+150_1",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "fcb87099c9587ee2bf73028b2c0bf76440abdf95784886dc724575f34a508bc7"
+      },
+      {
+        "name": "supported_near_correlation_1e+150",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "307c148a04fa9cce650f0895f7246897be98e6f557e90cc5580dbe3adc9e4565"
+      },
+      {
+        "name": "normal_not_worst_direction_sigma",
+        "frames": 2,
+        "crossings": 1,
+        "checkpoint_sha256": "3985df6fb0724ce0670b03da1e10e533e115d58e3182b413f7009c446c8bdd39"
+      },
+      {
+        "name": "independent_diagonal_extreme_ratio",
+        "frames": 2,
+        "crossings": 0,
+        "checkpoint_sha256": "42314595e00794e3663474b0cddd04e08ad58425e0588a59b6f0c304cac1b0f8"
+      },
+      {
+        "name": "rotated_multitrack_0",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "769e1ad8c9a1f6fb32f21cb9efaeea47538c38afaf375a22fb1f3e90d1be0c2c"
+      },
+      {
+        "name": "rotated_multitrack_1",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "a4541116bc0882ad6ea1da2204348fc49404407064d4fdcd59bb5d0680c10ea7"
+      },
+      {
+        "name": "rotated_multitrack_2",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "0d5bc63c6d8923fef5689d88b4ee66920dc184875a159f177d0f332d9f913463"
+      },
+      {
+        "name": "rotated_multitrack_3",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "a1873c9ecbbcbaa0993631d4ce696b3c410e9004a7022c08610c01f4772afa74"
+      },
+      {
+        "name": "rotated_multitrack_4",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "54d916bc5efd834de25575ee2e0782358d620476f2de843d4f174ba79a60b15e"
+      },
+      {
+        "name": "rotated_multitrack_5",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "aeb10588857b9df7dcfe4efa54c1e937b9bf9d9552aa747ad67a82dd6130dbac"
+      },
+      {
+        "name": "rotated_multitrack_6",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "ba8e7f1659547f56c24b950d1099ccc3876d6ede7267fbb810891a4b8f8d2dbc"
+      },
+      {
+        "name": "rotated_multitrack_7",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "2682382cb5149ace7d4edcd12ff0e497bf7cb5f86041a3d7ac88086511d99a06"
+      },
+      {
+        "name": "rotated_multitrack_8",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "2072311e20b537971bb31e13947851568190d4555f9daa49c1844c1d0a80a609"
+      },
+      {
+        "name": "rotated_multitrack_9",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "8c7fa9ab9d6647080aca76d0911cc033caf453328e0a60bc086a6c73ef2e0995"
+      },
+      {
+        "name": "rotated_multitrack_10",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "d1827765922438302864b32041b765c6d79a4cea651a9ef1836dcb76ef16d225"
+      },
+      {
+        "name": "rotated_multitrack_11",
+        "frames": 4,
+        "crossings": 9,
+        "checkpoint_sha256": "c3c71f868d6666b2df31bf30cff246d0082ea5eab5b0b83a8fdcd7d3fb8025cf"
+      },
+      {
+        "name": "zero_multiplier_legacy_parity",
+        "frames": 8,
+        "crossings": 9,
+        "checkpoint_sha256": "5a754288ef26a4794cca84a17c0a8bf62f1693feb6b471c461fb551057b9df3a"
+      }
+    ]
+  },
+  "strict_transport": {
+    "rejected_cases": 38,
+    "cases": [
+      {
+        "name": "negative_multiplier",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: evidence sigma multiplier must be finite and nonnegative"
+      },
+      {
+        "name": "unknown_source_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate evidence configuration: unknown field extra"
+      },
+      {
+        "name": "counting_object_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: counting must be a string"
+      },
+      {
+        "name": "duplicate_multiplier",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"sigma_multiplier\" at line 1, column 213"
+      },
+      {
+        "name": "nonfinite_multiplier",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: sigma_multiplier must be a finite number"
+      },
+      {
+        "name": "fractional_raw_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      {
+        "name": "old_checkpoint_not_upgraded",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported gate evidence checkpoint format or version"
+      },
+      {
+        "name": "old_inner_resume_not_allowed",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate configuration: unknown field resume"
+      },
+      {
+        "name": "wrong_format",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported gate evidence checkpoint format or version"
+      },
+      {
+        "name": "wrong_version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported gate evidence checkpoint format or version"
+      },
+      {
+        "name": "unknown_checkpoint_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate evidence checkpoint: unknown field extra"
+      },
+      {
+        "name": "missing_effective_multiplier",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field sigma_multiplier"
+      },
+      {
+        "name": "missing_effective_maximum_gap",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field max_gap_us"
+      },
+      {
+        "name": "missing_effective_track_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field max_tracks"
+      },
+      {
+        "name": "missing_effective_deadband",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field deadband_m"
+      },
+      {
+        "name": "missing_anchor_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field covariance"
+      },
+      {
+        "name": "indefinite_anchor_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: measurement covariance must be positive definite"
+      },
+      {
+        "name": "unconfirmed_anchor_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: saved evidence anchor does not establish a stable side"
+      },
+      {
+        "name": "future_anchor",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid or expired gate checkpoint anchor"
+      },
+      {
+        "name": "expired_anchor",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid or expired gate checkpoint anchor"
+      },
+      {
+        "name": "zero_track_id",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "noncanonical_segment",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: gate segment_id must be a canonical positive Int64 decimal string"
+      },
+      {
+        "name": "wrong_anchor_shape",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: evidence checkpoint anchor shape differs"
+      },
+      {
+        "name": "negative_counter",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: negative_to_positive must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "missing_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e9e269ce25ecfa61e67692a77590a9a20a016fff8ac7b5f49f9344b7b715663b",
+        "stdout_bytes": 537,
+        "stderr": "line 3: measurement availability contradicts its status"
+      },
+      {
+        "name": "zero_multiplier_still_requires_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: measurement availability contradicts its status"
+      },
+      {
+        "name": "indefinite_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e9e269ce25ecfa61e67692a77590a9a20a016fff8ac7b5f49f9344b7b715663b",
+        "stdout_bytes": 537,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "zero_variance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e9e269ce25ecfa61e67692a77590a9a20a016fff8ac7b5f49f9344b7b715663b",
+        "stdout_bytes": 537,
+        "stderr": "line 3: measurement covariance must be finite and positive definite"
+      },
+      {
+        "name": "wrong_covariance_shape",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e9e269ce25ecfa61e67692a77590a9a20a016fff8ac7b5f49f9344b7b715663b",
+        "stdout_bytes": 537,
+        "stderr": "line 3: covariance must contain exactly 3 numbers"
+      },
+      {
+        "name": "same_time",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e9e269ce25ecfa61e67692a77590a9a20a016fff8ac7b5f49f9344b7b715663b",
+        "stdout_bytes": 537,
+        "stderr": "line 3: gate frame timestamps must strictly increase"
+      },
+      {
+        "name": "unknown_frame_key",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e9e269ce25ecfa61e67692a77590a9a20a016fff8ac7b5f49f9344b7b715663b",
+        "stdout_bytes": 537,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      {
+        "name": "duplicate_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e9e269ce25ecfa61e67692a77590a9a20a016fff8ac7b5f49f9344b7b715663b",
+        "stdout_bytes": 537,
+        "stderr": "line 3: duplicate measurement track identity"
+      },
+      {
+        "name": "duplicate_raw_track_token",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e9e269ce25ecfa61e67692a77590a9a20a016fff8ac7b5f49f9344b7b715663b",
+        "stdout_bytes": 537,
+        "stderr": "line 3: invalid JSON: Duplicate key \"track_id\" at line 1, column 108"
+      },
+      {
+        "name": "fractional_raw_track_token",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e9e269ce25ecfa61e67692a77590a9a20a016fff8ac7b5f49f9344b7b715663b",
+        "stdout_bytes": 537,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "nonfinite_raw_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e9e269ce25ecfa61e67692a77590a9a20a016fff8ac7b5f49f9344b7b715663b",
+        "stdout_bytes": 537,
+        "stderr": "line 3: covariance must be a finite number"
+      },
+      {
+        "name": "late_failure_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: measurement availability contradicts its status"
+      },
+      {
+        "name": "crossing_counter_exhaustion",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: gate crossing counter exhausted"
+      },
+      {
+        "name": "crossing_counter_exhaustion_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: gate crossing counter exhausted"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "default_multiplier_equals_explicit_two": true,
+    "same_proposed_timestamp_correction_from_saved_state": "passed",
+    "exact_counter_after_increment": "9007199254740994"
+  },
+  "zero_multiplier_legacy_comparison": {
+    "cases": 41,
+    "frames": 132,
+    "crossings": 140,
+    "all_existing_counting_reports_and_anchor_states_equal_on_supported_covariance_domain": true
+  },
+  "numerical_supported_domain": {
+    "rejected_cases": 9,
+    "cases": [
+      {
+        "name": "near_singular_correlation_1e-300",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "322353b7f2d59804bf005d75759ee4c64be5174e93cfd5bad35a213fa2235a01",
+        "stdout_bytes": 411,
+        "stderr": "line 3: normal covariance cancellation or scale exceeds supported precision"
+      },
+      {
+        "name": "near_singular_correlation_1",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "6f6ab00667b8ae9a031030d4f59f5c636bdfff54f5523f463f59138c92324157",
+        "stdout_bytes": 406,
+        "stderr": "line 3: normal covariance cancellation or scale exceeds supported precision"
+      },
+      {
+        "name": "near_singular_correlation_1e+300",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "cef5311bc57bd2dc3143b3718baa1461e3edccd117fbe7a543b017598054b83f",
+        "stdout_bytes": 411,
+        "stderr": "line 3: normal covariance cancellation or scale exceeds supported precision"
+      },
+      {
+        "name": "correlation_precision_floor",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "091afe8dc8ec7cdaf178053a4b677fb6c2f0d0522a78f21f314977a46c56d282",
+        "stdout_bytes": 410,
+        "stderr": "line 3: normal covariance cancellation or scale exceeds supported precision"
+      },
+      {
+        "name": "normalized_correlated_residual_floor",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "e370ab7f274d12f642c9b1384918905de1c8f80d8a438692a1034edf0545ca5a",
+        "stdout_bytes": 407,
+        "stderr": "line 3: normal covariance cancellation or scale exceeds supported precision"
+      },
+      {
+        "name": "radius_underflow",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "3b4e7e81c02a9d6f2424079571f443fa05b8593e22373e495b6bb093b0f2d2b2",
+        "stdout_bytes": 414,
+        "stderr": "line 3: normal evidence radius is not representable"
+      },
+      {
+        "name": "radius_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "73378ca1c6a1cb8ef0cf15a71c8437da0b8712415e08ac3f28a3b4e0ad919712",
+        "stdout_bytes": 413,
+        "stderr": "line 3: normal evidence radius is not representable"
+      },
+      {
+        "name": "coalesced_interval",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "39463fd5e513effcf7e7b30161baf6bc40d33c0ce1063749529dccece3edaacb",
+        "stdout_bytes": 411,
+        "stderr": "line 3: normal evidence interval is not representable"
+      },
+      {
+        "name": "interval_bound_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "837251e2faef80f91d7d06dfe121b78297d5ad533d71d841ac212ed64aca779c",
+        "stdout_bytes": 421,
+        "stderr": "line 3: normal evidence interval is not representable"
+      }
+    ],
+    "near_singular_covariances_are_explicitly_outside_supported_domain": true,
+    "no_prefix_or_checkpoint_on_failing_frame": true,
+    "same_proposed_timestamp_empty_correction_from_saved_state": "passed"
+  },
+  "bounded_state": {
+    "actual_populated_tracks": 32,
+    "actual_populated_anchors": 512,
+    "actual_simultaneous_crossings": 512,
+    "populated_checkpoint_utf16_units": 37157,
+    "configured_track_capacity_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "8778341a25bc18377058b0bfcde2d1e20383f05773657ee16ac92c17f1d470e6",
+      "stdout_bytes": 68425,
+      "stderr": "line 3: measurement tracks exceeds its record limit"
+    },
+    "empty_constructor_anchor_capacity": 65536,
+    "constructor_one_over_anchor_capacity": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: gate count or anchor capacity exceeded"
+    },
+    "global_maximum_capacity_was_not_populated": true
+  },
+  "guarded_pipeline": {
+    "status": "passed",
+    "unmodified_guarded_measurement_frames": 29,
+    "projection_barriers": 4,
+    "blocked_frames_clear_all_evidence_anchors": true,
+    "maximum_absolute_oracle_errors": {
+      "distance_m": 0,
+      "normal_std_m": 6.938893903907228e-18,
+      "lower_m": 0,
+      "upper_m": 8.881784197001252e-16,
+      "$.counting.crossings[].from_position_m[]": 0.0,
+      "$.counting.crossings[].to_position_m[]": 0.0,
+      "$.counting.crossings[].position_m[]": 2.220446049250313e-16,
+      "$.counting.crossings[].crossing_fraction": 0.0
+    },
+    "maximum_relative_or_scaled_evidence_errors": {
+      "distance_m": 0,
+      "normal_std_m": 1.1584874622326903e-16,
+      "lower_m": 0,
+      "upper_m": 1.7763568394003e-16
+    }
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "exact_frame_utf16_units": 1048576,
+    "frame_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 2: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "exact_resume_source_utf16_units": 8388619,
+    "source_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+    }
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/evidence.test.mjs",
+    "summary": {
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 12,
+      "continuations": 48,
+      "directions": [
+        "native_to_native",
+        "native_to_browser",
+        "browser_to_native",
+        "browser_to_browser"
+      ]
+    },
+    "test_script_sha256": "34acbf5215c1b8bc58343bfa205b281d1bfac363dada8409a85db79bba7cdfb6",
+    "bridge_sha256": "69d379a26fbdce745ca343a9a10d798017d0db1018b4852ee11b61a6a85c0e57",
+    "stdout_sha256": "cff89f533f301ad793f25164144f78b5e903ad50a3aeaa45b87ea7f919302a58",
+    "stderr": ""
+  },
+  "elapsed_seconds": 28.2643834,
+  "status": "passed"
+}

@@ -1,0 +1,838 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/footprint_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-zone-v0.26-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "d32b8762cd35643ee96e8761169aaa68166d0a4d9d0c2f0d4e01e51bdb75386f",
+  "position_reference_sha256": "4ade4a4c5b0004eae0b43d460a70454d6d8aa2c28f1259c3e2c9d108c90b8773",
+  "binary_sha256": "5f4e22ce423da64a9e431a1b4e28dc66371b1179df55174b4f29e91750b6c14d",
+  "evidence_scope": "model_position_halfplane_bands_plus_explicit_convex_footprint",
+  "scaled_error_denominator": "max(abs(reference),1e-300)",
+  "independent_reference": "Fraction rawcross/support extrema and Decimal220 lengths/covariance, explicit deterministic vertex supports, independently rounded endpoints; original v22 path used only for exact preserved position fields",
+  "numeric_reference": {
+    "cases": 36,
+    "frames": 156,
+    "evidence_rows": 150,
+    "face_rows": 588,
+    "original_position_bands_preserved_exactly": true,
+    "one_sided_zero_support_faces": 120,
+    "axis_square_disk_exact": true,
+    "fraction_geometry_support_extrema": "passed",
+    "numpy_vertex_plus_ellipse_sample_checks": 28,
+    "secondary_sample_points_per_vertex": 257,
+    "stateless_repeat_and_reordering_exact": true,
+    "maximum_absolute_decimal_errors": {
+      "$.evidence[].vertices_offset_m[][]": 0,
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.1356855067118858e+133,
+      "$.evidence[].faces[].normal_std_m": 5.551115123125783e-17,
+      "$.evidence[].faces[].lower_m": 2.2713710134237715e+133,
+      "$.evidence[].faces[].upper_m": 3.552713678800501e-15,
+      "$.evidence[].faces[].position_lower_m": 1.1356855067118858e+133,
+      "$.evidence[].faces[].position_upper_m": 1.1356855067118858e+133,
+      "$.evidence[].faces[].footprint_lower_m": 2.7755575615628914e-17,
+      "$.evidence[].faces[].footprint_upper_m": 5.551115123125783e-17
+    },
+    "maximum_relative_or_scaled_decimal_errors": {
+      "$.evidence[].vertices_offset_m[][]": 0,
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.8724445165742408e-16,
+      "$.evidence[].faces[].normal_std_m": 2.7755575615628914e-16,
+      "$.evidence[].faces[].lower_m": 2.6919952751689134e-16,
+      "$.evidence[].faces[].upper_m": 5.210688437530957e-16,
+      "$.evidence[].faces[].position_lower_m": 2.1147105230955362e-16,
+      "$.evidence[].faces[].position_upper_m": 9.729275331114688e-16,
+      "$.evidence[].faces[].footprint_lower_m": 1.6399701920366276e-16,
+      "$.evidence[].faces[].footprint_upper_m": 2.0926019650387372e-16
+    },
+    "records": [
+      {
+        "name": "slanted_original_boundary",
+        "shape_vertices": 4,
+        "frames": 8,
+        "evidence_rows": 8,
+        "face_rows": 24
+      },
+      {
+        "name": "closed-bands-0",
+        "shape_vertices": 4,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "closed-bands-1",
+        "shape_vertices": 4,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "closed-bands-2",
+        "shape_vertices": 4,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "correlated-1e-150--1",
+        "shape_vertices": 4,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1e-150-1",
+        "shape_vertices": 4,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1--1",
+        "shape_vertices": 4,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1-1",
+        "shape_vertices": 4,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1e+150--1",
+        "shape_vertices": 4,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1e+150-1",
+        "shape_vertices": 4,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "winding-0",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "winding-1",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "winding-2",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "rotation",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "reflection",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "translation",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "metric_scale",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "anisotropic",
+        "shape_vertices": 4,
+        "frames": 1,
+        "evidence_rows": 1,
+        "face_rows": 4
+      },
+      {
+        "name": "supported_correlation",
+        "shape_vertices": 4,
+        "frames": 1,
+        "evidence_rows": 1,
+        "face_rows": 4
+      },
+      {
+        "name": "all_statuses_exact_clock_and_empty",
+        "shape_vertices": 4,
+        "frames": 9,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "optional_defaults",
+        "shape_vertices": 4,
+        "frames": 1,
+        "evidence_rows": 1,
+        "face_rows": 4
+      },
+      {
+        "name": "interior_ccw",
+        "shape_vertices": 4,
+        "frames": 6,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "interior_cw",
+        "shape_vertices": 4,
+        "frames": 6,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "interior_cyclic",
+        "shape_vertices": 4,
+        "frames": 6,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "edge_ccw",
+        "shape_vertices": 4,
+        "frames": 6,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "edge_cw",
+        "shape_vertices": 4,
+        "frames": 6,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "edge_cyclic",
+        "shape_vertices": 4,
+        "frames": 6,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "vertex_ccw",
+        "shape_vertices": 3,
+        "frames": 6,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "vertex_cw",
+        "shape_vertices": 3,
+        "frames": 6,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "vertex_cyclic",
+        "shape_vertices": 3,
+        "frames": 6,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "slanted_exact_own_boundary",
+        "shape_vertices": 3,
+        "frames": 1,
+        "evidence_rows": 1,
+        "face_rows": 3
+      },
+      {
+        "name": "slanted_zero_support_ulp",
+        "shape_vertices": 3,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 9
+      },
+      {
+        "name": "shape_rotation",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "shape_reflection",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "shape_translation",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "shape_scale",
+        "shape_vertices": 4,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      }
+    ]
+  },
+  "original_motion_and_checkpoint_continuations": {
+    "cases": 10,
+    "frames": 89,
+    "old_checkpoint_cut_points": 99,
+    "statuses": [
+      "initializing",
+      "numerical_failure",
+      "ready",
+      "rejected_innovation",
+      "rejected_projection",
+      "uncertain"
+    ],
+    "maximum_absolute_decimal_errors": {
+      "$.evidence[].vertices_offset_m[][]": 0,
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].normal_std_m": 1.3877787807814457e-17,
+      "$.evidence[].faces[].lower_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].upper_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].position_lower_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].position_upper_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].footprint_lower_m": 0,
+      "$.evidence[].faces[].footprint_upper_m": 0
+    },
+    "maximum_relative_or_scaled_decimal_errors": {
+      "$.evidence[].vertices_offset_m[][]": 0,
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.4955338941395803e-16,
+      "$.evidence[].faces[].normal_std_m": 2.905419723770977e-16,
+      "$.evidence[].faces[].lower_m": 1.4907837197200203e-16,
+      "$.evidence[].faces[].upper_m": 1.512288957399009e-16,
+      "$.evidence[].faces[].position_lower_m": 1.4947037513842389e-16,
+      "$.evidence[].faces[].position_upper_m": 1.4963649595124584e-16,
+      "$.evidence[].faces[].footprint_lower_m": 0,
+      "$.evidence[].faces[].footprint_upper_m": 0
+    },
+    "records": [
+      {
+        "name": "identity_path_lifecycle",
+        "frames": 11,
+        "old_checkpoint_cut_points": 12,
+        "evidence_rows": 0
+      },
+      {
+        "name": "raw_camera_projection_rejection",
+        "frames": 10,
+        "old_checkpoint_cut_points": 11,
+        "evidence_rows": 6
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 4,
+        "old_checkpoint_cut_points": 5,
+        "evidence_rows": 0
+      },
+      {
+        "name": "effective_defaults",
+        "frames": 4,
+        "old_checkpoint_cut_points": 5,
+        "evidence_rows": 1
+      },
+      {
+        "name": "extreme_scale_failure_retains_restorable_state",
+        "frames": 2,
+        "old_checkpoint_cut_points": 3,
+        "evidence_rows": 0
+      },
+      {
+        "name": "warehouse",
+        "frames": 10,
+        "old_checkpoint_cut_points": 11,
+        "evidence_rows": 5
+      },
+      {
+        "name": "distorted-camera",
+        "frames": 15,
+        "old_checkpoint_cut_points": 16,
+        "evidence_rows": 12
+      },
+      {
+        "name": "reframe",
+        "frames": 15,
+        "old_checkpoint_cut_points": 16,
+        "evidence_rows": 12
+      },
+      {
+        "name": "repeated_crossings",
+        "frames": 9,
+        "old_checkpoint_cut_points": 10,
+        "evidence_rows": 0
+      },
+      {
+        "name": "quality_rejects_current_positions",
+        "frames": 9,
+        "old_checkpoint_cut_points": 10,
+        "evidence_rows": 0
+      }
+    ]
+  },
+  "strict_and_numerical_rejections": {
+    "rejected_cases": 41,
+    "cases": [
+      {
+        "name": "missing_position",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field position"
+      },
+      {
+        "name": "missing_footprint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field footprint"
+      },
+      {
+        "name": "position_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: position must be a string"
+      },
+      {
+        "name": "footprint_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint must be a string"
+      },
+      {
+        "name": "unknown_wrapper",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint zone evidence configuration: unknown field extra"
+      },
+      {
+        "name": "duplicate_wrapper",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid JSON: Duplicate key \"position\" at line 1, column 24"
+      },
+      {
+        "name": "missing_vertices",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field vertices_offset_m"
+      },
+      {
+        "name": "unknown_footprint_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: convex footprint: unknown field extra"
+      },
+      {
+        "name": "duplicate_vertices",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid JSON: Duplicate key \"vertices_offset_m\" at line 1, column 73"
+      },
+      {
+        "name": "old_position_source_not_broadened",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone evidence configuration: unknown field vertices_offset_m"
+      },
+      {
+        "name": "raw_fractional_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_nested_position",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid JSON: Duplicate key \"session_id\" at line 1, column 26"
+      },
+      {
+        "name": "nonfinite_vertex",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint vertex offset must be a finite number"
+      },
+      {
+        "name": "empty",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: convex geometry requires 3 to 32 vertices"
+      },
+      {
+        "name": "point",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: convex geometry requires 3 to 32 vertices"
+      },
+      {
+        "name": "segment",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: convex geometry requires 3 to 32 vertices"
+      },
+      {
+        "name": "allzero",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone has no finite spatial extent"
+      },
+      {
+        "name": "outside_origin",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: convex footprint must contain the modeled anchor"
+      },
+      {
+        "name": "duplicate",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone must be strictly convex"
+      },
+      {
+        "name": "collinear",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone must be strictly convex"
+      },
+      {
+        "name": "concave",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone must be simple strictly convex and have no repeated vertices"
+      },
+      {
+        "name": "self_intersecting",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone must be simple strictly convex and have no repeated vertices"
+      },
+      {
+        "name": "vertex_arity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint vertex offset exceeds its record limit"
+      },
+      {
+        "name": "too_many",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: vertices_offset_m exceeds its record limit"
+      },
+      {
+        "name": "origin_ulp_exterior",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: projection component product exceeds supported precision"
+      },
+      {
+        "name": "wrong_session",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+        "stdout_bytes": 1307,
+        "stderr": "line 3: zone frame session time or capacity is invalid"
+      },
+      {
+        "name": "stale_ready",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+        "stdout_bytes": 1307,
+        "stderr": "line 3: ready zone sample is not current in this frame"
+      },
+      {
+        "name": "duplicate_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+        "stdout_bytes": 1307,
+        "stderr": "line 3: duplicate measurement track identity"
+      },
+      {
+        "name": "duplicate_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+        "stdout_bytes": 1307,
+        "stderr": "line 3: zone frame identities or accepted timestamps are invalid"
+      },
+      {
+        "name": "non_spd",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+        "stdout_bytes": 1307,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "missing_ready_position",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+        "stdout_bytes": 1307,
+        "stderr": "line 3: measurement availability contradicts its status"
+      },
+      {
+        "name": "closed_current",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+        "stdout_bytes": 1307,
+        "stderr": "line 3: current accepted zone track is also closed"
+      },
+      {
+        "name": "unknown_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+        "stdout_bytes": 1307,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      {
+        "name": "fractional_track_token",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+        "stdout_bytes": 1307,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "physical_contribution_swallowed",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: footprint and position extent exceed supported precision"
+      },
+      {
+        "name": "statistical_contribution_swallowed",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: footprint and position extent exceed supported precision"
+      },
+      {
+        "name": "combined_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: footprint and position extent exceed supported precision"
+      },
+      {
+        "name": "expanded_endpoint_swallowed",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: footprint lower endpoint cannot expand the position band"
+      },
+      {
+        "name": "old_position_failure_not_rescued",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: zone evidence interval is not representable"
+      },
+      {
+        "name": "invalid_utf8_complete_prefix",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+        "stdout_bytes": 1307,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "missing_header",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "missing disk zone evidence source"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "contribution_and_endpoint_domains_checked": true,
+    "old_position_domain_not_masked": true,
+    "integral_raw_id_token": "passed"
+  },
+  "warm_brown_reframe": {
+    "status": "passed",
+    "brown_warm_prefix_frames": 4,
+    "continuation_frames": 4,
+    "explicit_vertices_offset_m": [
+      [
+        -0.25,
+        -0.25
+      ],
+      [
+        1.0,
+        -0.25
+      ],
+      [
+        1.0,
+        0.25
+      ],
+      [
+        -0.25,
+        0.25
+      ]
+    ],
+    "maximum_absolute_metric_reframe_differences": {
+      "$[].evidence[].vertices_offset_m[][]": 0.0,
+      "$[].evidence[].faces[].distance_m": 0.0,
+      "$[].evidence[].faces[].normal_std_m": 6.938893903907228e-18,
+      "$[].evidence[].faces[].position_lower_m": 0.0,
+      "$[].evidence[].faces[].position_upper_m": 0.0,
+      "$[].evidence[].faces[].footprint_lower_m": 0.0,
+      "$[].evidence[].faces[].footprint_upper_m": 0.0,
+      "$[].evidence[].faces[].lower_m": 0.0,
+      "$[].evidence[].faces[].upper_m": 0.0
+    }
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "source_wrapper_and_frame_exact_units": 1048576,
+    "source_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "frame_overflow_complete_prefix": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "120dc5d1bc6b8654d163abe493ea79dd341b6439cd35ea970dd945a934f2e0c2",
+      "stdout_bytes": 1307,
+      "stderr": "line 3: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "nested_source_budget_note": "Raw inner strings share the same 1Mi source wrapper budget; a full 1Mi inner string plus wrapper overhead cannot be a successful request."
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/footprint-zone.test.mjs",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "old_checkpoint_cross_runtime": {
+      "cut_points": 9,
+      "continuations": 36,
+      "directions": [
+        "native_to_native",
+        "native_to_javascript",
+        "javascript_to_native",
+        "javascript_to_javascript"
+      ],
+      "footprint_evaluators_per_continuation": 2
+    },
+    "measured_bounded_batch": {
+      "successful_empty_frames": 5000,
+      "complete_return_utf16_units": 1118902,
+      "max_configured_zones": 16,
+      "max_faces_per_zone": 32,
+      "actual_shape_vertices": 32,
+      "actual_native_tracks": 128,
+      "actual_native_zone_rows": 2048,
+      "actual_native_face_rows": 65536,
+      "equivalent_pure_return_utf16_units": 25478775,
+      "output_budget_rejected": true,
+      "old_handles_occupied": 64,
+      "nested_source_budget": "outer source includes raw inner strings and wrapper overhead"
+    },
+    "test_script_sha256": "4943580a26753062052767d20239aa329e528fa94ffb9ef59925f264f3f7c25e",
+    "bridge_sha256": "69d379a26fbdce745ca343a9a10d798017d0db1018b4852ee11b61a6a85c0e57",
+    "stdout_sha256": "446dc7416dca513b75ad4bc910751c9d230441469eba96f2adaf27e3214795ea",
+    "stderr": ""
+  },
+  "status": "passed",
+  "elapsed_seconds": 20.3067892
+}

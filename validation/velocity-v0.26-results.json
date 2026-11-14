@@ -1,0 +1,714 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "seed": 20261130,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/velocity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/velocity-v0.26-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "22aa3bb70df03dfecda0eaa2bae86f6ab771f88d5ea88e389f9a6b9c84a951dd",
+  "binary_sha256": "5f4e22ce423da64a9e431a1b4e28dc66371b1179df55174b4f29e91750b6c14d",
+  "evidence_scope": "model_velocity_component_band",
+  "scaled_error_denominator": "max(abs(reference),1e-300)",
+  "decision_reference": "compare independently computed band endpoints after rounding to binary64",
+  "independent_reference": "Public scaled binary64 axis normalization; Decimal.from_float at 180 digits for direct dot and quadratic form; NumPy secondary well-conditioned oracle",
+  "numeric_reference": {
+    "cases": 33,
+    "frames": 41,
+    "evidence_rows": 85,
+    "maximum_absolute_decimal_errors": {
+      "component_mps": 0,
+      "axis_std_mps": 2.2737367544323206e-13,
+      "lower_mps": 9.085484053695086e+133,
+      "upper_mps": 1.8170968107390172e+134
+    },
+    "maximum_relative_or_scaled_decimal_errors": {
+      "component_mps": 0,
+      "axis_std_mps": 3.9747464164593395e-16,
+      "lower_mps": 4.545845495752533e-15,
+      "upper_mps": 2.8411055284664263e-16
+    },
+    "maximum_absolute_numpy_vs_decimal_errors": {
+      "axis_std_mps": 2.220446049250313e-16
+    },
+    "repeat_and_reordering_exact": true,
+    "records": [
+      {
+        "name": "anisotropic_axis_not_worst_direction",
+        "frames": 1,
+        "evidence_rows": 4
+      },
+      {
+        "name": "correlation-1e-150--1",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "correlation-1e-150-1",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "supported-correlation-1e-150",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "correlation-1--1",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "correlation-1-1",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "supported-correlation-1",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "correlation-1e+150--1",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "correlation-1e+150-1",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "supported-correlation-1e+150",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "normalization-10",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "normalization-11",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "normalization-12",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "normalization-13",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "normalization-14",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "normalization-15",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "exact_orthogonal_zero",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "ordinary_compensated_near_orthogonal",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "huge_compensated_dot_k_zero",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "minimum_subnormal_component_k_zero",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "optional_configuration_defaults",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "closed-equality-0-21",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "closed-equality-0-22",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "closed-equality-0-23",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "closed-equality-0-24",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "closed-equality-0-25",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "closed-equality-2-26",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "closed-equality-2-27",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "closed-equality-2-28",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "closed-equality-2-29",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "closed-equality-2-30",
+        "frames": 1,
+        "evidence_rows": 1
+      },
+      {
+        "name": "all_statuses_empty_and_exact_clock",
+        "frames": 9,
+        "evidence_rows": 3
+      },
+      {
+        "name": "sixteen_probes_sorted_targets",
+        "frames": 1,
+        "evidence_rows": 48
+      }
+    ]
+  },
+  "original_motion_and_checkpoint_continuations": {
+    "cases": 10,
+    "frames": 89,
+    "old_checkpoint_cut_points": 99,
+    "statuses": [
+      "initializing",
+      "numerical_failure",
+      "ready",
+      "rejected_innovation",
+      "rejected_projection",
+      "uncertain"
+    ],
+    "old_checkpoint_continuation_exact": true,
+    "independent_authored_motion_numpy": {
+      "authored_without_implementation_output": true,
+      "seed": 20261113,
+      "maximum_absolute_errors": {
+        "filter_state": 0.0,
+        "filter_covariance": 8.673617379884035e-19,
+        "observed_path_length_m": 0.0,
+        "net_displacement_m": 0.0
+      },
+      "interpretation": "Joseph-form NumPy update from a manually authored full session state, including historical path anchors."
+    },
+    "maximum_absolute_decimal_errors": {
+      "component_mps": 0,
+      "axis_std_mps": 1.1102230246251565e-16,
+      "lower_mps": 2.220446049250313e-16,
+      "upper_mps": 4.440892098500626e-16
+    },
+    "maximum_relative_or_scaled_decimal_errors": {
+      "component_mps": 0,
+      "axis_std_mps": 2.3956418075507584e-16,
+      "lower_mps": 2.0455604287781597e-15,
+      "upper_mps": 2.395589220170136e-16
+    },
+    "records": [
+      {
+        "name": "identity_path_lifecycle",
+        "frames": 11,
+        "old_checkpoint_cut_points": 12,
+        "evidence_rows": 0
+      },
+      {
+        "name": "raw_camera_projection_rejection",
+        "frames": 10,
+        "old_checkpoint_cut_points": 11,
+        "evidence_rows": 18
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 4,
+        "old_checkpoint_cut_points": 5,
+        "evidence_rows": 0
+      },
+      {
+        "name": "effective_defaults",
+        "frames": 4,
+        "old_checkpoint_cut_points": 5,
+        "evidence_rows": 3
+      },
+      {
+        "name": "extreme_scale_failure_retains_restorable_state",
+        "frames": 2,
+        "old_checkpoint_cut_points": 3,
+        "evidence_rows": 0
+      },
+      {
+        "name": "warehouse",
+        "frames": 10,
+        "old_checkpoint_cut_points": 11,
+        "evidence_rows": 15
+      },
+      {
+        "name": "distorted-camera",
+        "frames": 15,
+        "old_checkpoint_cut_points": 16,
+        "evidence_rows": 36
+      },
+      {
+        "name": "reframe",
+        "frames": 15,
+        "old_checkpoint_cut_points": 16,
+        "evidence_rows": 36
+      },
+      {
+        "name": "repeated_crossings",
+        "frames": 9,
+        "old_checkpoint_cut_points": 10,
+        "evidence_rows": 0
+      },
+      {
+        "name": "quality_rejects_current_positions",
+        "frames": 9,
+        "old_checkpoint_cut_points": 10,
+        "evidence_rows": 0
+      }
+    ]
+  },
+  "strict_and_numerical_rejections": {
+    "rejected_cases": 42,
+    "cases": [
+      {
+        "name": "empty_probes",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid velocity projector session or capacity"
+      },
+      {
+        "name": "seventeen_probes",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: velocity probes exceeds its record limit"
+      },
+      {
+        "name": "duplicate_probe_ids",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: duplicate velocity probe identity"
+      },
+      {
+        "name": "zero_direction",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: velocity probe direction must be nonzero"
+      },
+      {
+        "name": "direction_component_underflow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: velocity direction normalization loses a nonzero component"
+      },
+      {
+        "name": "negative_multiplier",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid normalized velocity probe or threshold"
+      },
+      {
+        "name": "empty_probe_id",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: probe_id must contain 1 to 128 UTF-16 code units"
+      },
+      {
+        "name": "long_probe_id",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: probe_id must contain 1 to 128 UTF-16 code units"
+      },
+      {
+        "name": "unknown_probe_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: velocity probe: unknown field extra"
+      },
+      {
+        "name": "empty_session",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid velocity projector session or capacity"
+      },
+      {
+        "name": "zero_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      {
+        "name": "too_large_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid velocity projector session or capacity"
+      },
+      {
+        "name": "unknown_source_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: velocity evidence configuration: unknown field extra"
+      },
+      {
+        "name": "resume_not_supported",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: velocity evidence configuration: unknown field resume"
+      },
+      {
+        "name": "fractional_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid JSON: Duplicate key \"session_id\" at line 1, column 22"
+      },
+      {
+        "name": "duplicate_probe_number",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid JSON: Duplicate key \"threshold_mps\" at line 1, column 103"
+      },
+      {
+        "name": "nonfinite_threshold",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: threshold_mps must be a finite number"
+      },
+      {
+        "name": "wrong_session",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: velocity frame session time or capacity is invalid"
+      },
+      {
+        "name": "future_accepted_time",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: velocity frame identities or accepted timestamps are invalid"
+      },
+      {
+        "name": "stale_ready_time",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: ready velocity sample is not current in this frame"
+      },
+      {
+        "name": "missing_ready_velocity",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: measurement availability contradicts its status"
+      },
+      {
+        "name": "missing_ready_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: measurement availability contradicts its status"
+      },
+      {
+        "name": "non_spd_velocity_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "duplicate_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: duplicate measurement track identity"
+      },
+      {
+        "name": "duplicate_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: velocity frame identities or accepted timestamps are invalid"
+      },
+      {
+        "name": "noncanonical_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: velocity segment identity must be a canonical positive Int64 string"
+      },
+      {
+        "name": "zero_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: velocity segment identity must be a canonical positive Int64 string"
+      },
+      {
+        "name": "accepted_segment_also_closed",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: current accepted velocity track is also closed"
+      },
+      {
+        "name": "duplicate_closed_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: duplicate closed velocity segment"
+      },
+      {
+        "name": "unknown_measurement_key",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      {
+        "name": "fractional_track_token",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_raw_measurement",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: invalid JSON: Duplicate key \"timestamp_us\" at line 1, column 81"
+      },
+      {
+        "name": "near_singular_correlation",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "65b0543d3fa50aa8b093ef7c79ce90d33d2db50c1615510d6ca125edcad62847",
+        "stdout_bytes": 377,
+        "stderr": "line 3: normal covariance cancellation or scale exceeds supported precision"
+      },
+      {
+        "name": "radius_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "32d2788c1d9a422156464d55bc88b859d3e0853cbb4e09fa369126fa23638ae4",
+        "stdout_bytes": 431,
+        "stderr": "line 3: velocity evidence radius is not representable"
+      },
+      {
+        "name": "radius_underflow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: velocity evidence radius is not representable"
+      },
+      {
+        "name": "endpoint_swallowing",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "65b0543d3fa50aa8b093ef7c79ce90d33d2db50c1615510d6ca125edcad62847",
+        "stdout_bytes": 377,
+        "stderr": "line 3: velocity evidence interval is not representable"
+      },
+      {
+        "name": "nonrepresentable_dot",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "65b0543d3fa50aa8b093ef7c79ce90d33d2db50c1615510d6ca125edcad62847",
+        "stdout_bytes": 377,
+        "stderr": "line 3: projection component is not representable"
+      },
+      {
+        "name": "compensated_dot_counterexample",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "84816c7818359962f7235eef76f44a245c1b9b9dc8ea2a9a76f1e7a0319c450f",
+        "stdout_bytes": 428,
+        "stderr": "line 3: velocity evidence interval is not representable"
+      },
+      {
+        "name": "dot_scaling_loses_nonzero_term",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "65b0543d3fa50aa8b093ef7c79ce90d33d2db50c1615510d6ca125edcad62847",
+        "stdout_bytes": 377,
+        "stderr": "line 3: projection component scaling loses a nonzero term"
+      },
+      {
+        "name": "invalid_utf8_tail",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "dc3f16113ed14d1a7aa87b87e8ec172f25b2b490ac835ff88826a0210dbd4a40",
+        "stdout_bytes": 374,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "missing_header",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "missing velocity evidence source"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "mathematically_integral_id_token": "passed",
+    "no_persistent_checkpoint_or_watermark": true
+  },
+  "warm_brown_reframe": {
+    "status": "passed",
+    "brown_warm_prefix_frames": 4,
+    "continuation_frames": 4,
+    "maximum_absolute_metric_reframe_differences": {
+      "$[].evidence[].component_mps": 8.93729534823251e-15,
+      "$[].evidence[].axis_std_mps": 5.551115123125783e-17,
+      "$[].evidence[].lower_mps": 8.881784197001252e-15,
+      "$[].evidence[].upper_mps": 8.992806499463768e-15,
+      "$[].evidence[].threshold_mps": 0.0
+    }
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "source_and_frame_exact_units": 1048576,
+    "source_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "frame_overflow_complete_prefix": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "41cff3f81fcf4ef1b2c3c16a59c42e85c4de42c26cbc78434797738052c03afe",
+      "stdout_bytes": 372,
+      "stderr": "line 3: JSON text exceeds 1048576 UTF-16 code units"
+    }
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "command": "node --test --test-reporter=tap web/velocity.test.mjs",
+    "old_checkpoint_cross_runtime": {
+      "cut_points": 9,
+      "continuations": 36,
+      "directions": [
+        "native_to_native",
+        "native_to_javascript",
+        "javascript_to_native",
+        "javascript_to_javascript"
+      ],
+      "velocity_evaluators_per_continuation": 2
+    },
+    "measured_bounded_batch": {
+      "successful_empty_frames": 5000,
+      "complete_return_utf16_units": 948902,
+      "max_configured_probes": 16,
+      "actual_evidence_rows": 512,
+      "output_overflow_rejected": true,
+      "old_handles_occupied": 64
+    },
+    "test_script_sha256": "13840ff2f8ef4bd56189e2fd3c4224a09b9aa170922b89f8d6ceab1683710a8a",
+    "bridge_sha256": "69d379a26fbdce745ca343a9a10d798017d0db1018b4852ee11b61a6a85c0e57",
+    "stdout_sha256": "0e8828c9f4adb109912c54ba90b300f722df1e79bfabace4fe44bce8d2ed552a",
+    "stderr": ""
+  },
+  "status": "passed",
+  "elapsed_seconds": 16.669845000000002
+}
