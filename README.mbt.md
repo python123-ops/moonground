@@ -2,7 +2,7 @@
 
 MoonGround 把固定相机中的目标轨迹转换为米制地面位置、速度和观测路径，面向园区、仓储和其他近似平面的场地。输入是已有目标身份、地面接触锚点和真实时间戳；库负责标定有效域、投影协方差、运动估计、轨迹分段和双向通道过线统计，并支持原子组合更新与完整状态恢复。固定地标检查持续核对原标定的米制残差；需要按检查结果决定是否计算对象测量时，可显式使用 `guarded` 入口。
 
-当前开发版本为 `0.22.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
+当前开发版本为 `0.23.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
 
 ## 与现有项目的衔接
 
@@ -29,7 +29,7 @@ MoonGround 复用 `moon-cv-geometry@0.2.2` 的几何能力与 `moon-kalman@0.2.1
 | `guarded` | 当前地标确认健康后计算对象，阻断时结束片段；均值／法向证据门控、证据通行及其确认分窗分别保存完整检查点，支持投影切换与重新确认 |
 | `transit` | 同目标同片段的有向入口／出口配对、通行时间界与插值估计、取消原因；均值／法向证据策略分别保存独立完整检查点；已完成证据通行可按确认时刻分窗、按时长界分类 |
 | `velocity` | 指定地面方向的速度分量、完整速度协方差投影与三态阈值证据；帧入口只采用当前 Ready 测量，无持久化状态 |
-| `zones` | 米制凸区域的逐边位置协方差支持区间与三态关系；当前 Ready 测量、分离边及不可用诊断，无持久化状态 |
+| `zones` | 米制凸区域的位置协方差支持区间与三态关系；可显式加入确定性圆盘足迹，保留位置区间、组合区间及分离边，无持久化状态 |
 | `codec` | 原生 CLI 与浏览器共用的严格 JSON 协议、检查点、坐标转换，以及独立／联合测量、通道、证据、地标健康、门控与区间回放 |
 
 计算包支持 `wasm`、`wasm-gc`、`js`、`native`。流式命令使用 native，浏览器桥使用 JavaScript；图像解码、检测、跟踪及相机采集由调用方接入。
@@ -1721,6 +1721,111 @@ CLI `--zone-evidence` 首行为 `{"session_id":"warehouse","zones":[{"zone_id":"
 
 配置和测量单行各限 1 Mi UTF-16 代码单元，纯请求外层 16 Mi、测量文本 8 Mi／5,000 行、完整输出 8 Mi。CLI 默认物理行 1 Mi，可显式放宽至 16 Mi；错误退出码为 2，保留成功的完整前缀，纯批量失败不返回部分结果。Web 在普通测量区增加小型折叠表，沿用原滑块并支持整批下载，使用说明和已查生态边界见 [`docs/zones-web.md`](docs/zones-web.md)。
 
+### 显式圆盘足迹与区域证据
+
+位置锚点在区域内，不代表围绕它的实体范围也在区域内。`zones.DiskFootprint::new(radius_m)` 接受调用方显式给定的有限非负米制半径，圆心就是当前模型的地面锚点；半径不是从像素 bbox、速度方向或检测置信度推导的。调用方应按所用锚点选择半径。同次帧调用使用同一半径，不同尺寸可分组计算。
+
+`ConvexZone::evaluate_disk(position, covariance, footprint)` 保留原位置区间，另外计算含圆盘的组合支持区间。各边原距离为 `d`、法向标准差为 `σ`，组合半径为 `kσ+r`，上下界为 `[d-(kσ+r), d+(kσ+r)]`。物理半径单独报告，不写入协方差或标准差。
+
+```mbt check
+///|
+test "README: explicit physical radius can cross a boundary while the modeled anchor stays inside" {
+  let zone = @zones.ConvexZone::new(
+    "storage",
+    [
+      { x: 0.0, y: 0.0, },
+      { x: 1.0, y: 0.0, },
+      { x: 1.0, y: 1.0, },
+      { x: 0.0, y: 1.0, },
+    ],
+    sigma_multiplier=0.0,
+  )
+  let position : @moonground.Point2 = { x: 0.875, y: 0.5, }
+  let covariance = @moonground.Covariance2::isotropic(0.25)
+  assert_eq(zone.evaluate(position, covariance).decision, @zones.Inside)
+  let body = zone.evaluate_disk(
+    position,
+    covariance,
+    @zones.DiskFootprint::new(0.25),
+  )
+  assert_eq(body.decision, @zones.Indeterminate)
+  assert_eq(body.faces[1].position_upper_m, -0.125)
+  assert_eq(body.faces[1].upper_m, 0.125)
+  assert_eq(body.faces[1].normal_std_m, 0.25)
+}
+```
+
+仍按原保守规则判定：所有组合上界不大于零为 `Inside`；任一组合下界严格大于零为 `Outside`，保留首条分离边；其余为 `Indeterminate`。闭相切不作为在外，角点附近未确认不解释为接触或相交。这里描述位置扰动集与显式圆盘的和，倍率没有附带覆盖概率，圆盘不是对真实物体轮廓的估计。
+
+`r=0` 逐值保留原位置上下界、方向标准差、判定与分离边。`k=0` 仍保留非零物理足迹，并验证原协方差。两种正半径贡献相加时都必须保留；正的物理半径必须严格扩展原两端点。溢出、吞并贡献或无法展开的端点返回 `GroundError`，不能用圆盘掩盖原位置证据不支持的数值输入。
+
+`ZoneProjector::evaluate_disk(frame, footprint)` 复用原帧准入和工作量上限，只计算本时刻 `Ready` 的位置；原预热、质量不足、拒绝、空帧与投影失败规则不变。接口无时间水位或新增检查点，恢复旧运动状态后可直接重算：
+
+```mbt check
+///|
+test "README: original motion recovery recomputes disk support without another clock" {
+  let zone = @zones.ConvexZone::new(
+    "storage",
+    [
+      { x: 0.0, y: 0.0, },
+      { x: 1.0, y: 0.0, },
+      { x: 1.0, y: 1.0, },
+      { x: 0.0, y: 1.0, },
+    ],
+    sigma_multiplier=0.0,
+  )
+  let projector = @zones.ZoneProjector::new("disk-readme", [zone])
+  let footprint = @zones.DiskFootprint::new(0.05)
+  let motion = @moonground.MotionEstimator::new(
+    "disk-readme",
+    @moonground.MotionConfig::new(gate=1000000.0),
+  )
+  let observe = (x : Double) => {
+    @moonground.GroundObservation::new(
+      7,
+      { x, y: 0.5, },
+      @moonground.Covariance2::isotropic(0.01),
+    )
+  }
+  for index in 0..<3 {
+    let frame = motion.update(index.to_int64() * 200000L, [
+      observe(0.2 + index.to_double() * 0.1),
+    ])
+    let evidence = projector.evaluate_disk(frame, footprint)
+    if index < 2 {
+      assert_eq(evidence.evidence.length(), 0)
+      assert_eq(evidence.unavailable.length(), 1)
+    } else {
+      assert_eq(evidence.evidence[0].evidence.decision, @zones.Inside)
+    }
+  }
+  let restored = @moonground.MotionEstimator::from_checkpoint(
+    motion.checkpoint(),
+  )
+  let expected = projector.evaluate_disk(
+    motion.update(600000L, [observe(0.5)]),
+    footprint,
+  )
+  let actual = projector.evaluate_disk(
+    restored.update(600000L, [observe(0.5)]),
+    footprint,
+  )
+  assert_eq(@debug.to_string(actual), @debug.to_string(expected))
+}
+```
+
+### 圆盘足迹证据协议
+
+CLI `--disk-zone-evidence` 首行为两个原文字符串的包装：`{"position":<原v0.22区域配置字符串>,"disk":"{\"radius_m\":0.25}"}`，后续仍为原 schema `0.2.0` 测量行。`disk` 是只含必填 `radius_m` 的原文 JSON 配置；两个内层及包装均严格拒绝重复键、未知字段和错误类型。旧 `--zone-evidence` 不接受半径字段。
+
+```sh
+./_build/native/release/build/cmd/main/main.exe --disk-zone-evidence < measured.ndjson > disk-zone-evidence.ndjson
+```
+
+`codec.DiskZoneEvidenceReplay::open/process_line` 共用协议；纯函数 `codec.disk_zone_evidence_json` 与 JavaScript `moonground_disk_zone_evidence` 接受 `{"source":<新包装原文>,"measurements":<原测量NDJSON原文>}`，只返回 `{"frames":[...]}`。结果的 `kind` 为 `disk_zone_evidence_frame`，`evidence_scope` 为 `model_position_halfplane_bands_plus_explicit_disk`。逐边保存 `position_lower_m/position_upper_m` 与组合 `lower_m/upper_m`，另给 `radius_m`；原位置协方差和标准差不改写。
+
+源包装、每个内层文档与测量单行各限 1 Mi UTF-16 代码单元；内层原文的转义仍计入外层上限。纯请求 16 Mi、测量文本 8 Mi／5,000 行、完整输出 8 Mi；原有 65,536 目标乘边数工作上限继续适用。CLI 默认物理行 1 Mi，可显式放宽至 16 Mi；错误退出码为 2，保留已成功的完整前缀，纯批量失败无部分结果。Web 在现区域折叠区增加圆盘选项、独立计算与下载，并分别展示位置区间和组合区间，见 [`docs/disk-zones-web.md`](docs/disk-zones-web.md)。
+
 ## 验证与复现
 
 以下开发命令在完整项目目录运行。Mooncakes 源码包只保留库、命令、JavaScript 桥及其必要文件，开发示例、验证脚本和网页资源保留在项目仓库中。
@@ -1733,26 +1838,27 @@ moon build --target all --deny-warn
 moon test --target all --deny-warn
 node web/build.mjs
 node --test web/parity.test.mjs
-python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.22-results.json
-python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.22-results.json
-python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.22-results.json
-python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.22-results.json
-python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.22-results.json
-python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.22-results.json
-python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.22-results.json
-python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.22-results.json
-python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.22-results.json
-python validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.22-results.json
-python validation/evidence_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-analysis-v0.22-results.json
-python validation/evidence_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-v0.22-results.json
-python validation/evidence_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-v0.22-results.json
-python validation/evidence_transit_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-analysis-v0.22-results.json
-python validation/evidence_guarded_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-v0.22-results.json
-python validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-v0.22-results.json
-python validation/evidence_transit_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-window-analysis-v0.22-results.json
-python validation/evidence_guarded_transit_window_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-window-v0.22-results.json
-python validation/velocity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/velocity-v0.22-results.json
-python validation/zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-results.json
+python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.23-results.json
+python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.23-results.json
+python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.23-results.json
+python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.23-results.json
+python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.23-results.json
+python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.23-results.json
+python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.23-results.json
+python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.23-results.json
+python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.23-results.json
+python validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.23-results.json
+python validation/evidence_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-analysis-v0.23-results.json
+python validation/evidence_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-v0.23-results.json
+python validation/evidence_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-v0.23-results.json
+python validation/evidence_transit_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-analysis-v0.23-results.json
+python validation/evidence_guarded_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-v0.23-results.json
+python validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-v0.23-results.json
+python validation/evidence_transit_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-window-analysis-v0.23-results.json
+python validation/evidence_guarded_transit_window_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-window-v0.23-results.json
+python validation/velocity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/velocity-v0.23-results.json
+python validation/zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-v0.23-results.json
+python validation/disk_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/disk-zone-results.json
 ```
 
 浏览器交互测试需要外部安装 Playwright 或 Playwright Core `1.62.1` 与浏览器。设置 `PLAYWRIGHT_MODULE` 为该包路径后，执行 `node --test web/ui.test.cjs`；默认使用配套 Chromium，设置 `MOONGROUND_BROWSER_CHANNEL=chrome` 可使用已安装的 Google Chrome。CI 使用 GitHub Ubuntu runner 预装的 Chrome，并从固定上游 blob 下载、校验 Noto Sans CJK SC 字体，记录实际浏览器版本与字体，避开系统软件源下载。交互用例覆盖桌面与 390 像素移动视口、本地导入、下载、旧结果失效、原始像素标定配置、选帧检查点的导出与续接、坐标变换、双向过线与死区、独立配对恢复和完整联合恢复、固定地标状态、门控阻断、标定切换与末帧完整检查点、区间统计来源选择和下游恢复、整数 token 保留、控制点草稿保护和异步操作取消。
@@ -1760,12 +1866,16 @@ python validation/zone_verify.py --binary _build/native/release/build/cmd/main/m
 安装 NumPy 后，可执行独立参考与长流检查。固定工具链在 Linux 和 Windows 上的原生产物均命名为 `main.exe`。
 
 ```sh
-python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.22-results.json
-python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.22-results.json
+python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.23-results.json
+python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.23-results.json
 moon package
-python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.22-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.22.0.zip --output validation/package-v0.22-results.json
+python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.23-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.23.0.zip --output validation/package-v0.23-results.json
 ```
+
+v0.23.0 的圆盘足迹验证见 [`validation/disk-zone-results.json`](validation/disk-zone-results.json)：45 个独立数学场景、193 帧、708 条逐边诊断，另有 10 个真实运动场景、89 帧及 99 个旧检查点续接位置；31 项协议与数值拒绝检查通过。220 位 Decimal 直接计算原始边叉积／长度、完整协方差二次型和显式圆盘支持范围。21 个零半径场景与原位置入口逐字段一致，全部场景保留原位置区间。数学场景包含 `1e150` 数量级，最大相对／缩放误差为 `9.730e-16`，分母为 `max(abs(reference), 1e-300)`；真实运动场景逐边量最大绝对差为 `1.422e-14 m`。
+
+圆盘入口 JavaScript／原生一致性测试 7 项通过，9 个旧检查点切点完成四方向共 36 次续接，每次使用两个独立圆盘求值器。实际运行 5,000 空帧及 128 个目标 × 16 个区域 × 32 条边的 65,536 面工作量边界；后一结果封装为纯批量 JSON 后占 `17,548,897` 个 UTF-16 代码单元，纯函数按 8 Mi 输出上限拒绝。库四后端各通过 655 项测试，工作区外部消费者各通过 703 项（含 48 项消费者测试）。
 
 v0.22.0 的区域证据验证见 [`validation/zone-results.json`](validation/zone-results.json)：21 个独立数学场景、86 帧、312 条逐边诊断，另有 10 个真实运动场景、89 帧及 99 个旧检查点续接位置；42 项协议与数值拒绝检查全部通过。参考用 Fraction 判断绕向、220 位 Decimal 直接计算原始边叉积／长度与完整二次型，并以舍入后的端点分类。数学场景包括 `1e150` 数量级，端点最大相对／缩放误差为 `9.730e-16`，分母为 `max(abs(reference), 1e-300)`；真实运动端点最大绝对差为 `1.422e-14`。另有 24 次 NumPy 椭圆边界采样检查，每次 257 点，只作为几何第二参考。
 

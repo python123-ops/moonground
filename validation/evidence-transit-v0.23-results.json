@@ -1,0 +1,1769 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/evidence_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-v0.23-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20260920 (914d7da 2026-09-20)\nmoonc v0.10.14+7d59c7ec9 (2026-09-18)\nmoonc moonrun 0.1.20260920 (914d7da 2026-09-20)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "d2f96ae9feeeea6831a2672a18c05a8e8ea7227cf459f7ed8bb1e4f33ac5907f",
+  "evidence_reference_sha256": "38979c33c25cbe00b0e0c412a3015080426b5097873a748fb1acc0c773ef77b3",
+  "transit_reference_sha256": "35870adfcf62aee6bab8a9d61fe19e09d71b5ad298a8d83ad36bff1f4d88fa61",
+  "binary_sha256": "d9e490ace61735879f625b2149bdb94638d68cca79d884c8c60431fa752677e8",
+  "decimal_fraction_reference": {
+    "cases": 28,
+    "frames": 112,
+    "passages": 19,
+    "crossings": 61,
+    "evidence": 216,
+    "resume_cut_points": 140,
+    "cancellation_reasons": [
+      "ambiguous_order",
+      "discontinuity",
+      "expired",
+      "reentered",
+      "reversed"
+    ],
+    "records": [
+      {
+        "frames": 7,
+        "passages": 2,
+        "crossings": 4,
+        "evidence": 14,
+        "resume_cut_points": 8,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "f4805fa1007727e4982d77d38316b7917cce353f773411e7cf4538ab327d5296",
+        "name": "separate_brackets_both_directions"
+      },
+      {
+        "frames": 3,
+        "passages": 2,
+        "crossings": 4,
+        "evidence": 6,
+        "resume_cut_points": 4,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 7.275957614183426e-12,
+          "$.counting.counting.crossings[].position_m[]": 0.0,
+          "$.passages[].exit.position_m[]": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 2.220446049250313e-16,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 3.945288540307956e-12,
+          "maximum_relative_error": 6.57548090051326e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 3.945288540307956e-12
+        },
+        "checkpoint_sha256": "335f4c6fc5a42bda660d4cf4c6ef701c3345d1ed714ada33c86f4d32a1f3256d",
+        "name": "same_frame_reverse_configuration_order"
+      },
+      {
+        "frames": 4,
+        "passages": 1,
+        "crossings": 2,
+        "evidence": 8,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "d543d09b7bacde792f141bff35479b13efbe3fb3130f81fb12e83e47521b91ef",
+        "name": "above_2pow53_microsecond_intervals"
+      },
+      {
+        "frames": 2,
+        "passages": 1,
+        "crossings": 2,
+        "evidence": 4,
+        "resume_cut_points": 3,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 5.551115123125783e-17,
+          "maximum_relative_error": 9.25185853854297e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 5.551115123125783e-17
+        },
+        "checkpoint_sha256": "f81fb61e3e9776deeaf9dd6e1dc2653c917a6abc02627a7a89210bc148b17a52",
+        "name": "above_2pow53_fractional_same_frame"
+      },
+      {
+        "frames": 4,
+        "passages": 1,
+        "crossings": 2,
+        "evidence": 8,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "361d1cd272f54f43b49a40755d16f69555d583ca93a46b79e0e13ed066238238",
+        "name": "int64_max_microsecond_intervals"
+      },
+      {
+        "frames": 2,
+        "passages": 1,
+        "crossings": 2,
+        "evidence": 4,
+        "resume_cut_points": 3,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 5.551115123125783e-17,
+          "maximum_relative_error": 9.25185853854297e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 5.551115123125783e-17
+        },
+        "checkpoint_sha256": "f13ca30b8af9b613b12282ad9c89b8f4bdf72b14adc25301449cfe43b002e549",
+        "name": "int64_max_fractional_same_frame"
+      },
+      {
+        "frames": 7,
+        "passages": 1,
+        "crossings": 3,
+        "evidence": 14,
+        "resume_cut_points": 8,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 6.000533403494046e-12,
+          "maximum_relative_error": 5.1433143458520394e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 6.000533403494046e-12
+        },
+        "checkpoint_sha256": "f9eca19e4e57063e47026dad10cd5ca06e4d45831af763e4e1e8222e293bdec6",
+        "name": "finite_extension_reentry_replaces_start"
+      },
+      {
+        "frames": 6,
+        "passages": 1,
+        "crossings": 3,
+        "evidence": 12,
+        "resume_cut_points": 7,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 7.275957614183426e-12,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 3.945288540307956e-12,
+          "maximum_relative_error": 6.57548090051326e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 3.945288540307956e-12
+        },
+        "checkpoint_sha256": "83f36277e3de8ff40e84d321758fad369872bb9e8086db73fe2e8d5466a4ccae",
+        "name": "same_frame_reentry_then_completion"
+      },
+      {
+        "frames": 6,
+        "passages": 1,
+        "crossings": 3,
+        "evidence": 12,
+        "resume_cut_points": 7,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].distance_m": 0.0,
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].from_position_m[]": 0.0,
+          "$.counting.counting.crossings[].to_position_m[]": 0.0,
+          "$.counting.counting.crossings[].position_m[]": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.from_position_m[]": 0.0,
+          "$.passages[].entry.to_position_m[]": 0.0,
+          "$.passages[].entry.position_m[]": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.from_position_m[]": 0.0,
+          "$.passages[].exit.to_position_m[]": 0.0,
+          "$.passages[].exit.position_m[]": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].from_position_m[]": 0.0,
+          "$.counting.crossings[].to_position_m[]": 0.0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "307bb11856afbe4db796d51dcac57f4531c9c087dbaabcf854b81c552750ce3c",
+        "name": "same_frame_exit_completes_old_then_entry_starts_new"
+      },
+      {
+        "frames": 3,
+        "passages": 0,
+        "crossings": 2,
+        "evidence": 6,
+        "resume_cut_points": 4,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.evidence[].distance_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.counting.counting.crossings[].from_position_m[]": 0.0,
+          "$.counting.counting.crossings[].position_m[]": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 2.7755575615628914e-17,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0,
+          "$.counting.crossings[].from_position_m[]": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 2.7755575615628914e-16,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "8e4b1211be3123aa13192eabeff920d1b6982dbf0c2ca968a44b60fd03e68f10",
+        "name": "overlapping_different_chords_are_ambiguous"
+      },
+      {
+        "frames": 4,
+        "passages": 0,
+        "crossings": 2,
+        "evidence": 8,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "d8375fb9e72b357ad89de9efed001d9e16f92571ca85a4770decc6a3dc16d40e",
+        "name": "expiration_confirmation_boundary"
+      },
+      {
+        "frames": 3,
+        "passages": 0,
+        "crossings": 1,
+        "evidence": 4,
+        "resume_cut_points": 4,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "b53e210dd41ede5a60d4b495e100717878cb864f71aeb78f8ff357f5a629f694",
+        "name": "discontinuity_precedes_expiration"
+      },
+      {
+        "frames": 4,
+        "passages": 0,
+        "crossings": 1,
+        "evidence": 6,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "d05aa4aaec20b47a12111ffecb663afdea71c504d1a59a4e50475c0c9075b8ac",
+        "name": "cancel_missing"
+      },
+      {
+        "frames": 4,
+        "passages": 0,
+        "crossings": 1,
+        "evidence": 6,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "fd234add0914c5551102dba236f7269cacb688010dd415e9bea33079c12c3a2e",
+        "name": "cancel_rejected_projection"
+      },
+      {
+        "frames": 4,
+        "passages": 0,
+        "crossings": 1,
+        "evidence": 6,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "cdf1706fbe7ca4f53dcc5d21d1537f3d24b5db0e1a1ddca11a6f6570416d9866",
+        "name": "cancel_rejected_innovation"
+      },
+      {
+        "frames": 4,
+        "passages": 0,
+        "crossings": 1,
+        "evidence": 6,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "ffbcd391e675035c5c91a8c2ed3f60341158234a2a1d2b8260f3c4f6cfb73c4c",
+        "name": "cancel_numerical_failure"
+      },
+      {
+        "frames": 4,
+        "passages": 0,
+        "crossings": 1,
+        "evidence": 6,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "af29f64da6435138f9fa372722276fccf74c4cdea9120dd7d9802f5c01592c4c",
+        "name": "cancel_quality"
+      },
+      {
+        "frames": 4,
+        "passages": 0,
+        "crossings": 2,
+        "evidence": 8,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "d41ee5881109fee76758d93fe257de45557201dea1c04dbc9eb3da8727b77f4b",
+        "name": "cancel_closed"
+      },
+      {
+        "frames": 4,
+        "passages": 0,
+        "crossings": 2,
+        "evidence": 8,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "1e5b049de29dd44d6ccec25e82bda0295252d2e0216bc435a28b362ea46620a6",
+        "name": "cancel_gap"
+      },
+      {
+        "frames": 4,
+        "passages": 1,
+        "crossings": 4,
+        "evidence": 8,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 7.275957614183426e-12
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 3.945288540307956e-12,
+          "maximum_relative_error": 6.57548090051326e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 3.945288540307956e-12
+        },
+        "checkpoint_sha256": "c9039f21f8b1557493c1aa45c75ae89a8e10065f592f78da81a448fc9ac2dec7",
+        "name": "reverse_entry_cancels_pending"
+      },
+      {
+        "frames": 4,
+        "passages": 0,
+        "crossings": 1,
+        "evidence": 6,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "dfd0206fddab60fe7593772e49141f155cde4a736c2741298264a958bfada357",
+        "name": "guarded_interrupt_closes_pending"
+      },
+      {
+        "frames": 3,
+        "passages": 0,
+        "crossings": 2,
+        "evidence": 6,
+        "resume_cut_points": 4,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 2.7755575615628914e-17,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 2.7755575615628914e-17,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "e6fd425a02b3886f158f4e73537d8196281963e1ad0ee11d02feb201a3e92894",
+        "name": "same_frame_different_anchors_are_ambiguous"
+      },
+      {
+        "frames": 4,
+        "passages": 1,
+        "crossings": 2,
+        "evidence": 8,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 1.2001066806988092e-11,
+          "maximum_relative_error": 6.546036440175324e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 1.2001066806988092e-11
+        },
+        "checkpoint_sha256": "23d78d0b17d7da16745f78fd0f2353b61888a0c7c4acc919820b819069cd13a6",
+        "name": "unconfirmed_retains_pending_without_refreshing_entry"
+      },
+      {
+        "frames": 5,
+        "passages": 0,
+        "crossings": 1,
+        "evidence": 10,
+        "resume_cut_points": 6,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "1ec571e34883ef0b46822d21d27db1b9f63d99a05e5d24a3976e8f71a03774c2",
+        "name": "unconfirmed_anchor_ttl_reaches_exact_gap"
+      },
+      {
+        "frames": 4,
+        "passages": 1,
+        "crossings": 2,
+        "evidence": 8,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 0,
+          "maximum_relative_error": 0,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "d53723f18518cb66ca8ca41d7218292512b559b6a1e64e21d31168e92b0cef0c",
+        "name": "pending_preserves_original_covariances_after_anchor_moves"
+      },
+      {
+        "frames": 4,
+        "passages": 2,
+        "crossings": 4,
+        "evidence": 8,
+        "resume_cut_points": 5,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].distance_m": 0.0,
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].to_position_m[]": 0.0,
+          "$.counting.counting.crossings[].position_m[]": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.counting.counting.crossings[].from_position_m[]": 0.0,
+          "$.passages[].entry.to_position_m[]": 0.0,
+          "$.passages[].entry.position_m[]": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.from_position_m[]": 0.0,
+          "$.passages[].exit.to_position_m[]": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0,
+          "$.passages[].entry.from_position_m[]": 0.0,
+          "$.passages[].exit.position_m[]": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 8.881784197001252e-16,
+          "normal_std_m": 2.7755575615628914e-17,
+          "lower_m": 8.881784197001252e-16,
+          "upper_m": 8.881784197001252e-16,
+          "$.counting.crossings[].to_position_m[]": 0.0,
+          "$.counting.crossings[].position_m[]": 4.440892098500626e-16,
+          "$.counting.crossings[].crossing_fraction": 1.1102230246251565e-16,
+          "$.counting.crossings[].from_position_m[]": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 2.51214793389404e-16,
+          "normal_std_m": 1.9153166812067975e-16,
+          "lower_m": 2.51214793389404e-16,
+          "upper_m": 3.14018491736755e-16
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 6.000533403494046e-12,
+          "maximum_relative_error": 6.170619570866621e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 6.000533403494046e-12
+        },
+        "checkpoint_sha256": "696e3af7abc2397e46ef315850b63eb87bc388368d22e596b62839431aa73010",
+        "name": "rotated_anisotropic_covariance"
+      },
+      {
+        "frames": 3,
+        "passages": 2,
+        "crossings": 4,
+        "evidence": 12,
+        "resume_cut_points": 4,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 6.000533403494046e-12,
+          "maximum_relative_error": 5.1433143458520394e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 6.000533403494046e-12
+        },
+        "checkpoint_sha256": "fd8f2ea683977c5d3d92b2f007c11282e87cc64f69a1e0ed40702c39b67e9b28",
+        "name": "section_order_then_sorted_track_ids"
+      },
+      {
+        "frames": 2,
+        "passages": 1,
+        "crossings": 2,
+        "evidence": 4,
+        "resume_cut_points": 3,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 1024.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0,
+          "$.counting.crossings[].position_m[]": 0.0,
+          "$.counting.crossings[].crossing_fraction": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 0,
+          "upper_m": 0
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 513.2,
+          "maximum_relative_error": 9.27354258199268e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 0
+        },
+        "checkpoint_sha256": "d85c02f48a95c9423b42650c3d9901c27055f027829488726db737c86689be43",
+        "name": "long_int64_chord_converts_only_elapsed_difference"
+      }
+    ]
+  },
+  "zero_multiplier_old_transit": {
+    "cases": 28,
+    "frames": 112,
+    "passages": 21,
+    "all_existing_transit_reports_equal_on_supported_covariance_domain": true
+  },
+  "strict_transport": {
+    "rejected_cases": 65,
+    "cases": [
+      {
+        "name": "unknown_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: evidence transit source: unknown field extra"
+      },
+      {
+        "name": "counting_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: counting must be a string"
+      },
+      {
+        "name": "empty_sections",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit section capacity or duration"
+      },
+      {
+        "name": "duplicate_sections",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit sections must be unique and reference configured gates"
+      },
+      {
+        "name": "unknown_gate",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit sections must be unique and reference configured gates"
+      },
+      {
+        "name": "invalid_direction",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unknown crossing direction"
+      },
+      {
+        "name": "same_two_gates",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: section entry and exit gates must differ"
+      },
+      {
+        "name": "duration_zero",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit section capacity or duration"
+      },
+      {
+        "name": "section_unknown_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit section: unknown field extra"
+      },
+      {
+        "name": "duplicate_source_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"counting\" at line 1, column 18"
+      },
+      {
+        "name": "raw_fractional_inner_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      {
+        "name": "old_transit_not_upgraded",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported evidence transit checkpoint format or version"
+      },
+      {
+        "name": "wrong_format",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported evidence transit checkpoint format or version"
+      },
+      {
+        "name": "wrong_version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported evidence transit checkpoint format or version"
+      },
+      {
+        "name": "unknown_checkpoint_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: evidence transit checkpoint: unknown field extra"
+      },
+      {
+        "name": "missing_effective_duration",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field max_duration_us"
+      },
+      {
+        "name": "missing_counts",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: evidence transit checkpoint count or pending shape differs"
+      },
+      {
+        "name": "negative_completed",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: completed must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "unearned_completed",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: evidence transit completed totals are inconsistent"
+      },
+      {
+        "name": "unknown_pending_section",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending evidence transit references an unknown section"
+      },
+      {
+        "name": "duplicate_pending",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid expired or duplicate pending evidence transit"
+      },
+      {
+        "name": "wrong_pending_segment",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid expired or duplicate pending evidence transit"
+      },
+      {
+        "name": "wrong_pending_direction",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: saved crossing differs from its chord geometry"
+      },
+      {
+        "name": "wrong_pending_gate",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid saved crossing identity or bracket"
+      },
+      {
+        "name": "wrong_pending_fraction",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: saved crossing differs from its chord geometry"
+      },
+      {
+        "name": "wrong_pending_intersection",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: saved crossing differs from its chord geometry"
+      },
+      {
+        "name": "future_pending",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid expired or duplicate pending evidence transit"
+      },
+      {
+        "name": "pending_track_missing",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid expired or duplicate pending evidence transit"
+      },
+      {
+        "name": "missing_from_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field from_covariance"
+      },
+      {
+        "name": "missing_to_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field to_covariance"
+      },
+      {
+        "name": "indefinite_from_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: measurement covariance must be positive definite"
+      },
+      {
+        "name": "wrong_to_covariance_shape",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: covariance must contain exactly 3 numbers"
+      },
+      {
+        "name": "unconfirmed_entry_from",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending entry endpoints lack opposite confirmed evidence"
+      },
+      {
+        "name": "unconfirmed_entry_to",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending entry endpoints lack opposite confirmed evidence"
+      },
+      {
+        "name": "current_entry_anchor_missing",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending entry confirmation anchor disappeared before expiry"
+      },
+      {
+        "name": "current_entry_anchor_point_differs",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending entry differs from its retained confirmation anchor"
+      },
+      {
+        "name": "current_entry_anchor_covariance_differs",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending entry differs from its retained confirmation anchor"
+      },
+      {
+        "name": "entry_anchor_predates_confirmation",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending entry anchor predates its confirmation"
+      },
+      {
+        "name": "missing_sigma",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field sigma_multiplier"
+      },
+      {
+        "name": "missing_effective_gap",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field max_gap_us"
+      },
+      {
+        "name": "missing_effective_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field max_tracks"
+      },
+      {
+        "name": "missing_effective_deadband",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field deadband_m"
+      },
+      {
+        "name": "unknown_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "89aa5199eba47812d1f99c3796449f33c2c4e2228cb3f55c2bed4b7da45dd124",
+        "stdout_bytes": 956,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      {
+        "name": "duplicate_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "89aa5199eba47812d1f99c3796449f33c2c4e2228cb3f55c2bed4b7da45dd124",
+        "stdout_bytes": 956,
+        "stderr": "line 3: duplicate measurement track identity"
+      },
+      {
+        "name": "same_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "89aa5199eba47812d1f99c3796449f33c2c4e2228cb3f55c2bed4b7da45dd124",
+        "stdout_bytes": 956,
+        "stderr": "line 3: gate frame timestamps must strictly increase"
+      },
+      {
+        "name": "wrong_session",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "89aa5199eba47812d1f99c3796449f33c2c4e2228cb3f55c2bed4b7da45dd124",
+        "stdout_bytes": 956,
+        "stderr": "line 3: gate frame session or timestamp differs"
+      },
+      {
+        "name": "missing_current_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "89aa5199eba47812d1f99c3796449f33c2c4e2228cb3f55c2bed4b7da45dd124",
+        "stdout_bytes": 956,
+        "stderr": "line 3: measurement availability contradicts its status"
+      },
+      {
+        "name": "indefinite_current_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "89aa5199eba47812d1f99c3796449f33c2c4e2228cb3f55c2bed4b7da45dd124",
+        "stdout_bytes": 956,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "fractional_raw_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "89aa5199eba47812d1f99c3796449f33c2c4e2228cb3f55c2bed4b7da45dd124",
+        "stdout_bytes": 956,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_raw_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "89aa5199eba47812d1f99c3796449f33c2c4e2228cb3f55c2bed4b7da45dd124",
+        "stdout_bytes": 956,
+        "stderr": "line 3: invalid JSON: Duplicate key \"track_id\" at line 1, column 113"
+      },
+      {
+        "name": "invalid_utf8",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "89aa5199eba47812d1f99c3796449f33c2c4e2228cb3f55c2bed4b7da45dd124",
+        "stdout_bytes": 956,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "blank_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "89aa5199eba47812d1f99c3796449f33c2c4e2228cb3f55c2bed4b7da45dd124",
+        "stdout_bytes": 956,
+        "stderr": "line 3: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "empty_header",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "missing evidence transit source"
+      },
+      {
+        "name": "late_error_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      {
+        "name": "resume_override",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: evidence transit resume source: unknown field sections"
+      },
+      {
+        "name": "mean_valid_but_positive_k_confirmation_impossible",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending entry endpoints lack opposite confirmed evidence"
+      },
+      {
+        "name": "retained_entry_confirmation_anchor_covariance_differs",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending entry differs from its retained confirmation anchor"
+      },
+      {
+        "name": "entry_anchor_disappears_before_its_gap_age",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending entry confirmation anchor disappeared before expiry"
+      },
+      {
+        "name": "pending_exact_deadline",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid expired or duplicate pending evidence transit"
+      },
+      {
+        "name": "entry_bracket_at_gap",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid expired or duplicate pending evidence transit"
+      },
+      {
+        "name": "pending_exceeds_uncompleted_entries",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending evidence transits exceed recorded entry crossings"
+      },
+      {
+        "name": "gate_count_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "3c58c46c8c1f19643773239cc625aa0d3353397b75a82fb08dfd5f5d9b976252",
+        "stdout_bytes": 1030,
+        "stderr": "line 3: gate crossing counter exhausted"
+      },
+      {
+        "name": "gate_count_overflow_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: gate crossing counter exhausted"
+      },
+      {
+        "name": "late_evidence_numeric_failure",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "ffc38ac97a88a7776e6947bbf91c3280d1294e11e9ae48517a73f434c3c320ea",
+        "stdout_bytes": 958,
+        "stderr": "line 3: normal covariance cancellation or scale exceeds supported precision"
+      },
+      {
+        "name": "late_numeric_failure_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: normal covariance cancellation or scale exceeds supported precision"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "same_proposed_timestamp_correction_from_saved_state": "passed",
+    "large_completed_count_after_increment": "9007199254740993"
+  },
+  "started_evidence_source": {
+    "historical_entry_ignored": true,
+    "future_frames": 2,
+    "sigma_multiplier_preserved": 2
+  },
+  "guarded_and_projection_barriers": {
+    "old_guarded_measurements_consumed_without_adapter": true,
+    "records": [
+      {
+        "name": "healthy_drift_missing_gap_recovery",
+        "blocked_frames": 10,
+        "projection_barriers": 0,
+        "frames": 18,
+        "passages": 4,
+        "crossings": 11,
+        "evidence": 24,
+        "resume_cut_points": 19,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].distance_m": 0.0,
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].to_position_m[]": 0.0,
+          "$.counting.counting.crossings[].position_m[]": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.counting.counting.crossings[].from_position_m[]": 0.0,
+          "$.passages[].entry.to_position_m[]": 0.0,
+          "$.passages[].entry.position_m[]": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.to_position_m[]": 0.0,
+          "$.passages[].exit.position_m[]": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 0.0,
+          "$.passages[].entry.from_position_m[]": 0.0,
+          "$.passages[].exit.from_position_m[]": 0.0,
+          "$.cancellations[].entry.from_position_m[]": 0.0,
+          "$.cancellations[].entry.to_position_m[]": 0.0,
+          "$.cancellations[].entry.position_m[]": 0.0,
+          "$.cancellations[].entry.crossing_fraction": 0.0
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 5.551115123125783e-17,
+          "upper_m": 5.551115123125783e-17,
+          "$.counting.crossings[].to_position_m[]": 0.0,
+          "$.counting.crossings[].position_m[]": 4.440892098500626e-16,
+          "$.counting.crossings[].crossing_fraction": 1.1102230246251565e-16,
+          "$.counting.crossings[].from_position_m[]": 0.0
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 0,
+          "lower_m": 1.3975683352306417e-16,
+          "upper_m": 1.3975683352306417e-16
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 1.4388490399142029e-12,
+          "maximum_relative_error": 2.873666594378905e-17,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 1.4388490399142029e-12
+        },
+        "checkpoint_sha256": "6eee19edc826f0b0267e8cc08528ddf007954e3d144869ee91107c1b8568c081"
+      },
+      {
+        "name": "camera_add_change_remove_equal",
+        "blocked_frames": 14,
+        "projection_barriers": 4,
+        "frames": 29,
+        "passages": 10,
+        "crossings": 20,
+        "evidence": 44,
+        "resume_cut_points": 30,
+        "maximum_absolute_pairing_errors": {
+          "$.counting.evidence[].distance_m": 0.0,
+          "$.counting.evidence[].normal_std_m": 0.0,
+          "$.counting.evidence[].lower_m": 0.0,
+          "$.counting.evidence[].upper_m": 0.0,
+          "$.counting.counting.crossings[].from_position_m[]": 0.0,
+          "$.counting.counting.crossings[].to_position_m[]": 0.0,
+          "$.counting.counting.crossings[].position_m[]": 0.0,
+          "$.counting.counting.crossings[].crossing_fraction": 0.0,
+          "$.passages[].entry.from_position_m[]": 0.0,
+          "$.passages[].entry.to_position_m[]": 0.0,
+          "$.passages[].entry.position_m[]": 0.0,
+          "$.passages[].entry.crossing_fraction": 0.0,
+          "$.passages[].exit.from_position_m[]": 0.0,
+          "$.passages[].exit.to_position_m[]": 0.0,
+          "$.passages[].exit.position_m[]": 0.0,
+          "$.passages[].exit.crossing_fraction": 0.0,
+          "$.passages[].estimated_elapsed_us": 7.275957614183426e-12
+        },
+        "maximum_absolute_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 6.938893903907228e-18,
+          "lower_m": 5.551115123125783e-17,
+          "upper_m": 5.551115123125783e-17,
+          "$.counting.crossings[].from_position_m[]": 0.0,
+          "$.counting.crossings[].to_position_m[]": 0.0,
+          "$.counting.crossings[].position_m[]": 2.220446049250313e-16,
+          "$.counting.crossings[].crossing_fraction": 1.1102230246251565e-16
+        },
+        "maximum_relative_or_scaled_normal_errors": {
+          "distance_m": 0,
+          "normal_std_m": 1.1584874622326903e-16,
+          "lower_m": 1.3975683352306417e-16,
+          "upper_m": 1.3975683352306417e-16
+        },
+        "elapsed_errors_against_exact_fraction_interpolation": {
+          "maximum_absolute_error_us": 8.44302405766939e-12,
+          "maximum_relative_error": 1.68260401504525e-16,
+          "maximum_absolute_error_us_when_upper_bound_at_most_1000000": 8.44302405766939e-12
+        },
+        "checkpoint_sha256": "404e8c2e9d1d8d7adf07ccc7720a8e77cfa5a6cbf25c746e24c1e918c464b9d7"
+      }
+    ]
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "exact_physical_line_bytes": 729,
+    "exact_resume_utf16_units": 8388619,
+    "source_one_unit_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+    }
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/evidence-transit.test.mjs",
+    "summary": {
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 15,
+      "continuations": 60,
+      "directions": [
+        "native-native",
+        "native-javascript",
+        "javascript-native",
+        "javascript-javascript"
+      ]
+    },
+    "measured_load": {
+      "pending_load": 12800,
+      "completed_passages": 12800,
+      "native_complete_frame_utf16_units": 8688715,
+      "constructor_capacity_tested": 65536,
+      "pending_checkpoint_utf16_units": 4339375
+    },
+    "test_script_sha256": "4f7abddb8cd7fec1d37457952fd5840a0badde81f3cc361cec344bc89b923971",
+    "bridge_sha256": "78a86e6f91d62d82f4f5abf8fba464c7a7d872fe46a27e909b53f953d04fcadb",
+    "stdout_sha256": "69ef681c25dde08e9085b71f8fdc4be8e37489005708545c1fdf5f3e35b77c0e",
+    "stderr": ""
+  },
+  "elapsed_seconds": 29.760138899999998,
+  "status": "passed"
+}
