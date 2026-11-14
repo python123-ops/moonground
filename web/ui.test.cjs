@@ -9618,6 +9618,539 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.locator("#disk-zone-results").screenshot({
       path: path.join(directory, "disk-zone-evidence-desktop-preview.png"),
     });
+    // Fixed ground-axis offsets have independent options and reports. Rebuild
+    // every baseline explicitly after the previous source/cancellation cases.
+    await runVelocityBase(velocitySource, 7);
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await page.locator("#disk-zone-input").fill(diskConfiguration);
+    await runVelocity(7);
+    const footprintVelocityBaseline = await exportVelocity();
+    await runZones(7);
+    const footprintPointBaseline = await exportZones();
+    await runDiskZones(7);
+    const footprintDiskBaseline = await exportDiskZones();
+    const footprintVertices = [
+      [-0.25, -0.25],
+      [1, -0.25],
+      [1, 0.25],
+      [-0.25, 0.25],
+    ];
+    const footprintConfiguration = JSON.stringify({
+      vertices_offset_m: footprintVertices,
+    });
+    const physicalMode = (mode) =>
+      page.locator("#physical-zone-mode").selectOption(mode);
+    const runFootprintZones = async (count) => {
+      await physicalMode("convex");
+      await page.locator("#footprint-zone-compute").click();
+      await page.waitForFunction((expected) => {
+        const message = document.querySelector("#footprint-zone-message");
+        return (
+          message.classList.contains("error") ||
+          message.textContent.includes("已计算 " + expected + " 帧")
+        );
+      }, count);
+      const text = await page.locator("#footprint-zone-message").textContent();
+      assert.equal(
+        await page.locator("#footprint-zone-message.error").count(),
+        0,
+        text,
+      );
+    };
+    const exportFootprintZones = () =>
+      exportJson(
+        "#download-footprint-zones",
+        "moonground-footprint-zone-evidence.json",
+      );
+    await physicalMode("convex");
+    assert.equal(await page.locator("#disk-zone-results").isHidden(), true);
+    assert.equal(
+      await page.locator("#footprint-zone-results").isVisible(),
+      true,
+    );
+    await page.locator("#footprint-zone-input").fill(footprintConfiguration);
+    await runFootprintZones(7);
+    const footprintEvidence = await exportFootprintZones();
+    assert.deepEqual(Object.keys(footprintEvidence), ["frames"]);
+    footprintEvidence.frames.forEach((frame, index) => {
+      const point = footprintPointBaseline.frames[index];
+      assert.equal(frame.kind, "footprint_zone_evidence_frame");
+      assert.equal(
+        frame.evidence_scope,
+        "model_position_halfplane_bands_plus_explicit_convex_footprint",
+      );
+      assert.equal(frame.session_id, point.session_id);
+      assert.equal(frame.timestamp_us, point.timestamp_us);
+      assert.deepEqual(frame.unavailable, point.unavailable);
+      frame.evidence.forEach((row, rowIndex) => {
+        const original = point.evidence[rowIndex];
+        assert.deepEqual(row.vertices_offset_m, footprintVertices);
+        assert.equal("radius_m" in row, false);
+        assert.equal(row.track_id, original.track_id);
+        assert.equal(row.segment_id, original.segment_id);
+        row.faces.forEach((face, faceIndex) => {
+          const oldFace = original.faces[faceIndex];
+          assert.equal(face.distance_m, oldFace.distance_m);
+          assert.equal(face.normal_std_m, oldFace.normal_std_m);
+          assert.deepEqual(face.outward_normal, oldFace.outward_normal);
+          assert.equal(face.position_lower_m, oldFace.lower_m);
+          assert.equal(face.position_upper_m, oldFace.upper_m);
+          assert.ok(face.footprint_lower_m <= 0);
+          assert.ok(face.footprint_upper_m >= 0);
+          assert.ok(face.lower_m <= oldFace.lower_m);
+          assert.ok(face.upper_m >= oldFace.upper_m);
+        });
+      });
+    });
+    const footprintLast = footprintEvidence.frames[5].evidence;
+    assert.deepEqual(
+      footprintLast[0].faces.map((face) => [
+        face.footprint_lower_m,
+        face.footprint_upper_m,
+      ]),
+      [
+        [-0.25, 0.25],
+        [-0.25, 1],
+        [-0.25, 0.25],
+        [-1, 0.25],
+      ],
+    );
+    assert.equal(
+      footprintPointBaseline.frames[5].evidence[3].decision,
+      "inside",
+    );
+    assert.equal(footprintLast[3].decision, "indeterminate");
+    await selectVelocityFrame(5);
+    await page.locator("#footprint-zone-face-selection").selectOption("3");
+    assert.equal(await page.locator("#footprint-zone-faces tr").count(), 4);
+    assert.equal(
+      await page
+        .locator("#footprint-zone-faces tr")
+        .first()
+        .locator("td")
+        .count(),
+      7,
+    );
+    assert.deepEqual(
+      JSON.parse(
+        await page
+          .locator("#footprint-zone-faces tr")
+          .first()
+          .getAttribute("title"),
+      ),
+      footprintLast[3].faces[0],
+    );
+    await selectVelocityFrame(4);
+    assert.equal(
+      await page.locator("#footprint-zone-face-selection").inputValue(),
+      "3",
+    );
+    await selectVelocityFrame(6);
+    assert.equal(await page.locator("#footprint-zone-faces tr").count(), 0);
+    await selectVelocityFrame(0);
+    assert.match(
+      await page.locator("#footprint-zone-unavailable").textContent(),
+      /初始化/,
+    );
+    await selectVelocityFrame(5);
+
+    // Display changes are neither a computation nor an invalidation.
+    await physicalMode("disk");
+    assert.deepEqual(await exportDiskZones(), footprintDiskBaseline);
+    assert.equal(await page.locator("#footprint-zone-faces tr").count(), 0);
+    assert.deepEqual(await exportZones(), footprintPointBaseline);
+    assert.deepEqual(await exportVelocity(), footprintVelocityBaseline);
+    await physicalMode("convex");
+    assert.deepEqual(await exportFootprintZones(), footprintEvidence);
+    // Changing one options document preserves the other physical model.
+    await page
+      .locator("#footprint-zone-input")
+      .fill(footprintConfiguration + " ");
+    assert.equal(
+      await page.locator("#download-footprint-zones").isDisabled(),
+      true,
+    );
+    await physicalMode("disk");
+    assert.deepEqual(await exportDiskZones(), footprintDiskBaseline);
+    await physicalMode("convex");
+    await page.locator("#footprint-zone-input").fill(footprintConfiguration);
+    await runFootprintZones(7);
+    await physicalMode("disk");
+    await page.locator("#disk-zone-input").fill(diskConfiguration + " ");
+    assert.equal(await page.locator("#download-disk-zones").isDisabled(), true);
+    await physicalMode("convex");
+    assert.deepEqual(await exportFootprintZones(), footprintEvidence);
+    await physicalMode("disk");
+    await page.locator("#disk-zone-input").fill(diskConfiguration);
+    await runDiskZones(7);
+
+    // A square has exactly the same axis-aligned face supports as a disk of
+    // this radius, while an asymmetric shape retains its separate two sides.
+    await physicalMode("convex");
+    await page.locator("#footprint-zone-input").fill(
+      JSON.stringify({
+        vertices_offset_m: [
+          [-0.25, -0.25],
+          [0.25, -0.25],
+          [0.25, 0.25],
+          [-0.25, 0.25],
+        ],
+      }),
+    );
+    await runFootprintZones(7);
+    (await exportFootprintZones()).frames.forEach((frame, index) => {
+      frame.evidence.forEach((row, rowIndex) => {
+        const disk = footprintDiskBaseline.frames[index].evidence[rowIndex];
+        assert.equal(row.decision, disk.decision);
+        assert.equal(row.separating_edge_index, disk.separating_edge_index);
+        row.faces.forEach((face, faceIndex) => {
+          const { footprint_lower_m, footprint_upper_m, ...sameFace } = face;
+          assert.deepEqual(sameFace, disk.faces[faceIndex]);
+          assert.equal(footprint_lower_m, -0.25);
+          assert.equal(footprint_upper_m, 0.25);
+        });
+      });
+    });
+    await page.locator("#footprint-zone-input").fill(
+      JSON.stringify({
+        vertices_offset_m: [...footprintVertices].reverse(),
+      }),
+    );
+    await runFootprintZones(7);
+    const footprintClockwise = await exportFootprintZones();
+    footprintClockwise.frames.forEach((frame, index) =>
+      frame.evidence.forEach((row, rowIndex) => {
+        const { vertices_offset_m, ...sameRow } = row;
+        const { vertices_offset_m: originalVertices, ...originalRow } =
+          footprintEvidence.frames[index].evidence[rowIndex];
+        assert.deepEqual(vertices_offset_m, [...originalVertices].reverse());
+        assert.deepEqual(sameRow, originalRow);
+      }),
+    );
+    const footprintBadGeometries = [
+      [
+        [0, 0],
+        [1, 0],
+      ],
+      [
+        [0, 0],
+        [0, 0],
+        [1, 1],
+      ],
+      [
+        [-1, 0],
+        [0, 0],
+        [1, 0],
+      ],
+      [
+        [1, 1],
+        [2, 1],
+        [1, 2],
+      ],
+      [
+        [-1, -1],
+        [1, -1],
+        [0, 0],
+        [1, 1],
+        [-1, 1],
+      ],
+    ];
+    const footprintBadInputs = [
+      ...footprintBadGeometries.map((vertices_offset_m) =>
+        JSON.stringify({ vertices_offset_m }),
+      ),
+      "{}",
+      '{"radius_m":0.25}',
+      '{"resume":{}}',
+      footprintConfiguration.replace(
+        '"vertices_offset_m":',
+        '"unknown":true,"vertices_offset_m":',
+      ),
+      '{"vertices_offset_m":[[-1,-1],[1,-1],[1,1],[-1,1]],"vertices_offset_m":[]}',
+      '{"vertices_offset_m":[[-1,-1],[1e309,-1],[1,1],[-1,1]]}',
+      footprintConfiguration + " ".repeat(1048577),
+    ];
+    for (const raw of footprintBadInputs) {
+      await page.locator("#footprint-zone-input").fill(raw);
+      await page.locator("#footprint-zone-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-zone-message")
+          .classList.contains("error"),
+      );
+      assert.equal(
+        await page.locator("#footprint-zone-input").inputValue(),
+        raw,
+      );
+      assert.equal(
+        await page.locator("#download-footprint-zones").isDisabled(),
+        true,
+      );
+      assert.deepEqual(await exportZones(), footprintPointBaseline);
+      assert.deepEqual(await exportVelocity(), footprintVelocityBaseline);
+    }
+    await page.locator("#footprint-zone-input").fill(footprintConfiguration);
+    await runFootprintZones(7);
+    await page
+      .locator("#zone-input")
+      .fill(
+        zoneConfiguration.replace(
+          '"zones":',
+          '"max_tracks":1000.0000000000000001,"zones":',
+        ),
+      );
+    assert.equal(await page.locator("#download-zones").isDisabled(), true);
+    assert.equal(await page.locator("#download-disk-zones").isDisabled(), true);
+    assert.equal(
+      await page.locator("#download-footprint-zones").isDisabled(),
+      true,
+    );
+    await page.locator("#footprint-zone-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#footprint-zone-message")
+        .classList.contains("error"),
+    );
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await runZones(7);
+    await runFootprintZones(7);
+    await physicalMode("disk");
+    await runDiskZones(7);
+    await physicalMode("convex");
+    // A preparation error with unchanged dependencies retains the old report.
+    await page.evaluate(() => {
+      window.footprintOriginalTextEncoder = window.TextEncoder;
+      window.TextEncoder = class {
+        encode() {
+          throw new Error("footprint UI preparation failed");
+        }
+      };
+    });
+    await page.locator("#footprint-zone-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#footprint-zone-message")
+        .classList.contains("error"),
+    );
+    await page.evaluate(() => {
+      window.TextEncoder = window.footprintOriginalTextEncoder;
+      delete window.footprintOriginalTextEncoder;
+    });
+    assert.deepEqual(await exportFootprintZones(), footprintEvidence);
+    await runVelocityBase(velocitySource, 7);
+    assert.deepEqual(await exportFootprintZones(), footprintEvidence);
+    for (const selector of [
+      "#velocity-input",
+      "#gate-input",
+      "#guarded-input",
+    ]) {
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      assert.deepEqual(await exportFootprintZones(), footprintEvidence);
+      await page.locator(selector).fill(previous);
+    }
+    await runVelocity(7);
+
+    // An anchor on a footprint vertex is legal. Zero physical support on a
+    // side must copy the original endpoint, even with nonzero covariance.
+    const footprintCornerInput =
+      [
+        { ...velocityHeader, session_id: "footprint-corner" },
+        ...[0, 200000].map((time) => ({
+          timestamp_us: String(time),
+          observations: [
+            { track_id: 1, point: [0, 0], covariance: [0.0001, 0, 0.0001] },
+          ],
+        })),
+      ]
+        .map((line) => JSON.stringify(line))
+        .join("\n") + "\n";
+    await runVelocityBase(footprintCornerInput, 2);
+    await page.locator("#zone-input").fill(
+      JSON.stringify({
+        session_id: "footprint-corner",
+        zones: [{ ...zoneUnitSquare.zones[0], sigma_multiplier: 0 }],
+      }),
+    );
+    await page.locator("#footprint-zone-input").fill(
+      JSON.stringify({
+        vertices_offset_m: [
+          [0, 0],
+          [1, 0],
+          [1, 0.25],
+          [0, 0.25],
+        ],
+      }),
+    );
+    await runFootprintZones(2);
+    const footprintCorner = (await exportFootprintZones()).frames[1]
+      .evidence[0];
+    assert.equal(footprintCorner.decision, "inside");
+    assert.equal(footprintCorner.separating_edge_index, null);
+    assert.equal(footprintCorner.faces[0].footprint_upper_m, 0);
+    assert.equal(
+      footprintCorner.faces[0].upper_m,
+      footprintCorner.faces[0].position_upper_m,
+    );
+    assert.ok(footprintCorner.faces[0].normal_std_m > 0);
+    assert.equal(footprintCorner.faces[1].upper_m, 0);
+    for (const [input, count, reason] of [
+      [velocityUncertainInput, 7, "uncertain"],
+      [velocityRejectedInput, 7, "rejected_innovation"],
+      [velocityPixelInput, 11, "rejected_projection"],
+    ]) {
+      await runVelocityBase(input, count);
+      await page.locator("#zone-input").fill(zoneConfiguration);
+      await page.locator("#footprint-zone-input").fill(footprintConfiguration);
+      await runFootprintZones(count);
+      const frame = (await exportFootprintZones()).frames[
+        count === 11 ? 10 : 5
+      ];
+      assert.deepEqual(frame.evidence, []);
+      assert.ok(frame.unavailable.length > 0);
+      assert.ok(frame.unavailable.every((row) => row.reason === reason));
+    }
+    await runVelocityBase(velocitySource, 7);
+    await runVelocity(7);
+    await runZones(7);
+    await runFootprintZones(7);
+    await physicalMode("disk");
+    await runDiskZones(7);
+    await physicalMode("convex");
+    // Switching display while preparing is allowed. Neither physical model
+    // cancels the other's run or lets an old finally clear a newer own task.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await physicalMode("disk");
+    await runDiskZones(7);
+    await releaseEvidenceTransitPreparation();
+    await physicalMode("convex");
+    assert.deepEqual(await exportFootprintZones(), footprintEvidence);
+    await physicalMode("disk");
+    await holdEvidenceTransitPreparation();
+    await page.locator("#disk-zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runFootprintZones(7);
+    await releaseEvidenceTransitPreparation();
+    await physicalMode("disk");
+    assert.deepEqual(await exportDiskZones(), footprintDiskBaseline);
+    await physicalMode("convex");
+    for (const selector of [
+      "#footprint-zone-input",
+      "#zone-input",
+      "#source",
+    ]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-zone-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page.locator("#download-footprint-zones").isDisabled(),
+        true,
+      );
+      if (selector === "#footprint-zone-input")
+        assert.deepEqual(await exportZones(), footprintPointBaseline);
+      else {
+        assert.equal(await page.locator("#download-zones").isDisabled(), true);
+        assert.equal(
+          await page.locator("#download-disk-zones").isDisabled(),
+          true,
+        );
+      }
+      await page.locator(selector).fill(previous);
+      if (selector === "#source") await runVelocityBase(previous, 7);
+      await runZones(7);
+      await runFootprintZones(7);
+      await physicalMode("disk");
+      await runDiskZones(7);
+      await physicalMode("convex");
+    }
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#footprint-zone-example").click();
+    await runFootprintZones(7);
+    const footprintSampleResult = await exportFootprintZones();
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportFootprintZones(), footprintSampleResult);
+    assert.equal(
+      await page.locator("#footprint-zone-input").inputValue(),
+      footprintConfiguration,
+    );
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runVelocityBase(velocitySource, 7);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportFootprintZones(), footprintSampleResult);
+    await page.locator("#zone-example").click();
+    assert.equal(await page.locator("#download-zones").isDisabled(), true);
+    assert.equal(await page.locator("#download-disk-zones").isDisabled(), true);
+    assert.equal(
+      await page.locator("#download-footprint-zones").isDisabled(),
+      true,
+    );
+    await page.locator("#zone-input").fill(
+      JSON.stringify({
+        session_id: "velocity-ui",
+        zones: [{ zone_id: "z".repeat(128), vertices_m: zoneWide }],
+      }),
+    );
+    await runFootprintZones(7);
+    await selectVelocityFrame(5);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await runZones(7);
+    await runFootprintZones(7);
+    await page.locator("#footprint-zone-face-selection").selectOption("3");
+    await page.locator("#zone-section").evaluate((details) => {
+      details.open = false;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#footprint-zone-faces tr").length === 0,
+    );
+    assert.equal(
+      await page.locator("#download-footprint-zones").isDisabled(),
+      false,
+    );
+    await page.locator("#zone-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#footprint-zone-faces tr").length === 4,
+    );
+    await page.locator("#physical-zone-results").screenshot({
+      path: path.join(directory, "footprint-zone-evidence-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#physical-zone-results").screenshot({
+      path: path.join(directory, "footprint-zone-evidence-desktop-preview.png"),
+    });
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

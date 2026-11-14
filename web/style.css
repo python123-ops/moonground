@@ -170,7 +170,8 @@ button:disabled {
 #transit-windows-guarded-message.error,
 #velocity-message.error,
 #zone-message.error,
-#disk-zone-message.error {
+#disk-zone-message.error,
+#footprint-zone-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -415,13 +416,16 @@ summary {
   margin-top: 8px;
 }
 
+#footprint-zone-input,
 #disk-zone-input {
   height: 70px;
   margin-top: 8px;
 }
 
 #zone-face-selection,
-#disk-zone-face-selection {
+#disk-zone-face-selection,
+#footprint-zone-face-selection,
+#physical-zone-mode {
   max-width: 100%;
   min-width: 0;
 }
