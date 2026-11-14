@@ -1019,11 +1019,12 @@
                 aria-label="物理足迹显示模式"
               >
                 <option value="disk">圆盘足迹</option>
-                <option value="convex">凸足迹</option>
+                <option value="convex">统一凸足迹</option>
+                <option value="assigned">逐目标混合足迹</option>
               </select></label
             >
             <p class="hint">
-              切换只改变显示；两种足迹分别配置、计算和下载，已完成结果各自保留。
+              切换只改变显示；圆盘、统一凸足迹和逐目标分配分别计算，已完成结果各自保留。
             </p>
             <div id="disk-zone-results">
               <h3>显式圆盘足迹</h3>
@@ -1115,51 +1116,95 @@
               </div>
             </div>
             <div id="footprint-zone-results" hidden>
-              <h3>显式凸足迹</h3>
-              <p class="hint">
-                顶点是相对当前米制模型锚点的固定偏移，已按 ground
-                坐标轴定向，同批所有目标共用。
-                原点须在闭足迹内，可在边或顶点上；不按质心重定中心，不从速度推断朝向。
-              </p>
-              <label for="footprint-zone-input" class="hint"
-                >凸足迹选项 JSON · 锚点相对米制顶点</label
-              >
-              <textarea id="footprint-zone-input" spellcheck="false">
+              <div id="footprint-zone-controls">
+                <h3>显式凸足迹</h3>
+                <p class="hint">
+                  顶点是相对当前米制模型锚点的固定偏移，已按 ground
+                  坐标轴定向，同批所有目标共用。
+                  原点须在闭足迹内，可在边或顶点上；不按质心重定中心，不从速度推断朝向。
+                </p>
+                <label for="footprint-zone-input" class="hint"
+                  >凸足迹选项 JSON · 锚点相对米制顶点</label
+                >
+                <textarea id="footprint-zone-input" spellcheck="false">
 {"vertices_offset_m":[[-0.25,-0.25],[1,-0.25],[1,0.25],[-0.25,0.25]]}</textarea
-              >
-              <div class="actions">
-                <button id="footprint-zone-compute" disabled>
-                  计算凸足迹区域证据
-                </button>
-                <button id="footprint-zone-example" class="quiet" disabled>
-                  载入非对称凸足迹示例
-                </button>
-                <button id="download-footprint-zones" class="quiet" disabled>
-                  下载整批凸足迹证据
-                </button>
+                >
+                <div class="actions">
+                  <button id="footprint-zone-compute" disabled>
+                    计算凸足迹区域证据
+                  </button>
+                  <button id="footprint-zone-example" class="quiet" disabled>
+                    载入非对称凸足迹示例
+                  </button>
+                  <button id="download-footprint-zones" class="quiet" disabled>
+                    下载整批凸足迹证据
+                  </button>
+                </div>
+                <p
+                  id="footprint-zone-message"
+                  class="hint"
+                  role="status"
+                  aria-live="polite"
+                >
+                  两份配置原文交核心验证；显式固定形状与位置协方差分别处理。
+                </p>
+                <p id="footprint-zone-frame" class="hint"></p>
+                <p class="hint">
+                  三态判定使用位置支持范围加上固定凸足迹。各边的物理支持下界与上界分别保留，
+                  不能用一个对称半径代替；角点附近未确认不表示相交，区间不是概率置信区间。
+                </p>
               </div>
-              <p
-                id="footprint-zone-message"
-                class="hint"
-                role="status"
-                aria-live="polite"
-              >
-                两份配置原文交核心验证；显式固定形状与位置协方差分别处理。
-              </p>
-              <p id="footprint-zone-frame" class="hint"></p>
-              <p class="hint">
-                三态判定使用位置支持范围加上固定凸足迹。各边的物理支持下界与上界分别保留，
-                不能用一个对称半径代替；角点附近未确认不表示相交，区间不是概率置信区间。
-              </p>
+              <div id="assigned-zone-controls" hidden>
+                <h3>逐目标混合足迹</h3>
+                <p class="hint">
+                  每行是一帧分配文档，与普通测量逐行对应；核心核对精确时间、目标
+                  ID 和片段 ID。
+                  同帧可分别声明圆盘或凸形，不沿用上一帧分配，未分配的 Ready
+                  目标显示“足迹未分配”。
+                </p>
+                <label for="assigned-zone-input" class="hint"
+                  >逐帧分配 NDJSON · timestamp_us 与普通测量完全一致</label
+                >
+                <textarea
+                  id="assigned-zone-input"
+                  spellcheck="false"
+                  placeholder='{"timestamp_us":"0","footprints":[]}'
+                ></textarea>
+                <div class="actions">
+                  <button id="assigned-zone-compute" disabled>
+                    计算逐目标足迹证据
+                  </button>
+                  <button id="assigned-zone-example" class="quiet" disabled>
+                    生成待审混合分配示例
+                  </button>
+                  <button id="download-assigned-zones" class="quiet" disabled>
+                    下载整批逐目标足迹证据
+                  </button>
+                </div>
+                <p
+                  id="assigned-zone-message"
+                  class="hint"
+                  role="status"
+                  aria-live="polite"
+                >
+                  分配原文交核心验证；示例只使用固定形状与核心接受的时间和身份，不推断尺寸。
+                </p>
+                <p id="assigned-zone-frame" class="hint"></p>
+                <p class="hint">
+                  分配只绑定本帧，不按目标 ID
+                  自动续用。原位置不可判定原因优先保留；
+                  重复、额外目标、错误片段或时间不匹配会使整批报错。区间不是概率置信区间。
+                </p>
+              </div>
               <div class="table-wrap">
                 <table>
                   <thead>
                     <tr>
                       <th>目标 / 片段</th>
                       <th>区域 ID</th>
-                      <th>足迹顶点数</th>
+                      <th id="footprint-zone-shape-heading">足迹顶点数</th>
                       <th>k</th>
-                      <th>凸足迹区域证据</th>
+                      <th>足迹区域证据</th>
                       <th>首条分离边 · 从 0 编号</th>
                     </tr>
                   </thead>
@@ -1167,10 +1212,10 @@
                 </table>
               </div>
               <label class="hint result-mode"
-                >查看凸足迹证据各边<select
+                >查看足迹证据各边<select
                   id="footprint-zone-face-selection"
                   disabled
-                  aria-label="选择凸足迹目标与区域各边证据"
+                  aria-label="选择目标与区域足迹各边证据"
                 ></select
               ></label>
               <p id="footprint-zone-face-summary" class="hint"></p>
@@ -1190,7 +1235,7 @@
                   <tbody id="footprint-zone-faces"></tbody>
                 </table>
               </div>
-              <p class="hint">凸足迹证据本帧不可判定目标</p>
+              <p class="hint">本帧足迹不可判定目标</p>
               <div class="table-wrap">
                 <table class="gate-table">
                   <thead>

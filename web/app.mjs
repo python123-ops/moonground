@@ -25,6 +25,7 @@ import {
   moonground_zone_evidence,
   moonground_disk_zone_evidence,
   moonground_footprint_zone_evidence,
+  moonground_assigned_zone_evidence,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -41,6 +42,7 @@ const velocityInput = $("velocity-input");
 const zoneInput = $("zone-input");
 const diskZoneInput = $("disk-zone-input");
 const footprintZoneInput = $("footprint-zone-input");
+const assignedZoneInput = $("assigned-zone-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -199,6 +201,17 @@ let footprintZoneMeasurements = "";
 let footprintZoneReference = null;
 let footprintZonePending = null;
 let footprintZoneSelectedKey = null;
+let assignedZoneRevision = 0;
+let assignedZoneRunToken = 0;
+let assignedZoneReport = null;
+let assignedZoneResponse = null;
+let assignedZoneConfiguration = "";
+let assignedZoneOptions = "";
+let assignedZoneSource = "";
+let assignedZoneMeasurements = "";
+let assignedZoneReference = null;
+let assignedZonePending = null;
+let assignedZoneSelectedKey = null;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -220,6 +233,7 @@ function stop() {
 }
 
 function invalidate() {
+  cancelAssignedZonePreparation();
   cancelFootprintZonePreparation();
   cancelDiskZonePreparation();
   cancelZonePreparation();
@@ -979,6 +993,7 @@ function renderZoneFaces(frame) {
 function renderZones() {
   renderDiskZones();
   renderFootprintZones();
+  renderAssignedZones();
   if (
     zoneReport !== null &&
     (zoneConfiguration !== zoneInput.value || zoneSource !== source.value)
@@ -1442,10 +1457,10 @@ function footprintZoneIsCurrent() {
 function footprintZoneEvidenceKey(row) {
   return JSON.stringify([row.track_id, row.segment_id, row.zone_id]);
 }
-function renderFootprintZoneFaces(frame) {
+function renderFootprintZoneFaces(frame, selectedKey) {
   const selection = $("footprint-zone-face-selection");
   const selected = frame.evidence.findIndex(
-    (row) => footprintZoneEvidenceKey(row) === footprintZoneSelectedKey,
+    (row) => footprintZoneEvidenceKey(row) === selectedKey,
   );
   const index = selected >= 0 ? selected : 0;
   const row = frame.evidence[index];
@@ -1460,13 +1475,13 @@ function renderFootprintZoneFaces(frame) {
   );
   selection.disabled = !row;
   if (!row) {
-    footprintZoneSelectedKey = null;
+    selectedKey = null;
     $("footprint-zone-face-summary").textContent = "本帧没有可展开的区域证据。";
     $("footprint-zone-faces").replaceChildren();
-    return;
+    return null;
   }
   selection.value = String(index);
-  footprintZoneSelectedKey = footprintZoneEvidenceKey(row);
+  selectedKey = footprintZoneEvidenceKey(row);
   $("footprint-zone-face-summary").textContent =
     "边按输入顶点顺序从 0 编号；仅展开当前目标与区域的 " +
     row.faces.length +
@@ -1498,6 +1513,7 @@ function renderFootprintZoneFaces(frame) {
       return detail;
     }),
   );
+  return selectedKey;
 }
 function renderFootprintZones() {
   if (
@@ -1525,6 +1541,8 @@ function renderFootprintZones() {
     !ordinaryVelocitySourceCurrent() || footprintZonePending !== null;
   $("footprint-zone-example").disabled = !ordinaryVelocitySourceCurrent();
   $("download-footprint-zones").disabled = !footprintZoneIsCurrent();
+  if ($("physical-zone-mode").value === "assigned") return;
+  $("footprint-zone-shape-heading").textContent = "足迹顶点数";
   for (const id of [
     "footprint-zone-evidence",
     "footprint-zone-unavailable",
@@ -1556,6 +1574,15 @@ function renderFootprintZones() {
     " 个。";
   if (!$("zone-section").open || $("physical-zone-mode").value !== "convex")
     return;
+  footprintZoneSelectedKey = renderPhysicalZoneFrame(
+    frame,
+    footprintZoneSelectedKey,
+  );
+}
+function renderPhysicalZoneFrame(frame, selectedKey, assigned = false) {
+  $("footprint-zone-shape-heading").textContent = assigned
+    ? "当前目标足迹"
+    : "足迹顶点数";
   const decisions = {
     inside: "确认在区域内",
     outside: "确认在区域外",
@@ -1565,7 +1592,11 @@ function renderFootprintZones() {
     const summary = reportRow([
       row.track_id + " / " + row.segment_id,
       row.zone_id,
-      row.vertices_offset_m.length,
+      assigned
+        ? row.shape_kind === "disk"
+          ? "圆盘 · r " + reportNumber(row.radius_m) + " m"
+          : "凸形 · " + row.vertices_offset_m.length + " 顶点"
+        : row.vertices_offset_m.length,
       reportNumber(row.sigma_multiplier),
       decisions[row.decision],
       row.separating_edge_index ?? "—",
@@ -1574,7 +1605,7 @@ function renderFootprintZones() {
     return summary;
   });
   if (!rows.length) {
-    const empty = reportRow(["本帧没有可判定的凸足迹区域证据。"]);
+    const empty = reportRow(["本帧没有可判定的足迹区域证据。"]);
     empty.firstChild.colSpan = 6;
     rows.push(empty);
   }
@@ -1583,11 +1614,13 @@ function renderFootprintZones() {
     ...frame.unavailable.map((row) =>
       reportRow([
         row.track_id + " / " + (row.segment_id ?? "—"),
-        states[row.reason] ?? row.reason,
+        row.reason === "missing_footprint"
+          ? "足迹未分配"
+          : (states[row.reason] ?? row.reason),
       ]),
     ),
   );
-  renderFootprintZoneFaces(frame);
+  return renderFootprintZoneFaces(frame, selectedKey);
 }
 function requestFootprintZones(position, footprint, measurements) {
   const configuration = JSON.stringify({ position, footprint });
@@ -1685,11 +1718,19 @@ $("footprint-zone-example").addEventListener("click", () => {
   renderFootprintZones();
 });
 $("footprint-zone-face-selection").addEventListener("change", (event) => {
-  if (!footprintZoneIsCurrent()) return;
-  const frame = footprintZoneReport.frames[Number(slider.value)];
+  const assigned = $("physical-zone-mode").value === "assigned";
+  if (assigned ? !assignedZoneIsCurrent() : !footprintZoneIsCurrent()) return;
+  const frame = (assigned ? assignedZoneReport : footprintZoneReport).frames[
+    Number(slider.value)
+  ];
   const row = frame?.evidence[Number(event.target.value)];
-  if (row) footprintZoneSelectedKey = footprintZoneEvidenceKey(row);
-  renderFootprintZones();
+  if (assigned) {
+    if (row) assignedZoneSelectedKey = footprintZoneEvidenceKey(row);
+    renderAssignedZones();
+  } else {
+    if (row) footprintZoneSelectedKey = footprintZoneEvidenceKey(row);
+    renderFootprintZones();
+  }
 });
 $("download-footprint-zones").addEventListener("click", () => {
   if (footprintZoneIsCurrent())
@@ -1699,7 +1740,255 @@ $("download-footprint-zones").addEventListener("click", () => {
     );
 });
 
+function assignedZoneMessage(text, error = false) {
+  $("assigned-zone-message").textContent = text;
+  $("assigned-zone-message").classList.toggle("error", error);
+}
+function cancelAssignedZonePreparation() {
+  assignedZoneRevision++;
+  if (assignedZonePending !== null)
+    assignedZoneMessage("上一次逐目标足迹区域证据准备已取消。");
+  assignedZonePending = null;
+}
+function clearAssignedZoneResult() {
+  cancelAssignedZonePreparation();
+  assignedZoneReport = null;
+  assignedZoneResponse = null;
+  assignedZoneConfiguration = "";
+  assignedZoneOptions = "";
+  assignedZoneSource = "";
+  assignedZoneMeasurements = "";
+  assignedZoneReference = null;
+  assignedZoneSelectedKey = null;
+}
+function assignedZoneIsCurrent() {
+  return (
+    assignedZoneReport !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    assignedZoneConfiguration === zoneInput.value &&
+    assignedZoneOptions === assignedZoneInput.value &&
+    assignedZoneSource === source.value &&
+    assignedZoneReference === measurementLines
+  );
+}
+function renderAssignedZones() {
+  if (
+    assignedZoneReport !== null &&
+    (assignedZoneConfiguration !== zoneInput.value ||
+      assignedZoneOptions !== assignedZoneInput.value ||
+      assignedZoneSource !== source.value)
+  ) {
+    clearAssignedZoneResult();
+    assignedZoneMessage("原始测量、区域或逐帧分配已修改，请重新计算。");
+  }
+  if (
+    assignedZoneReport !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    assignedZoneReference !== measurementLines
+  ) {
+    if (assignedZoneMeasurements === measurementLines.join("\n") + "\n")
+      assignedZoneReference = measurementLines;
+    else {
+      clearAssignedZoneResult();
+      assignedZoneMessage("普通测量载荷已变化，请重新分配并计算。");
+    }
+  }
+  $("assigned-zone-compute").disabled =
+    !ordinaryVelocitySourceCurrent() || assignedZonePending !== null;
+  $("assigned-zone-example").disabled = !ordinaryVelocitySourceCurrent();
+  $("download-assigned-zones").disabled = !assignedZoneIsCurrent();
+  if ($("physical-zone-mode").value !== "assigned") return;
+  for (const id of [
+    "footprint-zone-evidence",
+    "footprint-zone-unavailable",
+    "footprint-zone-faces",
+  ])
+    $(id).replaceChildren();
+  $("footprint-zone-face-selection").replaceChildren();
+  $("footprint-zone-face-selection").disabled = true;
+  $("footprint-zone-face-summary").textContent = "";
+  $("footprint-zone-shape-heading").textContent = "当前目标足迹";
+  if (!assignedZoneIsCurrent()) {
+    $("assigned-zone-frame").textContent =
+      "逐帧分配文档与上方普通测量一一对应；先生成或填写分配，再显式计算。";
+    return;
+  }
+  const index = Number(slider.value),
+    frame = assignedZoneReport.frames[index];
+  if (!frame) return;
+  $("assigned-zone-frame").textContent =
+    index +
+    1 +
+    " / " +
+    assignedZoneReport.frames.length +
+    " · " +
+    frame.timestamp_us +
+    " μs · 区域证据 " +
+    frame.evidence.length +
+    " 行；不可判定目标 " +
+    frame.unavailable.length +
+    " 个。";
+  if (!$("zone-section").open) return;
+  assignedZoneSelectedKey = renderPhysicalZoneFrame(
+    frame,
+    assignedZoneSelectedKey,
+    true,
+  );
+}
+function requestAssignedZones(configuration, options, measurements) {
+  // Keep every user document and original measurement raw. Only remove NDJSON
+  // line terminators; the core verifies clocks, identities and unknown fields.
+  const documents = options.split("\n");
+  if (documents.at(-1) === "") documents.pop();
+  if (documents.length !== measurements.length)
+    throw new Error(
+      "逐帧分配须与普通测量一一对应，共 " + measurements.length + " 行。",
+    );
+  const frames =
+    documents
+      .map((line, index) =>
+        JSON.stringify({
+          measurement: measurements[index],
+          assignments: line.endsWith("\r") ? line.slice(0, -1) : line,
+        }),
+      )
+      .join("\n") + "\n";
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(configuration).length + encoder.encode(frames).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器逐目标足迹输入上限为 8 MiB。");
+  const request = JSON.stringify({ source: configuration, frames });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("逐目标足迹请求超过 16 Mi 字符上限。");
+  const response = moonground_assigned_zone_evidence(request);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器逐目标足迹结果超过 8 MiB。");
+  return { response, report: unpack(response) };
+}
+$("assigned-zone-compute").addEventListener("click", async () => {
+  if (!ordinaryVelocitySourceCurrent()) return;
+  const current = ++assignedZoneRevision,
+    runToken = ++assignedZoneRunToken,
+    upstream = revision,
+    reference = measurementLines,
+    configuration = zoneInput.value,
+    options = assignedZoneInput.value,
+    input = loadedSource;
+  assignedZonePending = { reference, configuration, options, input };
+  assignedZoneMessage("正在计算当前米制模型的逐目标足迹区域位置证据…");
+  renderAssignedZones();
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (
+      current !== assignedZoneRevision ||
+      upstream !== revision ||
+      configuration !== zoneInput.value ||
+      options !== assignedZoneInput.value ||
+      input !== source.value ||
+      reference !== measurementLines ||
+      !ordinaryVelocitySourceCurrent()
+    )
+      return;
+    const measurements = reference.join("\n") + "\n";
+    const { response, report } = requestAssignedZones(
+      configuration,
+      options,
+      reference,
+    );
+    if (
+      current !== assignedZoneRevision ||
+      upstream !== revision ||
+      configuration !== zoneInput.value ||
+      options !== assignedZoneInput.value ||
+      input !== source.value ||
+      reference !== measurementLines
+    )
+      return;
+    assignedZoneReport = report;
+    assignedZoneResponse = response;
+    assignedZoneConfiguration = configuration;
+    assignedZoneOptions = options;
+    assignedZoneSource = input;
+    assignedZoneMeasurements = measurements;
+    assignedZoneReference = reference;
+    assignedZoneSelectedKey = null;
+    assignedZoneMessage(
+      "已计算 " +
+        report.frames.length +
+        " 帧逐目标足迹区域位置证据；结果跟随上方普通测量回放。",
+    );
+  } catch (error) {
+    if (current === assignedZoneRevision)
+      assignedZoneMessage(error.message, true);
+  } finally {
+    if (runToken === assignedZoneRunToken) {
+      assignedZonePending = null;
+      renderAssignedZones();
+    }
+  }
+});
+assignedZoneInput.addEventListener("input", () => {
+  clearAssignedZoneResult();
+  assignedZoneMessage(
+    "逐帧分配已修改，请显式重新计算；统一足迹和点位置证据各自保留。",
+  );
+  renderAssignedZones();
+});
+$("assigned-zone-example").addEventListener("click", () => {
+  if (!ordinaryVelocitySourceCurrent()) return;
+  try {
+    const encoder = new TextEncoder(),
+      lines = [];
+    let bytes = 0;
+    for (const frame of results) {
+      const line = JSON.stringify({
+        timestamp_us: frame.timestamp_us,
+        footprints: frame.tracks
+          .filter((track) => track.segment_id !== null)
+          .map((track, index) => ({
+            track_id: track.track_id,
+            segment_id: track.segment_id,
+            shape:
+              index % 2 === 0
+                ? { kind: "disk", radius_m: 0.25 }
+                : {
+                    kind: "convex",
+                    vertices_offset_m: [
+                      [-0.25, -0.25],
+                      [1, -0.25],
+                      [1, 0.25],
+                      [-0.25, 0.25],
+                    ],
+                  },
+          })),
+      });
+      bytes += encoder.encode(line).length + 1;
+      if (bytes > 8 * 1024 * 1024)
+        throw new Error("混合分配示例超过浏览器 8 MiB，请缩短普通测量流。");
+      lines.push(line);
+    }
+    clearAssignedZoneResult();
+    assignedZoneInput.value = lines.join("\n") + "\n";
+    assignedZoneMessage(
+      "已按核心接受的每帧时间、目标与片段生成待审草稿：固定 r=0.25 m 圆盘／固定凸形交替示例，不推断尺寸。",
+    );
+    renderAssignedZones();
+  } catch (error) {
+    assignedZoneMessage(error.message, true);
+  }
+});
+$("download-assigned-zones").addEventListener("click", () => {
+  if (assignedZoneIsCurrent())
+    saveFile(
+      assignedZoneResponse + "\n",
+      "moonground-assigned-zone-evidence.json",
+    );
+});
+
 zoneInput.addEventListener("input", () => {
+  clearAssignedZoneResult();
   clearFootprintZoneResult();
   clearDiskZoneResult();
   clearZoneResult();
@@ -1708,6 +1997,7 @@ zoneInput.addEventListener("input", () => {
 });
 $("zone-example").addEventListener("click", () => {
   if (!ordinaryVelocitySourceCurrent()) return;
+  clearAssignedZoneResult();
   clearFootprintZoneResult();
   clearDiskZoneResult();
   clearZoneResult();
@@ -1755,9 +2045,11 @@ $("download-zones").addEventListener("click", () => {
 });
 
 $("physical-zone-mode").addEventListener("change", () => {
-  const convex = $("physical-zone-mode").value === "convex";
-  $("disk-zone-results").hidden = convex;
-  $("footprint-zone-results").hidden = !convex;
+  const mode = $("physical-zone-mode").value;
+  $("disk-zone-results").hidden = mode !== "disk";
+  $("footprint-zone-results").hidden = mode === "disk";
+  $("footprint-zone-controls").hidden = mode !== "convex";
+  $("assigned-zone-controls").hidden = mode !== "assigned";
   renderZones();
 });
 
@@ -1830,6 +2122,7 @@ $("analyze").addEventListener("click", async () => {
   cancelZonePreparation();
   cancelDiskZonePreparation();
   cancelFootprintZonePreparation();
+  cancelAssignedZonePreparation();
   renderVelocity();
   renderZones();
   const current = ++revision,

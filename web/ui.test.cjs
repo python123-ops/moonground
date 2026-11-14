@@ -10151,6 +10151,576 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.locator("#physical-zone-results").screenshot({
       path: path.join(directory, "footprint-zone-evidence-desktop-preview.png"),
     });
+    // Mixed target shapes use an exact current-frame value bundle, not a
+    // persistent ID map. Set up all comparison products explicitly.
+    await runVelocityBase(velocitySource, 7);
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await physicalMode("disk");
+    await page.locator("#disk-zone-input").fill(diskConfiguration);
+    await physicalMode("convex");
+    await page.locator("#footprint-zone-input").fill(footprintConfiguration);
+    await runVelocity(7);
+    const assignedVelocityBaseline = await exportVelocity();
+    await runZones(7);
+    const assignedPointBaseline = await exportZones();
+    await physicalMode("disk");
+    await runDiskZones(7);
+    const assignedDiskBaseline = await exportDiskZones();
+    await runFootprintZones(7);
+    const assignedConvexBaseline = await exportFootprintZones();
+    const assignedBase = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    const assignmentDocs = (base) =>
+      base.frames.map((frame) => ({
+        timestamp_us: frame.timestamp_us,
+        footprints: frame.tracks.map((track, index) => ({
+          track_id: track.track_id,
+          segment_id: track.segment_id,
+          shape:
+            index % 2 === 0
+              ? { kind: "disk", radius_m: 0.25 }
+              : { kind: "convex", vertices_offset_m: footprintVertices },
+        })),
+      }));
+    const assignmentText = (documents) =>
+      documents
+        .map((doc) => (typeof doc === "string" ? doc : JSON.stringify(doc)))
+        .join("\n") + "\n";
+    const assignedDocuments = assignmentDocs(assignedBase);
+    const assignedConfiguration = assignmentText(assignedDocuments);
+    const runAssignedZones = async (count) => {
+      await physicalMode("assigned");
+      await page.locator("#assigned-zone-compute").click();
+      await page.waitForFunction((expected) => {
+        const message = document.querySelector("#assigned-zone-message");
+        return (
+          message.classList.contains("error") ||
+          message.textContent.includes("已计算 " + expected + " 帧")
+        );
+      }, count);
+      const text = await page.locator("#assigned-zone-message").textContent();
+      assert.equal(
+        await page.locator("#assigned-zone-message.error").count(),
+        0,
+        text,
+      );
+    };
+    const exportAssignedZones = () =>
+      exportJson(
+        "#download-assigned-zones",
+        "moonground-assigned-zone-evidence.json",
+      );
+    await physicalMode("assigned");
+    assert.equal(
+      await page.locator("#footprint-zone-controls").isHidden(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#assigned-zone-controls").isVisible(),
+      true,
+    );
+    await page.locator("#assigned-zone-example").click();
+    assert.equal(
+      await page.locator("#assigned-zone-input").inputValue(),
+      assignedConfiguration,
+    );
+    await runAssignedZones(7);
+    const assignedEvidence = await exportAssignedZones();
+    assert.deepEqual(Object.keys(assignedEvidence), ["frames"]);
+    assignedEvidence.frames.forEach((frame, index) => {
+      assert.equal(frame.kind, "assigned_zone_evidence_frame");
+      assert.equal(
+        frame.evidence_scope,
+        "model_position_halfplane_bands_plus_current_target_footprints",
+      );
+      assert.equal(frame.timestamp_us, assignedBase.frames[index].timestamp_us);
+      assert.deepEqual(
+        frame.unavailable,
+        assignedPointBaseline.frames[index].unavailable,
+      );
+      frame.evidence.forEach((row) => {
+        const { shape_kind, ...band } = row;
+        const baseline = (
+          shape_kind === "disk" ? assignedDiskBaseline : assignedConvexBaseline
+        ).frames[index].evidence.find(
+          (item) =>
+            item.track_id === row.track_id && item.zone_id === row.zone_id,
+        );
+        if (shape_kind === "disk") {
+          const faces = band.faces.map((face) => {
+            const { footprint_lower_m, footprint_upper_m, ...original } = face;
+            assert.equal(footprint_lower_m, -0.25);
+            assert.equal(footprint_upper_m, 0.25);
+            return original;
+          });
+          assert.deepEqual({ ...band, faces }, baseline);
+          assert.equal("vertices_offset_m" in band, false);
+        } else {
+          assert.equal(shape_kind, "convex");
+          assert.deepEqual(band, baseline);
+          assert.equal("radius_m" in band, false);
+        }
+      });
+    });
+    await selectVelocityFrame(5);
+    assert.match(
+      await page.locator("#footprint-zone-evidence").textContent(),
+      /圆盘/,
+    );
+    assert.match(
+      await page.locator("#footprint-zone-evidence").textContent(),
+      /凸形/,
+    );
+    await page.locator("#footprint-zone-face-selection").selectOption("3");
+    assert.deepEqual(
+      JSON.parse(
+        await page
+          .locator("#footprint-zone-faces tr")
+          .first()
+          .getAttribute("title"),
+      ),
+      assignedEvidence.frames[5].evidence[3].faces[0],
+    );
+    await selectVelocityFrame(4);
+    assert.equal(
+      await page.locator("#footprint-zone-face-selection").inputValue(),
+      "3",
+    );
+
+    // A current Ready object with no shape is unavailable once, not per zone.
+    const missingDocuments = JSON.parse(JSON.stringify(assignedDocuments));
+    missingDocuments[0].footprints = [];
+    missingDocuments[5].footprints.pop();
+    await page
+      .locator("#assigned-zone-input")
+      .fill(assignmentText(missingDocuments));
+    await runAssignedZones(7);
+    const assignedMissing = await exportAssignedZones();
+    assert.deepEqual(
+      assignedMissing.frames[0].unavailable,
+      assignedEvidence.frames[0].unavailable,
+    );
+    assert.equal(assignedMissing.frames[5].evidence.length, 5);
+    assert.deepEqual(assignedMissing.frames[5].unavailable, [
+      { track_id: 2, segment_id: "2", reason: "missing_footprint" },
+    ]);
+    await selectVelocityFrame(5);
+    assert.match(
+      await page.locator("#footprint-zone-unavailable").textContent(),
+      /足迹未分配/,
+    );
+    await physicalMode("convex");
+    assert.deepEqual(await exportFootprintZones(), assignedConvexBaseline);
+    await physicalMode("disk");
+    assert.deepEqual(await exportDiskZones(), assignedDiskBaseline);
+    await physicalMode("assigned");
+    assert.deepEqual(await exportAssignedZones(), assignedMissing);
+
+    // No browser parsing can round an invalid ID token into a valid mapping.
+    const assignedBadInputs = [];
+    for (const edit of [
+      (doc) => {
+        doc.timestamp_us = "1000001";
+      },
+      (doc) => {
+        doc.footprints[0].segment_id = "999";
+      },
+      (doc) => {
+        doc.footprints[0].segment_id = "01";
+      },
+      (doc) => {
+        doc.footprints.push(doc.footprints[0]);
+      },
+      (doc) => {
+        doc.footprints[0].track_id = 99;
+      },
+      (doc) => {
+        doc.footprints[0].shape.kind = "unknown";
+      },
+    ]) {
+      const docs = JSON.parse(JSON.stringify(assignedDocuments));
+      edit(docs[5]);
+      assignedBadInputs.push(assignmentText(docs));
+    }
+    for (const raw of [
+      JSON.stringify(assignedDocuments[5]).replace(
+        '"track_id":1',
+        '"track_id":1.0000000000000001',
+      ),
+      JSON.stringify(assignedDocuments[5]).replace(
+        '"footprints":',
+        '"unknown":true,"footprints":',
+      ),
+      JSON.stringify(assignedDocuments[5]).replace(
+        '"timestamp_us":',
+        '"timestamp_us":"0","timestamp_us":',
+      ),
+      JSON.stringify(assignedDocuments[5]).replace(
+        '"radius_m":0.25',
+        '"radius_m":0.25,"radius_m":0',
+      ),
+      JSON.stringify(assignedDocuments[5]) + " ".repeat(1048577),
+    ]) {
+      const docs = [...assignedDocuments];
+      docs[5] = raw;
+      assignedBadInputs.push(assignmentText(docs));
+    }
+    assignedBadInputs.push(assignmentText(assignedDocuments.slice(1)));
+    assignedBadInputs.push(assignedConfiguration + "\n");
+    for (const raw of assignedBadInputs) {
+      await page.locator("#assigned-zone-input").fill(raw);
+      await page.locator("#assigned-zone-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#assigned-zone-message")
+          .classList.contains("error"),
+      );
+      assert.equal(
+        await page.locator("#assigned-zone-input").inputValue(),
+        raw,
+      );
+      assert.equal(
+        await page.locator("#download-assigned-zones").isDisabled(),
+        true,
+      );
+      assert.deepEqual(await exportZones(), assignedPointBaseline);
+      assert.deepEqual(await exportVelocity(), assignedVelocityBaseline);
+      assert.equal(
+        await page.locator("#download-footprint-zones").isDisabled(),
+        false,
+      );
+      assert.equal(
+        await page.locator("#download-disk-zones").isDisabled(),
+        false,
+      );
+    }
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await runAssignedZones(7);
+    await page.evaluate(() => {
+      window.assignedOriginalTextEncoder = window.TextEncoder;
+      window.TextEncoder = class {
+        encode() {
+          throw new Error("assigned preparation failed");
+        }
+      };
+    });
+    await page.locator("#assigned-zone-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#assigned-zone-message")
+        .classList.contains("error"),
+    );
+    await page.evaluate(() => {
+      window.TextEncoder = window.assignedOriginalTextEncoder;
+      delete window.assignedOriginalTextEncoder;
+    });
+    assert.deepEqual(await exportAssignedZones(), assignedEvidence);
+    await runVelocityBase(velocitySource, 7);
+    assert.deepEqual(await exportAssignedZones(), assignedEvidence);
+    // An unchanged identity pair in another frame still needs its exact clock.
+    await page
+      .locator("#assigned-zone-input")
+      .fill(
+        assignmentText(
+          assignedDocuments.map((doc, index) =>
+            index === 5 ? assignedDocuments[4] : doc,
+          ),
+        ),
+      );
+    await page.locator("#assigned-zone-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#assigned-zone-message")
+        .classList.contains("error"),
+    );
+
+    // Sample docs preserve >2^53 timestamps and a newly reported segment;
+    // neither clocks nor segment identity can be recovered from an old map.
+    const assignedLargeInput =
+      [
+        { ...velocityHeader, session_id: "velocity-ui" },
+        {
+          timestamp_us: "9007199254740993",
+          observations: [
+            { track_id: 1, point: [0, 0], covariance: [0.01, 0, 0.01] },
+          ],
+        },
+        {
+          timestamp_us: "9007199254940993",
+          observations: [
+            { track_id: 1, point: [0.1, 0], covariance: [0.01, 0, 0.01] },
+          ],
+        },
+      ]
+        .map((line) => JSON.stringify(line))
+        .join("\n") + "\n";
+    await runVelocityBase(assignedLargeInput, 2);
+    await page.locator("#assigned-zone-example").click();
+    const largeAssignments = await page
+      .locator("#assigned-zone-input")
+      .inputValue();
+    assert.match(largeAssignments, /9007199254740993/);
+    await runAssignedZones(2);
+    assert.equal(
+      (await exportAssignedZones()).frames[1].timestamp_us,
+      "9007199254940993",
+    );
+    const assignedRestartInput =
+      [
+        velocityHeader,
+        ...[0, 200000, 400000, 800000, 1000000].map((time, index) => ({
+          timestamp_us: String(time),
+          observations:
+            index === 2
+              ? []
+              : [{ track_id: 1, point: [0, 0], covariance: [0.01, 0, 0.01] }],
+        })),
+      ]
+        .map((line) => JSON.stringify(line))
+        .join("\n") + "\n";
+    await runVelocityBase(assignedRestartInput, 5);
+    await page.locator("#assigned-zone-example").click();
+    await runAssignedZones(5);
+    const restartedAssignments = (
+      await page.locator("#assigned-zone-input").inputValue()
+    )
+      .trimEnd()
+      .split("\n")
+      .map(JSON.parse);
+    assert.notEqual(
+      restartedAssignments[0].footprints[0].segment_id,
+      restartedAssignments[4].footprints[0].segment_id,
+    );
+    restartedAssignments[4].footprints[0].segment_id =
+      restartedAssignments[0].footprints[0].segment_id;
+    await page
+      .locator("#assigned-zone-input")
+      .fill(assignmentText(restartedAssignments));
+    await page.locator("#assigned-zone-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#assigned-zone-message")
+        .classList.contains("error"),
+    );
+
+    for (const [input, count, reason] of [
+      [velocityUncertainInput, 7, "uncertain"],
+      [velocityRejectedInput, 7, "rejected_innovation"],
+      [velocityPixelInput, 11, "rejected_projection"],
+    ]) {
+      await runVelocityBase(input, count);
+      await page.locator("#assigned-zone-example").click();
+      if (count === 11) {
+        const sample = (await page.locator("#assigned-zone-input").inputValue())
+          .trimEnd()
+          .split("\n")
+          .map(JSON.parse);
+        assert.deepEqual(sample[10].footprints, []);
+      }
+      await runAssignedZones(count);
+      const report = await exportAssignedZones();
+      const index = count === 11 ? 10 : 5;
+      assert.deepEqual(report.frames[index].evidence, []);
+      assert.ok(report.frames[index].unavailable.length > 0);
+      assert.ok(
+        report.frames[index].unavailable.every((row) => row.reason === reason),
+      );
+      const docs = (await page.locator("#assigned-zone-input").inputValue())
+        .trimEnd()
+        .split("\n")
+        .map(JSON.parse);
+      docs[index].footprints = [];
+      await page.locator("#assigned-zone-input").fill(assignmentText(docs));
+      await runAssignedZones(count);
+      assert.deepEqual(
+        (await exportAssignedZones()).frames[index].unavailable,
+        report.frames[index].unavailable,
+      );
+      if (count === 11) {
+        docs[index].footprints = [
+          {
+            track_id: 1,
+            segment_id: "1",
+            shape: { kind: "disk", radius_m: 0.25 },
+          },
+        ];
+        await page.locator("#assigned-zone-input").fill(assignmentText(docs));
+        await page.locator("#assigned-zone-compute").click();
+        await page.waitForFunction(() =>
+          document
+            .querySelector("#assigned-zone-message")
+            .classList.contains("error"),
+        );
+      }
+    }
+    await runVelocityBase(velocitySource, 7);
+    await runZones(7);
+    await runVelocity(7);
+    await runFootprintZones(7);
+    await physicalMode("disk");
+    await runDiskZones(7);
+    await physicalMode("assigned");
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await runAssignedZones(7);
+    for (const selector of [
+      "#velocity-input",
+      "#gate-input",
+      "#guarded-input",
+    ]) {
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      assert.deepEqual(await exportAssignedZones(), assignedEvidence);
+      await page.locator(selector).fill(previous);
+    }
+    await runVelocity(7);
+    // Display-only switches must not erase or cancel another strategy's task.
+    await page
+      .locator("#assigned-zone-input")
+      .fill(assignedConfiguration.replace(/\n$/, " \n"));
+    await holdEvidenceTransitPreparation();
+    await page.locator("#assigned-zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runFootprintZones(7);
+    await releaseEvidenceTransitPreparation();
+    await physicalMode("assigned");
+    assert.deepEqual(await exportAssignedZones(), assignedEvidence);
+    await physicalMode("convex");
+    await page
+      .locator("#footprint-zone-input")
+      .fill(footprintConfiguration + " ");
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runAssignedZones(7);
+    await releaseEvidenceTransitPreparation();
+    await physicalMode("convex");
+    assert.deepEqual(await exportFootprintZones(), assignedConvexBaseline);
+    await page.locator("#footprint-zone-input").fill(footprintConfiguration);
+    await runFootprintZones(7);
+    await physicalMode("assigned");
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await runAssignedZones(7);
+    for (const selector of ["#assigned-zone-input", "#zone-input", "#source"]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#assigned-zone-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page.locator("#download-assigned-zones").isDisabled(),
+        true,
+      );
+      if (selector === "#assigned-zone-input") {
+        assert.deepEqual(await exportZones(), assignedPointBaseline);
+        assert.equal(
+          await page.locator("#download-footprint-zones").isDisabled(),
+          false,
+        );
+      } else {
+        assert.equal(await page.locator("#download-zones").isDisabled(), true);
+        assert.equal(
+          await page.locator("#download-disk-zones").isDisabled(),
+          true,
+        );
+        assert.equal(
+          await page.locator("#download-footprint-zones").isDisabled(),
+          true,
+        );
+      }
+      await page.locator(selector).fill(previous);
+      if (selector === "#source") await runVelocityBase(previous, 7);
+      await runZones(7);
+      await runFootprintZones(7);
+      await physicalMode("disk");
+      await runDiskZones(7);
+      await runAssignedZones(7);
+    }
+    await page
+      .locator("#assigned-zone-input")
+      .fill(assignmentText(missingDocuments));
+    await holdEvidenceTransitPreparation();
+    await page.locator("#assigned-zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#assigned-zone-example").click();
+    await runAssignedZones(7);
+    const assignedSample = await exportAssignedZones();
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportAssignedZones(), assignedSample);
+    assert.equal(
+      await page.locator("#assigned-zone-input").inputValue(),
+      assignedConfiguration,
+    );
+    await holdEvidenceTransitPreparation();
+    await page.locator("#assigned-zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runVelocityBase(velocitySource, 7);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportAssignedZones(), assignedSample);
+    await page.locator("#zone-example").click();
+    assert.equal(
+      await page.locator("#download-assigned-zones").isDisabled(),
+      true,
+    );
+    await page.locator("#zone-input").fill(
+      JSON.stringify({
+        session_id: "velocity-ui",
+        zones: [{ zone_id: "z".repeat(128), vertices_m: zoneWide }],
+      }),
+    );
+    await runAssignedZones(7);
+    await selectVelocityFrame(5);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await runAssignedZones(7);
+    await page.locator("#footprint-zone-face-selection").selectOption("8");
+    await page.locator("#zone-section").evaluate((details) => {
+      details.open = false;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#footprint-zone-faces tr").length === 0,
+    );
+    assert.equal(
+      await page.locator("#download-assigned-zones").isDisabled(),
+      false,
+    );
+    await page.locator("#zone-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#footprint-zone-faces tr").length === 4,
+    );
+    await page.locator("#physical-zone-results").screenshot({
+      path: path.join(directory, "assigned-zone-evidence-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#physical-zone-results").screenshot({
+      path: path.join(directory, "assigned-zone-evidence-desktop-preview.png"),
+    });
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

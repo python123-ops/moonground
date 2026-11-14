@@ -171,7 +171,8 @@ button:disabled {
 #velocity-message.error,
 #zone-message.error,
 #disk-zone-message.error,
-#footprint-zone-message.error {
+#footprint-zone-message.error,
+#assigned-zone-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -413,6 +414,11 @@ summary {
 #velocity-input,
 #zone-input {
   height: 150px;
+  margin-top: 8px;
+}
+
+#assigned-zone-input {
+  height: 180px;
   margin-top: 8px;
 }
 
