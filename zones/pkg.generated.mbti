@@ -69,6 +69,7 @@ pub struct ConvexZone {
 pub fn ConvexZone::evaluate(Self, @types.Point2, @types.Covariance2) -> ZoneBand raise @types.GroundError
 pub fn ConvexZone::evaluate_disk(Self, @types.Point2, @types.Covariance2, DiskFootprint) -> DiskZoneBand raise @types.GroundError
 pub fn ConvexZone::evaluate_footprint(Self, @types.Point2, @types.Covariance2, ConvexFootprint) -> FootprintZoneBand raise @types.GroundError
+pub fn ConvexZone::intersect_position(Self, @types.Point2, @types.Covariance2) -> PositionZoneIntersection raise @types.GroundError
 pub fn ConvexZone::new(String, Array[@types.Point2], sigma_multiplier? : Double) -> Self raise @types.GroundError
 pub fn ConvexZone::vertices_m(Self) -> Array[@types.Point2]
 
@@ -301,6 +302,33 @@ pub(all) struct FootprintZoneFaceBand {
 } derive(@debug.Debug)
 pub fn FootprintZoneFaceBand::to_repr(Self) -> @debug.Repr
 
+pub(all) struct PositionZoneIntersection {
+  zone_id : String
+  sigma_multiplier : Double
+  minimum_quadratic_lower : Double
+  minimum_quadratic_upper : Double
+  witness_edge_index : Int32?
+  witness_fraction : Double?
+  witness_position_m : @types.Point2
+  decision : ZoneIntersectionDecision
+} derive(@debug.Debug)
+pub fn PositionZoneIntersection::to_repr(Self) -> @debug.Repr
+
+pub(all) struct PositionZoneIntersectionEvidence {
+  track_id : Int32
+  segment_id : String
+  evidence : PositionZoneIntersection
+} derive(@debug.Debug)
+pub fn PositionZoneIntersectionEvidence::to_repr(Self) -> @debug.Repr
+
+pub(all) struct PositionZoneIntersectionFrame {
+  session_id : String
+  timestamp_us : Int64
+  evidence : Array[PositionZoneIntersectionEvidence]
+  unavailable : Array[ZoneUnavailable]
+} derive(@debug.Debug)
+pub fn PositionZoneIntersectionFrame::to_repr(Self) -> @debug.Repr
+
 pub(all) struct ZoneBand {
   zone_id : String
   sigma_multiplier : Double
@@ -344,6 +372,15 @@ pub(all) struct ZoneFaceBand {
 } derive(@debug.Debug)
 pub fn ZoneFaceBand::to_repr(Self) -> @debug.Repr
 
+pub(all) enum ZoneIntersectionDecision {
+  Disjoint
+  Intersects
+  Unresolved
+} derive(Eq, @debug.Debug)
+pub fn ZoneIntersectionDecision::equal(Self, Self) -> Bool
+pub fn ZoneIntersectionDecision::not_equal(Self, Self) -> Bool
+pub fn ZoneIntersectionDecision::to_repr(Self) -> @debug.Repr
+
 pub struct ZoneProjector {
   // private fields
 }
@@ -351,6 +388,7 @@ pub fn ZoneProjector::evaluate(Self, @motion.FrameResult) -> ZoneEvidenceFrame r
 pub fn ZoneProjector::evaluate_assigned(Self, @motion.FrameResult, FootprintAssignments) -> AssignedFootprintZoneEvidenceFrame raise @types.GroundError
 pub fn ZoneProjector::evaluate_disk(Self, @motion.FrameResult, DiskFootprint) -> DiskZoneEvidenceFrame raise @types.GroundError
 pub fn ZoneProjector::evaluate_footprint(Self, @motion.FrameResult, ConvexFootprint) -> FootprintZoneEvidenceFrame raise @types.GroundError
+pub fn ZoneProjector::intersect_position(Self, @motion.FrameResult) -> PositionZoneIntersectionFrame raise @types.GroundError
 pub fn ZoneProjector::new(String, Array[ConvexZone], max_tracks? : Int32) -> Self raise @types.GroundError
 
 pub(all) struct ZoneUnavailable {
