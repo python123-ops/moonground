@@ -134,6 +134,38 @@ pub fn FootprintRunGuardedSession::reframed(Self, @types.PixelTransform) -> Self
 pub fn FootprintRunGuardedSession::replace_projection(Self, Int64, @calibration.GroundCalibration, camera~ : @camera.CameraModel?) -> FootprintRunGuardedFrame raise @types.GroundError
 pub fn FootprintRunGuardedSession::update(Self, Int64, Array[@health.LandmarkObservation], Array[@moonground.PixelObservation], @zones.FootprintAssignments, lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunGuardedFrame raise @types.GroundError
 
+pub(all) struct FootprintRunWindowGuardedCheckpoint {
+  version : Int32
+  analysis : @analysis.FootprintRunWindowSessionCheckpoint
+  health : @health.HealthCheckpoint
+}
+
+pub(all) struct FootprintRunWindowGuardedFrame {
+  decision : GuardDecision
+  health : @health.HealthReport
+  analysis : @analysis.FootprintRunWindowSessionFrame
+  suppressed_track_ids : Array[Int32]
+} derive(@debug.Debug)
+pub fn FootprintRunWindowGuardedFrame::to_repr(Self) -> @debug.Repr
+
+pub struct FootprintRunWindowGuardedPreparation {
+  // private fields
+}
+pub fn FootprintRunWindowGuardedPreparation::commit(Self, @zones.FootprintAssignments) -> FootprintRunWindowGuardedFrame raise @types.GroundError
+pub fn FootprintRunWindowGuardedPreparation::preview(Self) -> FootprintRunGuardedPreview
+
+pub struct FootprintRunWindowGuardedSession {
+  // private fields
+}
+pub fn FootprintRunWindowGuardedSession::checkpoint(Self) -> FootprintRunWindowGuardedCheckpoint
+pub fn FootprintRunWindowGuardedSession::fork(Self) -> Self
+pub fn FootprintRunWindowGuardedSession::from_checkpoint(FootprintRunWindowGuardedCheckpoint) -> Self raise @types.GroundError
+pub fn FootprintRunWindowGuardedSession::new(FootprintRunGuardedSession, window_us~ : Int64, origin_us? : Int64) -> Self raise @types.GroundError
+pub fn FootprintRunWindowGuardedSession::prepare(Self, Int64, Array[@health.LandmarkObservation], Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunWindowGuardedPreparation raise @types.GroundError
+pub fn FootprintRunWindowGuardedSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn FootprintRunWindowGuardedSession::replace_projection(Self, Int64, @calibration.GroundCalibration, camera~ : @camera.CameraModel?) -> FootprintRunWindowGuardedFrame raise @types.GroundError
+pub fn FootprintRunWindowGuardedSession::update(Self, Int64, Array[@health.LandmarkObservation], Array[@moonground.PixelObservation], @zones.FootprintAssignments, lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunWindowGuardedFrame raise @types.GroundError
+
 pub(all) enum GuardDecision {
   Allowed
   Blocked
