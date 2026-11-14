@@ -1,0 +1,558 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.22-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20260920 (914d7da 2026-09-20)\nmoonc v0.10.14+7d59c7ec9 (2026-09-18)\nmoonc moonrun 0.1.20260920 (914d7da 2026-09-20)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "35870adfcf62aee6bab8a9d61fe19e09d71b5ad298a8d83ad36bff1f4d88fa61",
+  "gate_reference_sha256": "e295e92f0345e182d0cac50fb23535c7134d3046cc029bafd8c0dff982e50416",
+  "binary_sha256": "8c6e55e10178e97b83383e89ad8c90d4b4d6d86ef8179c81c7825d42eddd8722",
+  "fraction_and_geometry_reference": {
+    "cases": 21,
+    "frames": 87,
+    "passages": 12,
+    "resume_cut_points": 108,
+    "cancellation_reasons": [
+      "ambiguous_order",
+      "discontinuity",
+      "expired",
+      "reentered",
+      "reversed"
+    ],
+    "maximum_absolute_oracle_errors": {
+      "$.crossings[].from_position_m[]": 0.0,
+      "$.crossings[].to_position_m[]": 0.0,
+      "$.crossings[].position_m[]": 2.220446049250313e-16,
+      "$.crossings[].crossing_fraction": 0.0,
+      "$.counting.crossings[].crossing_fraction": 0.0,
+      "$.passages[].entry.crossing_fraction": 0.0,
+      "$.passages[].exit.crossing_fraction": 0.0,
+      "$.passages[].estimated_elapsed_us": 7.275957614183426e-12,
+      "$.counting.crossings[].position_m[]": 0.0,
+      "$.passages[].exit.position_m[]": 0.0,
+      "$.cancellations[].entry.crossing_fraction": 0.0,
+      "$.counting.crossings[].from_position_m[]": 0.0,
+      "$.counting.crossings[].to_position_m[]": 0.0,
+      "$.passages[].entry.from_position_m[]": 0.0,
+      "$.passages[].entry.to_position_m[]": 0.0,
+      "$.passages[].entry.position_m[]": 0.0,
+      "$.passages[].exit.from_position_m[]": 0.0,
+      "$.passages[].exit.to_position_m[]": 0.0
+    },
+    "records": [
+      {
+        "name": "separate_brackets_both_directions",
+        "frames": 7,
+        "checkpoint_sha256": "726151fa38300408881d7b0104d02a6289b9e18aed3fb9095f61c65308092099"
+      },
+      {
+        "name": "same_frame_reverse_configuration_order",
+        "frames": 3,
+        "checkpoint_sha256": "1df1ecb13acd29fca28709d1050d3490d9fc064d850e058c11331765b5978767"
+      },
+      {
+        "name": "above_2pow53_microsecond_intervals",
+        "frames": 4,
+        "checkpoint_sha256": "506f2706fee2acf3aed782beb63391f3b09d0ea7ac3370d37f855fa8c1de60da"
+      },
+      {
+        "name": "above_2pow53_fractional_same_frame",
+        "frames": 2,
+        "checkpoint_sha256": "1c3e3839939ef72f0d325e400d3eb3eda3ae9d404f016080d17df46685b1b790"
+      },
+      {
+        "name": "int64_max_microsecond_intervals",
+        "frames": 4,
+        "checkpoint_sha256": "6fb7f8a94d68273defb8b1061a71e85b81c4731a92415dde02c9ce848f07ddd6"
+      },
+      {
+        "name": "int64_max_fractional_same_frame",
+        "frames": 2,
+        "checkpoint_sha256": "8cfd5445322b8d91e28942663c531b1498faa14758362fd8e72e82f42cc374df"
+      },
+      {
+        "name": "finite_extension_reentry_replaces_start",
+        "frames": 7,
+        "checkpoint_sha256": "6f4e781b2f12f26e7b73571348555061f9b15fa58f602e9e58f1bfa8eb609e81"
+      },
+      {
+        "name": "same_frame_reentry_then_completion",
+        "frames": 6,
+        "checkpoint_sha256": "87e316c950b06694abba9969776a85c676d959db1c07ac90a2f5d9d74504c098"
+      },
+      {
+        "name": "same_frame_exit_completes_old_then_entry_starts_new",
+        "frames": 6,
+        "checkpoint_sha256": "34a8af63916de2dcf48e529849a75ea3b2e523d58d6689a295ced17e66236a71"
+      },
+      {
+        "name": "overlapping_different_chords_are_ambiguous",
+        "frames": 3,
+        "checkpoint_sha256": "b37d06270d3f0673689ad24371d222d9f683fdf56e98c76b67ffe7b12a881f56"
+      },
+      {
+        "name": "expiration_confirmation_boundary",
+        "frames": 4,
+        "checkpoint_sha256": "824045de9cebc5a83b2be3d4e99056e95744efdd325e2eba7b888be8e2bdda8e"
+      },
+      {
+        "name": "discontinuity_precedes_expiration",
+        "frames": 3,
+        "checkpoint_sha256": "b1bd950135f501256de3c7b47beb12a8deab28b51b77aac0b7645c8fd4ecab8a"
+      },
+      {
+        "name": "cancel_missing",
+        "frames": 4,
+        "checkpoint_sha256": "3f8cde788a9ef4208c9e305b0ce0063e7813d479df8ddf7dc5bb187f9c508d51"
+      },
+      {
+        "name": "cancel_rejected_projection",
+        "frames": 4,
+        "checkpoint_sha256": "99327cb0354e61c6470ccb58d5f9507c8ab81a67139071b503ccc39345ae205f"
+      },
+      {
+        "name": "cancel_rejected_innovation",
+        "frames": 4,
+        "checkpoint_sha256": "e4f77481893884912949672084782d31442a18372f18c92ee7288b2f786c932b"
+      },
+      {
+        "name": "cancel_numerical_failure",
+        "frames": 4,
+        "checkpoint_sha256": "b318c45224f30c6d19774db648cea55cf9a756ff63efde2d6404635159af0945"
+      },
+      {
+        "name": "cancel_quality",
+        "frames": 4,
+        "checkpoint_sha256": "bab6b34beddc40e62044f04c4c723fc49f3ec3181d0ad49ad9295bc807bab303"
+      },
+      {
+        "name": "cancel_closed",
+        "frames": 4,
+        "checkpoint_sha256": "9fb1197c3ddb2b1d8aba01ef1d523931feffd79d0c7846a539d8d35d532b4616"
+      },
+      {
+        "name": "cancel_gap",
+        "frames": 4,
+        "checkpoint_sha256": "5454aab356950de31389aafef5c7f1c17b7c4bdec1d0d079551310b0b8202e86"
+      },
+      {
+        "name": "reverse_entry_cancels_pending",
+        "frames": 4,
+        "checkpoint_sha256": "538a94d5b849e06defdc5d8433bfb1f9802a1cb980ccb015bc42680652f17b80"
+      },
+      {
+        "name": "guarded_interrupt_closes_pending",
+        "frames": 4,
+        "checkpoint_sha256": "a9cccdba657f5b56597fc96c32d19877cd0550ad091e2fe1e8337fb0a8168dbd"
+      }
+    ]
+  },
+  "strict_transport": {
+    "rejected_cases": 42,
+    "cases": [
+      {
+        "name": "unknown_source_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit source: unknown field extra"
+      },
+      {
+        "name": "source_counting_object",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: counting must be a string"
+      },
+      {
+        "name": "empty_sections",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit section capacity or duration"
+      },
+      {
+        "name": "duplicate_section_identity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit sections must be unique and reference configured gates"
+      },
+      {
+        "name": "unknown_entry_gate",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit sections must be unique and reference configured gates"
+      },
+      {
+        "name": "invalid_direction",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unknown crossing direction"
+      },
+      {
+        "name": "same_entry_exit_gate",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: section entry and exit gates must differ"
+      },
+      {
+        "name": "zero_confirmation_deadline",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid transit section capacity or duration"
+      },
+      {
+        "name": "unknown_section_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit section: unknown field extra"
+      },
+      {
+        "name": "duplicate_source_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"counting\" at line 1, column 18"
+      },
+      {
+        "name": "raw_fractional_gate_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      {
+        "name": "unknown_measurement_key",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7268043b570630bee880c9de395fc90131ae03fc44f168f1338de0cb9ce87486",
+        "stdout_bytes": 519,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      {
+        "name": "duplicate_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7268043b570630bee880c9de395fc90131ae03fc44f168f1338de0cb9ce87486",
+        "stdout_bytes": 519,
+        "stderr": "line 3: duplicate measurement track identity"
+      },
+      {
+        "name": "same_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7268043b570630bee880c9de395fc90131ae03fc44f168f1338de0cb9ce87486",
+        "stdout_bytes": 519,
+        "stderr": "line 3: gate frame timestamps must strictly increase"
+      },
+      {
+        "name": "wrong_session",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7268043b570630bee880c9de395fc90131ae03fc44f168f1338de0cb9ce87486",
+        "stdout_bytes": 519,
+        "stderr": "line 3: gate frame session or timestamp differs"
+      },
+      {
+        "name": "invalid_position_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7268043b570630bee880c9de395fc90131ae03fc44f168f1338de0cb9ce87486",
+        "stdout_bytes": 519,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "raw_fractional_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7268043b570630bee880c9de395fc90131ae03fc44f168f1338de0cb9ce87486",
+        "stdout_bytes": 519,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_measurement_key",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7268043b570630bee880c9de395fc90131ae03fc44f168f1338de0cb9ce87486",
+        "stdout_bytes": 519,
+        "stderr": "line 3: invalid JSON: Duplicate key \"timestamp_us\" at line 1, column 75"
+      },
+      {
+        "name": "invalid_utf8",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7268043b570630bee880c9de395fc90131ae03fc44f168f1338de0cb9ce87486",
+        "stdout_bytes": 519,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "blank_measurement",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7268043b570630bee880c9de395fc90131ae03fc44f168f1338de0cb9ce87486",
+        "stdout_bytes": 519,
+        "stderr": "line 3: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "late_error_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      {
+        "name": "wrong_checkpoint_format",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported transit checkpoint format or version"
+      },
+      {
+        "name": "wrong_checkpoint_version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported transit checkpoint format or version"
+      },
+      {
+        "name": "unknown_checkpoint_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit checkpoint: unknown field extra"
+      },
+      {
+        "name": "missing_completed_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit checkpoint count or pending shape differs"
+      },
+      {
+        "name": "negative_completed_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: completed must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "unearned_completed_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit checkpoint completed totals are inconsistent"
+      },
+      {
+        "name": "unknown_pending_section",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending transit references an unknown section"
+      },
+      {
+        "name": "duplicate_pending_identity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid, expired or duplicate pending transit"
+      },
+      {
+        "name": "wrong_pending_segment",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid, expired or duplicate pending transit"
+      },
+      {
+        "name": "wrong_pending_direction",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: saved crossing differs from its chord geometry"
+      },
+      {
+        "name": "wrong_pending_gate",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid saved crossing identity or bracket"
+      },
+      {
+        "name": "pending_fraction_corrupted",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: saved crossing differs from its chord geometry"
+      },
+      {
+        "name": "pending_crossing_point_corrupted",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: saved crossing differs from its chord geometry"
+      },
+      {
+        "name": "pending_future_confirmation",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid, expired or duplicate pending transit"
+      },
+      {
+        "name": "pending_no_current_qualified_track",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid, expired or duplicate pending transit"
+      },
+      {
+        "name": "resume_override",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: transit resume source: unknown field sections"
+      },
+      {
+        "name": "pending_confirmation_deadline_equality",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid, expired or duplicate pending transit"
+      },
+      {
+        "name": "pending_bracket_reaches_gate_gap_limit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid, expired or duplicate pending transit"
+      },
+      {
+        "name": "pending_exceeds_uncompleted_entry_total",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: pending transits exceed recorded entry crossings"
+      },
+      {
+        "name": "gate_counter_overflow_atomic",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "ccab38878c105cd77152adc74fc040e1899217b0dd206dfb73414ff07e5a15a0",
+        "stdout_bytes": 596,
+        "stderr": "line 3: gate crossing counter exhausted"
+      },
+      {
+        "name": "gate_counter_overflow_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: gate crossing counter exhausted"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "saturated_gate_checkpoint_safe_retry": "passed"
+  },
+  "started_gate_source": {
+    "historical_entry_ignored": true,
+    "future_frames": 2,
+    "maximum_absolute_oracle_errors": {
+      "$.crossings[].from_position_m[]": 0.0,
+      "$.crossings[].to_position_m[]": 0.0,
+      "$.crossings[].position_m[]": 2.220446049250313e-16,
+      "$.crossings[].crossing_fraction": 0.0,
+      "$.counting.crossings[].crossing_fraction": 0.0,
+      "$.counting.crossings[].position_m[]": 0.0,
+      "$.passages[].entry.crossing_fraction": 0.0,
+      "$.passages[].exit.position_m[]": 0.0,
+      "$.passages[].exit.crossing_fraction": 0.0,
+      "$.passages[].estimated_elapsed_us": 7.275957614183426e-12
+    }
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "exact_physical_line_bytes": 614,
+    "exact_source_utf16_units": 8388619,
+    "source_one_unit_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+    }
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/transit.test.mjs",
+    "summary": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 11,
+      "continuations": 44,
+      "directions": [
+        "native-native",
+        "native-javascript",
+        "javascript-native",
+        "javascript-javascript"
+      ]
+    },
+    "measured_load": {
+      "pending_load": 12800,
+      "completed_passages": 12800,
+      "native_complete_frame_utf16_units": 8475384,
+      "constructor_capacity_tested": 65536,
+      "pending_checkpoint_utf16_units": 3502524
+    },
+    "test_script_sha256": "4bcb3c4a603fedc378272314e40e155293575cbb07cad7f1043f8b16d1d9dffe",
+    "bridge_sha256": "6d587df6910a2ea0558a5c7fffb4d13d67f6106ee3a174271098b8c75a329349",
+    "stdout_sha256": "b477101d03d734ffb764fbc00db87f6e9f377ccf54e17a3843c397df534822d6",
+    "stderr": ""
+  },
+  "elapsed_seconds": 21.357679800000003,
+  "status": "passed"
+}
