@@ -125,6 +125,7 @@ pub struct FootprintAssignments {
   timestamp_us : Int64
   // private fields
 }
+pub fn FootprintAssignments::is_empty(Self) -> Bool
 pub fn FootprintAssignments::new(Int64, Array[FootprintAssignment]) -> Self raise @types.GroundError
 
 pub(all) struct FootprintRun {
