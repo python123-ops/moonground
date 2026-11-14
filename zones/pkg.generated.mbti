@@ -18,8 +18,51 @@ pub struct ConvexZone {
   // private fields
 }
 pub fn ConvexZone::evaluate(Self, @types.Point2, @types.Covariance2) -> ZoneBand raise @types.GroundError
+pub fn ConvexZone::evaluate_disk(Self, @types.Point2, @types.Covariance2, DiskFootprint) -> DiskZoneBand raise @types.GroundError
 pub fn ConvexZone::new(String, Array[@types.Point2], sigma_multiplier? : Double) -> Self raise @types.GroundError
 pub fn ConvexZone::vertices_m(Self) -> Array[@types.Point2]
+
+pub struct DiskFootprint {
+  radius_m : Double
+}
+pub fn DiskFootprint::new(Double) -> Self raise @types.GroundError
+
+pub(all) struct DiskZoneBand {
+  zone_id : String
+  radius_m : Double
+  sigma_multiplier : Double
+  faces : Array[DiskZoneFaceBand]
+  decision : ZoneDecision
+  separating_edge_index : Int32?
+} derive(@debug.Debug)
+pub fn DiskZoneBand::to_repr(Self) -> @debug.Repr
+
+pub(all) struct DiskZoneEvidence {
+  track_id : Int32
+  segment_id : String
+  evidence : DiskZoneBand
+} derive(@debug.Debug)
+pub fn DiskZoneEvidence::to_repr(Self) -> @debug.Repr
+
+pub(all) struct DiskZoneEvidenceFrame {
+  session_id : String
+  timestamp_us : Int64
+  evidence : Array[DiskZoneEvidence]
+  unavailable : Array[ZoneUnavailable]
+} derive(@debug.Debug)
+pub fn DiskZoneEvidenceFrame::to_repr(Self) -> @debug.Repr
+
+pub(all) struct DiskZoneFaceBand {
+  edge_index : Int32
+  outward_normal : @types.Point2
+  distance_m : Double
+  normal_std_m : Double
+  position_lower_m : Double
+  position_upper_m : Double
+  lower_m : Double
+  upper_m : Double
+} derive(@debug.Debug)
+pub fn DiskZoneFaceBand::to_repr(Self) -> @debug.Repr
 
 pub(all) struct ZoneBand {
   zone_id : String
@@ -68,6 +111,7 @@ pub struct ZoneProjector {
   // private fields
 }
 pub fn ZoneProjector::evaluate(Self, @motion.FrameResult) -> ZoneEvidenceFrame raise @types.GroundError
+pub fn ZoneProjector::evaluate_disk(Self, @motion.FrameResult, DiskFootprint) -> DiskZoneEvidenceFrame raise @types.GroundError
 pub fn ZoneProjector::new(String, Array[ConvexZone], max_tracks? : Int32) -> Self raise @types.GroundError
 
 pub(all) struct ZoneUnavailable {
