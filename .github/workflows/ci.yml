@@ -106,6 +106,8 @@ jobs:
         run: python validation/disk_zone_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-disk-zones.json
       - name: Verify explicit asymmetric convex-footprint evidence independently
         run: python validation/footprint_zone_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-footprint-zones.json
+      - name: Verify frame-bound mixed target footprint assignments independently
+        run: python validation/assigned_zone_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-assigned-zones.json
       - name: Exercise process protocol and bounded stream
         run: python validation/stream_test.py --binary "$MOONGROUND_CLI" --frames 3000 --targets 10 --latency-samples 100 --output _build/ci-stream.json
       - name: Check MBMOT consumer and package archive
@@ -114,7 +116,7 @@ jobs:
           moon -C examples/consumer check --target all --deny-warn
           moon -C examples/consumer test --target all --deny-warn
           moon package
-          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.24.0.zip --output _build/ci-package.json
+          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.25.0.zip --output _build/ci-package.json
       - name: Prepare browser test driver
         if: runner.os == 'Linux'
         run: |
@@ -169,6 +171,7 @@ jobs:
             _build/ci-zones.json
             _build/ci-disk-zones.json
             _build/ci-footprint-zones.json
+            _build/ci-assigned-zones.json
             _build/ci-stream.json
             _build/ci-package.json
             _build/site/*preview.png
