@@ -12,6 +12,8 @@ pub fn analysis_json(String) -> String raise @types.GroundError
 
 pub fn calibrate_json(String) -> String raise @types.GroundError
 
+pub fn disk_zone_evidence_json(String) -> String raise @types.GroundError
+
 pub fn evidence_analysis_json(String) -> String raise @types.GroundError
 
 pub fn evidence_guarded_json(String) -> String raise @types.GroundError
@@ -55,6 +57,12 @@ pub struct AnalysisReplay {
 pub fn AnalysisReplay::checkpoint_json(Self) -> String raise @types.GroundError
 pub fn AnalysisReplay::open(String) -> Self raise @types.GroundError
 pub fn AnalysisReplay::process_line(Self, String) -> String raise @types.GroundError
+
+pub struct DiskZoneEvidenceReplay {
+  // private fields
+}
+pub fn DiskZoneEvidenceReplay::open(String) -> Self raise @types.GroundError
+pub fn DiskZoneEvidenceReplay::process_line(Self, String) -> String raise @types.GroundError
 
 pub struct EvidenceAnalysisReplay {
   // private fields
