@@ -1415,11 +1415,11 @@
                     </table>
                   </div>
                   <details id="footprint-run-window-section">
-                    <summary>普通测量的确认序列分窗</summary>
+                    <summary>足迹确认序列分窗</summary>
                     <p class="hint">
-                      直接使用普通测量、当前区域、显式分配和序列选项，共同计算序列与分窗；
-                      无需先运行其他序列入口，也不读取原始联合或健康门控结果。
-                      按首次确认／结束的报告帧时间归窗，不表示到访、连续占用或实际停留。
+                      两种模式共用当前区域、显式分配、序列和窗口选项。
+                      普通测量下游使用已输出帧，原始联合直接重放上方原始像素／米制流。
+                      首次确认／结束按报告帧时间归窗，不表示到访、连续占用或实际停留。
                     </p>
                     <label for="footprint-run-window-input" class="hint"
                       >固定窗口 JSON · μs，规范 Int64 十进制字符串</label
@@ -1430,31 +1430,101 @@
                     >
 {"window_us":"500000","origin_us":"0"}</textarea
                     >
-                    <div class="actions">
-                      <button id="footprint-run-window-compute" disabled>
-                        按普通测量分窗确认序列
-                      </button>
-                      <button
-                        id="download-footprint-run-windows"
-                        class="quiet"
-                        disabled
+                    <label class="hint result-mode"
+                      >分窗结果显示<select
+                        id="footprint-run-window-mode"
+                        aria-label="足迹序列分窗模式"
                       >
-                        下载整批分窗与完整最终检查点
-                      </button>
-                    </div>
-                    <p
-                      id="footprint-run-window-message"
-                      class="hint"
-                      role="status"
-                      aria-live="polite"
+                        <option value="ordinary">普通测量下游</option>
+                        <option value="joint">原始联合</option>
+                      </select></label
                     >
-                      保留当前窗和最近关闭的有输入窗口；间隔中的未观察窗口只计数。
-                    </p>
+                    <div id="footprint-run-window-ordinary">
+                      <div class="actions">
+                        <button id="footprint-run-window-compute" disabled>
+                          按普通测量分窗确认序列
+                        </button>
+                        <button
+                          id="download-footprint-run-windows"
+                          class="quiet"
+                          disabled
+                        >
+                          下载整批分窗与完整最终检查点
+                        </button>
+                      </div>
+                      <p
+                        id="footprint-run-window-message"
+                        class="hint"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        保留当前窗和最近关闭的有输入窗口；间隔中的未观察窗口只计数。
+                      </p>
+                    </div>
+                    <div id="footprint-run-window-joint" hidden>
+                      <p class="hint">
+                        原始联合直接重放上方原始像素／米制流及当前区域、分配、序列和窗口选项，不读取已输出的普通测量。
+                        可用普通测量辅助核对完整身份；首帧预览来自本联合核心，不提交或预留身份，不自动修正分配。
+                      </p>
+                      <div class="actions">
+                        <button id="footprint-run-window-preview">
+                          预览联合分窗首帧候选
+                        </button>
+                        <button id="footprint-run-window-joint-compute">
+                          联合测量、序列并分窗
+                        </button>
+                        <button
+                          id="download-footprint-run-window-analysis"
+                          class="quiet"
+                          disabled
+                        >
+                          下载联合分窗与完整共同检查点
+                        </button>
+                      </div>
+                      <p
+                        id="footprint-run-window-joint-message"
+                        class="hint"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        测量、精确足迹序列和分窗共同提交；失败不提前推进任何一侧。
+                      </p>
+                      <p
+                        id="footprint-run-window-preview-message"
+                        class="hint"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        候选供手工核对身份；后续新片段仍逐帧严格验证。
+                      </p>
+                      <details id="footprint-run-window-preview-section">
+                        <summary>联合分窗首帧候选 · 未提交</summary>
+                        <pre
+                          id="footprint-run-window-preview-json"
+                          class="footprint-run-json"
+                        ></pre>
+                      </details>
+                      <label for="footprint-run-window-joint-frame" class="hint"
+                        >原始联合分窗独立回放</label
+                      >
+                      <input
+                        id="footprint-run-window-joint-frame"
+                        type="range"
+                        min="0"
+                        max="0"
+                        value="0"
+                        disabled
+                      />
+                      <pre
+                        id="footprint-run-window-joint-measurement"
+                        class="footprint-run-json"
+                      ></pre>
+                    </div>
                     <p id="footprint-run-window-frame" class="hint"></p>
                     <p id="footprint-run-window-current" class="hint"></p>
                     <p id="footprint-run-window-closed" class="hint"></p>
                     <p class="hint">
-                      表跟随上方普通滑块。每种结束原因显示“已确认 /
+                      表跟随所选模式的滑块。每种结束原因显示“已确认 /
                       未确认”次数；开窗池与新起序列用于核对流守恒，不是占用率。
                     </p>
                     <div class="table-wrap">

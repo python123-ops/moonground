@@ -12781,6 +12781,581 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       }
     }
 
+    {
+      const document = fs.readFileSync(
+        path.resolve(
+          __dirname,
+          "..",
+          "docs",
+          "footprint-run-window-analysis-web.md",
+        ),
+        "utf8",
+      );
+      const blocks = [
+        ...document.matchAll(/```javascript\r?\n([\s\S]*?)\r?\n```/g),
+      ].map((match) => match[1]);
+      assert.equal(blocks.length, 2);
+      const inputs = JSON.parse(
+        JSON.stringify(require("node:vm").runInNewContext(blocks[0])),
+      );
+      const mode = (value) =>
+        page.locator("#footprint-run-window-mode").selectOption(value);
+      const open = async () => {
+        await physicalMode("assigned");
+        for (const selector of [
+          "#zone-section",
+          "#footprint-run-section",
+          "#footprint-run-window-section",
+        ])
+          await page.locator(selector).evaluate((details) => {
+            details.open = true;
+          });
+      };
+      const settings = {
+        position: "#zone-input",
+        assignments: "#assigned-zone-input",
+        options: "#footprint-run-input",
+        window: "#footprint-run-window-input",
+      };
+      // Equivalent finite Double spelling invalidates ordinary output while
+      // preserving all numerical values. Raw mode must not need that output.
+      const rawInput = inputs.measurement.replace('"q":0.01', '"q":0.010');
+      const fill = async () => {
+        await open();
+        await page.locator("#source").fill(rawInput);
+        for (const [key, selector] of Object.entries(settings))
+          await page.locator(selector).fill(inputs[key]);
+        await mode("joint");
+      };
+      const run = async (count = 9) => {
+        await open();
+        await mode("joint");
+        await page.locator("#footprint-run-window-joint-compute").click();
+        await page.waitForFunction((count) => {
+          const message = document.querySelector(
+            "#footprint-run-window-joint-message",
+          );
+          return (
+            message.classList.contains("error") ||
+            message.textContent.includes("已原始联合分窗 " + count + " 帧")
+          );
+        }, count);
+        assert.equal(
+          await page
+            .locator("#footprint-run-window-joint-message.error")
+            .count(),
+          0,
+          await page
+            .locator("#footprint-run-window-joint-message")
+            .textContent(),
+        );
+      };
+      const preview = async () => {
+        await open();
+        await mode("joint");
+        await page.locator("#footprint-run-window-preview").click();
+        await page.waitForFunction(() => {
+          const message = document.querySelector(
+            "#footprint-run-window-preview-message",
+          );
+          return (
+            message.classList.contains("error") ||
+            message.textContent.includes("已预览首帧真实候选")
+          );
+        });
+        assert.equal(
+          await page
+            .locator("#footprint-run-window-preview-message.error")
+            .count(),
+          0,
+          await page
+            .locator("#footprint-run-window-preview-message")
+            .textContent(),
+        );
+        return JSON.parse(
+          await page
+            .locator("#footprint-run-window-preview-json")
+            .textContent(),
+        );
+      };
+      const output = () =>
+        exportJson(
+          "#download-footprint-run-window-analysis",
+          "moonground-footprint-run-window-analysis.json",
+        );
+      const ordinaryOutput = () =>
+        exportJson(
+          "#download-footprint-run-windows",
+          "moonground-footprint-run-windows.json",
+        );
+      const ordinary = async (count = 9) => {
+        await mode("ordinary");
+        await page.locator("#footprint-run-window-compute").click();
+        await page.waitForFunction((count) => {
+          const message = document.querySelector(
+            "#footprint-run-window-message",
+          );
+          return (
+            message.classList.contains("error") ||
+            message.textContent.includes("已分窗 " + count + " 帧")
+          );
+        }, count);
+        assert.equal(
+          await page.locator("#footprint-run-window-message.error").count(),
+          0,
+          await page.locator("#footprint-run-window-message").textContent(),
+        );
+      };
+      const select = (index) =>
+        page
+          .locator("#footprint-run-window-joint-frame")
+          .evaluate((slider, index) => {
+            slider.value = String(index);
+            slider.dispatchEvent(new Event("input", { bubbles: true }));
+          }, index);
+      await fill();
+      assert.equal(await page.locator("#download").isDisabled(), true);
+      const beforeAssignments = await page
+        .locator("#assigned-zone-input")
+        .inputValue();
+      const firstIdentity = await preview();
+      assert.deepEqual(
+        firstIdentity.tracks.map((track) => track.segment_id),
+        ["1", "2"],
+      );
+      assert.equal(
+        await page.locator("#assigned-zone-input").inputValue(),
+        beforeAssignments,
+      );
+      await run();
+      const joint = await output();
+      assert.equal(joint.frames[0].kind, "footprint_run_window_analysis_frame");
+      assert.equal(
+        joint.checkpoint.format,
+        "moonground.footprint-run-window-analysis",
+      );
+      assert.equal(
+        joint.checkpoint.measurement.motion.last_timestamp_us,
+        "2400000",
+      );
+      assert.equal(joint.checkpoint.windows.runs.last_timestamp_us, "2400000");
+      assert.equal("runs" in joint.checkpoint, false);
+      assert.deepEqual(
+        firstIdentity,
+        atomicIdentity(joint.frames[0].measurement),
+      );
+      await select(3);
+      const selection = await page
+        .locator("#footprint-run-window-frame")
+        .textContent();
+      await selectVelocityFrame(0);
+      assert.equal(
+        await page.locator("#footprint-run-window-frame").textContent(),
+        selection,
+      );
+      assert.match(
+        await page.locator("#footprint-run-window-current").textContent(),
+        /\[500000, 1000000\)/,
+      );
+      assert.equal(
+        JSON.parse(
+          await page
+            .locator("#footprint-run-window-joint-measurement")
+            .textContent(),
+        ).timestamp_us,
+        "600000",
+      );
+      assert.deepEqual(await output(), joint);
+      // Execute the documented fresh/preview/full-resume/suffix code verbatim.
+      const example = await page.evaluate(async (blocks) => {
+        const api = await import("./moonground.mjs");
+        return new Function(
+          "api",
+          blocks.join("\n") + "\nreturn continuation;",
+        )(api);
+      }, blocks);
+      assert.deepEqual(example.initial, joint);
+      assert.deepEqual(
+        example.preview.measurement,
+        joint.frames[0].measurement,
+      );
+      assert.deepEqual(example.verified.checkpoint, joint.checkpoint);
+      assert.deepEqual(example.verified.frames, []);
+      assert.equal(
+        example.continued.frames[0].measurement.timestamp_us,
+        "2600000",
+      );
+      assert.equal(
+        example.continued.frames[0].measurement.tracks[0].segment_id,
+        "3",
+      );
+      assert.equal(
+        example.continued.frames[0].windows.statistics.closed_window.start_us,
+        "2000000",
+      );
+      assert.equal(
+        example.continued.frames[0].windows.statistics.current_window.start_us,
+        "2500000",
+      );
+      assert.equal(
+        example.continued.frames[0].windows.statistics.current_window.zones[0]
+          .confirmed_inside,
+        "0",
+      );
+      const baseline = await page.evaluate(async (checkpoint) => {
+        const api = await import("./moonground.mjs");
+        const source = JSON.stringify({
+          analysis: JSON.stringify({
+            resume: {
+              format: "moonground.footprint-run-analysis",
+              checkpoint_version: "1",
+              measurement: checkpoint.measurement,
+              runs: checkpoint.windows.runs,
+            },
+          }),
+          window: '{"window_us":"500000"}',
+        });
+        return JSON.parse(
+          api.moonground_footprint_run_window_analysis(
+            JSON.stringify({ source, frames: "" }),
+          ),
+        );
+      }, joint.checkpoint);
+      assert.equal(
+        baseline.checkpoint.windows.baseline_timestamp_us,
+        "2400000",
+      );
+      assert.equal(baseline.checkpoint.windows.current_window, null);
+      // Full restore catches a watermark mismatch before it can become a source.
+      const corrupt = JSON.parse(JSON.stringify(joint.checkpoint));
+      corrupt.windows.runs.last_timestamp_us = "2400001";
+      const rejected = await page.evaluate(async (checkpoint) => {
+        const api = await import("./moonground.mjs");
+        return JSON.parse(
+          api.moonground_footprint_run_window_analysis(
+            JSON.stringify({
+              source: JSON.stringify({ resume: checkpoint }),
+              frames: "",
+            }),
+          ),
+        );
+      }, corrupt);
+      assert.ok(rejected.error);
+      assert.deepEqual(await output(), joint);
+      // Genuine ordinary output agrees with the new owner, but remains separate.
+      await runVelocityBase(rawInput, 9);
+      assert.deepEqual(
+        (await exportJson("#download", "moonground-results.json")).frames,
+        joint.frames.map((frame) => frame.measurement),
+      );
+      await ordinary();
+      const downstream = await ordinaryOutput();
+      assert.deepEqual(
+        downstream.frames,
+        joint.frames.map((frame) => frame.windows),
+      );
+      assert.deepEqual(downstream.checkpoint, joint.checkpoint.windows);
+      for (const value of ["joint", "ordinary", "joint"]) {
+        await mode(value);
+        if (value === "joint") assert.deepEqual(await output(), joint);
+        else assert.deepEqual(await ordinaryOutput(), downstream);
+      }
+      await page.evaluate(() => {
+        window.rawWindowEncoder = window.TextEncoder;
+        window.TextEncoder = class {
+          encode() {
+            throw new Error("raw window preparation failed");
+          }
+        };
+      });
+      await page.locator("#footprint-run-window-joint-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-run-window-joint-message")
+          .classList.contains("error"),
+      );
+      await page.evaluate(() => {
+        window.TextEncoder = window.rawWindowEncoder;
+        delete window.rawWindowEncoder;
+      });
+      assert.deepEqual(await output(), joint);
+      for (const [selector, value] of [
+        [
+          "#source",
+          rawInput.replace('"track_id":1', '"track_id":1.00000000000000001'),
+        ],
+        [
+          "#source",
+          rawInput.replace(
+            '"max_tracks":4',
+            '"max_tracks":4.00000000000000001',
+          ),
+        ],
+        [
+          "#source",
+          rawInput.replace(
+            '"timestamp_us":"0"',
+            '"timestamp_us":"0","unknown":true',
+          ),
+        ],
+        [
+          "#assigned-zone-input",
+          inputs.assignments.replace(
+            '"timestamp_us":"0"',
+            '"timestamp_us":"1"',
+          ),
+        ],
+        [
+          "#assigned-zone-input",
+          inputs.assignments.replace('"segment_id":"3"', '"segment_id":"1"'),
+        ],
+        [
+          "#footprint-run-window-input",
+          '{"window_us":"500000","window_us":"1"}',
+        ],
+      ]) {
+        await page.locator(selector).fill(value);
+        await page.locator("#footprint-run-window-joint-compute").click();
+        await page.waitForFunction(() =>
+          document
+            .querySelector("#footprint-run-window-joint-message")
+            .classList.contains("error"),
+        );
+        assert.equal(
+          await page
+            .locator("#download-footprint-run-window-analysis")
+            .isDisabled(),
+          true,
+        );
+        assert.equal(await page.locator(selector).inputValue(), value);
+        await fill();
+      }
+      const unsupported = rawInput.trimEnd().split("\n");
+      unsupported[1] = JSON.stringify({ replace_projection: "{}" });
+      await page.locator("#source").fill(unsupported.join("\n") + "\n");
+      await page.locator("#footprint-run-window-joint-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-run-window-joint-message")
+          .classList.contains("error"),
+      );
+      await fill();
+      await run();
+      for (const selector of ["#source", ...Object.values(settings)]) {
+        await holdEvidenceTransitPreparation();
+        await page.locator("#footprint-run-window-joint-compute").click();
+        await page.waitForFunction(
+          () => typeof window.releaseEvidenceTransitRun === "function",
+        );
+        const previous = await page.locator(selector).inputValue();
+        await page.locator(selector).fill(previous + " ");
+        await releaseEvidenceTransitPreparation();
+        assert.equal(
+          await page
+            .locator("#download-footprint-run-window-analysis")
+            .isDisabled(),
+          true,
+        );
+        await page.locator(selector).fill(previous);
+        await run();
+      }
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-joint-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page
+        .locator("#footprint-run-window-input")
+        .fill('{"window_us":"400000"}');
+      await run();
+      const newest = await output();
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await output(), newest);
+      await page.locator("#footprint-run-window-input").fill(inputs.window);
+      await run();
+      // Ordinary recomputation cannot cancel the raw task or erase its success.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-joint-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await runVelocityBase(rawInput, 9);
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await output(), joint);
+      // Two display modes preserve both independent in-flight tasks.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-joint-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await ordinary();
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await ordinaryOutput(), downstream);
+      await mode("joint");
+      assert.deepEqual(await output(), joint);
+      await mode("ordinary");
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await run();
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await output(), joint);
+      await mode("ordinary");
+      assert.deepEqual(await ordinaryOutput(), downstream);
+      await mode("joint");
+      // A paused preview ignores assignments and does not block formal replay.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-preview").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page.locator("#assigned-zone-input").fill("invalid assignments");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page
+          .locator("#footprint-run-window-preview-message.error")
+          .count(),
+        0,
+      );
+      assert.deepEqual(
+        JSON.parse(
+          await page
+            .locator("#footprint-run-window-preview-json")
+            .textContent(),
+        ),
+        firstIdentity,
+      );
+      await page.locator("#assigned-zone-input").fill(inputs.assignments);
+      await run();
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-preview").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await run();
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await output(), joint);
+      // A newer preview supersedes the older preparation across source edits.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-preview").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page
+        .locator("#source")
+        .fill(rawInput.replaceAll("footprint-window-web", "raw-window-new"));
+      await page
+        .locator("#zone-input")
+        .fill(
+          inputs.position.replaceAll("footprint-window-web", "raw-window-new"),
+        );
+      const newIdentity = await preview();
+      assert.equal(newIdentity.session_id, "raw-window-new");
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(
+        JSON.parse(
+          await page
+            .locator("#footprint-run-window-preview-json")
+            .textContent(),
+        ),
+        newIdentity,
+      );
+      await fill();
+      await run();
+      for (const selector of [
+        "#health-input",
+        "#guarded-input",
+        "#velocity-input",
+      ]) {
+        const value = await page.locator(selector).inputValue();
+        await page.locator(selector).fill(value + " ");
+        assert.deepEqual(await output(), joint);
+        await page.locator(selector).fill(value);
+      }
+      // Exact large clocks remain strings across the new raw producer.
+      await page.locator("#source").fill(assignedLargeInput);
+      await page.locator("#zone-input").fill(zoneConfiguration);
+      await page.locator("#assigned-zone-input").fill(largeAssignments);
+      await page
+        .locator("#footprint-run-window-input")
+        .fill('{"window_us":"1"}');
+      assert.equal((await preview()).timestamp_us, "9007199254740993");
+      await run(2);
+      const large = await output();
+      assert.equal(
+        large.frames[1].measurement.timestamp_us,
+        "9007199254940993",
+      );
+      assert.equal(
+        large.frames[1].windows.statistics.current_window.end_exclusive_us,
+        "9007199254940994",
+      );
+      // Pixel projection diagnostics still use the unchanged measurement domain.
+      await runVelocityBase(velocityPixelInput, 11);
+      await page.locator("#assigned-zone-example").click();
+      await page.locator("#footprint-run-window-input").fill(inputs.window);
+      await run(11);
+      const projected = await output();
+      assert.deepEqual(
+        projected.frames[10].windows.runs.evidence.unavailable,
+        projectionRuns.frames[10].evidence.unavailable,
+      );
+      assert.deepEqual(
+        (await exportJson("#download", "moonground-results.json")).frames,
+        projected.frames.map((frame) => frame.measurement),
+      );
+      await fill();
+      await preview();
+      await run();
+      await select(3);
+      await page
+        .locator("#footprint-run-window-section")
+        .evaluate((details) => {
+          details.open = false;
+        });
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll("#footprint-run-window-rows tr").length ===
+          0,
+      );
+      assert.equal(
+        await page
+          .locator("#download-footprint-run-window-analysis")
+          .isDisabled(),
+        false,
+      );
+      await page
+        .locator("#footprint-run-window-section")
+        .evaluate((details) => {
+          details.open = true;
+        });
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll("#footprint-run-window-rows tr").length ===
+          2,
+      );
+      for (const [width, height, name] of [
+        [390, 844, "mobile"],
+        [1440, 1050, "desktop"],
+      ]) {
+        await page.setViewportSize({ width, height });
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+          true,
+        );
+        await page.locator("#footprint-run-window-section").screenshot({
+          path: path.join(
+            directory,
+            "footprint-run-window-analysis-" + name + "-preview.png",
+          ),
+        });
+      }
+    }
+
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

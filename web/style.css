@@ -434,7 +434,8 @@ summary {
 #disk-zone-face-selection,
 #footprint-zone-face-selection,
 #physical-zone-mode,
-#footprint-run-mode {
+#footprint-run-mode,
+#footprint-run-window-mode {
   max-width: 100%;
   min-width: 0;
 }
