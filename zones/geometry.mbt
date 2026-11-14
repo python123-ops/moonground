@@ -16,23 +16,11 @@ fn zone_cross(
 }
 
 ///|
-/// Require strict convexity with a 1e-12 cross-product margin after translating
-/// and scaling the bounding box to unit extent. This construction threshold
-/// does not add a tolerance to evidence classification at any supporting line.
-pub fn ConvexZone::new(
-  zone_id : String,
+fn validate_convex_geometry(
   vertices_m : Array[@types.Point2],
-  sigma_multiplier~ : Double = 2.0,
-) -> ConvexZone raise @types.GroundError {
-  if zone_id.length() < 1 ||
-    zone_id.length() > 128 ||
-    vertices_m.length() < 3 ||
-    vertices_m.length() > 32 ||
-    !@types.is_finite(sigma_multiplier) ||
-    sigma_multiplier < 0.0 {
-    raise @types.InvalidInput(
-      "invalid zone identity vertex count or sigma multiplier",
-    )
+) -> (Array[@types.Point2], Double) raise @types.GroundError {
+  if vertices_m.length() < 3 || vertices_m.length() > 32 {
+    raise @types.InvalidInput("convex geometry requires 3 to 32 vertices")
   }
   let first = vertices_m[0]
   first.validate()
@@ -102,6 +90,29 @@ pub fn ConvexZone::new(
     }
     normals.push({ x: orientation * uy, y: -orientation * ux, })
   }
+  (normals, orientation)
+}
+
+///|
+/// Require strict convexity with a 1e-12 cross-product margin after translating
+/// and scaling the bounding box to unit extent. This construction threshold
+/// does not add a tolerance to evidence classification at any supporting line.
+pub fn ConvexZone::new(
+  zone_id : String,
+  vertices_m : Array[@types.Point2],
+  sigma_multiplier~ : Double = 2.0,
+) -> ConvexZone raise @types.GroundError {
+  if zone_id.length() < 1 ||
+    zone_id.length() > 128 ||
+    vertices_m.length() < 3 ||
+    vertices_m.length() > 32 ||
+    !@types.is_finite(sigma_multiplier) ||
+    sigma_multiplier < 0.0 {
+    raise @types.InvalidInput(
+      "invalid zone identity vertex count or sigma multiplier",
+    )
+  }
+  let (normals, orientation) = validate_convex_geometry(vertices_m)
   {
     zone_id,
     sigma_multiplier,

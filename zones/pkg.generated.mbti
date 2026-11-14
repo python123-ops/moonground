@@ -12,6 +12,12 @@ import {
 // Errors
 
 // Types and methods
+pub struct ConvexFootprint {
+  // private fields
+}
+pub fn ConvexFootprint::new(Array[@types.Point2]) -> Self raise @types.GroundError
+pub fn ConvexFootprint::vertices_offset_m(Self) -> Array[@types.Point2]
+
 pub struct ConvexZone {
   zone_id : String
   sigma_multiplier : Double
@@ -19,6 +25,7 @@ pub struct ConvexZone {
 }
 pub fn ConvexZone::evaluate(Self, @types.Point2, @types.Covariance2) -> ZoneBand raise @types.GroundError
 pub fn ConvexZone::evaluate_disk(Self, @types.Point2, @types.Covariance2, DiskFootprint) -> DiskZoneBand raise @types.GroundError
+pub fn ConvexZone::evaluate_footprint(Self, @types.Point2, @types.Covariance2, ConvexFootprint) -> FootprintZoneBand raise @types.GroundError
 pub fn ConvexZone::new(String, Array[@types.Point2], sigma_multiplier? : Double) -> Self raise @types.GroundError
 pub fn ConvexZone::vertices_m(Self) -> Array[@types.Point2]
 
@@ -63,6 +70,45 @@ pub(all) struct DiskZoneFaceBand {
   upper_m : Double
 } derive(@debug.Debug)
 pub fn DiskZoneFaceBand::to_repr(Self) -> @debug.Repr
+
+pub(all) struct FootprintZoneBand {
+  zone_id : String
+  vertices_offset_m : Array[@types.Point2]
+  sigma_multiplier : Double
+  faces : Array[FootprintZoneFaceBand]
+  decision : ZoneDecision
+  separating_edge_index : Int32?
+} derive(@debug.Debug)
+pub fn FootprintZoneBand::to_repr(Self) -> @debug.Repr
+
+pub(all) struct FootprintZoneEvidence {
+  track_id : Int32
+  segment_id : String
+  evidence : FootprintZoneBand
+} derive(@debug.Debug)
+pub fn FootprintZoneEvidence::to_repr(Self) -> @debug.Repr
+
+pub(all) struct FootprintZoneEvidenceFrame {
+  session_id : String
+  timestamp_us : Int64
+  evidence : Array[FootprintZoneEvidence]
+  unavailable : Array[ZoneUnavailable]
+} derive(@debug.Debug)
+pub fn FootprintZoneEvidenceFrame::to_repr(Self) -> @debug.Repr
+
+pub(all) struct FootprintZoneFaceBand {
+  edge_index : Int32
+  outward_normal : @types.Point2
+  distance_m : Double
+  normal_std_m : Double
+  position_lower_m : Double
+  position_upper_m : Double
+  footprint_lower_m : Double
+  footprint_upper_m : Double
+  lower_m : Double
+  upper_m : Double
+} derive(@debug.Debug)
+pub fn FootprintZoneFaceBand::to_repr(Self) -> @debug.Repr
 
 pub(all) struct ZoneBand {
   zone_id : String
@@ -112,6 +158,7 @@ pub struct ZoneProjector {
 }
 pub fn ZoneProjector::evaluate(Self, @motion.FrameResult) -> ZoneEvidenceFrame raise @types.GroundError
 pub fn ZoneProjector::evaluate_disk(Self, @motion.FrameResult, DiskFootprint) -> DiskZoneEvidenceFrame raise @types.GroundError
+pub fn ZoneProjector::evaluate_footprint(Self, @motion.FrameResult, ConvexFootprint) -> FootprintZoneEvidenceFrame raise @types.GroundError
 pub fn ZoneProjector::new(String, Array[ConvexZone], max_tracks? : Int32) -> Self raise @types.GroundError
 
 pub(all) struct ZoneUnavailable {
