@@ -314,24 +314,36 @@ fn FootprintRunReplay::run_process_frame(
     self.max_tracks,
   )
   let result = self.monitor.update(measurement, assignments)
+  for row in footprint_run_projection_rows(measurement_source, self.max_tracks) {
+    result.evidence.unavailable.push(row)
+  }
+  result.evidence.unavailable.sort_by((a, b) => a.track_id.compare(b.track_id))
+  footprint_run_frame_json(result)
+}
+
+///|
+fn footprint_run_projection_rows(
+  measurement_source : String,
+  max_tracks : Int32,
+) -> Array[@zones.AssignedFootprintUnavailable] raise @types.GroundError {
+  let result : Array[@zones.AssignedFootprintUnavailable] = []
   let original = object(parse_document(measurement_source), "measurement frame")
   for
     value in array(
       required(original, "tracks"),
       "measurement tracks",
-      self.max_tracks,
+      max_tracks,
     ) {
     let track = object(value, "measurement track")
     if track.get("status") is Some(String("rejected_projection")) {
-      result.evidence.unavailable.push({
+      result.push({
         track_id: positive_int(required(track, "track_id"), "track_id"),
         segment_id: None,
         reason: @zones.Position(@zones.RejectedProjection),
       })
     }
   }
-  result.evidence.unavailable.sort_by((a, b) => a.track_id.compare(b.track_id))
-  footprint_run_frame_json(result)
+  result
 }
 
 ///|
