@@ -196,6 +196,67 @@ pub(all) struct FootprintRunState {
   last_position_covariance : @types.Covariance2
 }
 
+pub(all) struct FootprintRunWindow {
+  start_us : Int64
+  end_exclusive_us : Int64?
+  first_timestamp_us : Int64
+  last_timestamp_us : Int64
+  input_frames : Int64
+  zones : Array[FootprintRunWindowZone]
+} derive(@debug.Debug)
+pub fn FootprintRunWindow::to_repr(Self) -> @debug.Repr
+
+pub(all) struct FootprintRunWindowCheckpoint {
+  version : Int32
+  runs : FootprintRunCheckpoint
+  window_us : Int64
+  origin_us : Int64
+  baseline_timestamp_us : Int64?
+  current_window : FootprintRunWindow?
+}
+
+pub(all) struct FootprintRunWindowEndCount {
+  reason : FootprintRunEndReason
+  confirmed : Int64
+  unconfirmed : Int64
+} derive(@debug.Debug)
+pub fn FootprintRunWindowEndCount::to_repr(Self) -> @debug.Repr
+
+pub(all) struct FootprintRunWindowFrame {
+  runs : FootprintRunFrame
+  statistics : FootprintRunWindowStatistics
+} derive(@debug.Debug)
+pub fn FootprintRunWindowFrame::to_repr(Self) -> @debug.Repr
+
+pub struct FootprintRunWindowMonitor {
+  // private fields
+}
+pub fn FootprintRunWindowMonitor::checkpoint(Self) -> FootprintRunWindowCheckpoint
+pub fn FootprintRunWindowMonitor::fork(Self) -> Self
+pub fn FootprintRunWindowMonitor::from_checkpoint(FootprintRunWindowCheckpoint) -> Self raise @types.GroundError
+pub fn FootprintRunWindowMonitor::new(FootprintRunMonitor, window_us~ : Int64, origin_us? : Int64) -> Self raise @types.GroundError
+pub fn FootprintRunWindowMonitor::update(Self, @motion.FrameResult, FootprintAssignments) -> FootprintRunWindowFrame raise @types.GroundError
+
+pub(all) struct FootprintRunWindowStatistics {
+  session_id : String
+  timestamp_us : Int64
+  closed_window : FootprintRunWindow?
+  current_window : FootprintRunWindow
+  unobserved_windows : Int64
+} derive(@debug.Debug)
+pub fn FootprintRunWindowStatistics::to_repr(Self) -> @debug.Repr
+
+pub(all) struct FootprintRunWindowZone {
+  zone_id : String
+  opening_active : Int64
+  opening_confirmed : Int64
+  started : Int64
+  confirmed_inside : Int64
+  confirmed_outside : Int64
+  endings : Array[FootprintRunWindowEndCount]
+} derive(@debug.Debug)
+pub fn FootprintRunWindowZone::to_repr(Self) -> @debug.Repr
+
 pub(all) enum FootprintShape {
   Disk(DiskFootprint)
   Convex(ConvexFootprint)
