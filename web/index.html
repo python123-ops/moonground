@@ -1209,23 +1209,103 @@
                   <textarea id="footprint-run-input" spellcheck="false">
 {"max_gap_us":"500000","confirmation_us":"1000000","min_samples":"2"}</textarea
                   >
-                  <div class="actions">
-                    <button id="footprint-run-compute" disabled>
-                      计算同足迹确认序列
-                    </button>
-                    <button id="download-footprint-runs" class="quiet" disabled>
-                      下载整批序列与最终检查点
-                    </button>
-                  </div>
-                  <p
-                    id="footprint-run-message"
-                    class="hint"
-                    role="status"
-                    aria-live="polite"
+                  <label class="hint result-mode"
+                    >序列计算显示<select
+                      id="footprint-run-mode"
+                      aria-label="足迹序列计算模式"
+                    >
+                      <option value="independent">独立下游</option>
+                      <option value="joint">原始联合</option>
+                    </select></label
                   >
-                    同时达到最少样本数与样本跨度才确认；新达标仅在该帧标记一次。
-                  </p>
-                  <p id="footprint-run-frame" class="hint"></p>
+                  <div id="footprint-run-independent">
+                    <div class="actions">
+                      <button id="footprint-run-compute" disabled>
+                        计算同足迹确认序列
+                      </button>
+                      <button
+                        id="download-footprint-runs"
+                        class="quiet"
+                        disabled
+                      >
+                        下载整批序列与最终检查点
+                      </button>
+                    </div>
+                    <p
+                      id="footprint-run-message"
+                      class="hint"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      同时达到最少样本数与样本跨度才确认；新达标仅在该帧标记一次。
+                    </p>
+                    <p id="footprint-run-frame" class="hint"></p>
+                  </div>
+                  <div id="footprint-run-joint" hidden>
+                    <p class="hint">
+                      联合入口从上方原始像素／米制观测重放，不读取普通测量已输出帧。
+                      可先使用普通测量和待审分配示例准备身份，再从相同起点联合计算；每个新片段仍由核心严格核对。
+                    </p>
+                    <div class="actions">
+                      <button id="footprint-run-preview">
+                        预览首帧候选身份
+                      </button>
+                      <button id="footprint-run-joint-compute">
+                        联合测量并确认序列
+                      </button>
+                      <button
+                        id="download-footprint-run-analysis"
+                        class="quiet"
+                        disabled
+                      >
+                        下载联合结果与完整共同检查点
+                      </button>
+                    </div>
+                    <p
+                      id="footprint-run-joint-message"
+                      class="hint"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      预览不提交、不预留身份，不自动填写形状或替换分配；联合失败不推进任何一侧。
+                    </p>
+                    <p
+                      id="footprint-run-preview-message"
+                      class="hint"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      首帧候选仅供身份核对，不提交状态或填写分配。
+                    </p>
+                    <details id="footprint-run-preview-section">
+                      <summary>首帧候选身份 · 未提交</summary>
+                      <pre
+                        id="footprint-run-preview-json"
+                        class="footprint-run-json"
+                      ></pre>
+                    </details>
+                    <p class="hint">
+                      预览始终针对当前原始配置／恢复起点的第一帧观测；
+                      旧普通测量结果不受影响。已启动测量与全新序列起点不匹配时会报错，实际续接请在
+                      API 使用完整共同检查点。
+                    </p>
+                    <label for="footprint-run-joint-frame" class="hint"
+                      >联合结果独立回放</label
+                    >
+                    <input
+                      id="footprint-run-joint-frame"
+                      type="range"
+                      min="0"
+                      max="0"
+                      value="0"
+                      disabled
+                    />
+                    <p id="footprint-run-joint-counter" class="hint"></p>
+                    <pre
+                      id="footprint-run-joint-measurement"
+                      class="footprint-run-json"
+                    ></pre>
+                  </div>
                   <p class="hint">
                     样本跨度是末样本时间减首样本时间，不表示实际连续在内、到访、离开、占用或停留。
                     形状的半径、类型、顶点或顺序改变会结束旧序列。

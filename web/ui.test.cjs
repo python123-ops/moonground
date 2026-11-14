@@ -11227,6 +11227,546 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.locator("#footprint-run-section").screenshot({
       path: path.join(directory, "footprint-runs-desktop-preview.png"),
     });
+    // Atomic raw replay has its own result and clock; ordinary output is only
+    // an optional identity preview, never the input of this joint calculation.
+    const atomicOrdinaryBaseline = await exportJson(
+      "#download",
+      "moonground-results.json",
+    );
+    const atomicRunBaseline = await exportFootprintRuns();
+    const atomicIdentity = (frame) => ({
+      session_id: frame.session_id,
+      timestamp_us: frame.timestamp_us,
+      tracks: frame.tracks.map(({ track_id, segment_id, status }) => ({
+        track_id,
+        segment_id,
+        status,
+      })),
+    });
+    const atomicMode = (mode) =>
+      page.locator("#footprint-run-mode").selectOption(mode);
+    const showAtomic = async () => {
+      await physicalMode("assigned");
+      await page.locator("#zone-section").evaluate((details) => {
+        details.open = true;
+      });
+      await page.locator("#footprint-run-section").evaluate((details) => {
+        details.open = true;
+      });
+      await atomicMode("joint");
+    };
+    const runAtomicFootprints = async (count) => {
+      await showAtomic();
+      await page.locator("#footprint-run-joint-compute").click();
+      await page.waitForFunction((expected) => {
+        const node = document.querySelector("#footprint-run-joint-message");
+        return (
+          node.classList.contains("error") ||
+          node.textContent.includes("已联合计算 " + expected + " 帧")
+        );
+      }, count);
+      assert.equal(
+        await page.locator("#footprint-run-joint-message.error").count(),
+        0,
+        await page.locator("#footprint-run-joint-message").textContent(),
+      );
+    };
+    const previewAtomicFootprints = async () => {
+      await showAtomic();
+      await page.locator("#footprint-run-preview").click();
+      await page.waitForFunction(() => {
+        const node = document.querySelector("#footprint-run-preview-message");
+        return (
+          node.classList.contains("error") ||
+          node.textContent.includes("已预览首帧候选")
+        );
+      });
+      assert.equal(
+        await page.locator("#footprint-run-preview-message.error").count(),
+        0,
+        await page.locator("#footprint-run-preview-message").textContent(),
+      );
+      return JSON.parse(
+        await page.locator("#footprint-run-preview-json").textContent(),
+      );
+    };
+    const exportAtomicFootprints = () =>
+      exportJson(
+        "#download-footprint-run-analysis",
+        "moonground-footprint-run-analysis.json",
+      );
+    const selectAtomicFrame = (index) =>
+      page.locator("#footprint-run-joint-frame").evaluate((input, value) => {
+        input.value = String(value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }, index);
+    await showAtomic();
+    assert.equal(
+      await page.locator("#footprint-run-independent").isHidden(),
+      true,
+    );
+    assert.equal(await page.locator("#footprint-run-joint").isVisible(), true);
+    const atomicAssignmentsBeforePreview = await page
+      .locator("#assigned-zone-input")
+      .inputValue();
+    assert.deepEqual(
+      await previewAtomicFootprints(),
+      atomicIdentity(atomicOrdinaryBaseline.frames[0]),
+    );
+    assert.equal(
+      await page.locator("#assigned-zone-input").inputValue(),
+      atomicAssignmentsBeforePreview,
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      atomicOrdinaryBaseline,
+    );
+    // Even a same-text input event invalidates the ordinary output, but not a
+    // raw joint owner. The new path must work with no ordinary result loaded.
+    await page.locator("#source").fill(velocitySource);
+    assert.equal(await page.locator("#download").isDisabled(), true);
+    assert.equal(
+      await page.locator("#footprint-run-compute").isDisabled(),
+      true,
+    );
+    assert.deepEqual(
+      await previewAtomicFootprints(),
+      atomicIdentity(atomicOrdinaryBaseline.frames[0]),
+    );
+    await runAtomicFootprints(7);
+    const atomicFootprints = await exportAtomicFootprints();
+    atomicFootprints.frames.forEach((frame, index) => {
+      assert.equal(frame.kind, "footprint_run_analysis_frame");
+      assert.deepEqual(frame.measurement, atomicOrdinaryBaseline.frames[index]);
+      assert.deepEqual(frame.runs, atomicRunBaseline.frames[index]);
+    });
+    assert.equal(
+      atomicFootprints.checkpoint.format,
+      "moonground.footprint-run-analysis",
+    );
+    assert.equal(atomicFootprints.checkpoint.checkpoint_version, "1");
+    assert.equal(atomicFootprints.checkpoint.runs.last_timestamp_us, "1200000");
+    assert.ok(atomicFootprints.checkpoint.measurement);
+    assert.deepEqual(
+      await page.evaluate(async (checkpoint) => {
+        const bridge = await import("./moonground.mjs");
+        return JSON.parse(
+          bridge.moonground_footprint_run_analysis(
+            JSON.stringify({
+              source: JSON.stringify({ resume: checkpoint }),
+              frames: "",
+            }),
+          ),
+        );
+      }, atomicFootprints.checkpoint),
+      { frames: [], checkpoint: atomicFootprints.checkpoint },
+    );
+    assert.equal(await page.locator("#download").isDisabled(), true);
+    await runVelocityBase(velocitySource, 7);
+    assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      atomicOrdinaryBaseline,
+    );
+    await selectAtomicFrame(3);
+    assert.deepEqual(
+      JSON.parse(
+        await page.locator("#footprint-run-joint-measurement").textContent(),
+      ),
+      atomicIdentity(atomicOrdinaryBaseline.frames[3]),
+    );
+    assert.equal(
+      await page.locator("#footprint-run-rows tr").count(),
+      atomicFootprints.frames[3].runs.active.length +
+        atomicFootprints.frames[3].runs.closed.length,
+    );
+    await selectVelocityFrame(1);
+    assert.match(
+      await page.locator("#footprint-run-joint-counter").textContent(),
+      /600000/,
+    );
+    assert.equal(
+      await page.locator("#footprint-run-joint-frame").inputValue(),
+      "3",
+    );
+    await atomicMode("independent");
+    assert.deepEqual(await exportFootprintRuns(), atomicRunBaseline);
+    assert.equal(
+      await page.locator("#download-footprint-run-analysis").isHidden(),
+      true,
+    );
+    await atomicMode("joint");
+    assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+    assert.equal(
+      await page.locator("#footprint-run-joint-frame").inputValue(),
+      "3",
+    );
+    assert.equal(
+      await page.locator("#download-footprint-runs").isHidden(),
+      true,
+    );
+    // Displayed previews cannot be substituted for the actual candidate.
+    await page.locator("#footprint-run-preview-json").evaluate((node) => {
+      node.textContent =
+        '{"timestamp_us":"999","tracks":[{"track_id":1,"segment_id":"999"}]}';
+    });
+    await runAtomicFootprints(7);
+    assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+    assert.deepEqual(
+      JSON.parse(
+        await page.locator("#footprint-run-preview-json").textContent(),
+      ),
+      atomicIdentity(atomicOrdinaryBaseline.frames[0]),
+    );
+    const badAtomicDocuments = JSON.parse(JSON.stringify(assignedDocuments));
+    badAtomicDocuments[4].footprints[0].segment_id = "999";
+    await page
+      .locator("#assigned-zone-input")
+      .fill(assignmentText(badAtomicDocuments));
+    assert.deepEqual(
+      JSON.parse(
+        await page.locator("#footprint-run-preview-json").textContent(),
+      ),
+      atomicIdentity(atomicOrdinaryBaseline.frames[0]),
+    );
+    await page.locator("#footprint-run-joint-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#footprint-run-joint-message")
+        .classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#download-footprint-run-analysis").isDisabled(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#assigned-zone-input").inputValue(),
+      assignmentText(badAtomicDocuments),
+    );
+    assert.deepEqual(
+      await exportJson("#download", "moonground-results.json"),
+      atomicOrdinaryBaseline,
+    );
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await runAtomicFootprints(7);
+    // Failures at unchanged dependencies preserve the prior complete result.
+    await page.evaluate(() => {
+      window.atomicOriginalTextEncoder = window.TextEncoder;
+      window.TextEncoder = class {
+        encode() {
+          throw new Error("atomic preparation failed");
+        }
+      };
+    });
+    await page.locator("#footprint-run-joint-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#footprint-run-joint-message")
+        .classList.contains("error"),
+    );
+    await page.locator("#footprint-run-preview").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#footprint-run-preview-message")
+        .classList.contains("error"),
+    );
+    await page.evaluate(() => {
+      window.TextEncoder = window.atomicOriginalTextEncoder;
+      delete window.atomicOriginalTextEncoder;
+    });
+    assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+    assert.deepEqual(
+      JSON.parse(
+        await page.locator("#footprint-run-preview-json").textContent(),
+      ),
+      atomicIdentity(atomicOrdinaryBaseline.frames[0]),
+    );
+    // Raw fractional IDs and duplicate fields cannot be rounded or normalized.
+    for (const input of [
+      velocitySource.replace('"track_id":2', '"track_id":2.0000000000000001'),
+      velocitySource.replace(
+        '"session_id":"velocity-ui"',
+        '"session_id":"velocity-ui","session_id":"velocity-ui"',
+      ),
+    ]) {
+      await page.locator("#source").fill(input);
+      await page.locator("#footprint-run-preview").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-run-preview-message")
+          .classList.contains("error"),
+      );
+      await page.locator("#footprint-run-joint-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-run-joint-message")
+          .classList.contains("error"),
+      );
+      assert.equal(await page.locator("#source").inputValue(), input);
+      assert.equal(
+        await page.locator("#download-footprint-run-analysis").isDisabled(),
+        true,
+      );
+    }
+    const laterBadAtomicLines = velocitySource.trimEnd().split("\n");
+    laterBadAtomicLines[7] =
+      '{"timestamp_us":"1200000","observations":[{"track_id":1.0000000000000001,"point":[0,0]}]}';
+    await page.locator("#source").fill(laterBadAtomicLines.join("\n") + "\n");
+    assert.deepEqual(
+      await previewAtomicFootprints(),
+      atomicIdentity(atomicOrdinaryBaseline.frames[0]),
+    );
+    await page.locator("#footprint-run-joint-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#footprint-run-joint-message")
+        .classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#download-footprint-run-analysis").isDisabled(),
+      true,
+    );
+    // A started measurement checkpoint cannot be paired with a new monitor.
+    const mismatchedAtomicSource =
+      [
+        JSON.stringify({ resume: atomicFootprints.checkpoint.measurement }),
+        '{"timestamp_us":"1400000","observations":[]}',
+      ].join("\n") + "\n";
+    await page.locator("#source").fill(mismatchedAtomicSource);
+    await page
+      .locator("#assigned-zone-input")
+      .fill('{"timestamp_us":"1400000","footprints":[]}\n');
+    await page.locator("#footprint-run-preview").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#footprint-run-preview-message")
+        .classList.contains("error"),
+    );
+    await page.locator("#footprint-run-joint-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#footprint-run-joint-message")
+        .classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#source").inputValue(),
+      mismatchedAtomicSource,
+    );
+    // Exact large clocks and projection reasons use the same raw producer.
+    await page.locator("#source").fill(assignedLargeInput);
+    await page.locator("#assigned-zone-input").fill(largeAssignments);
+    assert.equal(
+      (await previewAtomicFootprints()).timestamp_us,
+      "9007199254740993",
+    );
+    await runAtomicFootprints(2);
+    const largeAtomic = await exportAtomicFootprints();
+    assert.equal(
+      largeAtomic.frames[1].measurement.timestamp_us,
+      "9007199254940993",
+    );
+    assert.equal(
+      largeAtomic.checkpoint.runs.last_timestamp_us,
+      "9007199254940993",
+    );
+    await runVelocityBase(velocityPixelInput, 11);
+    await page.locator("#assigned-zone-example").click();
+    await runAtomicFootprints(11);
+    const projectedAtomic = await exportAtomicFootprints();
+    assert.deepEqual(
+      projectedAtomic.frames[10].runs.evidence.unavailable,
+      projectionRuns.frames[10].evidence.unavailable,
+    );
+    assert.deepEqual(
+      (await exportJson("#download", "moonground-results.json")).frames,
+      projectedAtomic.frames.map((frame) => frame.measurement),
+    );
+    await runVelocityBase(velocitySource, 7);
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await runAtomicFootprints(7);
+    await atomicMode("independent");
+    await runFootprintRuns(7);
+    await atomicMode("joint");
+    assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+    // Same-raw ordinary recalculation is unrelated to a raw joint preparation.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-joint-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runVelocityBase(velocitySource, 7);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+    // Each display strategy preserves the other's task and complete result.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-joint-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await atomicMode("independent");
+    await runFootprintRuns(7);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportFootprintRuns(), atomicRunBaseline);
+    await atomicMode("joint");
+    assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+    await atomicMode("independent");
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runAtomicFootprints(7);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+    await atomicMode("independent");
+    assert.deepEqual(await exportFootprintRuns(), atomicRunBaseline);
+    await atomicMode("joint");
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-preview").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runAtomicFootprints(7);
+    await releaseEvidenceTransitPreparation();
+    assert.match(
+      await page.locator("#footprint-run-joint-message").textContent(),
+      /已联合计算 7 帧/,
+    );
+    assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+    // Assignment changes do not cancel an unrelated candidate preview.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-preview").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page
+      .locator("#assigned-zone-input")
+      .fill(assignedConfiguration.replace(/\n$/, " \n"));
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(
+      JSON.parse(
+        await page.locator("#footprint-run-preview-json").textContent(),
+      ),
+      atomicIdentity(atomicOrdinaryBaseline.frames[0]),
+    );
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await runAtomicFootprints(7);
+    for (const selector of [
+      "#source",
+      "#zone-input",
+      "#assigned-zone-input",
+      "#footprint-run-input",
+    ]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-joint-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page.locator("#download-footprint-run-analysis").isDisabled(),
+        true,
+      );
+      await page.locator(selector).fill(previous);
+      await runAtomicFootprints(7);
+    }
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-joint-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page
+      .locator("#footprint-run-input")
+      .fill('{"max_gap_us":"500000","confirmation_us":"0","min_samples":"1"}');
+    await runAtomicFootprints(7);
+    const supersedingAtomic = await exportAtomicFootprints();
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportAtomicFootprints(), supersedingAtomic);
+    await page.locator("#footprint-run-input").fill(runOptions);
+    await runAtomicFootprints(7);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-preview").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page
+      .locator("#source")
+      .fill(velocitySource.replace("velocity-ui", "velocity-preview-new"));
+    await page
+      .locator("#zone-input")
+      .fill(zoneConfiguration.replace("velocity-ui", "velocity-preview-new"));
+    const newAtomicPreview = await previewAtomicFootprints();
+    assert.equal(newAtomicPreview.session_id, "velocity-preview-new");
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(
+      JSON.parse(
+        await page.locator("#footprint-run-preview-json").textContent(),
+      ),
+      newAtomicPreview,
+    );
+    await page.locator("#source").fill(velocitySource);
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await previewAtomicFootprints();
+    await runAtomicFootprints(7);
+    for (const selector of [
+      "#velocity-input",
+      "#gate-input",
+      "#guarded-input",
+    ]) {
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+      await page.locator(selector).fill(previous);
+    }
+    await physicalMode("convex");
+    const atomicOtherFootprint = await page
+      .locator("#footprint-zone-input")
+      .inputValue();
+    await page
+      .locator("#footprint-zone-input")
+      .fill(atomicOtherFootprint + " ");
+    await physicalMode("assigned");
+    assert.deepEqual(await exportAtomicFootprints(), atomicFootprints);
+    await selectAtomicFrame(3);
+    await page.locator("#footprint-run-section").evaluate((details) => {
+      details.open = false;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#footprint-run-rows tr").length === 0,
+    );
+    assert.equal(
+      await page.locator("#download-footprint-run-analysis").isDisabled(),
+      false,
+    );
+    await page.locator("#footprint-run-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#footprint-run-rows tr").length > 1,
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#footprint-run-section").screenshot({
+      path: path.join(directory, "footprint-run-analysis-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#footprint-run-section").screenshot({
+      path: path.join(directory, "footprint-run-analysis-desktop-preview.png"),
+    });
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

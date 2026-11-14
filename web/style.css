@@ -432,7 +432,17 @@ summary {
 #zone-face-selection,
 #disk-zone-face-selection,
 #footprint-zone-face-selection,
-#physical-zone-mode {
+#physical-zone-mode,
+#footprint-run-mode {
   max-width: 100%;
   min-width: 0;
+}
+
+.footprint-run-json {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 180px;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.6;
 }
