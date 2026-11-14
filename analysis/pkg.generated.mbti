@@ -8,6 +8,7 @@ import {
   "python123-ops/moonground/motion",
   "python123-ops/moonground/transit",
   "python123-ops/moonground/types",
+  "python123-ops/moonground/zones",
 }
 
 // Values
@@ -123,6 +124,39 @@ pub(all) struct EvidenceTransitWindowSessionFrame {
   windows : @transit.EvidenceTransitWindowFrame
 } derive(@debug.Debug)
 pub fn EvidenceTransitWindowSessionFrame::to_repr(Self) -> @debug.Repr
+
+pub struct FootprintRunPreparation {
+  // private fields
+}
+pub fn FootprintRunPreparation::commit(Self, @zones.FootprintAssignments) -> FootprintRunSessionFrame raise @types.GroundError
+pub fn FootprintRunPreparation::measurement(Self) -> @moonground.MeasurementFrame
+
+pub struct FootprintRunSession {
+  // private fields
+}
+pub fn FootprintRunSession::checkpoint(Self) -> FootprintRunSessionCheckpoint
+pub fn FootprintRunSession::fork(Self) -> Self
+pub fn FootprintRunSession::from_checkpoint(FootprintRunSessionCheckpoint) -> Self raise @types.GroundError
+pub fn FootprintRunSession::from_ground(@motion.MotionEstimator, @zones.FootprintRunMonitor) -> Self raise @types.GroundError
+pub fn FootprintRunSession::from_pixel(@moonground.MeasurementSession, @zones.FootprintRunMonitor) -> Self raise @types.GroundError
+pub fn FootprintRunSession::interrupt(Self, Int64) -> FootprintRunSessionFrame raise @types.GroundError
+pub fn FootprintRunSession::prepare_ground(Self, Int64, Array[@types.GroundObservation], lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunPreparation raise @types.GroundError
+pub fn FootprintRunSession::prepare_pixel(Self, Int64, Array[@moonground.PixelObservation], lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunPreparation raise @types.GroundError
+pub fn FootprintRunSession::reframed(Self, @types.PixelTransform) -> Self raise @types.GroundError
+pub fn FootprintRunSession::update_ground(Self, Int64, Array[@types.GroundObservation], @zones.FootprintAssignments, lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunSessionFrame raise @types.GroundError
+pub fn FootprintRunSession::update_pixel(Self, Int64, Array[@moonground.PixelObservation], @zones.FootprintAssignments, lost? : Array[Int32], removed? : Array[Int32]) -> FootprintRunSessionFrame raise @types.GroundError
+
+pub(all) struct FootprintRunSessionCheckpoint {
+  version : Int32
+  measurement : AnalysisMeasurement
+  runs : @zones.FootprintRunCheckpoint
+}
+
+pub(all) struct FootprintRunSessionFrame {
+  measurement : @moonground.MeasurementFrame
+  runs : @zones.FootprintRunFrame
+} derive(@debug.Debug)
+pub fn FootprintRunSessionFrame::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 
