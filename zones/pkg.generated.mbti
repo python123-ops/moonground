@@ -48,6 +48,13 @@ pub(all) struct AssignedFootprintZoneEvidenceFrame {
 } derive(@debug.Debug)
 pub fn AssignedFootprintZoneEvidenceFrame::to_repr(Self) -> @debug.Repr
 
+pub(all) struct ClosedFootprintRun {
+  run : FootprintRun
+  closed_at_timestamp_us : Int64
+  reason : FootprintRunEndReason
+} derive(@debug.Debug)
+pub fn ClosedFootprintRun::to_repr(Self) -> @debug.Repr
+
 pub struct ConvexFootprint {
   // private fields
 }
@@ -119,6 +126,74 @@ pub struct FootprintAssignments {
   // private fields
 }
 pub fn FootprintAssignments::new(Int64, Array[FootprintAssignment]) -> Self raise @types.GroundError
+
+pub(all) struct FootprintRun {
+  zone_id : String
+  track_id : Int32
+  segment_id : String
+  decision : ZoneDecision
+  first_timestamp_us : Int64
+  last_timestamp_us : Int64
+  sample_count : Int64
+  sample_span_us : Int64
+  confirmed : Bool
+} derive(@debug.Debug)
+pub fn FootprintRun::to_repr(Self) -> @debug.Repr
+
+pub(all) struct FootprintRunCheckpoint {
+  version : Int32
+  session_id : String
+  zones : Array[ConvexZone]
+  max_tracks : Int32
+  config : FootprintRunConfig
+  last_timestamp_us : Int64?
+  states : Array[FootprintRunState]
+}
+
+pub struct FootprintRunConfig {
+  max_gap_us : Int64
+  confirmation_us : Int64
+  min_samples : Int64
+}
+pub fn FootprintRunConfig::new(max_gap_us? : Int64, confirmation_us? : Int64, min_samples? : Int64) -> Self raise @types.GroundError
+
+pub(all) enum FootprintRunEndReason {
+  GapExceeded
+  SegmentClosed
+  SegmentChanged
+  MissingTarget
+  UnavailableEvidence
+  ShapeChanged
+  IndeterminateEvidence
+  DecisionChanged
+} derive(Eq, @debug.Debug)
+pub fn FootprintRunEndReason::equal(Self, Self) -> Bool
+pub fn FootprintRunEndReason::not_equal(Self, Self) -> Bool
+pub fn FootprintRunEndReason::to_repr(Self) -> @debug.Repr
+
+pub(all) struct FootprintRunFrame {
+  evidence : AssignedFootprintZoneEvidenceFrame
+  active : Array[FootprintRun]
+  confirmed : Array[FootprintRun]
+  closed : Array[ClosedFootprintRun]
+} derive(@debug.Debug)
+pub fn FootprintRunFrame::to_repr(Self) -> @debug.Repr
+
+pub struct FootprintRunMonitor {
+  // private fields
+}
+pub fn FootprintRunMonitor::checkpoint(Self) -> FootprintRunCheckpoint
+pub fn FootprintRunMonitor::fork(Self) -> Self
+pub fn FootprintRunMonitor::from_checkpoint(FootprintRunCheckpoint) -> Self raise @types.GroundError
+pub fn FootprintRunMonitor::new(String, Array[ConvexZone], FootprintRunConfig, max_tracks? : Int32) -> Self raise @types.GroundError
+pub fn FootprintRunMonitor::update(Self, @motion.FrameResult, FootprintAssignments) -> FootprintRunFrame raise @types.GroundError
+
+pub(all) struct FootprintRunState {
+  run : FootprintRun
+  shape : FootprintShape
+  last_position_m : @types.Point2
+  last_position_covariance : @types.Covariance2
+}
 
 pub(all) enum FootprintShape {
   Disk(DiskFootprint)
