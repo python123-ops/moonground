@@ -1,0 +1,601 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/footprint_run_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-v0.27-results.json",
+  "python": "3.8.7",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "a366e8aa9c465752e5fad1bacbcbed5a9b3e2c65eec0781019741eff974ba4e7",
+  "assigned_reference_sha256": "ad22944dcfd5c25433a7f5040ca93243904c3efff6841908696d0c988ec1d88e",
+  "binary_sha256": "74792627079047175583bf35130f4bfebe9676a041ca828dcd641e4193c06d90",
+  "scope": "current_target_footprint_confirmed_sample_runs",
+  "independent_reference": "Offline longest eligible suffix of actual v25 current evidence; Python integer sample counts/spans/qualification and closure priority; no physical dwell inference",
+  "integer_run_reference": {
+    "cases": 22,
+    "frames": 81,
+    "cut_points": 103,
+    "break_reasons": [
+      "decision_changed",
+      "gap_exceeded",
+      "indeterminate_evidence",
+      "missing_target",
+      "segment_changed",
+      "segment_closed",
+      "shape_changed",
+      "unavailable_evidence"
+    ],
+    "newly_confirmed": 9,
+    "closed_rows": 20,
+    "current_v25_evidence_exact": true,
+    "all_frame_and_checkpoint_fields_exact": true,
+    "records": [
+      {
+        "name": "and_confirmation",
+        "frames": 7,
+        "active_rows": 7,
+        "newly_confirmed": 2,
+        "closed_rows": 1
+      },
+      {
+        "name": "instant_first",
+        "frames": 3,
+        "active_rows": 3,
+        "newly_confirmed": 2,
+        "closed_rows": 1
+      },
+      {
+        "name": "samples_only",
+        "frames": 3,
+        "active_rows": 3,
+        "newly_confirmed": 1,
+        "closed_rows": 0
+      },
+      {
+        "name": "span_only",
+        "frames": 3,
+        "active_rows": 3,
+        "newly_confirmed": 1,
+        "closed_rows": 0
+      },
+      {
+        "name": "break_indeterminate",
+        "frames": 4,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "break_missing",
+        "frames": 4,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "break_initializing",
+        "frames": 4,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "break_uncertain",
+        "frames": 4,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "break_rejected",
+        "frames": 4,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "break_numerical",
+        "frames": 4,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "break_projection",
+        "frames": 4,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "break_absent",
+        "frames": 4,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "break_outside",
+        "frames": 4,
+        "active_rows": 4,
+        "newly_confirmed": 0,
+        "closed_rows": 2
+      },
+      {
+        "name": "shape_radius",
+        "frames": 3,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "shape_kind",
+        "frames": 3,
+        "active_rows": 2,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "shape_vertex_order",
+        "frames": 3,
+        "active_rows": 0,
+        "newly_confirmed": 0,
+        "closed_rows": 0
+      },
+      {
+        "name": "segment",
+        "frames": 3,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "closed",
+        "frames": 3,
+        "active_rows": 2,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "gap_priority",
+        "frames": 3,
+        "active_rows": 2,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "beyond_double",
+        "frames": 3,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "near_max",
+        "frames": 3,
+        "active_rows": 3,
+        "newly_confirmed": 0,
+        "closed_rows": 1
+      },
+      {
+        "name": "multi_target_zone_mixed",
+        "frames": 5,
+        "active_rows": 15,
+        "newly_confirmed": 3,
+        "closed_rows": 1
+      }
+    ]
+  },
+  "bounded_exhaustive": {
+    "sequences": 81,
+    "samples_per_sequence": 4,
+    "frames": 324,
+    "alphabet": [
+      "inside",
+      "outside",
+      "indeterminate"
+    ],
+    "offline_suffix_reference": "passed"
+  },
+  "strict_restore_and_raw": {
+    "rejected_cases": 40,
+    "records": [
+      {
+        "name": "unknown_header",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run source: unknown field extra"
+      },
+      {
+        "name": "position_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: position must be a string"
+      },
+      {
+        "name": "options_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: options must be a string"
+      },
+      {
+        "name": "missing_position",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field position"
+      },
+      {
+        "name": "duplicate_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"position\" at line 1, column 16"
+      },
+      {
+        "name": "min_samples0",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid footprint run confirmation limits"
+      },
+      {
+        "name": "min_samples2",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: min_samples must be a string"
+      },
+      {
+        "name": "confirmation_us-1",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: confirmation_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "max_gap_us0",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid footprint run confirmation limits"
+      },
+      {
+        "name": "max_gap_us01",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_gap_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported footprint run checkpoint version"
+      },
+      {
+        "name": "schema",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported footprint run checkpoint version"
+      },
+      {
+        "name": "empty_session",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid zone projector session or capacity"
+      },
+      {
+        "name": "missing_config",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field min_samples"
+      },
+      {
+        "name": "missing_sigma",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field sigma_multiplier"
+      },
+      {
+        "name": "wrong_last",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid footprint run identity time or decision"
+      },
+      {
+        "name": "unstarted_states",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unstarted footprint run checkpoint has retained states"
+      },
+      {
+        "name": "negative_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: sample_count must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "zero_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid footprint run identity time or decision"
+      },
+      {
+        "name": "count_exceeds_timeslots",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: inconsistent footprint run span or confirmation"
+      },
+      {
+        "name": "span_mismatch",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: inconsistent footprint run span or confirmation"
+      },
+      {
+        "name": "first_after_last",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid footprint run identity time or decision"
+      },
+      {
+        "name": "qualification_false",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: inconsistent footprint run span or confirmation"
+      },
+      {
+        "name": "indeterminate",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: run decision must be inside or outside"
+      },
+      {
+        "name": "rescore_outside",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run checkpoint omits or contradicts current evidence"
+      },
+      {
+        "name": "non_spd",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: measurement covariance must be positive definite"
+      },
+      {
+        "name": "changed_shape_indeterminate",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: indeterminate footprint evidence cannot retain a run"
+      },
+      {
+        "name": "unknown_zone",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unknown or duplicate footprint run zone identity"
+      },
+      {
+        "name": "duplicate_state",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unknown or duplicate footprint run zone identity"
+      },
+      {
+        "name": "gap_impossible",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run samples cannot satisfy the maximum gap"
+      },
+      {
+        "name": "unknown_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run checkpoint: unknown field extra"
+      },
+      {
+        "name": "missing_definite_zone",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run checkpoint omits or contradicts current evidence"
+      },
+      {
+        "name": "cross_zone_point",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run target has inconsistent shape or current anchor"
+      },
+      {
+        "name": "cross_zone_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run target has inconsistent shape or current anchor"
+      },
+      {
+        "name": "cross_zone_shape",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run target has inconsistent shape or current anchor"
+      },
+      {
+        "name": "cross_zone_segment",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run target has inconsistent shape or current anchor"
+      },
+      {
+        "name": "failed_frame_0",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "bf2ab74a2b3568ccd4616c6e8c36a59982998991c9fbe55977723022348a1c22",
+        "stdout_bytes": 1598,
+        "stderr": "line 3: footprint run timestamps must strictly increase"
+      },
+      {
+        "name": "failed_frame_1",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "bf2ab74a2b3568ccd4616c6e8c36a59982998991c9fbe55977723022348a1c22",
+        "stdout_bytes": 1598,
+        "stderr": "line 3: disk evidence interval cannot expand the position band"
+      },
+      {
+        "name": "failed_frame_2",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "bf2ab74a2b3568ccd4616c6e8c36a59982998991c9fbe55977723022348a1c22",
+        "stdout_bytes": 1598,
+        "stderr": "line 3: footprint run frame: unknown field extra"
+      },
+      {
+        "name": "failed_frame_3",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "bf2ab74a2b3568ccd4616c6e8c36a59982998991c9fbe55977723022348a1c22",
+        "stdout_bytes": 1598,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      }
+    ],
+    "complete_native_prefix_preserved": true,
+    "failed_checkpoint_mode_emits_no_checkpoint": true
+  },
+  "int64_counter_overflow": {
+    "status": "passed",
+    "saved_count": "9223372036854775807",
+    "same_timestamp_retry": "9223372036854775807",
+    "failed_update": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 2: footprint run sample count overflows Int64"
+    },
+    "corrected_sample_count": "1",
+    "live_atomic_rollback_tested_by_core": true
+  },
+  "transport": {
+    "exact_source_and_frame_utf16": 1048576,
+    "lf_crlf_unterminated_eof": "passed",
+    "overflow_prefix": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "bf2ab74a2b3568ccd4616c6e8c36a59982998991c9fbe55977723022348a1c22",
+      "stdout_bytes": 1598,
+      "stderr": "line 3: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "missing_header": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "missing footprint run source"
+    }
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/footprint-run.test.mjs",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 13,
+      "continuations": 52,
+      "directions": [
+        "native_to_native",
+        "native_to_javascript",
+        "javascript_to_native",
+        "javascript_to_javascript"
+      ],
+      "exact_clock_start": "9007199254740993"
+    },
+    "actual_budgets": {
+      "successful_empty_frames": 5000,
+      "complete_return_utf16_units": 1969239,
+      "old_handles_occupied": 64,
+      "whole_output_includes_checkpoint": true
+    },
+    "maximum_work_and_retained_state": {
+      "maximum_actual_face_expansions": 65536,
+      "maximum_raw_support_projections": 2097152,
+      "max_work_retained_states": 2048,
+      "max_actual_retained_states": 21840,
+      "max_state_frame_utf16_units": 610100,
+      "checkpoint_budget_rejected": true,
+      "equivalent_work_pure_return_utf16_units": 29511252
+    },
+    "test_script_sha256": "31bee92bd9bcbcff442fb4f5a6143db352a408ea7caeae0e8127cce779445e9d",
+    "bridge_sha256": "282321eaa2f26d15bb7522926f0db98588cf2c03f84d8ad2f0976bea92ddd505",
+    "stdout_sha256": "fd6bc34906beb3f6ccacbcd2ab5410a50b83df894068b85af9bcf029a4204db4"
+  },
+  "status": "passed",
+  "elapsed_seconds": 20.5298391
+}

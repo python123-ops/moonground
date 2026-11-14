@@ -1,0 +1,834 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/assigned_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/assigned-zone-v0.27-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "ad22944dcfd5c25433a7f5040ca93243904c3efff6841908696d0c988ec1d88e",
+  "disk_reference_sha256": "21bc673c9ec9a6114bc803d28fa8e56bb75d0bbe7a8a9643fdd7b44d79cad43a",
+  "convex_reference_sha256": "d32b8762cd35643ee96e8761169aaa68166d0a4d9d0c2f0d4e01e51bdb75386f",
+  "position_reference_sha256": "4ade4a4c5b0004eae0b43d460a70454d6d8aa2c28f1259c3e2c9d108c90b8773",
+  "binary_sha256": "74792627079047175583bf35130f4bfebe9676a041ca828dcd641e4193c06d90",
+  "evidence_scope": "model_position_halfplane_bands_plus_current_target_footprints",
+  "scaled_error_denominator": "max(abs(reference),1e-300)",
+  "independent_reference": "Fraction rawcross/support extrema and Decimal220 lengths/covariance, explicit deterministic vertex supports, independently rounded endpoints; old point path verifies preserved position fields; old disk and convex grouped paths independently check exact production compatibility",
+  "numeric_reference": {
+    "cases": 36,
+    "frames": 156,
+    "evidence_rows": 300,
+    "face_rows": 1176,
+    "missing_ready_rows": 150,
+    "grouped_old_disk_and_convex_exact": true,
+    "old_position_bands_preserved_exactly": true,
+    "stateless_repeat_and_reordering_exact": true,
+    "maximum_absolute_decimal_errors": {
+      "$.evidence[].vertices_offset_m[][]": 0,
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.1356855067118858e+133,
+      "$.evidence[].faces[].normal_std_m": 5.551115123125783e-17,
+      "$.evidence[].faces[].lower_m": 2.2713710134237715e+133,
+      "$.evidence[].faces[].upper_m": 3.552713678800501e-15,
+      "$.evidence[].faces[].position_lower_m": 1.1356855067118858e+133,
+      "$.evidence[].faces[].position_upper_m": 1.1356855067118858e+133,
+      "$.evidence[].faces[].footprint_lower_m": 2.7755575615628914e-17,
+      "$.evidence[].faces[].footprint_upper_m": 5.551115123125783e-17,
+      "$.evidence[].radius_m": 0
+    },
+    "maximum_relative_or_scaled_decimal_errors": {
+      "$.evidence[].vertices_offset_m[][]": 0,
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.8724445165742408e-16,
+      "$.evidence[].faces[].normal_std_m": 2.7755575615628914e-16,
+      "$.evidence[].faces[].lower_m": 3.0284946845650255e-16,
+      "$.evidence[].faces[].upper_m": 5.210688437530957e-16,
+      "$.evidence[].faces[].position_lower_m": 2.1147105230955362e-16,
+      "$.evidence[].faces[].position_upper_m": 9.729275331114688e-16,
+      "$.evidence[].faces[].footprint_lower_m": 1.6399701920366276e-16,
+      "$.evidence[].faces[].footprint_upper_m": 2.0926019650387372e-16,
+      "$.evidence[].radius_m": 0
+    },
+    "records": [
+      {
+        "name": "slanted_original_boundary",
+        "frames": 8,
+        "evidence_rows": 16,
+        "face_rows": 48
+      },
+      {
+        "name": "closed-bands-0",
+        "frames": 7,
+        "evidence_rows": 14,
+        "face_rows": 56
+      },
+      {
+        "name": "closed-bands-1",
+        "frames": 7,
+        "evidence_rows": 14,
+        "face_rows": 56
+      },
+      {
+        "name": "closed-bands-2",
+        "frames": 7,
+        "evidence_rows": 14,
+        "face_rows": 56
+      },
+      {
+        "name": "correlated-1e-150--1",
+        "frames": 4,
+        "evidence_rows": 8,
+        "face_rows": 32
+      },
+      {
+        "name": "correlated-1e-150-1",
+        "frames": 4,
+        "evidence_rows": 8,
+        "face_rows": 32
+      },
+      {
+        "name": "correlated-1--1",
+        "frames": 4,
+        "evidence_rows": 8,
+        "face_rows": 32
+      },
+      {
+        "name": "correlated-1-1",
+        "frames": 4,
+        "evidence_rows": 8,
+        "face_rows": 32
+      },
+      {
+        "name": "correlated-1e+150--1",
+        "frames": 4,
+        "evidence_rows": 8,
+        "face_rows": 32
+      },
+      {
+        "name": "correlated-1e+150-1",
+        "frames": 4,
+        "evidence_rows": 8,
+        "face_rows": 32
+      },
+      {
+        "name": "winding-0",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "winding-1",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "winding-2",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "rotation",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "reflection",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "translation",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "metric_scale",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "anisotropic",
+        "frames": 1,
+        "evidence_rows": 2,
+        "face_rows": 8
+      },
+      {
+        "name": "supported_correlation",
+        "frames": 1,
+        "evidence_rows": 2,
+        "face_rows": 8
+      },
+      {
+        "name": "all_statuses_exact_clock_and_empty",
+        "frames": 9,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "optional_defaults",
+        "frames": 1,
+        "evidence_rows": 2,
+        "face_rows": 8
+      },
+      {
+        "name": "interior_ccw",
+        "frames": 6,
+        "evidence_rows": 12,
+        "face_rows": 48
+      },
+      {
+        "name": "interior_cw",
+        "frames": 6,
+        "evidence_rows": 12,
+        "face_rows": 48
+      },
+      {
+        "name": "interior_cyclic",
+        "frames": 6,
+        "evidence_rows": 12,
+        "face_rows": 48
+      },
+      {
+        "name": "edge_ccw",
+        "frames": 6,
+        "evidence_rows": 12,
+        "face_rows": 48
+      },
+      {
+        "name": "edge_cw",
+        "frames": 6,
+        "evidence_rows": 12,
+        "face_rows": 48
+      },
+      {
+        "name": "edge_cyclic",
+        "frames": 6,
+        "evidence_rows": 12,
+        "face_rows": 48
+      },
+      {
+        "name": "vertex_ccw",
+        "frames": 6,
+        "evidence_rows": 12,
+        "face_rows": 48
+      },
+      {
+        "name": "vertex_cw",
+        "frames": 6,
+        "evidence_rows": 12,
+        "face_rows": 48
+      },
+      {
+        "name": "vertex_cyclic",
+        "frames": 6,
+        "evidence_rows": 12,
+        "face_rows": 48
+      },
+      {
+        "name": "slanted_exact_own_boundary",
+        "frames": 1,
+        "evidence_rows": 2,
+        "face_rows": 6
+      },
+      {
+        "name": "slanted_zero_support_ulp",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 18
+      },
+      {
+        "name": "shape_rotation",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "shape_reflection",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "shape_translation",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      },
+      {
+        "name": "shape_scale",
+        "frames": 3,
+        "evidence_rows": 6,
+        "face_rows": 24
+      }
+    ]
+  },
+  "original_motion_and_checkpoint_continuations": {
+    "shape_kinds": [
+      "convex",
+      "disk"
+    ],
+    "cases": 10,
+    "frames": 89,
+    "old_checkpoint_cut_points": 99,
+    "statuses": [
+      "initializing",
+      "numerical_failure",
+      "ready",
+      "rejected_innovation",
+      "rejected_projection",
+      "uncertain"
+    ],
+    "maximum_absolute_decimal_errors": {
+      "$.evidence[].vertices_offset_m[][]": 0,
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].normal_std_m": 1.3877787807814457e-17,
+      "$.evidence[].faces[].lower_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].upper_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].position_lower_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].position_upper_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].footprint_lower_m": 0,
+      "$.evidence[].faces[].footprint_upper_m": 0,
+      "$.evidence[].radius_m": 0
+    },
+    "maximum_relative_or_scaled_decimal_errors": {
+      "$.evidence[].vertices_offset_m[][]": 0,
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.4955338941395803e-16,
+      "$.evidence[].faces[].normal_std_m": 2.905419723770977e-16,
+      "$.evidence[].faces[].lower_m": 1.4907837197200203e-16,
+      "$.evidence[].faces[].upper_m": 1.5046573177713297e-16,
+      "$.evidence[].faces[].position_lower_m": 1.4947037513842389e-16,
+      "$.evidence[].faces[].position_upper_m": 1.4963649595124584e-16,
+      "$.evidence[].faces[].footprint_lower_m": 0,
+      "$.evidence[].faces[].footprint_upper_m": 0,
+      "$.evidence[].radius_m": 0
+    },
+    "records": [
+      {
+        "name": "identity_path_lifecycle",
+        "frames": 11,
+        "old_checkpoint_cut_points": 12,
+        "evidence_rows": 0
+      },
+      {
+        "name": "raw_camera_projection_rejection",
+        "frames": 10,
+        "old_checkpoint_cut_points": 11,
+        "evidence_rows": 6
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 4,
+        "old_checkpoint_cut_points": 5,
+        "evidence_rows": 0
+      },
+      {
+        "name": "effective_defaults",
+        "frames": 4,
+        "old_checkpoint_cut_points": 5,
+        "evidence_rows": 1
+      },
+      {
+        "name": "extreme_scale_failure_retains_restorable_state",
+        "frames": 2,
+        "old_checkpoint_cut_points": 3,
+        "evidence_rows": 0
+      },
+      {
+        "name": "warehouse",
+        "frames": 10,
+        "old_checkpoint_cut_points": 11,
+        "evidence_rows": 5
+      },
+      {
+        "name": "distorted-camera",
+        "frames": 15,
+        "old_checkpoint_cut_points": 16,
+        "evidence_rows": 12
+      },
+      {
+        "name": "reframe",
+        "frames": 15,
+        "old_checkpoint_cut_points": 16,
+        "evidence_rows": 12
+      },
+      {
+        "name": "repeated_crossings",
+        "frames": 9,
+        "old_checkpoint_cut_points": 10,
+        "evidence_rows": 0
+      },
+      {
+        "name": "quality_rejects_current_positions",
+        "frames": 9,
+        "old_checkpoint_cut_points": 10,
+        "evidence_rows": 0
+      }
+    ]
+  },
+  "strict_and_numerical_rejections": {
+    "rejected_cases": 45,
+    "cases": [
+      {
+        "name": "missing_measurement",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: missing field measurement"
+      },
+      {
+        "name": "missing_assignments",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: missing field assignments"
+      },
+      {
+        "name": "measurement_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: measurement must be a string"
+      },
+      {
+        "name": "assignments_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: assignments must be a string"
+      },
+      {
+        "name": "unknown_wrapper",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: assigned zone frame: unknown field extra"
+      },
+      {
+        "name": "duplicate_wrapper",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: invalid JSON: Duplicate key \"measurement\" at line 1, column 27"
+      },
+      {
+        "name": "missing_clock",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: missing field timestamp_us"
+      },
+      {
+        "name": "numeric_clock",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: assignment timestamp_us must be a string"
+      },
+      {
+        "name": "negative_clock",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: assignment timestamp_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "leading_zero_clock",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: assignment timestamp_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "clock_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: assignment timestamp_us must be a nonnegative Int64 decimal string"
+      },
+      {
+        "name": "wrong_clock",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: footprint assignments do not match frame time or capacity"
+      },
+      {
+        "name": "unknown_document",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: footprint assignments: unknown field extra"
+      },
+      {
+        "name": "missing_items",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: missing field footprints"
+      },
+      {
+        "name": "duplicate_document",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: invalid JSON: Duplicate key \"timestamp_us\" at line 1, column 22"
+      },
+      {
+        "name": "duplicate_id",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: duplicate footprint assignment target identity"
+      },
+      {
+        "name": "extra_id",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: footprint assignment must match a reported target and segment"
+      },
+      {
+        "name": "stale_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: footprint assignment must match a reported target and segment"
+      },
+      {
+        "name": "noncanonical_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: zone segment identity must be a canonical positive Int64 string"
+      },
+      {
+        "name": "unknown_kind",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: assigned footprint kind must be disk or convex"
+      },
+      {
+        "name": "negative_disk",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: disk footprint radius must be finite and nonnegative"
+      },
+      {
+        "name": "disk_unknown_field",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: assigned disk shape: unknown field extra"
+      },
+      {
+        "name": "disk_with_vertices",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: assigned disk shape: unknown field vertices_offset_m"
+      },
+      {
+        "name": "convex_with_radius",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: assigned convex shape: unknown field radius_m"
+      },
+      {
+        "name": "degenerate_convex",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: convex geometry requires 3 to 32 vertices"
+      },
+      {
+        "name": "origin_outside_convex",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: convex footprint must contain the modeled anchor"
+      },
+      {
+        "name": "nonfinite_disk_raw",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: radius_m must be a finite number"
+      },
+      {
+        "name": "nested_assignment_depth",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: invalid JSON: Depth limit exceeded, please increase the max_nesting_depth parameter"
+      },
+      {
+        "name": "fractional_assignment_id",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_assignment_field",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: invalid JSON: Duplicate key \"track_id\" at line 1, column 50"
+      },
+      {
+        "name": "duplicate_shape_field",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: invalid JSON: Duplicate key \"kind\" at line 1, column 90"
+      },
+      {
+        "name": "unknown_assignment_field",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: target footprint assignment: unknown field extra"
+      },
+      {
+        "name": "wrong_session",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: zone frame session time or capacity is invalid"
+      },
+      {
+        "name": "stale_ready",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: ready zone sample is not current in this frame"
+      },
+      {
+        "name": "duplicate_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: duplicate measurement track identity"
+      },
+      {
+        "name": "non_spd",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "missing_position",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: measurement availability contradicts its status"
+      },
+      {
+        "name": "closed_current",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: current accepted zone track is also closed"
+      },
+      {
+        "name": "unknown_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      {
+        "name": "cannot_bind_projection_without_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: footprint assignment must match a reported target and segment"
+      },
+      {
+        "name": "cannot_bind_closed_only",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: footprint assignment must match a reported target and segment"
+      },
+      {
+        "name": "missing_cannot_bypass_old_numerics",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: zone evidence interval is not representable"
+      },
+      {
+        "name": "late_expansion_error",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: disk and position radius exceed supported precision"
+      },
+      {
+        "name": "invalid_utf8_prefix",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+        "stdout_bytes": 1291,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "missing_header",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "missing disk zone evidence source"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "integral_raw_id_token": "passed",
+    "stateless_same_frame_retry": "passed"
+  },
+  "current_frame_binding": {
+    "status": "passed",
+    "all_original_reasons_before_missing": true,
+    "matched_nonready_allowed": true,
+    "rejected_plus_closed_allowed": true,
+    "same_id_new_segment_reissued": true,
+    "exact_clock_us": "9007199254740993",
+    "exact_segment_id": "9223372036854775807"
+  },
+  "warm_brown_reframe": {
+    "status": "passed",
+    "shape_kinds": [
+      "convex",
+      "disk"
+    ],
+    "brown_warm_prefix_frames": 4,
+    "continuation_frames": 4,
+    "assignments_reissued_per_frame": true,
+    "maximum_absolute_metric_reframe_differences": {
+      "$[].evidence[].radius_m": 0.0,
+      "$[].evidence[].faces[].distance_m": 0.0,
+      "$[].evidence[].faces[].normal_std_m": 6.938893903907228e-18,
+      "$[].evidence[].faces[].position_lower_m": 0.0,
+      "$[].evidence[].faces[].position_upper_m": 0.0,
+      "$[].evidence[].faces[].footprint_lower_m": 0.0,
+      "$[].evidence[].faces[].footprint_upper_m": 0.0,
+      "$[].evidence[].faces[].lower_m": 0.0,
+      "$[].evidence[].faces[].upper_m": 0.0,
+      "$[].evidence[].vertices_offset_m[][]": 0.0
+    }
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "source_and_wrapped_frame_exact_units": 1048576,
+    "overflow_complete_prefix": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "aaf53cf9924375dc4e0df42d3f732518729302bceec1f0c78d9a1caab14c3719",
+      "stdout_bytes": 1291,
+      "stderr": "line 3: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "inner_budget_note": "Inner raw strings plus escaping and wrapper overhead share the wrapped frame 1Mi limit."
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/assigned-zone.test.mjs",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "old_checkpoint_cross_runtime": {
+      "cut_points": 9,
+      "continuations": 36,
+      "directions": [
+        "native_to_native",
+        "native_to_javascript",
+        "javascript_to_native",
+        "javascript_to_javascript"
+      ],
+      "assigned_evaluators_per_continuation": 2,
+      "shape_kinds": [
+        "convex",
+        "disk"
+      ],
+      "assignments_reissued_per_frame": true
+    },
+    "measured_bounded_batch": {
+      "successful_empty_frames": 5000,
+      "complete_return_utf16_units": 1113902,
+      "actual_shape_vertices": 32,
+      "actual_native_tracks": 128,
+      "actual_native_zone_rows": 2048,
+      "actual_native_face_rows": 65536,
+      "raw_support_projections": 2097152,
+      "equivalent_pure_return_utf16_units": 25523824,
+      "output_budget_rejected": true,
+      "old_handles_occupied": 64,
+      "nested_frame_budget": "raw inner strings and escaping share outer frame 1Mi limit"
+    },
+    "test_script_sha256": "de8af5689430fa91e8e218490bb08a96d42085197adba3fbafede20771b79f7d",
+    "bridge_sha256": "282321eaa2f26d15bb7522926f0db98588cf2c03f84d8ad2f0976bea92ddd505",
+    "stdout_sha256": "0e3ad22e5924ca9a454c762068f3888de3173936bcb1be0087a95634b0e512e3",
+    "stderr": ""
+  },
+  "status": "passed",
+  "elapsed_seconds": 29.8346406
+}
