@@ -13356,6 +13356,712 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       }
     }
 
+    {
+      const document = fs.readFileSync(
+        path.resolve(
+          __dirname,
+          "..",
+          "docs",
+          "footprint-run-window-guarded-web.md",
+        ),
+        "utf8",
+      );
+      const blocks = [
+        ...document.matchAll(/```javascript\r?\n([\s\S]*?)\r?\n```/g),
+      ].map((match) => match[1]);
+      assert.equal(blocks.length, 2);
+      const inputs = JSON.parse(
+        JSON.stringify(require("node:vm").runInNewContext(blocks[0])),
+      );
+      const selectors = {
+        measurement: "#source",
+        health: "#health-input",
+        position: "#zone-input",
+        assignments: "#assigned-zone-input",
+        options: "#footprint-run-input",
+        window: "#footprint-run-window-input",
+      };
+      const mode = (value) =>
+        page.locator("#footprint-run-window-mode").selectOption(value);
+      const fill = async (value = inputs) => {
+        await physicalMode("assigned");
+        for (const [key, selector] of Object.entries(selectors))
+          await page.locator(selector).fill(value[key]);
+        for (const id of [
+          "zone-section",
+          "footprint-run-section",
+          "footprint-run-window-section",
+        ])
+          await page.locator("#" + id).evaluate((details) => {
+            details.open = true;
+          });
+        await mode("guarded");
+      };
+      const run = async (count = 15) => {
+        await mode("guarded");
+        await page.locator("#footprint-run-window-guarded-compute").click();
+        await page.waitForFunction((count) => {
+          const message = document.querySelector(
+            "#footprint-run-window-guarded-message",
+          );
+          return (
+            message.classList.contains("error") ||
+            message.textContent.includes("已门控联合分窗 " + count + " 帧")
+          );
+        }, count);
+        assert.equal(
+          await page
+            .locator("#footprint-run-window-guarded-message.error")
+            .count(),
+          0,
+          await page
+            .locator("#footprint-run-window-guarded-message")
+            .textContent(),
+        );
+      };
+      const output = () =>
+        exportJson(
+          "#download-footprint-run-window-guarded",
+          "moonground-footprint-run-window-guarded.json",
+        );
+      const select = (index, preview = false) =>
+        page
+          .locator(
+            preview
+              ? "#footprint-run-window-guarded-preview-frame"
+              : "#footprint-run-window-guarded-frame",
+          )
+          .evaluate((slider, index) => {
+            slider.value = String(index);
+            slider.dispatchEvent(new Event("input", { bubbles: true }));
+          }, index);
+      const identity = async (index, preview = false) => {
+        await select(index, preview);
+        return JSON.parse(
+          await page
+            .locator(
+              preview
+                ? "#footprint-run-window-guarded-preview-json"
+                : "#footprint-run-window-guarded-measurement",
+            )
+            .textContent(),
+        );
+      };
+      const preview = async (count = 15) => {
+        await mode("guarded");
+        await page.locator("#footprint-run-window-guarded-preview").click();
+        await page.waitForFunction((count) => {
+          const message = document.querySelector(
+            "#footprint-run-window-guarded-preview-message",
+          );
+          return (
+            message.classList.contains("error") ||
+            message.textContent.includes("已全程发现 " + count + " 帧")
+          );
+        }, count);
+        assert.equal(
+          await page
+            .locator("#footprint-run-window-guarded-preview-message.error")
+            .count(),
+          0,
+          await page
+            .locator("#footprint-run-window-guarded-preview-message")
+            .textContent(),
+        );
+        const values = [];
+        for (let i = 0; i < count; i++) values.push(await identity(i, true));
+        return values;
+      };
+      await fill();
+      assert.equal(await page.locator("#download").isDisabled(), true);
+      const beforeAssignments = await page
+        .locator("#assigned-zone-input")
+        .inputValue();
+      const candidates = await preview();
+      assert.equal(
+        await page.locator("#assigned-zone-input").inputValue(),
+        beforeAssignments,
+      );
+      assert.equal(candidates[0].decision, "blocked");
+      assert.deepEqual(candidates[0].tracks, []);
+      assert.deepEqual(candidates[0].suppressed_track_ids, [1]);
+      assert.equal(candidates[1].tracks[0].segment_id, "1");
+      assert.equal(candidates[7].tracks[0].segment_id, "2");
+      assert.equal(candidates[11].tracks[0].segment_id, "3");
+      assert.equal(candidates[9].timestamp_us, "1700000");
+      assert.equal(candidates[9].health.status, "insufficient");
+      await run();
+      const guarded = await output();
+      assert.equal(
+        guarded.checkpoint.format,
+        "moonground.footprint-run-window-guarded",
+      );
+      assert.equal(
+        guarded.checkpoint.analysis.format,
+        "moonground.footprint-run-window-analysis",
+      );
+      assert.equal(
+        guarded.checkpoint.analysis.measurement.motion.last_timestamp_us,
+        "2600000",
+      );
+      assert.equal(
+        guarded.checkpoint.analysis.windows.runs.last_timestamp_us,
+        "2600000",
+      );
+      assert.equal(
+        guarded.checkpoint.health.state.last_timestamp_us,
+        "2600000",
+      );
+      assert.equal("runs" in guarded.checkpoint.analysis, false);
+      assert.equal(
+        guarded.frames[9].kind,
+        "footprint_run_window_guarded_projection_replaced",
+      );
+      assert.ok(guarded.frames[3].analysis.windows.runs.confirmed.length > 0);
+      assert.ok(
+        guarded.frames[4].analysis.windows.runs.closed.some(
+          (row) => row.reason === "segment_closed",
+        ),
+      );
+      assert.ok(
+        guarded.frames[9].analysis.windows.runs.closed.some(
+          (row) => row.reason === "segment_closed",
+        ),
+      );
+      assert.ok(guarded.frames[13].analysis.windows.runs.confirmed.length > 0);
+      for (let i = 0; i < candidates.length; i++) {
+        const { operation, ...selected } = await identity(i);
+        assert.deepEqual(selected, candidates[i]);
+      }
+      await select(9);
+      assert.match(
+        await page.locator("#footprint-run-window-frame").textContent(),
+        /标定切换.*阻断测量/,
+      );
+      const selectedText = await page
+        .locator("#footprint-run-window-frame")
+        .textContent();
+      await selectVelocityFrame(0);
+      assert.equal(
+        await page.locator("#footprint-run-window-frame").textContent(),
+        selectedText,
+      );
+      assert.deepEqual(await output(), guarded);
+      // Both documentation blocks execute verbatim, including full CP restore,
+      // a second replacement barrier, health reconfirmation and segment 4.
+      const example = await page.evaluate(async (blocks) => {
+        const api = await import("./moonground.mjs");
+        return new Function(
+          "api",
+          blocks.join("\n") + "\nreturn continuation;",
+        )(api);
+      }, blocks);
+      assert.deepEqual(example.initial, guarded);
+      assert.deepEqual(example.verified.frames, []);
+      assert.deepEqual(example.verified.checkpoint, guarded.checkpoint);
+      assert.equal("checkpoint" in example.preview, false);
+      assert.equal(
+        example.continued.frames[0].kind,
+        "footprint_run_window_guarded_projection_replaced",
+      );
+      assert.equal(example.continued.frames[0].decision, "blocked");
+      assert.equal(
+        example.continued.frames[4].analysis.measurement.timestamp_us,
+        "3600000",
+      );
+      assert.equal(
+        example.continued.frames[4].analysis.measurement.tracks[0].segment_id,
+        "4",
+      );
+      assert.ok(
+        example.continued.frames[4].analysis.windows.runs.confirmed.length > 0,
+      );
+      assert.equal(
+        example.continued.checkpoint.health.state.last_timestamp_us,
+        "3600000",
+      );
+      const oracle = await page.evaluate(
+        async ({ blocks, inputs }) => {
+          const api = await import("./moonground.mjs");
+          return new Function(
+            "api",
+            "inputs2",
+            blocks.join("\n") +
+              `
+          const old = readResult(api.moonground_footprint_run_guarded(JSON.stringify({
+            source: JSON.parse(rawSource).guarded, frames: wrapped.join("\\n") + "\\n"})));
+          let index = 0;
+          const frames = old.frames.map((frame) => JSON.stringify({
+            measurement: JSON.stringify(frame.analysis.measurement),
+            assignments: frame.kind === "footprint_run_guarded_projection_replaced"
+              ? JSON.stringify({timestamp_us: frame.analysis.measurement.timestamp_us, footprints: []})
+              : assignmentLines[index++],
+          })).join("\\n") + "\\n";
+          const windows = readResult(api.moonground_footprint_run_windows(JSON.stringify({
+            source: JSON.stringify({runs: JSON.stringify({position: inputs2.position, options: inputs2.options}), window: inputs2.window}), frames})));
+          return {old, windows};
+        `,
+          )(api, inputs);
+        },
+        { blocks, inputs },
+      );
+      assert.deepEqual(
+        guarded.frames.map((frame) => frame.analysis.measurement),
+        oracle.old.frames.map((frame) => frame.analysis.measurement),
+      );
+      assert.deepEqual(
+        guarded.frames.map((frame) => frame.analysis.windows),
+        oracle.windows.frames,
+      );
+      assert.deepEqual(
+        guarded.checkpoint.analysis.windows,
+        oracle.windows.checkpoint,
+      );
+      assert.deepEqual(guarded.checkpoint.health, oracle.old.checkpoint.health);
+      // Started old guarded CP establishes a baseline without replaying history.
+      const baseline = await page.evaluate(
+        async ({ checkpoint, window }) => {
+          const api = await import("./moonground.mjs");
+          return JSON.parse(
+            api.moonground_footprint_run_window_guarded(
+              JSON.stringify({
+                source: JSON.stringify({
+                  guarded: JSON.stringify({ resume: checkpoint }),
+                  window,
+                }),
+                frames: "",
+              }),
+            ),
+          );
+        },
+        { checkpoint: oracle.old.checkpoint, window: inputs.window },
+      );
+      assert.equal(
+        baseline.checkpoint.analysis.windows.baseline_timestamp_us,
+        "2600000",
+      );
+      assert.equal(baseline.checkpoint.analysis.windows.current_window, null);
+      const corrupt = JSON.parse(JSON.stringify(guarded.checkpoint));
+      corrupt.health.state.last_timestamp_us = "2600001";
+      const rejected = await page.evaluate(async (checkpoint) => {
+        const api = await import("./moonground.mjs");
+        return JSON.parse(
+          api.moonground_footprint_run_window_guarded(
+            JSON.stringify({
+              source: JSON.stringify({ resume: checkpoint }),
+              frames: "",
+            }),
+          ),
+        );
+      }, corrupt);
+      assert.ok(rejected.error);
+      assert.deepEqual(await output(), guarded);
+      // A same-input preparation failure retains the last successful result.
+      await page.evaluate(() => {
+        window.guardedWindowEncoder = window.TextEncoder;
+        window.TextEncoder = class {
+          encode() {
+            throw new Error("guarded window preparation failed");
+          }
+        };
+      });
+      await page.locator("#footprint-run-window-guarded-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-run-window-guarded-message")
+          .classList.contains("error"),
+      );
+      await page.evaluate(() => {
+        window.TextEncoder = window.guardedWindowEncoder;
+        delete window.guardedWindowEncoder;
+      });
+      assert.deepEqual(await output(), guarded);
+      const bad = [
+        [
+          "measurement",
+          inputs.measurement.replace(
+            '"track_id":1',
+            '"track_id":1.00000000000000001',
+          ),
+        ],
+        [
+          "measurement",
+          inputs.measurement.replace(
+            '"max_tracks":4',
+            '"max_tracks":4.00000000000000001',
+          ),
+        ],
+        [
+          "health",
+          inputs.health.replace(
+            '"landmark_id":"A"',
+            '"landmark_id":"A","unknown":true',
+          ),
+        ],
+        [
+          "health",
+          inputs.health.replace(
+            '"timestamp_us":"0"',
+            '"timestamp_us":"0","timestamp_us":"0"',
+          ),
+        ],
+        [
+          "health",
+          inputs.health.replace('"timestamp_us":"0"', '"timestamp_us":"1"'),
+        ],
+        [
+          "assignments",
+          inputs.assignments.replace('"segment_id":"2"', '"segment_id":"1"'),
+        ],
+        [
+          "assignments",
+          inputs.assignments.replace(
+            '"footprints":[]',
+            '"footprints":[{"track_id":1,"segment_id":"1","shape":{"kind":"disk","radius_m":0.1}}]',
+          ),
+        ],
+        ["window", '{"window_us":"500000","window_us":"1"}'],
+      ];
+      const invalidControl = inputs.measurement.trimEnd().split("\n");
+      const replacement = JSON.parse(
+        JSON.parse(invalidControl[10]).replace_projection,
+      );
+      delete replacement.camera;
+      invalidControl[10] = JSON.stringify({
+        replace_projection: JSON.stringify(replacement),
+      });
+      bad.push(["measurement", invalidControl.join("\n") + "\n"]);
+      for (const [key, text] of bad) {
+        await fill({ ...inputs, [key]: text });
+        await page.locator("#footprint-run-window-guarded-compute").click();
+        await page.waitForFunction(() =>
+          document
+            .querySelector("#footprint-run-window-guarded-message")
+            .classList.contains("error"),
+        );
+        assert.equal(
+          await page
+            .locator("#download-footprint-run-window-guarded")
+            .isDisabled(),
+          true,
+        );
+        assert.equal(await page.locator(selectors[key]).inputValue(), text);
+      }
+      await fill();
+      await run();
+      for (const selector of Object.values(selectors)) {
+        await holdEvidenceTransitPreparation();
+        await page.locator("#footprint-run-window-guarded-compute").click();
+        await page.waitForFunction(
+          () => typeof window.releaseEvidenceTransitRun === "function",
+        );
+        const text = await page.locator(selector).inputValue();
+        await page.locator(selector).fill(text + " ");
+        await releaseEvidenceTransitPreparation();
+        assert.equal(
+          await page
+            .locator("#download-footprint-run-window-guarded")
+            .isDisabled(),
+          true,
+        );
+        await page.locator(selector).fill(text);
+        await run();
+      }
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-guarded-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page
+        .locator("#footprint-run-window-input")
+        .fill('{"window_us":"400000"}');
+      await run();
+      const newest = await output();
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await output(), newest);
+      await fill();
+      // Valid programmatic health-file replacement cancels an older raw task.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-guarded-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const loadedHealth = inputs.health.replace(
+        "fixed-floor",
+        "loaded-fixed-floor",
+      );
+      await page.locator("#health-file").setInputFiles({
+        name: "window-health.ndjson",
+        mimeType: "application/x-ndjson",
+        buffer: Buffer.from(loadedHealth),
+      });
+      await page.waitForFunction(
+        (text) => document.querySelector("#health-input").value === text,
+        loadedHealth,
+      );
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page
+          .locator("#download-footprint-run-window-guarded")
+          .isDisabled(),
+        true,
+      );
+      await fill();
+      // Discovery excludes assignments but remains a separate true full replay.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-guarded-preview").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page.locator("#assigned-zone-input").fill("invalid assignments");
+      await releaseEvidenceTransitPreparation();
+      assert.equal((await identity(11, true)).tracks[0].segment_id, "3");
+      await page.locator("#assigned-zone-input").fill(inputs.assignments);
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-guarded-preview").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await run();
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await output(), guarded);
+      // A newer health draft/preview supersedes a paused older preview.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-guarded-preview").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page
+        .locator("#health-input")
+        .fill(
+          inputs.health
+            .replace('"confirmation_us":"200000"', '"confirmation_us":"0"')
+            .replace('"min_observations":2', '"min_observations":1'),
+        );
+      const instant = await preview();
+      assert.equal(instant[0].decision, "allowed");
+      await releaseEvidenceTransitPreparation();
+      assert.equal((await identity(0, true)).decision, "allowed");
+      await fill();
+      await run();
+      for (const selector of [
+        "#guarded-input",
+        "#velocity-input",
+        "#gate-input",
+      ]) {
+        const text = await page.locator(selector).inputValue();
+        await page.locator(selector).fill(text + " ");
+        assert.deepEqual(await output(), guarded);
+        await page.locator(selector).fill(text);
+      }
+      // A shared valid prefix supports all three slots. Health changes leave
+      // ordinary/raw reports intact; mode changes do not cancel either task.
+      const common = { ...inputs };
+      for (const key of ["measurement", "health"])
+        common[key] =
+          inputs[key].trimEnd().split("\n").slice(0, 5).join("\n") + "\n";
+      common.assignments =
+        inputs.assignments.trimEnd().split("\n").slice(0, 4).join("\n") + "\n";
+      await fill(common);
+      await run(4);
+      const commonGuarded = await output();
+      await runVelocityBase(common.measurement, 4);
+      const computeOld = async (joint) => {
+        await mode(joint ? "joint" : "ordinary");
+        await page
+          .locator(
+            joint
+              ? "#footprint-run-window-joint-compute"
+              : "#footprint-run-window-compute",
+          )
+          .click();
+        await page.waitForFunction((joint) => {
+          const message = document.querySelector(
+            joint
+              ? "#footprint-run-window-joint-message"
+              : "#footprint-run-window-message",
+          );
+          return (
+            message.classList.contains("error") ||
+            message.textContent.includes(
+              joint ? "已原始联合分窗 4 帧" : "已分窗 4 帧",
+            )
+          );
+        }, joint);
+        assert.equal(
+          await page
+            .locator(
+              joint
+                ? "#footprint-run-window-joint-message.error"
+                : "#footprint-run-window-message.error",
+            )
+            .count(),
+          0,
+        );
+      };
+      const oldOutput = (joint) =>
+        exportJson(
+          joint
+            ? "#download-footprint-run-window-analysis"
+            : "#download-footprint-run-windows",
+          joint
+            ? "moonground-footprint-run-window-analysis.json"
+            : "moonground-footprint-run-windows.json",
+        );
+      await computeOld(false);
+      const ordinary = await oldOutput(false);
+      await computeOld(true);
+      const raw = await oldOutput(true);
+      await page.locator("#health-input").fill(common.health + " ");
+      assert.equal(
+        await page
+          .locator("#download-footprint-run-window-guarded")
+          .isDisabled(),
+        true,
+      );
+      assert.deepEqual(await oldOutput(true), raw);
+      await mode("ordinary");
+      assert.deepEqual(await oldOutput(false), ordinary);
+      await page.locator("#health-input").fill(common.health);
+      await run(4);
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-guarded-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await runVelocityBase(common.measurement, 4);
+      await computeOld(true);
+      await releaseEvidenceTransitPreparation();
+      await mode("guarded");
+      assert.deepEqual(await output(), commonGuarded);
+      await mode("joint");
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-window-joint-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await run(4);
+      await releaseEvidenceTransitPreparation();
+      await mode("joint");
+      assert.deepEqual(await oldOutput(true), raw);
+      await atomicMode("guarded");
+      await page.locator("#footprint-run-guarded-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-run-guarded-message")
+          .textContent.includes("已门控联合计算 4 帧"),
+      );
+      await page
+        .locator("#footprint-run-window-input")
+        .fill('{"window_us":"1"}');
+      assert.equal(
+        await page.locator("#download-footprint-run-guarded").isDisabled(),
+        false,
+      );
+      for (const id of [
+        "download-footprint-run-windows",
+        "download-footprint-run-window-analysis",
+        "download-footprint-run-window-guarded",
+      ])
+        assert.equal(await page.locator("#" + id).isDisabled(), true);
+      // Exact clocks survive controls and both paired streams beyond 2^53.
+      const shifted = { ...inputs };
+      const offset = 9007199254740993n;
+      for (const key of ["measurement", "health", "assignments"]) {
+        shifted[key] =
+          inputs[key]
+            .trimEnd()
+            .split("\n")
+            .map((line, index) => {
+              if (key !== "assignments" && index === 0) return line;
+              const value = JSON.parse(line);
+              if (value.replace_projection) {
+                const control = JSON.parse(value.replace_projection);
+                control.timestamp_us = String(
+                  offset + BigInt(control.timestamp_us),
+                );
+                return JSON.stringify({
+                  replace_projection: JSON.stringify(control),
+                });
+              }
+              value.timestamp_us = String(offset + BigInt(value.timestamp_us));
+              return JSON.stringify(value);
+            })
+            .join("\n") + "\n";
+      }
+      await fill(shifted);
+      assert.equal(
+        (await preview())[9].timestamp_us,
+        String(offset + 1700000n),
+      );
+      await run();
+      assert.equal(
+        (await output()).checkpoint.health.state.last_timestamp_us,
+        String(offset + 2600000n),
+      );
+      await fill();
+      await run();
+      await preview();
+      await select(9);
+      await page
+        .locator("#footprint-run-window-section")
+        .evaluate((details) => {
+          details.open = false;
+        });
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll("#footprint-run-window-rows tr").length ===
+          0,
+      );
+      assert.equal(
+        await page
+          .locator("#footprint-run-window-guarded-measurement")
+          .textContent(),
+        "",
+      );
+      assert.equal(
+        await page
+          .locator("#download-footprint-run-window-guarded")
+          .isDisabled(),
+        false,
+      );
+      await page
+        .locator("#footprint-run-window-section")
+        .evaluate((details) => {
+          details.open = true;
+        });
+      // The replacement shares its bucket with 1600000: this frame has a
+      // current window but no newly closed window, hence one zone row.
+      assert.equal(
+        guarded.frames[9].analysis.windows.statistics.closed_window,
+        null,
+      );
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll("#footprint-run-window-rows tr").length ===
+          1,
+      );
+      await select(9, true);
+      for (const [width, height, name] of [
+        [390, 844, "mobile"],
+        [1440, 1050, "desktop"],
+      ]) {
+        await page.setViewportSize({ width, height });
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+          true,
+        );
+        await page.locator("#footprint-run-window-section").screenshot({
+          path: path.join(
+            directory,
+            "footprint-run-window-guarded-" + name + "-preview.png",
+          ),
+        });
+      }
+    }
+
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

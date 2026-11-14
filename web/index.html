@@ -1417,8 +1417,9 @@
                   <details id="footprint-run-window-section">
                     <summary>足迹确认序列分窗</summary>
                     <p class="hint">
-                      两种模式共用当前区域、显式分配、序列和窗口选项。
+                      三种模式共用当前区域、显式分配、序列和窗口选项。
                       普通测量下游使用已输出帧，原始联合直接重放上方原始像素／米制流。
+                      健康门控联合另外读取固定地标健康流，按真实门控身份重放。
                       首次确认／结束按报告帧时间归窗，不表示到访、连续占用或实际停留。
                     </p>
                     <label for="footprint-run-window-input" class="hint"
@@ -1437,6 +1438,7 @@
                       >
                         <option value="ordinary">普通测量下游</option>
                         <option value="joint">原始联合</option>
+                        <option value="guarded">健康门控联合</option>
                       </select></label
                     >
                     <div id="footprint-run-window-ordinary">
@@ -1517,6 +1519,87 @@
                       />
                       <pre
                         id="footprint-run-window-joint-measurement"
+                        class="footprint-run-json"
+                      ></pre>
+                    </div>
+                    <div id="footprint-run-window-guarded" hidden>
+                      <p class="hint">
+                        直接读取上方原始像素流、固定地标健康流及当前区域、分配、序列和窗口选项。
+                        全程预览来自本联合核心；恢复健康或切换标定后的片段需按实际候选手工绑定。
+                        阻断帧仍须显式空分配；单独的标定切换行原样转发，不消耗地标或分配行。
+                      </p>
+                      <div class="actions">
+                        <button id="footprint-run-window-guarded-preview">
+                          全程预览门控分窗身份
+                        </button>
+                        <button id="footprint-run-window-guarded-compute">
+                          门控测量、序列并分窗
+                        </button>
+                        <button
+                          id="download-footprint-run-window-guarded"
+                          class="quiet"
+                          disabled
+                        >
+                          下载门控分窗与完整共同检查点
+                        </button>
+                      </div>
+                      <p
+                        id="footprint-run-window-guarded-message"
+                        class="hint"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        健康、测量、足迹序列与报告帧分窗共同提交。
+                      </p>
+                      <p
+                        id="footprint-run-window-guarded-preview-message"
+                        class="hint"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        预览不使用分配、不提交正式结果、不预留身份。
+                      </p>
+                      <details
+                        id="footprint-run-window-guarded-preview-section"
+                      >
+                        <summary>全程门控分窗候选 · 未提交</summary>
+                        <label
+                          for="footprint-run-window-guarded-preview-frame"
+                          class="hint"
+                          >候选身份独立回放</label
+                        >
+                        <input
+                          id="footprint-run-window-guarded-preview-frame"
+                          type="range"
+                          min="0"
+                          max="0"
+                          value="0"
+                          disabled
+                        />
+                        <p
+                          id="footprint-run-window-guarded-preview-counter"
+                          class="hint"
+                        ></p>
+                        <pre
+                          id="footprint-run-window-guarded-preview-json"
+                          class="footprint-run-json"
+                        ></pre>
+                      </details>
+                      <label
+                        for="footprint-run-window-guarded-frame"
+                        class="hint"
+                        >健康门控分窗独立回放</label
+                      >
+                      <input
+                        id="footprint-run-window-guarded-frame"
+                        type="range"
+                        min="0"
+                        max="0"
+                        value="0"
+                        disabled
+                      />
+                      <pre
+                        id="footprint-run-window-guarded-measurement"
                         class="footprint-run-json"
                       ></pre>
                     </div>
