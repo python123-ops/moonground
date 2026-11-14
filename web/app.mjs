@@ -23,6 +23,7 @@ import {
   moonground_evidence_guarded_transit_window,
   moonground_velocity_evidence,
   moonground_zone_evidence,
+  moonground_zone_intersection,
   moonground_disk_zone_evidence,
   moonground_footprint_zone_evidence,
   moonground_assigned_zone_evidence,
@@ -191,6 +192,17 @@ let zoneMeasurements = "";
 let zoneReference = null;
 let zonePending = null;
 let zoneSelectedKey = null;
+const zoneIntersection = {
+  revision: 0,
+  runToken: 0,
+  report: null,
+  response: null,
+  configuration: "",
+  input: "",
+  measurements: "",
+  reference: null,
+  pending: null,
+};
 let diskZoneRevision = 0;
 let diskZoneRunToken = 0;
 let diskZoneReport = null;
@@ -331,6 +343,7 @@ function invalidate() {
   cancelFootprintZonePreparation();
   cancelDiskZonePreparation();
   cancelZonePreparation();
+  cancelZoneIntersectionPreparation();
   cancelVelocityPreparation();
   revision++;
   invalidateEvidenceTransitJointSource();
@@ -1085,6 +1098,7 @@ function renderZoneFaces(frame) {
   );
 }
 function renderZones() {
+  renderZoneIntersection();
   renderFootprintRuns();
   renderFootprintRunJoint();
   renderFootprintRunGuarded();
@@ -1171,19 +1185,24 @@ function renderZones() {
   );
   renderZoneFaces(frame);
 }
-function requestZones(configuration, measurements) {
+function requestZones(
+  configuration,
+  measurements,
+  evaluate = moonground_zone_evidence,
+  label = "凸区域证据",
+) {
   const encoder = new TextEncoder();
   if (
     encoder.encode(configuration).length + encoder.encode(measurements).length >
     8 * 1024 * 1024
   )
-    throw new Error("浏览器凸区域证据输入上限为 8 MiB。");
+    throw new Error("浏览器" + label + "输入上限为 8 MiB。");
   const request = JSON.stringify({ source: configuration, measurements });
   if (request.length > 16 * 1024 * 1024)
-    throw new Error("凸区域证据请求超过 16 Mi 字符上限。");
-  const response = moonground_zone_evidence(request);
+    throw new Error(label + "请求超过 16 Mi 字符上限。");
+  const response = evaluate(request);
   if (encoder.encode(response).length > 8 * 1024 * 1024)
-    throw new Error("浏览器凸区域证据结果超过 8 MiB。");
+    throw new Error("浏览器" + label + "结果超过 8 MiB。");
   return { response, report: unpack(response) };
 }
 $("zone-compute").addEventListener("click", async () => {
@@ -1239,6 +1258,193 @@ $("zone-compute").addEventListener("click", async () => {
     }
   }
 });
+function zoneIntersectionMessage(text, error = false) {
+  $("zone-intersection-message").textContent = text;
+  $("zone-intersection-message").classList.toggle("error", error);
+}
+function cancelZoneIntersectionPreparation() {
+  zoneIntersection.revision++;
+  if (zoneIntersection.pending !== null)
+    zoneIntersectionMessage("上一次椭圆相交准备已取消。");
+  zoneIntersection.pending = null;
+}
+function clearZoneIntersection() {
+  cancelZoneIntersectionPreparation();
+  Object.assign(zoneIntersection, {
+    report: null,
+    response: null,
+    configuration: "",
+    input: "",
+    measurements: "",
+    reference: null,
+  });
+}
+function zoneIntersectionIsCurrent() {
+  return (
+    zoneIntersection.report !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    zoneIntersection.configuration === zoneInput.value &&
+    zoneIntersection.input === source.value &&
+    zoneIntersection.reference === measurementLines
+  );
+}
+function renderZoneIntersection() {
+  const state = zoneIntersection;
+  if (
+    (state.report !== null &&
+      (state.configuration !== zoneInput.value ||
+        state.input !== source.value)) ||
+    (state.pending !== null &&
+      (state.pending.configuration !== zoneInput.value ||
+        state.pending.input !== source.value))
+  ) {
+    clearZoneIntersection();
+    zoneIntersectionMessage(
+      "原始测量输入或区域配置已修改，请重新计算椭圆相交。",
+    );
+  }
+  if (
+    state.report !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    state.reference !== measurementLines
+  ) {
+    if (state.measurements === measurementLines.join("\n") + "\n")
+      state.reference = measurementLines;
+    else {
+      clearZoneIntersection();
+      zoneIntersectionMessage("普通测量载荷已变化，请重新计算椭圆相交。");
+    }
+  }
+  $("zone-intersection-compute").disabled =
+    !ordinaryVelocitySourceCurrent() || state.pending !== null;
+  $("download-zone-intersection").disabled = !zoneIntersectionIsCurrent();
+  $("zone-intersection-evidence").replaceChildren();
+  $("zone-intersection-unavailable").replaceChildren();
+  if (!zoneIntersectionIsCurrent()) {
+    $("zone-intersection-frame").textContent =
+      "先计算上方普通测量，再显式计算位置椭圆与凸区域相交。";
+    return;
+  }
+  const index = Number(slider.value),
+    frame = state.report.frames[index];
+  if (!frame) return;
+  $("zone-intersection-frame").textContent =
+    index +
+    1 +
+    " / " +
+    state.report.frames.length +
+    " · " +
+    frame.timestamp_us +
+    " μs · 相交证据 " +
+    frame.evidence.length +
+    " 行；不可判定目标 " +
+    frame.unavailable.length +
+    " 个。";
+  if (!$("zone-section").open || !$("zone-intersection-section").open) return;
+  const decisions = {
+    disjoint: "确定不相交",
+    intersects: "确定有公共点",
+    indeterminate: "相交关系未确认",
+  };
+  const rows = frame.evidence.map((item) => {
+    const row = reportRow([
+      item.track_id + " / " + item.segment_id,
+      item.zone_id,
+      reportNumber(item.sigma_multiplier),
+      "[" +
+        reportNumber(item.minimum_quadratic_lower) +
+        ", " +
+        reportNumber(item.minimum_quadratic_upper) +
+        "]",
+      decisions[item.decision],
+      item.witness_edge_index ?? "—",
+      item.witness_fraction === null
+        ? "—"
+        : reportNumber(item.witness_fraction),
+      item.witness_position_m.map(reportNumber).join(", "),
+    ]);
+    row.title = JSON.stringify(item);
+    return row;
+  });
+  if (!rows.length) {
+    const row = reportRow(["本帧没有可判定的位置椭圆。"]);
+    row.firstChild.colSpan = 8;
+    rows.push(row);
+  }
+  $("zone-intersection-evidence").replaceChildren(...rows);
+  $("zone-intersection-unavailable").replaceChildren(
+    ...frame.unavailable.map((item) =>
+      reportRow([
+        item.track_id + " / " + (item.segment_id ?? "—"),
+        states[item.reason] ?? item.reason,
+      ]),
+    ),
+  );
+}
+$("zone-intersection-compute").addEventListener("click", async () => {
+  if (!ordinaryVelocitySourceCurrent()) return;
+  const state = zoneIntersection,
+    current = ++state.revision,
+    runToken = ++state.runToken,
+    upstream = revision,
+    reference = measurementLines,
+    configuration = zoneInput.value,
+    input = loadedSource;
+  state.pending = { reference, configuration, input };
+  zoneIntersectionMessage("正在计算当前模型位置椭圆与凸区域的公共点证据…");
+  renderZoneIntersection();
+  const isCurrent = () =>
+    current === state.revision &&
+    upstream === revision &&
+    reference === measurementLines &&
+    configuration === zoneInput.value &&
+    input === source.value &&
+    ordinaryVelocitySourceCurrent();
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (!isCurrent()) return;
+    const measurements = reference.join("\n") + "\n";
+    const { response, report } = requestZones(
+      configuration,
+      measurements,
+      moonground_zone_intersection,
+      "椭圆相交证据",
+    );
+    if (!isCurrent()) return;
+    Object.assign(state, {
+      report,
+      response,
+      configuration,
+      input,
+      measurements,
+      reference,
+    });
+    zoneIntersectionMessage(
+      "已计算 " +
+        report.frames.length +
+        " 帧位置椭圆相交证据；跟随上方普通滑块。",
+    );
+  } catch (error) {
+    if (isCurrent()) zoneIntersectionMessage(error.message, true);
+  } finally {
+    if (runToken === state.runToken) {
+      state.pending = null;
+      renderZoneIntersection();
+    }
+  }
+});
+$("zone-intersection-section").addEventListener(
+  "toggle",
+  renderZoneIntersection,
+);
+$("download-zone-intersection").addEventListener("click", () => {
+  if (zoneIntersectionIsCurrent())
+    saveFile(
+      zoneIntersection.response + "\n",
+      "moonground-zone-intersection.json",
+    );
+});
+
 function diskZoneMessage(text, error = false) {
   $("disk-zone-message").textContent = text;
   $("disk-zone-message").classList.toggle("error", error);
@@ -3764,6 +3970,7 @@ $("analyze").addEventListener("click", async () => {
   if (analysisBusy) return;
   cancelVelocityPreparation();
   cancelZonePreparation();
+  cancelZoneIntersectionPreparation();
   cancelDiskZonePreparation();
   cancelFootprintZonePreparation();
   cancelAssignedZonePreparation();

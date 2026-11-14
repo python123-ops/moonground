@@ -14062,6 +14062,408 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
       }
     }
 
+    {
+      const document = fs.readFileSync(
+        path.resolve(__dirname, "..", "docs", "zone-intersection-web.md"),
+        "utf8",
+      );
+      const blocks = [
+        ...document.matchAll(/```javascript\r?\n([\s\S]*?)\r?\n```/g),
+      ].map((match) => match[1]);
+      assert.equal(blocks.length, 2);
+      const inputs = JSON.parse(
+        JSON.stringify(require("node:vm").runInNewContext(blocks[0])),
+      );
+      const open = async () => {
+        for (const id of ["zone-section", "zone-intersection-section"])
+          await page.locator("#" + id).evaluate((details) => {
+            details.open = true;
+          });
+      };
+      const fill = async () => {
+        await runVelocityBase(inputs.measurement, 2);
+        await page.locator("#zone-input").fill(inputs.position);
+        await open();
+      };
+      const run = async (count = 2) => {
+        await open();
+        await page.locator("#zone-intersection-compute").click();
+        await page.waitForFunction((count) => {
+          const message = document.querySelector("#zone-intersection-message");
+          return (
+            message.classList.contains("error") ||
+            message.textContent.includes(
+              "已计算 " + count + " 帧位置椭圆相交证据",
+            )
+          );
+        }, count);
+        assert.equal(
+          await page.locator("#zone-intersection-message.error").count(),
+          0,
+          await page.locator("#zone-intersection-message").textContent(),
+        );
+      };
+      const output = () =>
+        exportJson(
+          "#download-zone-intersection",
+          "moonground-zone-intersection.json",
+        );
+      await fill();
+      const base = await exportJson("#download", "moonground-results.json");
+      await run();
+      const intersection = await output();
+      assert.deepEqual(Object.keys(intersection), ["frames"]);
+      assert.equal(
+        intersection.frames[0].kind,
+        "position_zone_intersection_frame",
+      );
+      assert.equal(
+        intersection.frames[0].evidence_scope,
+        "model_position_ellipse_convex_zone_intersection",
+      );
+      assert.deepEqual(intersection.frames[0].evidence, []);
+      assert.equal(intersection.frames[0].unavailable.length, 3);
+      assert.ok(
+        intersection.frames[0].unavailable.every(
+          (row) => row.reason === "initializing",
+        ),
+      );
+      const last = intersection.frames[1];
+      assert.deepEqual(
+        last.evidence.map((row) => row.track_id),
+        [1, 2, 3],
+      );
+      assert.deepEqual(
+        last.evidence.map((row) => row.decision),
+        ["disjoint", "intersects", "disjoint"],
+      );
+      assert.ok(last.evidence[0].minimum_quadratic_lower > 1);
+      assert.ok(
+        last.evidence[0].minimum_quadratic_lower <=
+          last.evidence[0].minimum_quadratic_upper,
+      );
+      assert.equal(last.evidence[1].minimum_quadratic_lower, 0);
+      assert.equal(last.evidence[1].minimum_quadratic_upper, 0);
+      await selectVelocityFrame(0);
+      assert.match(
+        await page.locator("#zone-intersection-unavailable").textContent(),
+        /初始化/,
+      );
+      await selectVelocityFrame(1);
+      assert.equal(
+        await page.locator("#zone-intersection-evidence tr").count(),
+        3,
+      );
+      assert.match(
+        await page.locator("#zone-intersection-evidence").textContent(),
+        /确定不相交.*确定有公共点.*确定不相交/,
+      );
+      assert.deepEqual(
+        JSON.parse(
+          await page
+            .locator("#zone-intersection-evidence tr")
+            .first()
+            .getAttribute("title"),
+        ),
+        last.evidence[0],
+      );
+      // Documentation executes the original measurement bridge and both distinct
+      // zone algorithms; the UI must only format the new authoritative fields.
+      const example = await page.evaluate(async (blocks) => {
+        const api = await import("./moonground.mjs");
+        return new Function("api", blocks.join("\n") + "\nreturn example;")(
+          api,
+        );
+      }, blocks);
+      assert.deepEqual(example.measurementFrames, base.frames);
+      assert.deepEqual(example.intersection, intersection);
+      await page
+        .locator("#zone-input")
+        .fill(
+          inputs.position.replace(
+            '"sigma_multiplier":1',
+            '"sigma_multiplier":0',
+          ),
+        );
+      await run();
+      const zeroRadius = await output();
+      assert.deepEqual(
+        zeroRadius.frames[1].evidence.map((row) => row.decision),
+        ["disjoint", "intersects", "disjoint"],
+      );
+      assert.ok(
+        zeroRadius.frames[1].evidence.every(
+          (row) => row.sigma_multiplier === 0,
+        ),
+      );
+      await page.locator("#zone-input").fill(inputs.position);
+      await run();
+      assert.equal(
+        example.faces.frames[1].evidence[0].decision,
+        "indeterminate",
+      );
+      await runZones(2);
+      assert.deepEqual(await exportZones(), example.faces);
+      assert.deepEqual(await output(), intersection);
+      assert.deepEqual(
+        (await exportJson("#download", "moonground-results.json")).frames,
+        base.frames,
+      );
+      await page.locator("#run").click();
+      await page.waitForFunction(() =>
+        document.querySelector("#message").textContent.includes("已完成 2 帧"),
+      );
+      assert.deepEqual(await output(), intersection);
+      // Independent inputs neither clear the result nor cancel a pending job.
+      for (const id of [
+        "velocity-input",
+        "disk-zone-input",
+        "footprint-zone-input",
+        "assigned-zone-input",
+        "health-input",
+        "guarded-input",
+        "gate-input",
+      ]) {
+        if (id === "disk-zone-input") await physicalMode("disk");
+        if (id === "footprint-zone-input") await physicalMode("convex");
+        if (id === "assigned-zone-input") await physicalMode("assigned");
+        const selector = "#" + id;
+        const text = await page.locator(selector).inputValue();
+        await page.locator(selector).fill(text + " ");
+        assert.deepEqual(await output(), intersection);
+        await page.locator(selector).fill(text);
+      }
+      await page.locator("#velocity-example").click();
+      await runVelocity(2);
+      const velocity = await exportVelocity();
+      await holdEvidenceTransitPreparation();
+      await page.locator("#zone-intersection-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await runVelocity(2);
+      await runZones(2);
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await output(), intersection);
+      assert.deepEqual(await exportVelocity(), velocity);
+      assert.deepEqual(await exportZones(), example.faces);
+      // An unchanged valid input whose request preparation fails keeps success.
+      await page.evaluate(() => {
+        window.intersectionEncoder = window.TextEncoder;
+        window.TextEncoder = class {
+          encode() {
+            throw new Error("intersection preparation failed");
+          }
+        };
+      });
+      await page.locator("#zone-intersection-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#zone-intersection-message")
+          .classList.contains("error"),
+      );
+      await page.evaluate(() => {
+        window.TextEncoder = window.intersectionEncoder;
+        delete window.intersectionEncoder;
+      });
+      assert.deepEqual(await output(), intersection);
+      for (const text of [
+        inputs.position.replace(
+          '"max_tracks":4',
+          '"max_tracks":4.00000000000000001',
+        ),
+        inputs.position.replace(
+          '"sigma_multiplier":1',
+          '"sigma_multiplier":1,"sigma_multiplier":1',
+        ),
+        inputs.position.replace(
+          '"zone_id":"square"',
+          '"zone_id":"square","unknown":true',
+        ),
+      ]) {
+        await page.locator("#zone-input").fill(text);
+        await page.locator("#zone-intersection-compute").click();
+        await page.waitForFunction(() =>
+          document
+            .querySelector("#zone-intersection-message")
+            .classList.contains("error"),
+        );
+        assert.equal(
+          await page.locator("#download-zone-intersection").isDisabled(),
+          true,
+        );
+        assert.equal(await page.locator("#zone-input").inputValue(), text);
+        assert.deepEqual(
+          (await exportJson("#download", "moonground-results.json")).frames,
+          base.frames,
+        );
+      }
+      await page.locator("#zone-input").fill(inputs.position);
+      await run();
+      for (const selector of ["#zone-input", "#source"]) {
+        await holdEvidenceTransitPreparation();
+        await page.locator("#zone-intersection-compute").click();
+        await page.waitForFunction(
+          () => typeof window.releaseEvidenceTransitRun === "function",
+        );
+        const text = await page.locator(selector).inputValue();
+        await page.locator(selector).fill(text + " ");
+        await releaseEvidenceTransitPreparation();
+        assert.equal(
+          await page.locator("#download-zone-intersection").isDisabled(),
+          true,
+        );
+        await page.locator(selector).fill(text);
+        if (selector === "#source")
+          await runVelocityBase(inputs.measurement, 2);
+        await run();
+      }
+      // Same-payload ordinary recomputation cancels preparation but rebinds the
+      // existing stateless report after the new raw frames are available.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#zone-intersection-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page.locator("#run").click();
+      await page.waitForFunction(() =>
+        document.querySelector("#message").textContent.includes("已完成 2 帧"),
+      );
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await output(), intersection);
+      // A programmatic region example supersedes a paused request. Its actual
+      // new result survives the old task's finally without a synthetic edit.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#zone-intersection-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page.locator("#zone-example").click();
+      await run();
+      const newer = await output();
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await output(), newer);
+      await fill();
+      await run();
+      // Restoring the ordinary complete CP changes the raw source and requires
+      // a new explicit evaluation; this feature has no separate CP to restore.
+      await selectVelocityFrame(1);
+      const checkpoint = await exportJson(
+        "#save-checkpoint",
+        "moonground-checkpoint.json",
+      );
+      await holdEvidenceTransitPreparation();
+      await page.locator("#zone-intersection-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page.locator("#checkpoint-file").setInputFiles({
+        name: "ellipse-measurement.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(checkpoint)),
+      });
+      await page.waitForFunction(() =>
+        document.querySelector("#source").value.includes('"resume"'),
+      );
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page.locator("#download-zone-intersection").isDisabled(),
+        true,
+      );
+      const next = JSON.parse(inputs.measurement.trimEnd().split("\n").at(-1));
+      next.timestamp_us = "2";
+      await runVelocityBase(
+        (await page.locator("#source").inputValue()).trimEnd() +
+          "\n" +
+          JSON.stringify(next) +
+          "\n",
+        1,
+      );
+      await run(1);
+      assert.equal((await output()).frames[0].timestamp_us, "2");
+      assert.equal((await output()).frames[0].evidence[0].segment_id, "1");
+      // Original Brown projection and quality gating remain the input contract.
+      for (const [input, count, reason] of [
+        [velocityUncertainInput, 7, "uncertain"],
+        [velocityRejectedInput, 7, "rejected_innovation"],
+        [velocityPixelInput, 11, "rejected_projection"],
+      ]) {
+        await runVelocityBase(input, count);
+        await page.locator("#zone-input").fill(zoneConfiguration);
+        await run(count);
+        await runZones(count);
+        const current = await output(),
+          old = await exportZones();
+        assert.deepEqual(
+          current.frames.map((frame) => frame.unavailable),
+          old.frames.map((frame) => frame.unavailable),
+        );
+        assert.ok(
+          current.frames.some((frame) =>
+            frame.unavailable.some((row) => row.reason === reason),
+          ),
+        );
+      }
+      const shifted =
+        inputs.measurement
+          .trimEnd()
+          .split("\n")
+          .map((line, index) => {
+            if (!index) return line;
+            const value = JSON.parse(line);
+            value.timestamp_us = String(
+              9007199254740993n + BigInt(value.timestamp_us),
+            );
+            return JSON.stringify(value);
+          })
+          .join("\n") + "\n";
+      await runVelocityBase(shifted, 2);
+      await page.locator("#zone-input").fill(inputs.position);
+      await run();
+      assert.equal((await output()).frames[1].timestamp_us, "9007199254740994");
+      await fill();
+      await run();
+      await selectVelocityFrame(1);
+      await page.locator("#zone-intersection-section").evaluate((details) => {
+        details.open = false;
+      });
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll("#zone-intersection-evidence tr").length ===
+          0,
+      );
+      assert.equal(
+        await page.locator("#download-zone-intersection").isDisabled(),
+        false,
+      );
+      await page.locator("#zone-intersection-section").evaluate((details) => {
+        details.open = true;
+      });
+      await page.waitForFunction(
+        () =>
+          document.querySelectorAll("#zone-intersection-evidence tr").length ===
+          3,
+      );
+      for (const [width, height, name] of [
+        [390, 844, "mobile"],
+        [1440, 1050, "desktop"],
+      ]) {
+        await page.setViewportSize({ width, height });
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+          true,
+        );
+        await page.locator("#zone-intersection-section").screenshot({
+          path: path.join(
+            directory,
+            "zone-intersection-" + name + "-preview.png",
+          ),
+        });
+      }
+    }
+
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

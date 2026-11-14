@@ -1012,6 +1012,66 @@
               <tbody id="zone-unavailable"></tbody>
             </table>
           </div>
+          <details id="zone-intersection-section">
+            <summary>位置椭圆与凸区域相交</summary>
+            <p class="hint">
+              使用上方区域配置与普通测量，判断当前模型位置的闭椭圆和闭凸区域是否有公共点。
+              与逐边支持证据分别计算、保留结果；相交不表示完整包含、物理占用或到访。
+              k 沿用区域 sigma_multiplier，不表示概率。
+            </p>
+            <div class="actions">
+              <button id="zone-intersection-compute" disabled>
+                计算位置椭圆相交
+              </button>
+              <button id="download-zone-intersection" class="quiet" disabled>
+                下载整批椭圆相交证据
+              </button>
+            </div>
+            <p
+              id="zone-intersection-message"
+              class="hint"
+              role="status"
+              aria-live="polite"
+            >
+              显式计算后跟随上方普通滑块，不修改测量或原区域判定。
+            </p>
+            <p id="zone-intersection-frame" class="hint"></p>
+            <p class="hint">
+              Q 为区域内最小的协方差逆二次型，表中显示核心返回的上下界。
+              接近相切时可能仍未确认。候选边从 0 编号，参数 t
+              对应输入边；坐标是舍入后的诊断点，不是精确最近点。
+              表格显示六位有效数字，悬停行和下载保留核心原值。
+            </p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>目标 / 片段</th>
+                    <th>区域 ID</th>
+                    <th>k</th>
+                    <th>Q 最小值界</th>
+                    <th>相交证据</th>
+                    <th>候选边</th>
+                    <th>参数 t</th>
+                    <th>候选点（舍入） · m</th>
+                  </tr>
+                </thead>
+                <tbody id="zone-intersection-evidence"></tbody>
+              </table>
+            </div>
+            <p class="hint">本帧不可判定目标</p>
+            <div class="table-wrap">
+              <table class="gate-table">
+                <thead>
+                  <tr>
+                    <th>目标 / 片段</th>
+                    <th>原测量状态</th>
+                  </tr>
+                </thead>
+                <tbody id="zone-intersection-unavailable"></tbody>
+              </table>
+            </div>
+          </details>
           <div id="physical-zone-results">
             <label class="hint result-mode"
               >物理足迹显示<select
