@@ -12,6 +12,42 @@ import {
 // Errors
 
 // Types and methods
+pub(all) enum AssignedFootprintBand {
+  Disk(DiskZoneBand)
+  Convex(FootprintZoneBand)
+} derive(@debug.Debug)
+pub fn AssignedFootprintBand::to_repr(Self) -> @debug.Repr
+
+pub(all) struct AssignedFootprintEvidence {
+  track_id : Int32
+  segment_id : String
+  evidence : AssignedFootprintBand
+} derive(@debug.Debug)
+pub fn AssignedFootprintEvidence::to_repr(Self) -> @debug.Repr
+
+pub(all) struct AssignedFootprintUnavailable {
+  track_id : Int32
+  segment_id : String?
+  reason : AssignedFootprintUnavailableReason
+} derive(@debug.Debug)
+pub fn AssignedFootprintUnavailable::to_repr(Self) -> @debug.Repr
+
+pub(all) enum AssignedFootprintUnavailableReason {
+  Position(ZoneUnavailableReason)
+  MissingFootprint
+} derive(Eq, @debug.Debug)
+pub fn AssignedFootprintUnavailableReason::equal(Self, Self) -> Bool
+pub fn AssignedFootprintUnavailableReason::not_equal(Self, Self) -> Bool
+pub fn AssignedFootprintUnavailableReason::to_repr(Self) -> @debug.Repr
+
+pub(all) struct AssignedFootprintZoneEvidenceFrame {
+  session_id : String
+  timestamp_us : Int64
+  evidence : Array[AssignedFootprintEvidence]
+  unavailable : Array[AssignedFootprintUnavailable]
+} derive(@debug.Debug)
+pub fn AssignedFootprintZoneEvidenceFrame::to_repr(Self) -> @debug.Repr
+
 pub struct ConvexFootprint {
   // private fields
 }
@@ -70,6 +106,24 @@ pub(all) struct DiskZoneFaceBand {
   upper_m : Double
 } derive(@debug.Debug)
 pub fn DiskZoneFaceBand::to_repr(Self) -> @debug.Repr
+
+pub struct FootprintAssignment {
+  track_id : Int32
+  segment_id : String
+  // private fields
+}
+pub fn FootprintAssignment::new(Int32, String, FootprintShape) -> Self raise @types.GroundError
+
+pub struct FootprintAssignments {
+  timestamp_us : Int64
+  // private fields
+}
+pub fn FootprintAssignments::new(Int64, Array[FootprintAssignment]) -> Self raise @types.GroundError
+
+pub(all) enum FootprintShape {
+  Disk(DiskFootprint)
+  Convex(ConvexFootprint)
+}
 
 pub(all) struct FootprintZoneBand {
   zone_id : String
@@ -157,6 +211,7 @@ pub struct ZoneProjector {
   // private fields
 }
 pub fn ZoneProjector::evaluate(Self, @motion.FrameResult) -> ZoneEvidenceFrame raise @types.GroundError
+pub fn ZoneProjector::evaluate_assigned(Self, @motion.FrameResult, FootprintAssignments) -> AssignedFootprintZoneEvidenceFrame raise @types.GroundError
 pub fn ZoneProjector::evaluate_disk(Self, @motion.FrameResult, DiskFootprint) -> DiskZoneEvidenceFrame raise @types.GroundError
 pub fn ZoneProjector::evaluate_footprint(Self, @motion.FrameResult, ConvexFootprint) -> FootprintZoneEvidenceFrame raise @types.GroundError
 pub fn ZoneProjector::new(String, Array[ConvexZone], max_tracks? : Int32) -> Self raise @types.GroundError
