@@ -422,6 +422,7 @@ summary {
   margin-top: 8px;
 }
 
+#footprint-run-input,
 #footprint-zone-input,
 #disk-zone-input {
   height: 70px;

@@ -1195,6 +1195,62 @@
                   自动续用。原位置不可判定原因优先保留；
                   重复、额外目标、错误片段或时间不匹配会使整批报错。区间不是概率置信区间。
                 </p>
+                <details id="footprint-run-section">
+                  <summary>同足迹证据确认序列</summary>
+                  <p class="hint">
+                    读取当前区域配置、逐帧分配和普通测量。
+                    只有同目标、同片段、同区域、同显式形状且连续同为确认在内或确认在外的样本才延续；
+                    未确认、不可用、缺少目标、片段关闭或间隔达到上限会结束旧序列。
+                  </p>
+                  <label for="footprint-run-input" class="hint"
+                    >序列选项 JSON · 时间单位
+                    μs，样本数与时间均为精确整数字符串</label
+                  >
+                  <textarea id="footprint-run-input" spellcheck="false">
+{"max_gap_us":"500000","confirmation_us":"1000000","min_samples":"2"}</textarea
+                  >
+                  <div class="actions">
+                    <button id="footprint-run-compute" disabled>
+                      计算同足迹确认序列
+                    </button>
+                    <button id="download-footprint-runs" class="quiet" disabled>
+                      下载整批序列与最终检查点
+                    </button>
+                  </div>
+                  <p
+                    id="footprint-run-message"
+                    class="hint"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    同时达到最少样本数与样本跨度才确认；新达标仅在该帧标记一次。
+                  </p>
+                  <p id="footprint-run-frame" class="hint"></p>
+                  <p class="hint">
+                    样本跨度是末样本时间减首样本时间，不表示实际连续在内、到访、离开、占用或停留。
+                    形状的半径、类型、顶点或顺序改变会结束旧序列。
+                    投影拒绝在原证据中保留原因，已有序列按本帧缺少目标结束。
+                  </p>
+                  <div class="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>记录</th>
+                          <th>目标 / 片段</th>
+                          <th>区域 ID</th>
+                          <th>同类证据</th>
+                          <th>首样本 · μs</th>
+                          <th>末样本 · μs</th>
+                          <th>样本数</th>
+                          <th>样本跨度 · μs</th>
+                          <th>合取资格</th>
+                          <th>结束原因 / 当前时间</th>
+                        </tr>
+                      </thead>
+                      <tbody id="footprint-run-rows"></tbody>
+                    </table>
+                  </div>
+                </details>
               </div>
               <div class="table-wrap">
                 <table>

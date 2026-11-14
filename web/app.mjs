@@ -26,6 +26,7 @@ import {
   moonground_disk_zone_evidence,
   moonground_footprint_zone_evidence,
   moonground_assigned_zone_evidence,
+  moonground_footprint_runs,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -43,6 +44,7 @@ const zoneInput = $("zone-input");
 const diskZoneInput = $("disk-zone-input");
 const footprintZoneInput = $("footprint-zone-input");
 const assignedZoneInput = $("assigned-zone-input");
+const footprintRunInput = $("footprint-run-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -212,6 +214,17 @@ let assignedZoneMeasurements = "";
 let assignedZoneReference = null;
 let assignedZonePending = null;
 let assignedZoneSelectedKey = null;
+let footprintRunRevision = 0;
+let footprintRunRunToken = 0;
+let footprintRunReport = null;
+let footprintRunResponse = null;
+let footprintRunConfiguration = "";
+let footprintRunAssignments = "";
+let footprintRunOptions = "";
+let footprintRunSource = "";
+let footprintRunMeasurements = "";
+let footprintRunReference = null;
+let footprintRunPending = null;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -233,6 +246,7 @@ function stop() {
 }
 
 function invalidate() {
+  cancelFootprintRunPreparation();
   cancelAssignedZonePreparation();
   cancelFootprintZonePreparation();
   cancelDiskZonePreparation();
@@ -991,6 +1005,7 @@ function renderZoneFaces(frame) {
   );
 }
 function renderZones() {
+  renderFootprintRuns();
   renderDiskZones();
   renderFootprintZones();
   renderAssignedZones();
@@ -1835,7 +1850,7 @@ function renderAssignedZones() {
     true,
   );
 }
-function requestAssignedZones(configuration, options, measurements) {
+function wrapAssignedZoneFrames(options, measurements) {
   // Keep every user document and original measurement raw. Only remove NDJSON
   // line terminators; the core verifies clocks, identities and unknown fields.
   const documents = options.split("\n");
@@ -1844,7 +1859,7 @@ function requestAssignedZones(configuration, options, measurements) {
     throw new Error(
       "逐帧分配须与普通测量一一对应，共 " + measurements.length + " 行。",
     );
-  const frames =
+  return (
     documents
       .map((line, index) =>
         JSON.stringify({
@@ -1852,7 +1867,11 @@ function requestAssignedZones(configuration, options, measurements) {
           assignments: line.endsWith("\r") ? line.slice(0, -1) : line,
         }),
       )
-      .join("\n") + "\n";
+      .join("\n") + "\n"
+  );
+}
+function requestAssignedZones(configuration, options, measurements) {
+  const frames = wrapAssignedZoneFrames(options, measurements);
   const encoder = new TextEncoder();
   if (
     encoder.encode(configuration).length + encoder.encode(frames).length >
@@ -1930,11 +1949,13 @@ $("assigned-zone-compute").addEventListener("click", async () => {
   }
 });
 assignedZoneInput.addEventListener("input", () => {
+  clearFootprintRunResult();
   clearAssignedZoneResult();
   assignedZoneMessage(
     "逐帧分配已修改，请显式重新计算；统一足迹和点位置证据各自保留。",
   );
   renderAssignedZones();
+  renderFootprintRuns();
 });
 $("assigned-zone-example").addEventListener("click", () => {
   if (!ordinaryVelocitySourceCurrent()) return;
@@ -1969,12 +1990,14 @@ $("assigned-zone-example").addEventListener("click", () => {
         throw new Error("混合分配示例超过浏览器 8 MiB，请缩短普通测量流。");
       lines.push(line);
     }
+    clearFootprintRunResult();
     clearAssignedZoneResult();
     assignedZoneInput.value = lines.join("\n") + "\n";
     assignedZoneMessage(
       "已按核心接受的每帧时间、目标与片段生成待审草稿：固定 r=0.25 m 圆盘／固定凸形交替示例，不推断尺寸。",
     );
     renderAssignedZones();
+    renderFootprintRuns();
   } catch (error) {
     assignedZoneMessage(error.message, true);
   }
@@ -1987,7 +2010,260 @@ $("download-assigned-zones").addEventListener("click", () => {
     );
 });
 
+function footprintRunMessage(text, error = false) {
+  $("footprint-run-message").textContent = text;
+  $("footprint-run-message").classList.toggle("error", error);
+}
+function cancelFootprintRunPreparation() {
+  footprintRunRevision++;
+  if (footprintRunPending !== null)
+    footprintRunMessage("上一次足迹确认序列准备已取消。");
+  footprintRunPending = null;
+}
+function clearFootprintRunResult() {
+  cancelFootprintRunPreparation();
+  footprintRunReport = null;
+  footprintRunResponse = null;
+  footprintRunConfiguration = "";
+  footprintRunAssignments = "";
+  footprintRunOptions = "";
+  footprintRunSource = "";
+  footprintRunMeasurements = "";
+  footprintRunReference = null;
+}
+function footprintRunIsCurrent() {
+  return (
+    footprintRunReport !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    footprintRunConfiguration === zoneInput.value &&
+    footprintRunAssignments === assignedZoneInput.value &&
+    footprintRunOptions === footprintRunInput.value &&
+    footprintRunSource === source.value &&
+    footprintRunReference === measurementLines
+  );
+}
+function footprintRunKey(run) {
+  return JSON.stringify([
+    run.track_id,
+    run.segment_id,
+    run.zone_id,
+    run.first_timestamp_us,
+  ]);
+}
+function renderFootprintRuns() {
+  if (
+    footprintRunReport !== null &&
+    (footprintRunConfiguration !== zoneInput.value ||
+      footprintRunAssignments !== assignedZoneInput.value ||
+      footprintRunOptions !== footprintRunInput.value ||
+      footprintRunSource !== source.value)
+  ) {
+    clearFootprintRunResult();
+    footprintRunMessage("原始测量、区域、分配或序列选项已修改，请重新计算。");
+  }
+  if (
+    footprintRunReport !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    footprintRunReference !== measurementLines
+  ) {
+    if (footprintRunMeasurements === measurementLines.join("\n") + "\n")
+      footprintRunReference = measurementLines;
+    else {
+      clearFootprintRunResult();
+      footprintRunMessage("普通测量载荷已变化，请重新计算确认序列。");
+    }
+  }
+  $("footprint-run-compute").disabled =
+    !ordinaryVelocitySourceCurrent() || footprintRunPending !== null;
+  $("download-footprint-runs").disabled = !footprintRunIsCurrent();
+  $("footprint-run-rows").replaceChildren();
+  if (!footprintRunIsCurrent()) {
+    $("footprint-run-frame").textContent =
+      "使用当前逐帧分配与普通测量；无需先计算上方独立足迹结果。";
+    return;
+  }
+  const index = Number(slider.value),
+    frame = footprintRunReport.frames[index];
+  if (!frame) return;
+  $("footprint-run-frame").textContent =
+    index +
+    1 +
+    " / " +
+    footprintRunReport.frames.length +
+    " · " +
+    frame.evidence.timestamp_us +
+    " μs · 当前序列 " +
+    frame.active.length +
+    "；本帧首次确认 " +
+    frame.confirmed.length +
+    "；本帧结束 " +
+    frame.closed.length +
+    "；原证据不可判定目标 " +
+    frame.evidence.unavailable.length +
+    "。";
+  if (
+    !$("zone-section").open ||
+    !$("footprint-run-section").open ||
+    $("physical-zone-mode").value !== "assigned"
+  )
+    return;
+  const reasons = {
+    gap_exceeded: "帧间隔达到上限",
+    segment_closed: "原片段已关闭",
+    segment_changed: "片段已更换",
+    missing_target: "本帧缺少目标",
+    unavailable_evidence: "原证据不可用",
+    shape_changed: "显式形状已改变",
+    indeterminate_evidence: "区域关系未确认",
+    decision_changed: "区域证据已改变",
+  };
+  const newly = new Set(frame.confirmed.map(footprintRunKey));
+  const rows = [
+    ...frame.active.map((run) => ({ run, active: true, data: run })),
+    ...frame.closed.map((closed) => ({
+      ...closed,
+      active: false,
+      data: closed,
+    })),
+  ].map((record) => {
+    const run = record.run;
+    const row = reportRow([
+      record.active ? "当前" : "本帧结束",
+      run.track_id + " / " + run.segment_id,
+      run.zone_id,
+      run.decision === "inside" ? "确认在内" : "确认在外",
+      run.first_timestamp_us,
+      run.last_timestamp_us,
+      run.sample_count,
+      run.sample_span_us,
+      record.active && newly.has(footprintRunKey(run))
+        ? "本帧首次确认"
+        : run.confirmed
+          ? "已确认"
+          : "待确认",
+      record.active
+        ? "—"
+        : (reasons[record.reason] ?? record.reason) +
+          " · " +
+          record.closed_at_timestamp_us +
+          " μs",
+    ]);
+    row.title = JSON.stringify(record.data);
+    return row;
+  });
+  if (!rows.length) {
+    const row = reportRow(["本帧没有当前或结束的确认序列。"]);
+    row.firstChild.colSpan = 10;
+    rows.push(row);
+  }
+  $("footprint-run-rows").replaceChildren(...rows);
+}
+function requestFootprintRuns(
+  configuration,
+  options,
+  assignments,
+  measurements,
+) {
+  const source = JSON.stringify({ position: configuration, options });
+  const frames = wrapAssignedZoneFrames(assignments, measurements);
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(source).length + encoder.encode(frames).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器足迹确认序列输入上限为 8 MiB。");
+  const request = JSON.stringify({ source, frames });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("足迹确认序列请求超过 16 Mi 字符上限。");
+  const response = moonground_footprint_runs(request);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器足迹确认序列结果超过 8 MiB。");
+  return { response, report: unpack(response) };
+}
+$("footprint-run-compute").addEventListener("click", async () => {
+  if (!ordinaryVelocitySourceCurrent()) return;
+  const current = ++footprintRunRevision,
+    runToken = ++footprintRunRunToken,
+    upstream = revision,
+    reference = measurementLines,
+    configuration = zoneInput.value,
+    assignments = assignedZoneInput.value,
+    options = footprintRunInput.value,
+    input = loadedSource;
+  footprintRunPending = {
+    reference,
+    configuration,
+    assignments,
+    options,
+    input,
+  };
+  footprintRunMessage("正在计算同形状、同区域证据的连续确认序列…");
+  renderFootprintRuns();
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (
+      current !== footprintRunRevision ||
+      upstream !== revision ||
+      reference !== measurementLines ||
+      configuration !== zoneInput.value ||
+      assignments !== assignedZoneInput.value ||
+      options !== footprintRunInput.value ||
+      input !== source.value ||
+      !ordinaryVelocitySourceCurrent()
+    )
+      return;
+    const { response, report } = requestFootprintRuns(
+      configuration,
+      options,
+      assignments,
+      reference,
+    );
+    if (
+      current !== footprintRunRevision ||
+      upstream !== revision ||
+      reference !== measurementLines ||
+      configuration !== zoneInput.value ||
+      assignments !== assignedZoneInput.value ||
+      options !== footprintRunInput.value ||
+      input !== source.value
+    )
+      return;
+    footprintRunReport = report;
+    footprintRunResponse = response;
+    footprintRunConfiguration = configuration;
+    footprintRunAssignments = assignments;
+    footprintRunOptions = options;
+    footprintRunSource = input;
+    footprintRunMeasurements = reference.join("\n") + "\n";
+    footprintRunReference = reference;
+    footprintRunMessage(
+      "已计算 " +
+        report.frames.length +
+        " 帧同足迹确认序列；下载包含完整最终检查点。",
+    );
+  } catch (error) {
+    if (current === footprintRunRevision)
+      footprintRunMessage(error.message, true);
+  } finally {
+    if (runToken === footprintRunRunToken) {
+      footprintRunPending = null;
+      renderFootprintRuns();
+    }
+  }
+});
+footprintRunInput.addEventListener("input", () => {
+  clearFootprintRunResult();
+  footprintRunMessage("序列选项已修改，请显式重新计算；原区域证据保留。");
+  renderFootprintRuns();
+});
+$("footprint-run-section").addEventListener("toggle", renderFootprintRuns);
+$("download-footprint-runs").addEventListener("click", () => {
+  if (footprintRunIsCurrent())
+    saveFile(footprintRunResponse + "\n", "moonground-footprint-runs.json");
+});
+
 zoneInput.addEventListener("input", () => {
+  clearFootprintRunResult();
   clearAssignedZoneResult();
   clearFootprintZoneResult();
   clearDiskZoneResult();
@@ -1997,6 +2273,7 @@ zoneInput.addEventListener("input", () => {
 });
 $("zone-example").addEventListener("click", () => {
   if (!ordinaryVelocitySourceCurrent()) return;
+  clearFootprintRunResult();
   clearAssignedZoneResult();
   clearFootprintZoneResult();
   clearDiskZoneResult();
@@ -2123,6 +2400,7 @@ $("analyze").addEventListener("click", async () => {
   cancelDiskZonePreparation();
   cancelFootprintZonePreparation();
   cancelAssignedZonePreparation();
+  cancelFootprintRunPreparation();
   renderVelocity();
   renderZones();
   const current = ++revision,

@@ -10721,6 +10721,512 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.locator("#physical-zone-results").screenshot({
       path: path.join(directory, "assigned-zone-evidence-desktop-preview.png"),
     });
+    // Confirmation sequences consume the original mixed-shape inputs directly.
+    // Establish every comparison product rather than inheriting a display mode.
+    await runVelocityBase(velocitySource, 7);
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await physicalMode("disk");
+    await page.locator("#disk-zone-input").fill(diskConfiguration);
+    await runDiskZones(7);
+    const runDiskBaseline = await exportDiskZones();
+    await physicalMode("convex");
+    await page.locator("#footprint-zone-input").fill(footprintConfiguration);
+    await runFootprintZones(7);
+    const runConvexBaseline = await exportFootprintZones();
+    await runZones(7);
+    const runPointBaseline = await exportZones();
+    await runVelocity(7);
+    const runVelocityBaseline = await exportVelocity();
+    await physicalMode("assigned");
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await runAssignedZones(7);
+    const runAssignedBaseline = await exportAssignedZones();
+    await page.locator("#footprint-run-section").evaluate((details) => {
+      details.open = true;
+    });
+    const defaultRunOptions =
+      '{"max_gap_us":"500000","confirmation_us":"1000000","min_samples":"2"}';
+    const runOptions =
+      '{"max_gap_us":"500000","confirmation_us":"400000","min_samples":"3"}';
+    const runFootprintRuns = async (count) => {
+      await physicalMode("assigned");
+      await page.locator("#footprint-run-section").evaluate((details) => {
+        details.open = true;
+      });
+      await page.locator("#footprint-run-compute").click();
+      await page.waitForFunction((expected) => {
+        const message = document.querySelector("#footprint-run-message");
+        return (
+          message.classList.contains("error") ||
+          message.textContent.includes("已计算 " + expected + " 帧")
+        );
+      }, count);
+      assert.equal(
+        await page.locator("#footprint-run-message.error").count(),
+        0,
+        await page.locator("#footprint-run-message").textContent(),
+      );
+    };
+    const exportFootprintRuns = () =>
+      exportJson("#download-footprint-runs", "moonground-footprint-runs.json");
+    await page.locator("#footprint-run-input").fill(defaultRunOptions);
+    await runFootprintRuns(7);
+    const defaultRuns = await exportFootprintRuns();
+    assert.ok(
+      defaultRuns.frames.every((frame) => frame.confirmed.length === 0),
+    );
+    assert.deepEqual(Object.keys(defaultRuns).sort(), ["checkpoint", "frames"]);
+    assert.equal(defaultRuns.checkpoint.kind, "footprint_run_checkpoint");
+    assert.equal(defaultRuns.checkpoint.last_timestamp_us, "1200000");
+    assert.deepEqual(defaultRuns.checkpoint.states, []);
+    assert.deepEqual(
+      await page.evaluate(async (checkpoint) => {
+        const bridge = await import("./moonground.mjs");
+        return JSON.parse(
+          bridge.moonground_footprint_runs(
+            JSON.stringify({
+              source: JSON.stringify({ resume: checkpoint }),
+              frames: "",
+            }),
+          ),
+        );
+      }, defaultRuns.checkpoint),
+      { frames: [], checkpoint: defaultRuns.checkpoint },
+    );
+    await page.locator("#footprint-run-input").fill(runOptions);
+    await runFootprintRuns(7);
+    const footprintRuns = await exportFootprintRuns();
+    footprintRuns.frames.forEach((frame, index) => {
+      assert.equal(frame.kind, "footprint_run_frame");
+      assert.equal(
+        frame.evidence_scope,
+        "current_target_footprint_confirmed_sample_runs",
+      );
+      assert.deepEqual(frame.evidence, runAssignedBaseline.frames[index]);
+      for (const run of frame.active) {
+        assert.equal(typeof run.sample_count, "string");
+        assert.equal(typeof run.sample_span_us, "string");
+        assert.equal(
+          BigInt(run.sample_span_us),
+          BigInt(run.last_timestamp_us) - BigInt(run.first_timestamp_us),
+        );
+      }
+    });
+    const runFor = (frame, key, track = 1, zone = "wide") =>
+      frame[key].find((run) => run.track_id === track && run.zone_id === zone);
+    assert.equal(runFor(footprintRuns.frames[2], "active").confirmed, false);
+    assert.equal(
+      runFor(footprintRuns.frames[3], "confirmed").sample_count,
+      "3",
+    );
+    assert.equal(
+      runFor(footprintRuns.frames[3], "confirmed").sample_span_us,
+      "400000",
+    );
+    assert.equal(runFor(footprintRuns.frames[4], "confirmed"), undefined);
+    assert.equal(runFor(footprintRuns.frames[5], "active").sample_count, "5");
+    assert.equal(footprintRuns.frames[6].active.length, 0);
+    assert.ok(footprintRuns.frames[6].closed.length > 0);
+    assert.ok(
+      footprintRuns.frames[6].closed.every(
+        (record) => record.reason === "missing_target",
+      ),
+    );
+    await selectVelocityFrame(3);
+    assert.equal(
+      await page.locator("#footprint-run-rows tr").count(),
+      footprintRuns.frames[3].active.length +
+        footprintRuns.frames[3].closed.length,
+    );
+    assert.match(
+      await page.locator("#footprint-run-rows").textContent(),
+      /本帧首次确认/,
+    );
+    assert.deepEqual(
+      JSON.parse(
+        await page
+          .locator("#footprint-run-rows tr")
+          .first()
+          .getAttribute("title"),
+      ),
+      footprintRuns.frames[3].active[0],
+    );
+    await selectVelocityFrame(6);
+    assert.match(
+      await page.locator("#footprint-run-rows").textContent(),
+      /本帧缺少目标/,
+    );
+    assert.deepEqual(
+      JSON.parse(
+        await page
+          .locator("#footprint-run-rows tr")
+          .first()
+          .getAttribute("title"),
+      ),
+      footprintRuns.frames[6].closed[0],
+    );
+    // Each threshold is necessary; sample time is never rounded in the browser.
+    for (const options of [
+      { max_gap_us: "500000", confirmation_us: "600000", min_samples: "2" },
+      { max_gap_us: "500000", confirmation_us: "200000", min_samples: "4" },
+    ]) {
+      await page.locator("#footprint-run-input").fill(JSON.stringify(options));
+      await runFootprintRuns(7);
+      const report = await exportFootprintRuns();
+      assert.equal(runFor(report.frames[2], "active").confirmed, false);
+      assert.equal(runFor(report.frames[4], "confirmed").sample_count, "4");
+    }
+    await page
+      .locator("#footprint-run-input")
+      .fill('{"max_gap_us":"500000","confirmation_us":"0","min_samples":"1"}');
+    await runFootprintRuns(7);
+    const instantRuns = await exportFootprintRuns();
+    assert.equal(runFor(instantRuns.frames[1], "confirmed").sample_count, "1");
+    assert.equal(
+      runFor(instantRuns.frames[1], "confirmed").sample_span_us,
+      "0",
+    );
+    assert.equal(runFor(instantRuns.frames[2], "confirmed"), undefined);
+    await page
+      .locator("#footprint-run-input")
+      .fill('{"max_gap_us":"200000","confirmation_us":"0","min_samples":"1"}');
+    await runFootprintRuns(7);
+    const gapRuns = await exportFootprintRuns();
+    assert.ok(
+      gapRuns.frames[2].closed.every(
+        (record) => record.reason === "gap_exceeded",
+      ),
+    );
+    assert.equal(runFor(gapRuns.frames[2], "active").sample_count, "1");
+    await page.locator("#footprint-run-input").fill(runOptions);
+    for (const change of [
+      (docs) => {
+        docs[4].footprints[0].shape.radius_m = 0.5;
+      },
+      (docs) => {
+        docs[4].footprints[1].shape.vertices_offset_m.reverse();
+      },
+    ]) {
+      const docs = JSON.parse(JSON.stringify(assignedDocuments));
+      change(docs);
+      await page.locator("#assigned-zone-input").fill(assignmentText(docs));
+      await runFootprintRuns(7);
+      const report = await exportFootprintRuns();
+      assert.ok(
+        report.frames[4].closed.some(
+          (record) => record.reason === "shape_changed",
+        ),
+      );
+      const track = docs[4].footprints[0].shape.radius_m === 0.5 ? 1 : 2;
+      assert.equal(runFor(report.frames[4], "active", track).sample_count, "1");
+      assert.equal(
+        runFor(report.frames[4], "active", track).first_timestamp_us,
+        "800000",
+      );
+    }
+    const unavailableDocs = JSON.parse(JSON.stringify(assignedDocuments));
+    unavailableDocs[3].footprints.pop();
+    await page
+      .locator("#assigned-zone-input")
+      .fill(assignmentText(unavailableDocs));
+    await runFootprintRuns(7);
+    const missingRuns = await exportFootprintRuns();
+    assert.ok(
+      missingRuns.frames[3].closed.some(
+        (record) =>
+          record.run.track_id === 2 && record.reason === "unavailable_evidence",
+      ),
+    );
+    assert.equal(
+      missingRuns.frames[3].evidence.unavailable[0].reason,
+      "missing_footprint",
+    );
+    assert.equal(runFor(missingRuns.frames[4], "active", 2).sample_count, "1");
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await page.locator("#zone-input").fill(
+      JSON.stringify({
+        session_id: "velocity-ui",
+        zones: [
+          {
+            zone_id: "edge",
+            vertices_m: [
+              [-10, -10],
+              [1, -10],
+              [1, 10],
+              [-10, 10],
+            ],
+          },
+        ],
+      }),
+    );
+    await runFootprintRuns(7);
+    const unknownRuns = await exportFootprintRuns();
+    assert.ok(
+      unknownRuns.frames[2].closed.some(
+        (record) =>
+          record.run.track_id === 1 &&
+          record.reason === "indeterminate_evidence",
+      ),
+    );
+    assert.equal(runFor(unknownRuns.frames[2], "active", 1, "edge"), undefined);
+    assert.equal(
+      runFor(unknownRuns.frames[4], "active", 1, "edge").decision,
+      "outside",
+    );
+    assert.equal(
+      runFor(unknownRuns.frames[4], "active", 1, "edge").sample_count,
+      "1",
+    );
+    // Projection rows retain their reason, without a fabricated current segment.
+    await runVelocityBase(velocityPixelInput, 11);
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await page.locator("#assigned-zone-example").click();
+    await runFootprintRuns(11);
+    const projectionRuns = await exportFootprintRuns();
+    assert.deepEqual(projectionRuns.frames[10].evidence.unavailable, [
+      { track_id: 1, segment_id: null, reason: "rejected_projection" },
+    ]);
+    assert.ok(
+      projectionRuns.frames[10].closed.some(
+        (record) => record.reason === "missing_target",
+      ),
+    );
+    await runVelocityBase(assignedLargeInput, 2);
+    await page.locator("#assigned-zone-example").click();
+    await page
+      .locator("#footprint-run-input")
+      .fill('{"max_gap_us":"500000","confirmation_us":"0","min_samples":"1"}');
+    await runFootprintRuns(2);
+    const largeRuns = await exportFootprintRuns();
+    assert.equal(largeRuns.checkpoint.last_timestamp_us, "9007199254940993");
+    assert.equal(
+      largeRuns.frames[1].active[0].first_timestamp_us,
+      "9007199254940993",
+    );
+    assert.equal(largeRuns.frames[1].active[0].sample_span_us, "0");
+    // Restore independent slots explicitly before exercising editing boundaries.
+    await runVelocityBase(velocitySource, 7);
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await runAssignedZones(7);
+    await runZones(7);
+    await runVelocity(7);
+    await physicalMode("disk");
+    await runDiskZones(7);
+    await runFootprintZones(7);
+    await physicalMode("assigned");
+    await page.locator("#footprint-run-input").fill(runOptions);
+    await runFootprintRuns(7);
+    assert.deepEqual(await exportFootprintRuns(), footprintRuns);
+    for (const raw of [
+      '{"max_gap_us":"0"}',
+      '{"confirmation_us":"01"}',
+      '{"min_samples":2}',
+      '{"min_samples":1.0000000000000001}',
+      '{"min_samples":"2","min_samples":"3"}',
+      '{"min_samples":"2","unknown":true}',
+    ]) {
+      await page.locator("#footprint-run-input").fill(raw);
+      await page.locator("#footprint-run-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-run-message")
+          .classList.contains("error"),
+      );
+      assert.equal(
+        await page.locator("#footprint-run-input").inputValue(),
+        raw,
+      );
+      assert.equal(
+        await page.locator("#download-footprint-runs").isDisabled(),
+        true,
+      );
+      assert.deepEqual(await exportAssignedZones(), runAssignedBaseline);
+      assert.deepEqual(await exportZones(), runPointBaseline);
+    }
+    await page.locator("#footprint-run-input").fill(runOptions);
+    await runFootprintRuns(7);
+    await page.evaluate(() => {
+      window.runOriginalTextEncoder = window.TextEncoder;
+      window.TextEncoder = class {
+        encode() {
+          throw new Error("run preparation failed");
+        }
+      };
+    });
+    await page.locator("#footprint-run-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#footprint-run-message")
+        .classList.contains("error"),
+    );
+    await page.evaluate(() => {
+      window.TextEncoder = window.runOriginalTextEncoder;
+      delete window.runOriginalTextEncoder;
+    });
+    assert.deepEqual(await exportFootprintRuns(), footprintRuns);
+    await page
+      .locator("#assigned-zone-input")
+      .fill(
+        assignedConfiguration.replace(
+          '"track_id":1',
+          '"track_id":1.0000000000000001',
+        ),
+      );
+    await page.locator("#footprint-run-compute").click();
+    await page.waitForFunction(() =>
+      document
+        .querySelector("#footprint-run-message")
+        .classList.contains("error"),
+    );
+    assert.equal(
+      await page.locator("#download-footprint-runs").isDisabled(),
+      true,
+    );
+    await page.locator("#assigned-zone-input").fill(assignedConfiguration);
+    await runAssignedZones(7);
+    await runFootprintRuns(7);
+    for (const selector of [
+      "#velocity-input",
+      "#gate-input",
+      "#guarded-input",
+    ]) {
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      assert.deepEqual(await exportFootprintRuns(), footprintRuns);
+      await page.locator(selector).fill(previous);
+    }
+    await runVelocity(7);
+    // Other physical modes have no ownership over a run's task or result.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await physicalMode("convex");
+    await page
+      .locator("#footprint-zone-input")
+      .fill(footprintConfiguration + " ");
+    await runFootprintZones(7);
+    await releaseEvidenceTransitPreparation();
+    await physicalMode("assigned");
+    assert.deepEqual(await exportFootprintRuns(), footprintRuns);
+    await physicalMode("convex");
+    assert.deepEqual(await exportFootprintZones(), runConvexBaseline);
+    await physicalMode("disk");
+    await page.locator("#disk-zone-input").fill(diskConfiguration + " ");
+    await runDiskZones(7);
+    assert.deepEqual(await exportDiskZones(), runDiskBaseline);
+    await physicalMode("assigned");
+    assert.deepEqual(await exportFootprintRuns(), footprintRuns);
+    // Recomputing the independent assigned product does not cancel run preparation.
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runAssignedZones(7);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportFootprintRuns(), footprintRuns);
+    for (const selector of [
+      "#footprint-run-input",
+      "#assigned-zone-input",
+      "#zone-input",
+      "#source",
+    ]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page.locator("#download-footprint-runs").isDisabled(),
+        true,
+      );
+      if (selector === "#footprint-run-input") {
+        assert.deepEqual(await exportAssignedZones(), runAssignedBaseline);
+        assert.deepEqual(await exportZones(), runPointBaseline);
+        assert.deepEqual(await exportVelocity(), runVelocityBaseline);
+      }
+      await page.locator(selector).fill(previous);
+      if (selector === "#source") await runVelocityBase(previous, 7);
+      await runAssignedZones(7);
+      await runZones(7);
+      await runFootprintRuns(7);
+    }
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page
+      .locator("#footprint-run-input")
+      .fill('{"max_gap_us":"500000","confirmation_us":"0","min_samples":"1"}');
+    await runFootprintRuns(7);
+    const supersedingRuns = await exportFootprintRuns();
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportFootprintRuns(), supersedingRuns);
+    await page.locator("#footprint-run-input").fill(runOptions);
+    await runFootprintRuns(7);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#assigned-zone-example").click();
+    await runFootprintRuns(7);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportFootprintRuns(), footprintRuns);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#footprint-run-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await runVelocityBase(velocitySource, 7);
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportFootprintRuns(), footprintRuns);
+    await runVelocityBase(velocitySource, 7);
+    assert.deepEqual(await exportFootprintRuns(), footprintRuns);
+    await selectVelocityFrame(3);
+    await page.locator("#footprint-run-section").evaluate((details) => {
+      details.open = false;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#footprint-run-rows tr").length === 0,
+    );
+    assert.equal(
+      await page.locator("#download-footprint-runs").isDisabled(),
+      false,
+    );
+    await page.locator("#footprint-run-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#footprint-run-rows tr").length > 1,
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#footprint-run-section").screenshot({
+      path: path.join(directory, "footprint-runs-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#footprint-run-section").screenshot({
+      path: path.join(directory, "footprint-runs-desktop-preview.png"),
+    });
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();
