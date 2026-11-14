@@ -6,9 +6,9 @@ pub struct ZoneEvidenceReplay {
 }
 
 ///|
-pub fn ZoneEvidenceReplay::open(
+fn zone_configuration_parts(
   source : String,
-) -> ZoneEvidenceReplay raise @types.GroundError {
+) -> (String, Array[@zones.ConvexZone], Int32) raise @types.GroundError {
   let fields = object(parse_document(source), "zone evidence configuration")
   allowed_fields(
     fields,
@@ -37,12 +37,16 @@ pub fn ZoneEvidenceReplay::open(
     Some(value) => positive_int(value, "max_tracks")
     None => 1000
   }
+  (text(required(fields, "session_id"), "session_id"), zones, max_tracks)
+}
+
+///|
+pub fn ZoneEvidenceReplay::open(
+  source : String,
+) -> ZoneEvidenceReplay raise @types.GroundError {
+  let (session_id, zones, max_tracks) = zone_configuration_parts(source)
   {
-    projector: @zones.ZoneProjector::new(
-      text(required(fields, "session_id"), "session_id"),
-      zones,
-      max_tracks~,
-    ),
+    projector: @zones.ZoneProjector::new(session_id, zones, max_tracks~),
     max_tracks,
   }
 }

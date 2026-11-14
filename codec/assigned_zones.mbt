@@ -176,6 +176,13 @@ fn AssignedZoneEvidenceReplay::assigned_process_frame(
     }
   }
   frame.unavailable.sort_by((a, b) => a.track_id.compare(b.track_id))
+  assigned_zone_frame_json(frame)
+}
+
+///|
+fn assigned_zone_frame_json(
+  frame : @zones.AssignedFootprintZoneEvidenceFrame,
+) -> Json {
   Json::object({
     "schema_version": Json("0.1.0"),
     "kind": Json("assigned_zone_evidence_frame"),
