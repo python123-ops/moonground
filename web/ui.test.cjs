@@ -11767,6 +11767,533 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.locator("#footprint-run-section").screenshot({
       path: path.join(directory, "footprint-run-analysis-desktop-preview.png"),
     });
+
+    {
+      // Health gating discovers identities across the whole raw stream, including
+      // blocked recovery and a replacement row which consumes neither companion.
+      const guardedDoc = fs.readFileSync(
+        path.resolve(__dirname, "..", "docs", "footprint-run-guarded-web.md"),
+        "utf8",
+      );
+      const guardedExampleCode = guardedDoc.match(
+        /~~~javascript\n([\s\S]*?)\n~~~|```javascript\r?\n([\s\S]*?)\r?\n```/,
+      );
+      assert.ok(
+        guardedExampleCode,
+        "complete checked five-input documentation example",
+      );
+      const guardedInputs = JSON.parse(
+        JSON.stringify(
+          require("node:vm").runInNewContext(
+            guardedExampleCode[1] || guardedExampleCode[2],
+          ),
+        ),
+      );
+      const guardedSelectors = {
+        measurement: "#source",
+        health: "#health-input",
+        position: "#zone-input",
+        assignments: "#assigned-zone-input",
+        options: "#footprint-run-input",
+      };
+      const fillGuardedInputs = async (inputs = guardedInputs) => {
+        await physicalMode("assigned");
+        for (const [key, selector] of Object.entries(guardedSelectors))
+          await page.locator(selector).fill(inputs[key]);
+        await page.locator("#footprint-run-section").evaluate((details) => {
+          details.open = true;
+        });
+        await atomicMode("guarded");
+      };
+      const guardedRun = async (count = 15) => {
+        await atomicMode("guarded");
+        await page.locator("#footprint-run-guarded-compute").click();
+        await page.waitForFunction((count) => {
+          const message = document.querySelector(
+            "#footprint-run-guarded-message",
+          );
+          return (
+            message.classList.contains("error") ||
+            message.textContent.includes("已门控联合计算 " + count + " 帧")
+          );
+        }, count);
+        assert.equal(
+          await page.locator("#footprint-run-guarded-message.error").count(),
+          0,
+          await page.locator("#footprint-run-guarded-message").textContent(),
+        );
+      };
+      const guardedExport = () =>
+        exportJson(
+          "#download-footprint-run-guarded",
+          "moonground-footprint-run-guarded.json",
+        );
+      const guardedSelect = async (index, preview = false) => {
+        await page
+          .locator(
+            preview
+              ? "#footprint-run-guarded-preview-frame"
+              : "#footprint-run-guarded-frame",
+          )
+          .evaluate((slider, value) => {
+            slider.value = String(value);
+            slider.dispatchEvent(new Event("input", { bubbles: true }));
+          }, index);
+      };
+      const guardedPreview = async (count = 15) => {
+        await atomicMode("guarded");
+        await page.locator("#footprint-run-guarded-preview").click();
+        await page.waitForFunction((count) => {
+          const message = document.querySelector(
+            "#footprint-run-guarded-preview-message",
+          );
+          return (
+            message.classList.contains("error") ||
+            message.textContent.includes("已全程预览 " + count + " 帧")
+          );
+        }, count);
+        assert.equal(
+          await page
+            .locator("#footprint-run-guarded-preview-message.error")
+            .count(),
+          0,
+          await page
+            .locator("#footprint-run-guarded-preview-message")
+            .textContent(),
+        );
+        const identities = [];
+        for (let index = 0; index < count; index++) {
+          await guardedSelect(index, true);
+          identities.push(
+            JSON.parse(
+              await page
+                .locator("#footprint-run-guarded-preview-json")
+                .textContent(),
+            ),
+          );
+        }
+        return identities;
+      };
+      await fillGuardedInputs();
+      assert.equal(await page.locator("#download").isDisabled(), true);
+      const guardedAssignmentsBeforePreview = await page
+        .locator("#assigned-zone-input")
+        .inputValue();
+      const guardedCandidates = await guardedPreview();
+      assert.equal(
+        await page.locator("#assigned-zone-input").inputValue(),
+        guardedAssignmentsBeforePreview,
+      );
+      assert.equal(guardedCandidates[0].decision, "blocked");
+      assert.deepEqual(guardedCandidates[0].tracks, []);
+      assert.deepEqual(guardedCandidates[0].suppressed_track_ids, [1]);
+      assert.equal(guardedCandidates[1].tracks[0].segment_id, "1");
+      assert.equal(guardedCandidates[7].tracks[0].segment_id, "2");
+      assert.equal(guardedCandidates[11].tracks[0].segment_id, "3");
+      assert.equal(guardedCandidates[9].timestamp_us, "1700000");
+      assert.equal(guardedCandidates[9].health.status, "insufficient");
+      assert.deepEqual(guardedCandidates[9].tracks, []);
+      await guardedRun();
+      const guardedFootprints = await guardedExport();
+      assert.equal(guardedFootprints.frames.length, 15);
+      assert.equal(
+        guardedFootprints.checkpoint.format,
+        "moonground.footprint-run-guarded",
+      );
+      assert.equal(
+        guardedFootprints.checkpoint.analysis.measurement.motion
+          .last_timestamp_us,
+        "2600000",
+      );
+      assert.equal(
+        guardedFootprints.checkpoint.health.state.last_timestamp_us,
+        "2600000",
+      );
+      assert.deepEqual(
+        guardedFootprints.frames.map((frame) => ({
+          decision: frame.decision,
+          health: {
+            status: frame.health.status,
+            evidence: frame.health.evidence,
+          },
+          suppressed_track_ids: frame.suppressed_track_ids,
+          ...atomicIdentity(frame.analysis.measurement),
+        })),
+        guardedCandidates,
+      );
+      assert.ok(guardedFootprints.frames[3].analysis.runs.confirmed.length > 0);
+      assert.equal(guardedFootprints.frames[4].decision, "blocked");
+      assert.ok(
+        guardedFootprints.frames[4].analysis.runs.closed.some(
+          (entry) => entry.reason === "segment_closed",
+        ),
+      );
+      assert.equal(
+        guardedFootprints.frames[9].kind,
+        "footprint_run_guarded_projection_replaced",
+      );
+      assert.ok(
+        guardedFootprints.frames[9].analysis.runs.closed.some(
+          (entry) => entry.reason === "segment_closed",
+        ),
+      );
+      assert.ok(
+        guardedFootprints.frames[13].analysis.runs.confirmed.length > 0,
+      );
+      await guardedSelect(9);
+      assert.match(
+        await page.locator("#footprint-run-guarded-counter").textContent(),
+        /标定切换/,
+      );
+      assert.match(
+        await page.locator("#footprint-run-guarded-measurement").textContent(),
+        /replace_projection/,
+      );
+      await guardedSelect(3);
+      assert.match(
+        await page.locator("#footprint-run-rows").textContent(),
+        /本帧首次确认/,
+      );
+      // The complete downloaded checkpoint restores the same new projection.
+      const guardedResumed = await page.evaluate(async (checkpoint) => {
+        const api = await import("./moonground.mjs");
+        return JSON.parse(
+          api.moonground_footprint_run_guarded(
+            JSON.stringify({
+              source: JSON.stringify({ resume: checkpoint }),
+              frames: "",
+            }),
+          ),
+        );
+      }, guardedFootprints.checkpoint);
+      assert.deepEqual(guardedResumed.checkpoint, guardedFootprints.checkpoint);
+      assert.deepEqual(guardedResumed.frames, []);
+      const guardedContinuation = await page.evaluate(async (checkpoint) => {
+        const api = await import("./moonground.mjs");
+        const frame = {
+          measurement: JSON.stringify({
+            timestamp_us: "2800000",
+            observations: [
+              {
+                track_id: 1,
+                point: [6, 5],
+                covariance: [0.01, 0, 0.01],
+              },
+            ],
+          }),
+          health: JSON.stringify({
+            timestamp_us: "2800000",
+            observations: [
+              { landmark_id: "A", point: [5, 5] },
+              { landmark_id: "B", point: [10, 5] },
+              { landmark_id: "C", point: [5, 10] },
+            ],
+          }),
+          assignments: JSON.stringify({
+            timestamp_us: "2800000",
+            footprints: [
+              {
+                track_id: 1,
+                segment_id: "3",
+                shape: { kind: "disk", radius_m: 0.1 },
+              },
+            ],
+          }),
+        };
+        return JSON.parse(
+          api.moonground_footprint_run_guarded(
+            JSON.stringify({
+              source: JSON.stringify({ resume: checkpoint }),
+              frames: JSON.stringify(frame) + "\n",
+            }),
+          ),
+        );
+      }, guardedFootprints.checkpoint);
+      assert.equal(
+        guardedContinuation.frames[0].analysis.measurement.tracks[0].segment_id,
+        "3",
+      );
+      assert.equal(guardedContinuation.frames[0].decision, "allowed");
+      assert.equal(
+        guardedContinuation.frames[0].analysis.runs.active[0]
+          .first_timestamp_us,
+        "2200000",
+      );
+      // Unchanged-input failure retains the last complete successful result.
+      await page.evaluate(() => {
+        window.footprintGuardedEncoder = window.TextEncoder;
+        window.TextEncoder = class {
+          encode() {
+            throw new Error("guarded preparation failed");
+          }
+        };
+      });
+      await page.locator("#footprint-run-guarded-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-run-guarded-message")
+          .classList.contains("error"),
+      );
+      await page.evaluate(() => {
+        window.TextEncoder = window.footprintGuardedEncoder;
+        delete window.footprintGuardedEncoder;
+      });
+      assert.deepEqual(await guardedExport(), guardedFootprints);
+      // All raw tokens reach core. Bad clocks, stale IDs, nonempty blocked
+      // bundles, duplicate/unknown fields and raw fractional IDs stay errors.
+      const guardedBadInputs = [
+        {
+          ...guardedInputs,
+          measurement: guardedInputs.measurement.replace(
+            '"track_id":1',
+            '"track_id":1.00000000000000001',
+          ),
+        },
+        {
+          ...guardedInputs,
+          health: guardedInputs.health.replace(
+            '"landmark_id":"A"',
+            '"landmark_id":"A","unknown":true',
+          ),
+        },
+        {
+          ...guardedInputs,
+          health: guardedInputs.health.replace(
+            '"timestamp_us":"0"',
+            '"timestamp_us":"0","timestamp_us":"0"',
+          ),
+        },
+        {
+          ...guardedInputs,
+          health: guardedInputs.health.replace(
+            '"timestamp_us":"0"',
+            '"timestamp_us":"1"',
+          ),
+        },
+        {
+          ...guardedInputs,
+          assignments: guardedInputs.assignments.replace(
+            '"segment_id":"2"',
+            '"segment_id":"1"',
+          ),
+        },
+        {
+          ...guardedInputs,
+          assignments: guardedInputs.assignments.replace(
+            '"footprints":[]',
+            '"footprints":[{"track_id":1,"segment_id":"1","shape":{"kind":"disk","radius_m":0.1}}]',
+          ),
+        },
+        {
+          ...guardedInputs,
+          assignments: guardedInputs.assignments.replace(
+            '"timestamp_us":"0"',
+            '"timestamp_us":"1"',
+          ),
+        },
+      ];
+      const guardedLines = guardedInputs.measurement.trimEnd().split("\n");
+      const control = JSON.parse(guardedLines[10]);
+      const replacementDocument = JSON.parse(control.replace_projection);
+      delete replacementDocument.camera;
+      const badControlLines = [...guardedLines];
+      badControlLines[10] = JSON.stringify({
+        replace_projection: JSON.stringify(replacementDocument),
+      });
+      guardedBadInputs.push({
+        ...guardedInputs,
+        measurement: badControlLines.join("\n") + "\n",
+      });
+      for (const inputs of guardedBadInputs) {
+        await fillGuardedInputs(inputs);
+        await page.locator("#footprint-run-guarded-compute").click();
+        await page.waitForFunction(() =>
+          document
+            .querySelector("#footprint-run-guarded-message")
+            .classList.contains("error"),
+        );
+        assert.equal(
+          await page.locator("#download-footprint-run-guarded").isDisabled(),
+          true,
+        );
+        assert.equal(
+          await page.locator("#source").inputValue(),
+          inputs.measurement,
+        );
+        assert.equal(
+          await page.locator("#assigned-zone-input").inputValue(),
+          inputs.assignments,
+        );
+      }
+      await fillGuardedInputs();
+      await guardedRun();
+      // Raw configuration edits cancel pending computations, even when switching
+      // the display to another strategy; old finally cannot clear the new task.
+      for (const selector of Object.values(guardedSelectors)) {
+        await holdEvidenceTransitPreparation();
+        await page.locator("#footprint-run-guarded-compute").click();
+        await page.waitForFunction(
+          () => typeof window.releaseEvidenceTransitRun === "function",
+        );
+        const previous = await page.locator(selector).inputValue();
+        await page.locator(selector).fill(previous + " ");
+        await releaseEvidenceTransitPreparation();
+        assert.equal(
+          await page.locator("#download-footprint-run-guarded").isDisabled(),
+          true,
+        );
+        await page.locator(selector).fill(previous);
+        await guardedRun();
+      }
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-guarded-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page
+        .locator("#footprint-run-input")
+        .fill(
+          '{"max_gap_us":"500000","confirmation_us":"0","min_samples":"1"}',
+        );
+      await guardedRun();
+      const guardedSuperseded = await guardedExport();
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await guardedExport(), guardedSuperseded);
+      await page.locator("#footprint-run-input").fill(guardedInputs.options);
+      await guardedRun();
+
+      // A successful programmatic health-file load must invalidate raw-bound
+      // tasks too; it must not need an artificial input event.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-guarded-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const healthReplacementText = guardedInputs.health.replace(
+        "fixed-floor",
+        "loaded-fixed-floor",
+      );
+      await page.locator("#health-file").setInputFiles({
+        name: "guarded-health.ndjson",
+        mimeType: "application/x-ndjson",
+        buffer: Buffer.from(healthReplacementText),
+      });
+      await page.waitForFunction(
+        (input) => document.querySelector("#health-input").value === input,
+        healthReplacementText,
+      );
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page.locator("#download-footprint-run-guarded").isDisabled(),
+        true,
+      );
+      await page.locator("#health-input").fill(guardedInputs.health);
+      await guardedRun();
+      // A newer full preview supersedes a paused earlier health preparation.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-guarded-preview").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const instantHealthText = guardedInputs.health
+        .replace('"confirmation_us":"200000"', '"confirmation_us":"0"')
+        .replace('"min_observations":2', '"min_observations":1');
+      await page.locator("#health-input").fill(instantHealthText);
+      const instantCandidates = await guardedPreview();
+      assert.equal(instantCandidates[0].decision, "allowed");
+      await releaseEvidenceTransitPreparation();
+      await guardedSelect(0, true);
+      assert.equal(
+        JSON.parse(
+          await page
+            .locator("#footprint-run-guarded-preview-json")
+            .textContent(),
+        ).decision,
+        "allowed",
+      );
+      await page.locator("#health-input").fill(guardedInputs.health);
+      await guardedRun();
+
+      // Preview is a separate task and ignores assignment edits.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-guarded-preview").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await page.locator("#assigned-zone-input").fill("invalid assignments");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page
+          .locator("#footprint-run-guarded-preview-message.error")
+          .count(),
+        0,
+      );
+      await guardedSelect(11, true);
+      assert.equal(
+        JSON.parse(
+          await page
+            .locator("#footprint-run-guarded-preview-json")
+            .textContent(),
+        ).tracks[0].segment_id,
+        "3",
+      );
+      await page
+        .locator("#assigned-zone-input")
+        .fill(guardedInputs.assignments);
+      await guardedRun();
+      // Same-raw ordinary/health activity and three display modes do not alter
+      // the raw-bound result. Ordinary mode itself still rejects control rows.
+      await holdEvidenceTransitPreparation();
+      await page.locator("#footprint-run-guarded-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await atomicMode("joint");
+      await page.locator("#footprint-run-joint-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#footprint-run-joint-message")
+          .classList.contains("error"),
+      );
+      await atomicMode("independent");
+      await atomicMode("guarded");
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await guardedExport(), guardedFootprints);
+      await page.locator("#run-health").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#health-message")
+          .textContent.includes("已检查 14 帧"),
+      );
+      assert.deepEqual(await guardedExport(), guardedFootprints);
+      // The independent health monitor uses its original projection throughout;
+      // its different health result cannot replace the joint slot.
+      await page.locator("#run").click();
+      await page.waitForFunction(() =>
+        document.querySelector("#message").classList.contains("error"),
+      );
+      assert.deepEqual(await guardedExport(), guardedFootprints);
+      await guardedPreview();
+      await guardedSelect(13);
+      for (const [width, height, name] of [
+        [390, 844, "mobile"],
+        [1440, 1050, "desktop"],
+      ]) {
+        await page.setViewportSize({ width, height });
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+          true,
+        );
+        await page.locator("#footprint-run-section").screenshot({
+          path: path.join(
+            directory,
+            "footprint-run-guarded-" + name + "-preview.png",
+          ),
+        });
+      }
+    }
     assert.deepEqual(errors, []);
   } finally {
     if (browser) await browser.close();

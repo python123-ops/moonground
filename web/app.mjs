@@ -29,6 +29,8 @@ import {
   moonground_footprint_runs,
   moonground_footprint_run_analysis,
   moonground_footprint_run_preview,
+  moonground_footprint_run_guarded,
+  moonground_footprint_run_guarded_preview,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -239,6 +241,22 @@ let footprintRunPreviewRunToken = 0;
 let footprintRunPreviewReport = null;
 let footprintRunPreviewInputs = null;
 let footprintRunPreviewPending = null;
+const footprintRunGuarded = {
+  revision: 0,
+  runToken: 0,
+  report: null,
+  response: null,
+  inputs: null,
+  pending: null,
+};
+const footprintRunGuardedPreview = {
+  revision: 0,
+  runToken: 0,
+  report: null,
+  inputs: null,
+  pending: null,
+};
+
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -1021,6 +1039,7 @@ function renderZoneFaces(frame) {
 function renderZones() {
   renderFootprintRuns();
   renderFootprintRunJoint();
+  renderFootprintRunGuarded();
   renderDiskZones();
   renderFootprintZones();
   renderAssignedZones();
@@ -1972,6 +1991,7 @@ assignedZoneInput.addEventListener("input", () => {
   renderAssignedZones();
   renderFootprintRuns();
   renderFootprintRunJoint();
+  renderFootprintRunGuarded();
 });
 $("assigned-zone-example").addEventListener("click", () => {
   if (!ordinaryVelocitySourceCurrent()) return;
@@ -2015,6 +2035,7 @@ $("assigned-zone-example").addEventListener("click", () => {
     renderAssignedZones();
     renderFootprintRuns();
     renderFootprintRunJoint();
+    renderFootprintRunGuarded();
   } catch (error) {
     assignedZoneMessage(error.message, true);
   }
@@ -2348,12 +2369,14 @@ function footprintRunPureRequest(source, field, value, invoke) {
 }
 $("footprint-run-joint-compute").addEventListener("click", async () => {
   renderFootprintRunJoint();
+  renderFootprintRunGuarded();
   const inputs = currentFootprintRunJointInputs(),
     current = ++footprintRunJointRevision,
     runToken = ++footprintRunJointRunToken;
   footprintRunJointPending = inputs;
   footprintRunJointMessage("正在从原始观测原子计算测量与同足迹序列…");
   renderFootprintRunJoint();
+  renderFootprintRunGuarded();
   try {
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (
@@ -2395,17 +2418,20 @@ $("footprint-run-joint-compute").addEventListener("click", async () => {
     if (runToken === footprintRunJointRunToken) {
       footprintRunJointPending = null;
       renderFootprintRunJoint();
+      renderFootprintRunGuarded();
     }
   }
 });
 $("footprint-run-preview").addEventListener("click", async () => {
   renderFootprintRunJoint();
+  renderFootprintRunGuarded();
   const inputs = currentFootprintRunJointInputs(),
     current = ++footprintRunPreviewRevision,
     runToken = ++footprintRunPreviewRunToken;
   footprintRunPreviewPending = inputs;
   footprintRunPreviewMessage("正在预览首帧候选身份；不提交联合状态…");
   renderFootprintRunJoint();
+  renderFootprintRunGuarded();
   try {
     await new Promise((resolve) => setTimeout(resolve, 0));
     if (
@@ -2438,6 +2464,7 @@ $("footprint-run-preview").addEventListener("click", async () => {
     if (runToken === footprintRunPreviewRunToken) {
       footprintRunPreviewPending = null;
       renderFootprintRunJoint();
+      renderFootprintRunGuarded();
     }
   }
 });
@@ -2445,8 +2472,10 @@ $("footprint-run-mode").addEventListener("change", () => {
   footprintRunMode = $("footprint-run-mode").value;
   $("footprint-run-independent").hidden = footprintRunMode !== "independent";
   $("footprint-run-joint").hidden = footprintRunMode !== "joint";
+  $("footprint-run-guarded").hidden = footprintRunMode !== "guarded";
   renderFootprintRuns();
   renderFootprintRunJoint();
+  renderFootprintRunGuarded();
 });
 $("footprint-run-joint-frame").addEventListener(
   "input",
@@ -2461,6 +2490,302 @@ $("download-footprint-run-analysis").addEventListener("click", () => {
     saveFile(
       footprintRunJointResponse + "\n",
       "moonground-footprint-run-analysis.json",
+    );
+});
+
+function currentFootprintRunGuardedInputs() {
+  return { ...currentFootprintRunJointInputs(), health: healthInput.value };
+}
+function sameFootprintRunGuardedInputs(left, right, preview = false) {
+  return (
+    sameFootprintRunInputs(left, right, preview) && left.health === right.health
+  );
+}
+function footprintRunGuardedMessage(text, error = false, preview = false) {
+  const target = $(
+    preview
+      ? "footprint-run-guarded-preview-message"
+      : "footprint-run-guarded-message",
+  );
+  target.textContent = text;
+  target.classList.toggle("error", error);
+}
+function clearFootprintRunGuarded(state, preview) {
+  state.revision++;
+  state.report = null;
+  state.response = null;
+  state.inputs = null;
+  state.pending = null;
+  footprintRunGuardedMessage(
+    preview
+      ? "候选输入已修改，请重新全程预览。"
+      : "原始观测、地标、区域、分配或选项已修改，请重新门控联合计算。",
+    false,
+    preview,
+  );
+}
+function footprintRunGuardedIsCurrent() {
+  return (
+    footprintRunGuarded.report !== null &&
+    sameFootprintRunGuardedInputs(
+      footprintRunGuarded.inputs,
+      currentFootprintRunGuardedInputs(),
+    )
+  );
+}
+function footprintRunGuardedIdentity(frame, replacement = false) {
+  return {
+    ...(replacement ? { operation: "replace_projection" } : {}),
+    decision: frame.decision,
+    health: { status: frame.health.status, evidence: frame.health.evidence },
+    suppressed_track_ids: frame.suppressed_track_ids,
+    ...footprintRunIdentity(frame.measurement ?? frame.analysis.measurement),
+  };
+}
+function renderFootprintRunGuarded() {
+  const inputs = currentFootprintRunGuardedInputs();
+  for (const [state, preview] of [
+    [footprintRunGuarded, false],
+    [footprintRunGuardedPreview, true],
+  ]) {
+    if (
+      (state.report !== null &&
+        !sameFootprintRunGuardedInputs(state.inputs, inputs, preview)) ||
+      (state.pending !== null &&
+        !sameFootprintRunGuardedInputs(state.pending, inputs, preview))
+    )
+      clearFootprintRunGuarded(state, preview);
+  }
+  $("footprint-run-guarded-compute").disabled =
+    !inputs.measurement.trim() ||
+    !inputs.health.trim() ||
+    footprintRunGuarded.pending !== null;
+  $("footprint-run-guarded-preview").disabled =
+    !inputs.measurement.trim() ||
+    !inputs.health.trim() ||
+    footprintRunGuardedPreview.pending !== null;
+  $("download-footprint-run-guarded").disabled =
+    !footprintRunGuardedIsCurrent();
+  const visible =
+    footprintRunMode === "guarded" &&
+    $("zone-section").open &&
+    $("footprint-run-section").open &&
+    $("physical-zone-mode").value === "assigned";
+  const previewSlider = $("footprint-run-guarded-preview-frame");
+  previewSlider.disabled = footprintRunGuardedPreview.report === null;
+  $("footprint-run-guarded-preview-json").textContent = "";
+  $("footprint-run-guarded-preview-counter").textContent = "";
+  if (
+    visible &&
+    $("footprint-run-guarded-preview-section").open &&
+    footprintRunGuardedPreview.report !== null
+  ) {
+    const index = Number(previewSlider.value),
+      frame = footprintRunGuardedPreview.report.frames[index];
+    if (frame) {
+      $("footprint-run-guarded-preview-counter").textContent =
+        index +
+        1 +
+        " / " +
+        footprintRunGuardedPreview.report.frames.length +
+        " · " +
+        frame.measurement.timestamp_us +
+        " μs";
+      $("footprint-run-guarded-preview-json").textContent = JSON.stringify(
+        footprintRunGuardedIdentity(frame),
+        null,
+        2,
+      );
+    }
+  }
+  const resultSlider = $("footprint-run-guarded-frame");
+  resultSlider.disabled = !footprintRunGuardedIsCurrent();
+  $("footprint-run-guarded-measurement").textContent = "";
+  if (footprintRunMode !== "guarded") return;
+  $("footprint-run-rows").replaceChildren();
+  if (!footprintRunGuardedIsCurrent()) {
+    $("footprint-run-guarded-counter").textContent =
+      "独立重放原始像素观测与地标；不读取普通或旧门控结果。";
+    return;
+  }
+  const index = Number(resultSlider.value),
+    frame = footprintRunGuarded.report.frames[index];
+  if (!frame) return;
+  const replacement =
+    frame.kind === "footprint_run_guarded_projection_replaced";
+  $("footprint-run-guarded-counter").textContent =
+    index +
+    1 +
+    " / " +
+    footprintRunGuarded.report.frames.length +
+    " · " +
+    frame.analysis.measurement.timestamp_us +
+    " μs · " +
+    (replacement ? "标定切换 · " : "") +
+    (frame.decision === "allowed" ? "允许测量" : "阻断测量") +
+    " · " +
+    (healthStates[frame.health.status] ?? frame.health.status) +
+    " · 当前序列 " +
+    frame.analysis.runs.active.length +
+    "；本帧首次确认 " +
+    frame.analysis.runs.confirmed.length +
+    "；本帧结束 " +
+    frame.analysis.runs.closed.length +
+    "。";
+  if (!visible) return;
+  $("footprint-run-guarded-measurement").textContent = JSON.stringify(
+    footprintRunGuardedIdentity(frame, replacement),
+    null,
+    2,
+  );
+  renderFootprintRunRows(frame.analysis.runs);
+}
+function footprintRunProjectionControl(line) {
+  try {
+    const wrapper = JSON.parse(line);
+    return (
+      wrapper !== null &&
+      !Array.isArray(wrapper) &&
+      typeof wrapper === "object" &&
+      Object.keys(wrapper).length === 1 &&
+      Object.hasOwn(wrapper, "replace_projection")
+    );
+  } catch {
+    return false;
+  }
+}
+function footprintRunGuardedRawInput(inputs, preview) {
+  const measurement = observationLines(inputs.measurement),
+    health = observationLines(inputs.health);
+  if (measurement.length < 2 || !health[0]?.trim())
+    throw new Error("请输入原始像素配置、地标配置及对应观测。");
+  const observations = measurement.slice(1);
+  if (observations.length > 5000) throw new Error("门控联合重放最多 5000 行。");
+  const assignments = preview ? [] : observationLines(inputs.assignments);
+  let normal = 0;
+  const frames = observations.map((line) => {
+    // Inspect only the operation key; preserve raw control and inner numeric tokens.
+    // MoonBit validates duplicate keys, unknown fields, values and exact clocks.
+    if (footprintRunProjectionControl(line)) return line;
+    const index = normal++;
+    if (index >= health.length - 1 || (!preview && index >= assignments.length))
+      throw new Error(
+        "每条普通观测需要一条地标观测和显式分配；标定切换不消耗配对行。",
+      );
+    return JSON.stringify({
+      measurement: line,
+      health: health[index + 1],
+      ...(!preview ? { assignments: assignments[index] } : {}),
+    });
+  });
+  if (
+    normal !== health.length - 1 ||
+    (!preview && normal !== assignments.length)
+  )
+    throw new Error(
+      "普通观测、地标观测与分配行数不一致；标定切换不消耗配对行。",
+    );
+  return {
+    source: JSON.stringify({
+      analysis: JSON.stringify({
+        measurement: measurement[0],
+        runs: JSON.stringify({
+          position: inputs.position,
+          options: inputs.options,
+        }),
+      }),
+      health: health[0],
+    }),
+    frames: frames.join("\n") + "\n",
+  };
+}
+async function computeFootprintRunGuarded(preview) {
+  renderFootprintRunGuarded();
+  const state = preview ? footprintRunGuardedPreview : footprintRunGuarded;
+  const inputs = currentFootprintRunGuardedInputs(),
+    current = ++state.revision,
+    runToken = ++state.runToken;
+  state.pending = inputs;
+  footprintRunGuardedMessage(
+    preview
+      ? "正在全程预览真实门控身份；不提交正式结果…"
+      : "正在原子计算健康、测量与足迹确认序列…",
+    false,
+    preview,
+  );
+  renderFootprintRunGuarded();
+  const currentInput = () =>
+    current === state.revision &&
+    sameFootprintRunGuardedInputs(
+      inputs,
+      currentFootprintRunGuardedInputs(),
+      preview,
+    );
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (!currentInput()) return;
+    const raw = footprintRunGuardedRawInput(inputs, preview);
+    const { response, report } = footprintRunPureRequest(
+      raw.source,
+      "frames",
+      raw.frames,
+      preview
+        ? moonground_footprint_run_guarded_preview
+        : moonground_footprint_run_guarded,
+    );
+    if (!currentInput()) return;
+    state.report = report;
+    state.response = response;
+    state.inputs = inputs;
+    const target = $(
+      preview
+        ? "footprint-run-guarded-preview-frame"
+        : "footprint-run-guarded-frame",
+    );
+    target.max = String(Math.max(0, report.frames.length - 1));
+    target.value = "0";
+    if (preview) $("footprint-run-guarded-preview-section").open = true;
+    footprintRunGuardedMessage(
+      preview
+        ? "已全程预览 " +
+            report.frames.length +
+            " 帧；按实际身份手工绑定形状，阻断帧须显式空分配。"
+        : "已门控联合计算 " +
+            report.frames.length +
+            " 帧；下载包含完整共同检查点。",
+      false,
+      preview,
+    );
+  } catch (error) {
+    if (currentInput())
+      footprintRunGuardedMessage(error.message, true, preview);
+  } finally {
+    if (runToken === state.runToken) {
+      state.pending = null;
+      renderFootprintRunGuarded();
+    }
+  }
+}
+$("footprint-run-guarded-compute").addEventListener("click", () =>
+  computeFootprintRunGuarded(false),
+);
+$("footprint-run-guarded-preview").addEventListener("click", () =>
+  computeFootprintRunGuarded(true),
+);
+for (const id of [
+  "footprint-run-guarded-frame",
+  "footprint-run-guarded-preview-frame",
+])
+  $(id).addEventListener("input", renderFootprintRunGuarded);
+$("footprint-run-guarded-preview-section").addEventListener(
+  "toggle",
+  renderFootprintRunGuarded,
+);
+$("download-footprint-run-guarded").addEventListener("click", () => {
+  if (footprintRunGuardedIsCurrent())
+    saveFile(
+      footprintRunGuarded.response + "\n",
+      "moonground-footprint-run-guarded.json",
     );
 });
 
@@ -2562,6 +2887,7 @@ footprintRunInput.addEventListener("input", () => {
   footprintRunMessage("序列选项已修改，请显式重新计算；原区域证据保留。");
   renderFootprintRuns();
   renderFootprintRunJoint();
+  renderFootprintRunGuarded();
 });
 $("footprint-run-section").addEventListener("toggle", renderZones);
 $("download-footprint-runs").addEventListener("click", () => {
@@ -3359,6 +3685,7 @@ async function runHealth(
     );
     if (current !== healthRevision) return;
     healthInput.value = input;
+    renderFootprintRunGuarded();
     healthLoadedSource = input;
     healthReport = report;
     healthResponse = response;
@@ -3381,6 +3708,7 @@ async function runHealth(
 healthInput.addEventListener("input", () => {
   clearHealthResult();
   healthMessage("地标输入已修改，请重新检查。");
+  renderFootprintRunGuarded();
 });
 $("run-health").addEventListener("click", () => runHealth());
 $("health-frame").addEventListener("input", renderHealth);
@@ -3443,6 +3771,7 @@ $("health-checkpoint-file").addEventListener("change", async (event) => {
     if (current !== healthRevision) return;
     clearHealthResult();
     healthInput.value = nextInput;
+    renderFootprintRunGuarded();
     healthMessage(
       `已载入地标检查点（末帧 ${report.checkpoint.state.last_timestamp_us ?? "尚无观测"} μs）。添加更晚的地标观测后继续检查。`,
     );

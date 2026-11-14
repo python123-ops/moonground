@@ -1216,6 +1216,7 @@
                     >
                       <option value="independent">独立下游</option>
                       <option value="joint">原始联合</option>
+                      <option value="guarded">健康门控联合</option>
                     </select></label
                   >
                   <div id="footprint-run-independent">
@@ -1303,6 +1304,89 @@
                     <p id="footprint-run-joint-counter" class="hint"></p>
                     <pre
                       id="footprint-run-joint-measurement"
+                      class="footprint-run-json"
+                    ></pre>
+                  </div>
+                  <div id="footprint-run-guarded" hidden>
+                    <p class="hint">
+                      读取上方原始像素流、固定地标流和当前区域／分配／序列选项。
+                      先全程预览真实门控身份，再手工绑定：健康预热、阻断与恢复会改变片段，普通测量草稿不能代替核对。
+                      仅健康已确认时允许测量；阻断帧必须提供同时间空分配。
+                    </p>
+                    <p class="hint">
+                      原始像素流中的单独 replace_projection
+                      控制行按原文传递，不消耗地标或分配行；
+                      其余观测各按顺序消耗一行。标定切换须保持同一米制坐标与固定地标，随后重新健康确认。
+                    </p>
+                    <div class="actions">
+                      <button id="footprint-run-guarded-preview">
+                        全程预览门控候选身份
+                      </button>
+                      <button id="footprint-run-guarded-compute">
+                        健康门控测量并确认序列
+                      </button>
+                      <button
+                        id="download-footprint-run-guarded"
+                        class="quiet"
+                        disabled
+                      >
+                        下载门控结果与完整共同检查点
+                      </button>
+                    </div>
+                    <p
+                      id="footprint-run-guarded-message"
+                      class="hint"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      独立任务与结果；失败不提前推进健康、测量或序列。
+                    </p>
+                    <p
+                      id="footprint-run-guarded-preview-message"
+                      class="hint"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      全程预览不返回序列或检查点，不填写分配。
+                    </p>
+                    <details id="footprint-run-guarded-preview-section">
+                      <summary>全程门控候选身份 · 临时重放</summary>
+                      <label
+                        for="footprint-run-guarded-preview-frame"
+                        class="hint"
+                        >候选独立回放</label
+                      >
+                      <input
+                        id="footprint-run-guarded-preview-frame"
+                        type="range"
+                        min="0"
+                        max="0"
+                        value="0"
+                        disabled
+                      />
+                      <p
+                        id="footprint-run-guarded-preview-counter"
+                        class="hint"
+                      ></p>
+                      <pre
+                        id="footprint-run-guarded-preview-json"
+                        class="footprint-run-json"
+                      ></pre>
+                    </details>
+                    <label for="footprint-run-guarded-frame" class="hint"
+                      >门控联合结果独立回放</label
+                    >
+                    <input
+                      id="footprint-run-guarded-frame"
+                      type="range"
+                      min="0"
+                      max="0"
+                      value="0"
+                      disabled
+                    />
+                    <p id="footprint-run-guarded-counter" class="hint"></p>
+                    <pre
+                      id="footprint-run-guarded-measurement"
                       class="footprint-run-json"
                     ></pre>
                   </div>
