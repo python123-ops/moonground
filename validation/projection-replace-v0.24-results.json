@@ -1,0 +1,356 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.24-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "6f8c0421bdc4feb270195d5d8477c8a27e72b76d102fb300907ff6e73d7c36ba",
+  "health_reference_sha256": "de503a5fe49be912176c0af2ac1c509d99059e464f9c08655c5ce43b52233188",
+  "gate_reference_sha256": "e295e92f0345e182d0cac50fb23535c7134d3046cc029bafd8c0dff982e50416",
+  "binary_sha256": "609d17a7748e58225d12722b159ae15fcdc0a316ea7d6d6694c7ce62a28de977",
+  "independent_host_composition": {
+    "cases": 5,
+    "frames": 98,
+    "replacement_barriers": 16,
+    "allowed_frames": 49,
+    "closed_segments": 26,
+    "crossings": 34,
+    "resume_cut_points": 103,
+    "resume_source_forms": 2,
+    "maximum_absolute_oracle_errors": {
+      "$.landmarks[].projected_position_m[]": 4.1166181574681104e-11,
+      "$.landmarks[].projected_covariance[]": 3.673276960380889e-16,
+      "$.landmarks[].residual_m[]": 4.1166181574681104e-11,
+      "$.landmarks[].error_m": 4.2002048209219435e-11,
+      "$.landmarks[].position_std_m": 2.7200464103316335e-15,
+      "$.rms_error_m": 2.5484291666987142e-11,
+      "$.max_error_m": 4.192548628377644e-11,
+      "$.crossings[].from_position_m[]": 0,
+      "$.crossings[].to_position_m[]": 0,
+      "$.crossings[].position_m[]": 2.220446049250313e-16,
+      "$.crossings[].crossing_fraction": 0
+    },
+    "full_motion_covariance_paths_counts_anchors_and_projection_caches_equal": true,
+    "records": [
+      {
+        "name": "camera_add_change_remove_equal",
+        "frames": 29,
+        "checkpoint_sha256": "eebf98caa8ad286d36b818cf7ac1d8d992875be1cffad0cd3b98d6d095f79c3c"
+      },
+      {
+        "name": "above_2pow53",
+        "frames": 29,
+        "checkpoint_sha256": "1a7fd6a5ad6445ec3b1c8485524a8d60fdf03841c4dc50a727608e8b0ba6339c"
+      },
+      {
+        "name": "int64_final_timestamp",
+        "frames": 29,
+        "checkpoint_sha256": "485be94ac84bae96e0ed2aa9e2d8b486137b0e5d3aeb6512d2d3df6cd6112a83"
+      },
+      {
+        "name": "unstarted_and_pending_replacements",
+        "frames": 5,
+        "checkpoint_sha256": "a2b5ec381a97bed3dd95fdc35e4bd8acd19acd403a0256c350850574d0a5e06b"
+      },
+      {
+        "name": "drift_replacement_and_immediate_reconfirmation",
+        "frames": 6,
+        "checkpoint_sha256": "f48b5a8c495aa0573675642f1c307c1383039c84777266d75ac821b43704ebf2"
+      }
+    ]
+  },
+  "strict_transport": {
+    "rejected_cases": 28,
+    "complete_prefix_preserved": true,
+    "late_failure_emits_no_checkpoint": true,
+    "same_proposed_timestamp_correction_from_saved_state": "passed",
+    "cases": [
+      {
+        "name": "missing_camera",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: missing field camera"
+      },
+      {
+        "name": "missing_calibration",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: missing field calibration"
+      },
+      {
+        "name": "missing_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: missing field timestamp_us"
+      },
+      {
+        "name": "unknown_inner_field",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: projection replacement: unknown field same_ground_frame"
+      },
+      {
+        "name": "equal_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: frame timestamps must strictly increase"
+      },
+      {
+        "name": "earlier_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: frame timestamps must strictly increase"
+      },
+      {
+        "name": "negative_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: timestamp_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "numeric_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: timestamp_us must be a string"
+      },
+      {
+        "name": "fractional_timestamp_string",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: timestamp_us must be a nonnegative Int64 decimal string"
+      },
+      {
+        "name": "timestamp_int64_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: timestamp_us must be a nonnegative Int64 decimal string"
+      },
+      {
+        "name": "singular_matrix",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: homography must be nonzero"
+      },
+      {
+        "name": "invalid_roi",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: ROI must be simple, strictly convex and contain no repeated vertices"
+      },
+      {
+        "name": "negative_noise",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: ground noise floor must have finite positive variance"
+      },
+      {
+        "name": "unknown_calibration_key",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: calibration: unknown field extra"
+      },
+      {
+        "name": "invalid_camera_focal",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: camera focal lengths and radius must be positive"
+      },
+      {
+        "name": "unknown_camera_key",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: camera: unknown field extra"
+      },
+      {
+        "name": "control_object_not_raw_text",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: replace_projection must be a string"
+      },
+      {
+        "name": "mixed_measurement",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: projection replacement envelope: unknown field measurement"
+      },
+      {
+        "name": "mixed_health",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: projection replacement envelope: unknown field health"
+      },
+      {
+        "name": "unknown_outer_key",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: projection replacement envelope: unknown field extra"
+      },
+      {
+        "name": "duplicate_outer_key",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: invalid JSON: Duplicate key \"replace_projection\" at line 1, column 28"
+      },
+      {
+        "name": "duplicate_inner_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: invalid JSON: Duplicate key \"timestamp_us\" at line 1, column 25"
+      },
+      {
+        "name": "duplicate_inner_camera",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: invalid JSON: Duplicate key \"camera\" at line 1, column 206"
+      },
+      {
+        "name": "inner_trailing_json",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: invalid JSON: Invalid character '{' at line 1, column 320"
+      },
+      {
+        "name": "inner_nonfinite_number",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: fx must be a finite number"
+      },
+      {
+        "name": "inner_nonobject",
+        "exit_code": 2,
+        "complete_output_lines": 5,
+        "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+        "stdout_bytes": 13079,
+        "stderr": "line 7: projection replacement must be an object"
+      },
+      {
+        "name": "late_invalid_control_no_checkpoint",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 7: camera must be an object"
+      },
+      {
+        "name": "maximum_watermark_cannot_advance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: frame timestamps must strictly increase"
+      }
+    ]
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "exact_outer_physical_bytes": 1048576,
+    "one_extra_outer_byte": {
+      "exit_code": 2,
+      "complete_output_lines": 5,
+      "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+      "stdout_bytes": 13079,
+      "stderr": "line 7: line byte limit exceeded"
+    },
+    "codec_limit_with_native_transport_override": {
+      "exit_code": 2,
+      "complete_output_lines": 5,
+      "stdout_sha256": "176fc139b935caf0d73ddb12f33b7b894fce6c0ec93590975ad13b04e556dca4",
+      "stdout_bytes": 13079,
+      "stderr": "line 7: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "oversized_raw_inner_document": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 7: JSON text exceeds 1048576 UTF-16 code units"
+    }
+  },
+  "downstream_transit": {
+    "status": "passed",
+    "barrier_discontinuity_cancellations": 2,
+    "pending_before": 2,
+    "pending_after": 0,
+    "passages_across_replacement": 0
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/projection-replace.test.mjs",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 30,
+      "continuations": 120,
+      "directions": [
+        "native_to_native",
+        "native_to_browser",
+        "browser_to_native",
+        "browser_to_browser"
+      ]
+    },
+    "test_script_sha256": "c0374da4aac77858379fb3c1e9c0cda5cbe402dbe46a9af7654a74e1f6a1ba72",
+    "bridge_sha256": "24217d326bc69b0c028ef6a9e54373098d544a7fe49d26bce5a076504f3b28b4",
+    "stdout_sha256": "582a51c54d4ea5ad489cbaa29f69b3152c4db6741ad879b8401b6452ad7ff084",
+    "stderr": ""
+  },
+  "elapsed_seconds": 37.6808362,
+  "status": "passed"
+}

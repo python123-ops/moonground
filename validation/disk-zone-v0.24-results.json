@@ -1,0 +1,793 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/disk_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/disk-zone-v0.24-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "21bc673c9ec9a6114bc803d28fa8e56bb75d0bbe7a8a9643fdd7b44d79cad43a",
+  "position_reference_sha256": "4ade4a4c5b0004eae0b43d460a70454d6d8aa2c28f1259c3e2c9d108c90b8773",
+  "binary_sha256": "609d17a7748e58225d12722b159ae15fcdc0a316ea7d6d6694c7ce62a28de977",
+  "evidence_scope": "model_position_halfplane_bands_plus_explicit_disk",
+  "scaled_error_denominator": "max(abs(reference),1e-300)",
+  "independent_reference": "Decimal220 raw-edge cross/length and covariance quadratic, explicit deterministic disk support, independently rounded endpoints; original v22 path used only for exact reduction/preserved position fields",
+  "numeric_reference": {
+    "cases": 45,
+    "frames": 193,
+    "evidence_rows": 181,
+    "face_rows": 708,
+    "zero_radius_cases": 21,
+    "zero_radius_original_path_exact": true,
+    "original_position_bands_preserved_exactly": true,
+    "physical_body_changes_center_only_relation": true,
+    "numpy_minkowski_sample_checks": 43,
+    "secondary_sample_points_per_case": 257,
+    "stateless_repeat_and_reordering_exact": true,
+    "maximum_absolute_decimal_errors": {
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.1356855067118858e+133,
+      "$.evidence[].faces[].normal_std_m": 5.551115123125783e-17,
+      "$.evidence[].faces[].lower_m": 1.1356855067118858e+133,
+      "$.evidence[].faces[].upper_m": 1.1356855067118858e+133,
+      "$.evidence[].faces[].position_lower_m": 1.1356855067118858e+133,
+      "$.evidence[].faces[].position_upper_m": 1.1356855067118858e+133,
+      "$.evidence[].radius_m": 0
+    },
+    "maximum_relative_or_scaled_decimal_errors": {
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.8724445165742408e-16,
+      "$.evidence[].faces[].normal_std_m": 2.7755575615628914e-16,
+      "$.evidence[].faces[].lower_m": 3.0284946845650255e-16,
+      "$.evidence[].faces[].upper_m": 9.729275331114688e-16,
+      "$.evidence[].faces[].position_lower_m": 2.1032404740024908e-16,
+      "$.evidence[].faces[].position_upper_m": 9.729275331114688e-16,
+      "$.evidence[].radius_m": 0
+    },
+    "records": [
+      {
+        "name": "slanted_original_boundary_point_reduction",
+        "radius_m": 0,
+        "frames": 8,
+        "evidence_rows": 8,
+        "face_rows": 24
+      },
+      {
+        "name": "slanted_original_boundary_explicit_body",
+        "radius_m": 0.15625,
+        "frames": 8,
+        "evidence_rows": 8,
+        "face_rows": 24
+      },
+      {
+        "name": "closed-bands-0_point_reduction",
+        "radius_m": 0,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "closed-bands-0_explicit_body",
+        "radius_m": 0.03125,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "closed-bands-1_point_reduction",
+        "radius_m": 0,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "closed-bands-1_explicit_body",
+        "radius_m": 0.03125,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "closed-bands-2_point_reduction",
+        "radius_m": 0,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "closed-bands-2_explicit_body",
+        "radius_m": 0.03125,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "correlated-1e-150--1_point_reduction",
+        "radius_m": 0,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1e-150--1_explicit_body",
+        "radius_m": 6.25e-152,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1e-150-1_point_reduction",
+        "radius_m": 0,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1e-150-1_explicit_body",
+        "radius_m": 6.25e-152,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1--1_point_reduction",
+        "radius_m": 0,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1--1_explicit_body",
+        "radius_m": 0.0625,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1-1_point_reduction",
+        "radius_m": 0,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1-1_explicit_body",
+        "radius_m": 0.0625,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1e+150--1_point_reduction",
+        "radius_m": 0,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1e+150--1_explicit_body",
+        "radius_m": 6.25e+148,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1e+150-1_point_reduction",
+        "radius_m": 0,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "correlated-1e+150-1_explicit_body",
+        "radius_m": 6.25e+148,
+        "frames": 4,
+        "evidence_rows": 4,
+        "face_rows": 16
+      },
+      {
+        "name": "winding-0_point_reduction",
+        "radius_m": 0,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "winding-0_explicit_body",
+        "radius_m": 0.15625,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "winding-1_point_reduction",
+        "radius_m": 0,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "winding-1_explicit_body",
+        "radius_m": 0.15625,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "winding-2_point_reduction",
+        "radius_m": 0,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "winding-2_explicit_body",
+        "radius_m": 0.15625,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "rotation_point_reduction",
+        "radius_m": 0,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "rotation_explicit_body",
+        "radius_m": 0.18125000000000002,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "reflection_point_reduction",
+        "radius_m": 0,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "reflection_explicit_body",
+        "radius_m": 0.15625,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "translation_point_reduction",
+        "radius_m": 0,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "translation_explicit_body",
+        "radius_m": 0.15625,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "metric_scale_point_reduction",
+        "radius_m": 0,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "metric_scale_explicit_body",
+        "radius_m": 0.546875,
+        "frames": 3,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "anisotropic_point_reduction",
+        "radius_m": 0,
+        "frames": 1,
+        "evidence_rows": 1,
+        "face_rows": 4
+      },
+      {
+        "name": "anisotropic_explicit_body",
+        "radius_m": 0.625,
+        "frames": 1,
+        "evidence_rows": 1,
+        "face_rows": 4
+      },
+      {
+        "name": "supported_correlation_point_reduction",
+        "radius_m": 0,
+        "frames": 1,
+        "evidence_rows": 1,
+        "face_rows": 4
+      },
+      {
+        "name": "supported_correlation_explicit_body",
+        "radius_m": 0.625,
+        "frames": 1,
+        "evidence_rows": 1,
+        "face_rows": 4
+      },
+      {
+        "name": "all_statuses_exact_clock_and_empty_point_reduction",
+        "radius_m": 0,
+        "frames": 9,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "all_statuses_exact_clock_and_empty_explicit_body",
+        "radius_m": 0.03125,
+        "frames": 9,
+        "evidence_rows": 3,
+        "face_rows": 12
+      },
+      {
+        "name": "optional_defaults_point_reduction",
+        "radius_m": 0,
+        "frames": 1,
+        "evidence_rows": 1,
+        "face_rows": 4
+      },
+      {
+        "name": "optional_defaults_explicit_body",
+        "radius_m": 0.03125,
+        "frames": 1,
+        "evidence_rows": 1,
+        "face_rows": 4
+      },
+      {
+        "name": "body_closed_tangencies_0",
+        "radius_m": 0.125,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "body_closed_tangencies_1",
+        "radius_m": 0.125,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      },
+      {
+        "name": "body_closed_tangencies_2",
+        "radius_m": 0.125,
+        "frames": 7,
+        "evidence_rows": 7,
+        "face_rows": 28
+      }
+    ]
+  },
+  "original_motion_and_checkpoint_continuations": {
+    "cases": 10,
+    "frames": 89,
+    "old_checkpoint_cut_points": 99,
+    "statuses": [
+      "initializing",
+      "numerical_failure",
+      "ready",
+      "rejected_innovation",
+      "rejected_projection",
+      "uncertain"
+    ],
+    "maximum_absolute_decimal_errors": {
+      "$.evidence[].radius_m": 0,
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].normal_std_m": 1.3877787807814457e-17,
+      "$.evidence[].faces[].lower_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].upper_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].position_lower_m": 1.4210854715202004e-14,
+      "$.evidence[].faces[].position_upper_m": 1.4210854715202004e-14
+    },
+    "maximum_relative_or_scaled_decimal_errors": {
+      "$.evidence[].radius_m": 0,
+      "$.evidence[].faces[].outward_normal[]": 0,
+      "$.evidence[].faces[].distance_m": 1.4955338941395803e-16,
+      "$.evidence[].faces[].normal_std_m": 2.905419723770977e-16,
+      "$.evidence[].faces[].lower_m": 1.4907837197200203e-16,
+      "$.evidence[].faces[].upper_m": 1.5003144368601626e-16,
+      "$.evidence[].faces[].position_lower_m": 1.4947037513842389e-16,
+      "$.evidence[].faces[].position_upper_m": 1.4963649595124584e-16
+    },
+    "records": [
+      {
+        "name": "identity_path_lifecycle",
+        "frames": 11,
+        "old_checkpoint_cut_points": 12,
+        "evidence_rows": 0
+      },
+      {
+        "name": "raw_camera_projection_rejection",
+        "frames": 10,
+        "old_checkpoint_cut_points": 11,
+        "evidence_rows": 6
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 4,
+        "old_checkpoint_cut_points": 5,
+        "evidence_rows": 0
+      },
+      {
+        "name": "effective_defaults",
+        "frames": 4,
+        "old_checkpoint_cut_points": 5,
+        "evidence_rows": 1
+      },
+      {
+        "name": "extreme_scale_failure_retains_restorable_state",
+        "frames": 2,
+        "old_checkpoint_cut_points": 3,
+        "evidence_rows": 0
+      },
+      {
+        "name": "warehouse",
+        "frames": 10,
+        "old_checkpoint_cut_points": 11,
+        "evidence_rows": 5
+      },
+      {
+        "name": "distorted-camera",
+        "frames": 15,
+        "old_checkpoint_cut_points": 16,
+        "evidence_rows": 12
+      },
+      {
+        "name": "reframe",
+        "frames": 15,
+        "old_checkpoint_cut_points": 16,
+        "evidence_rows": 12
+      },
+      {
+        "name": "repeated_crossings",
+        "frames": 9,
+        "old_checkpoint_cut_points": 10,
+        "evidence_rows": 0
+      },
+      {
+        "name": "quality_rejects_current_positions",
+        "frames": 9,
+        "old_checkpoint_cut_points": 10,
+        "evidence_rows": 0
+      }
+    ]
+  },
+  "strict_and_numerical_rejections": {
+    "rejected_cases": 31,
+    "cases": [
+      {
+        "name": "missing_position",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field position"
+      },
+      {
+        "name": "missing_disk",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field disk"
+      },
+      {
+        "name": "position_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: position must be a string"
+      },
+      {
+        "name": "disk_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: disk must be a string"
+      },
+      {
+        "name": "unknown_wrapper",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: disk zone evidence configuration: unknown field extra"
+      },
+      {
+        "name": "duplicate_wrapper",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid JSON: Duplicate key \"position\" at line 1, column 24"
+      },
+      {
+        "name": "missing_radius",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field radius_m"
+      },
+      {
+        "name": "negative_radius",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: disk footprint radius must be finite and nonnegative"
+      },
+      {
+        "name": "nonfinite_radius",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: radius_m must be a finite number"
+      },
+      {
+        "name": "unknown_disk_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: disk footprint: unknown field extra"
+      },
+      {
+        "name": "duplicate_disk_radius",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid JSON: Duplicate key \"radius_m\" at line 1, column 17"
+      },
+      {
+        "name": "old_position_source_not_broadened",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone evidence configuration: unknown field radius_m"
+      },
+      {
+        "name": "raw_fractional_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_nested_position",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid JSON: Duplicate key \"session_id\" at line 1, column 26"
+      },
+      {
+        "name": "wrong_session",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+        "stdout_bytes": 1000,
+        "stderr": "line 3: zone frame session time or capacity is invalid"
+      },
+      {
+        "name": "stale_ready",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+        "stdout_bytes": 1000,
+        "stderr": "line 3: ready zone sample is not current in this frame"
+      },
+      {
+        "name": "duplicate_track",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+        "stdout_bytes": 1000,
+        "stderr": "line 3: duplicate measurement track identity"
+      },
+      {
+        "name": "duplicate_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+        "stdout_bytes": 1000,
+        "stderr": "line 3: zone frame identities or accepted timestamps are invalid"
+      },
+      {
+        "name": "non_spd",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+        "stdout_bytes": 1000,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "missing_ready_position",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+        "stdout_bytes": 1000,
+        "stderr": "line 3: measurement availability contradicts its status"
+      },
+      {
+        "name": "closed_current",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+        "stdout_bytes": 1000,
+        "stderr": "line 3: current accepted zone track is also closed"
+      },
+      {
+        "name": "unknown_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+        "stdout_bytes": 1000,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      {
+        "name": "fractional_track_token",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+        "stdout_bytes": 1000,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "physical_contribution_swallowed",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: disk and position radius exceed supported precision"
+      },
+      {
+        "name": "statistical_contribution_swallowed",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: disk and position radius exceed supported precision"
+      },
+      {
+        "name": "combined_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: disk and position radius exceed supported precision"
+      },
+      {
+        "name": "expanded_endpoint_swallowed",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: disk evidence interval cannot expand the position band"
+      },
+      {
+        "name": "positive_subnormal_disk_cannot_expand",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: disk evidence interval cannot expand the position band"
+      },
+      {
+        "name": "old_position_failure_not_rescued",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: zone evidence interval is not representable"
+      },
+      {
+        "name": "invalid_utf8_complete_prefix",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+        "stdout_bytes": 1000,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "missing_header",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "missing disk zone evidence source"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "contribution_and_endpoint_domains_checked": true,
+    "old_position_domain_not_masked": true,
+    "integral_raw_id_token": "passed"
+  },
+  "warm_brown_reframe": {
+    "status": "passed",
+    "brown_warm_prefix_frames": 4,
+    "continuation_frames": 4,
+    "explicit_radius_m": 0.25,
+    "maximum_absolute_metric_reframe_differences": {
+      "$[].evidence[].radius_m": 0.0,
+      "$[].evidence[].faces[].distance_m": 0.0,
+      "$[].evidence[].faces[].normal_std_m": 6.938893903907228e-18,
+      "$[].evidence[].faces[].position_lower_m": 0.0,
+      "$[].evidence[].faces[].position_upper_m": 0.0,
+      "$[].evidence[].faces[].lower_m": 0.0,
+      "$[].evidence[].faces[].upper_m": 0.0
+    }
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "source_wrapper_and_frame_exact_units": 1048576,
+    "source_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "frame_overflow_complete_prefix": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "7d3bd9e9b81b6a89ad0cbd2191030c59412772a864e361a0cbb908e0b4ac802b",
+      "stdout_bytes": 1000,
+      "stderr": "line 3: JSON text exceeds 1048576 UTF-16 code units"
+    },
+    "nested_source_budget_note": "Raw inner strings share the same 1Mi source wrapper budget; a full 1Mi inner string plus wrapper overhead cannot be a successful request."
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/disk-zone.test.mjs",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "old_checkpoint_cross_runtime": {
+      "cut_points": 9,
+      "continuations": 36,
+      "directions": [
+        "native_to_native",
+        "native_to_javascript",
+        "javascript_to_native",
+        "javascript_to_javascript"
+      ],
+      "disk_evaluators_per_continuation": 2
+    },
+    "measured_bounded_batch": {
+      "successful_empty_frames": 5000,
+      "complete_return_utf16_units": 1033902,
+      "max_configured_zones": 16,
+      "max_faces_per_zone": 32,
+      "actual_native_tracks": 128,
+      "actual_native_zone_rows": 2048,
+      "actual_native_face_rows": 65536,
+      "equivalent_pure_return_utf16_units": 17548897,
+      "output_budget_rejected": true,
+      "old_handles_occupied": 64,
+      "nested_source_budget": "outer source includes raw inner strings and wrapper overhead"
+    },
+    "test_script_sha256": "9f45625a84c8aeeed5aedb86db03e54d6053e2a0646a97a3e0aad57f068fa9fd",
+    "bridge_sha256": "24217d326bc69b0c028ef6a9e54373098d544a7fe49d26bce5a076504f3b28b4",
+    "stdout_sha256": "6e92282c1baf4639bb56ae4ff9b017635be76f67c55e7a4200aa8c7e8d1b983c",
+    "stderr": ""
+  },
+  "status": "passed",
+  "elapsed_seconds": 19.040266499999998
+}

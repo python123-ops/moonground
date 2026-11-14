@@ -1,0 +1,635 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "tolerance": 2e-08,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.24-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "de503a5fe49be912176c0af2ac1c509d99059e464f9c08655c5ce43b52233188",
+  "camera_reference_sha256": "a2edef0a2bfb588ac1001e05b72fb53d5fdf18267d1fb6462510a17b2d047f7c",
+  "projection_reference_sha256": "b75b5c247dcd381154c8fcc1acac4d84c7eaa071df99ead03b82a9dc809bb769",
+  "binary_sha256": "609d17a7748e58225d12722b159ae15fcdc0a316ea7d6d6694c7ce62a28de977",
+  "numerical_and_temporal_reference": {
+    "cases": 16,
+    "frames": 113,
+    "landmark_results": 449,
+    "resume_cut_points": 129,
+    "statuses": [
+      "drift",
+      "healthy",
+      "insufficient",
+      "pending"
+    ],
+    "rejection_categories": [
+      "missing",
+      "numerical",
+      "position_uncertainty",
+      "projection"
+    ],
+    "maximum_absolute_oracle_errors": {
+      "$.landmarks[].projected_position_m[]": 7.546185898377189e-12,
+      "$.landmarks[].projected_covariance[]": 1.7433970933566911e-16,
+      "$.landmarks[].residual_m[]": 7.546185898377189e-12,
+      "$.landmarks[].error_m": 9.16194897726541e-12,
+      "$.landmarks[].position_std_m": 1.4710455076283324e-15,
+      "$.rms_error_m": 2.521205466621268e-12,
+      "$.max_error_m": 9.16194897726541e-12
+    },
+    "records": [
+      {
+        "name": "evidence_recovery_and_partial_rejection",
+        "frames": 15,
+        "checkpoint_sha256": "2037f4ce594a2e9623130a9a9502f03fb98aeecfef459fe757e416f6b3dbdafc"
+      },
+      {
+        "name": "brown_camera_0",
+        "frames": 16,
+        "checkpoint_sha256": "7d3c1a290c24b09540058a174bcc4198dcbcc177764dd73e94e39a4c560def20"
+      },
+      {
+        "name": "brown_camera_1",
+        "frames": 16,
+        "checkpoint_sha256": "1d2e6265fab1604b5786467d8ee23a8e7afeb0dda744f13d97005ed28719ed99"
+      },
+      {
+        "name": "exact_time_above_2pow53",
+        "frames": 15,
+        "checkpoint_sha256": "600c5beb153c9740a2c221b08da6b363d16997b0a54f9a684c71a04313812db1"
+      },
+      {
+        "name": "int64_maximum_time",
+        "frames": 15,
+        "checkpoint_sha256": "05c428508eb4da29342351d58b84ccec6084f68ce50a122ed758f97806adee64"
+      },
+      {
+        "name": "minimum-1-0",
+        "frames": 6,
+        "checkpoint_sha256": "5a59fa0246d7758e30a58a6a61c4c918d3c215087d8b6c15c00b7a3e14d67aed"
+      },
+      {
+        "name": "minimum-1-300000",
+        "frames": 6,
+        "checkpoint_sha256": "29ec3067561d179496a8ebd7efc7ea7bd398e97366baac425e59be1224b872a1"
+      },
+      {
+        "name": "minimum-3-0",
+        "frames": 6,
+        "checkpoint_sha256": "ebaeaf87a5bbbae36e267ad0845442c17a215f283fc2bc24810354611f92847a"
+      },
+      {
+        "name": "exact_metric_limits_included",
+        "frames": 2,
+        "checkpoint_sha256": "a00da440fe3386a4bf3b3f9bb223d511c4b1b7269a5e22986575c67035258b06"
+      },
+      {
+        "name": "max_limit_independent_from_rms",
+        "frames": 1,
+        "checkpoint_sha256": "18d3199745765b7d8fba76be0068ec02672ec38ca4ba229742b01bce9fc1a5cc"
+      },
+      {
+        "name": "zero_metric_limits",
+        "frames": 1,
+        "checkpoint_sha256": "4b10e261fd73046ad743b84d5da972e9253dce9a5e369c6856e20bdcec299603"
+      },
+      {
+        "name": "position_quality_equality",
+        "frames": 2,
+        "checkpoint_sha256": "04caf1be3213821913a5749791c983b0cebf6102c8eec42234ff64bbd037717b"
+      },
+      {
+        "name": "finite_errors_with_overflowing_squares",
+        "frames": 4,
+        "checkpoint_sha256": "0720027c4a40a335412dfb35878091786e446e6e8b1735e7594205006f29a17e"
+      },
+      {
+        "name": "residual_overflow_is_local_rejection",
+        "frames": 1,
+        "checkpoint_sha256": "b81e1b99fc653886d773f6ce551828811fc1e408d989b9e71d245a61d0d7491b"
+      },
+      {
+        "name": "clamped_count_allows_long_confirmed_span",
+        "frames": 4,
+        "checkpoint_sha256": "f0f82088b4c68bd024f583725a5e858fab98fb98d118e4034d7d6d0b367635cc"
+      },
+      {
+        "name": "default_pixel_covariance_4I",
+        "frames": 3,
+        "checkpoint_sha256": "d22d4e2485efd6e59752e30e3c30917341b1dcac3a872076053b17fb66df4e22"
+      }
+    ]
+  },
+  "pixel_coordinate_adaptation": {
+    "cases": 6,
+    "records": [
+      {
+        "name": "evidence_recovery_and_partial_rejection",
+        "scale_x": 0.5,
+        "scale_y": 0.75,
+        "frames": 15,
+        "resume_cut": 7
+      },
+      {
+        "name": "evidence_recovery_and_partial_rejection",
+        "scale_x": 2,
+        "scale_y": 0.4,
+        "frames": 15,
+        "resume_cut": 7
+      },
+      {
+        "name": "brown_camera_0",
+        "scale_x": 0.5,
+        "scale_y": 0.75,
+        "frames": 16,
+        "resume_cut": 8
+      },
+      {
+        "name": "brown_camera_0",
+        "scale_x": 2,
+        "scale_y": 0.4,
+        "frames": 16,
+        "resume_cut": 8
+      },
+      {
+        "name": "brown_camera_1",
+        "scale_x": 0.5,
+        "scale_y": 0.75,
+        "frames": 16,
+        "resume_cut": 8
+      },
+      {
+        "name": "brown_camera_1",
+        "scale_x": 2,
+        "scale_y": 0.4,
+        "frames": 16,
+        "resume_cut": 8
+      }
+    ],
+    "maximum_absolute_errors": {
+      "$[].landmarks[].projected_position_m[]": 5.329070518200751e-15,
+      "$[].landmarks[].projected_covariance[]": 2.6020852139652106e-18,
+      "$[].landmarks[].residual_m[]": 5.329070518200751e-15,
+      "$[].landmarks[].error_m": 4.433953204596719e-15,
+      "$[].landmarks[].position_std_m": 2.7755575615628914e-17,
+      "$[].rms_error_m": 2.9289695021079515e-15,
+      "$[].max_error_m": 3.580361673049448e-15
+    },
+    "scope": "independent_wire_coordinate_adaptation; typed_reframed_is_covered_by_core_tests"
+  },
+  "strict_transport": {
+    "rejected_cases": 50,
+    "cases": [
+      {
+        "name": "unknown_configuration",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: health configuration: unknown field extra"
+      },
+      {
+        "name": "empty_monitor_id",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: monitor_id must contain 1 to 128 UTF-16 code units"
+      },
+      {
+        "name": "empty_landmarks",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: landmark health monitor requires 1 to 64 references and enough landmarks"
+      },
+      {
+        "name": "too_many_landmarks",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: landmarks exceeds its record limit"
+      },
+      {
+        "name": "duplicate_landmark",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: duplicate configured landmark identity"
+      },
+      {
+        "name": "unknown_landmark_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: known landmark: unknown field extra"
+      },
+      {
+        "name": "non_string_landmark_identity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: landmark_id must be a string"
+      },
+      {
+        "name": "min_landmarks_unavailable",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: landmark health monitor requires 1 to 64 references and enough landmarks"
+      },
+      {
+        "name": "negative_rms_limit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: landmark metric tolerances must be finite and nonnegative"
+      },
+      {
+        "name": "negative_max_limit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: landmark metric tolerances must be finite and nonnegative"
+      },
+      {
+        "name": "zero_min_observations",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: min_observations must be a positive 32-bit integer"
+      },
+      {
+        "name": "too_many_min_observations",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid landmark health limits"
+      },
+      {
+        "name": "negative_confirmation",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: confirmation_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "zero_gap",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid landmark health limits"
+      },
+      {
+        "name": "zero_quality_limit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: landmark position uncertainty limit must be finite and positive"
+      },
+      {
+        "name": "raw_fractional_minimum",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: min_observations must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_configuration_key",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid checkpoint JSON: Duplicate key \"monitor_id\" at line 1, column 20"
+      },
+      {
+        "name": "unknown_frame_field",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "acbed46c65e704a088eb2064f0e0fbc0b926e511ba08fc9d2b39b00920062496",
+        "stdout_bytes": 1154,
+        "stderr": "line 3: health observation frame: unknown field extra"
+      },
+      {
+        "name": "unknown_observation_field",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "acbed46c65e704a088eb2064f0e0fbc0b926e511ba08fc9d2b39b00920062496",
+        "stdout_bytes": 1154,
+        "stderr": "line 3: landmark observation: unknown field extra"
+      },
+      {
+        "name": "unknown_landmark_id",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "acbed46c65e704a088eb2064f0e0fbc0b926e511ba08fc9d2b39b00920062496",
+        "stdout_bytes": 1154,
+        "stderr": "line 3: unknown landmark identity"
+      },
+      {
+        "name": "duplicate_observation",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "acbed46c65e704a088eb2064f0e0fbc0b926e511ba08fc9d2b39b00920062496",
+        "stdout_bytes": 1154,
+        "stderr": "line 3: landmark frame exceeds configured reference count"
+      },
+      {
+        "name": "invalid_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "acbed46c65e704a088eb2064f0e0fbc0b926e511ba08fc9d2b39b00920062496",
+        "stdout_bytes": 1154,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "same_timestamp",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "acbed46c65e704a088eb2064f0e0fbc0b926e511ba08fc9d2b39b00920062496",
+        "stdout_bytes": 1154,
+        "stderr": "line 3: landmark frame timestamps must be nonnegative and strictly increase"
+      },
+      {
+        "name": "timestamp_number",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "acbed46c65e704a088eb2064f0e0fbc0b926e511ba08fc9d2b39b00920062496",
+        "stdout_bytes": 1154,
+        "stderr": "line 3: timestamp_us must be a string"
+      },
+      {
+        "name": "duplicate_frame_key",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "acbed46c65e704a088eb2064f0e0fbc0b926e511ba08fc9d2b39b00920062496",
+        "stdout_bytes": 1154,
+        "stderr": "line 3: invalid JSON: Duplicate key \"timestamp_us\" at line 1, column 20"
+      },
+      {
+        "name": "blank_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "acbed46c65e704a088eb2064f0e0fbc0b926e511ba08fc9d2b39b00920062496",
+        "stdout_bytes": 1154,
+        "stderr": "line 3: invalid JSON: Unexpected end of file"
+      },
+      {
+        "name": "invalid_utf8",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "acbed46c65e704a088eb2064f0e0fbc0b926e511ba08fc9d2b39b00920062496",
+        "stdout_bytes": 1154,
+        "stderr": "line 3: invalid UTF-8"
+      },
+      {
+        "name": "checkpoint_mode_late_failure",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 3: health observation frame: unknown field extra"
+      },
+      {
+        "name": "checkpoint_wrong_format",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported health checkpoint format or version"
+      },
+      {
+        "name": "checkpoint_wrong_version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported health checkpoint format or version"
+      },
+      {
+        "name": "checkpoint_unknown_field",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: health checkpoint: unknown field extra"
+      },
+      {
+        "name": "streak_future",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: inconsistent landmark checkpoint evidence streak"
+      },
+      {
+        "name": "streak_zero_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: observations must be a positive 32-bit integer"
+      },
+      {
+        "name": "streak_count_over_clamp",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: inconsistent landmark checkpoint evidence streak"
+      },
+      {
+        "name": "single_observation_stale_since",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: inconsistent landmark checkpoint evidence streak"
+      },
+      {
+        "name": "streak_invalid_evidence",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: health streak requires within_tolerance or beyond_tolerance"
+      },
+      {
+        "name": "unstarted_with_streak",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unstarted landmark checkpoint contains evidence"
+      },
+      {
+        "name": "resume_override",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: health resume envelope: unknown field monitor_id"
+      },
+      {
+        "name": "checkpoint_missing_health",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field health"
+      },
+      {
+        "name": "checkpoint_missing_rms_limit",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field rms_limit_m"
+      },
+      {
+        "name": "checkpoint_missing_min_observations",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field min_observations"
+      },
+      {
+        "name": "checkpoint_missing_gap",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field max_gap_us"
+      },
+      {
+        "name": "checkpoint_missing_noise_floor",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field ground_noise_floor_m"
+      },
+      {
+        "name": "checkpoint_missing_maximum_scale",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field max_meters_per_pixel"
+      },
+      {
+        "name": "checkpoint_missing_camera_k1",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field k1"
+      },
+      {
+        "name": "checkpoint_missing_camera_k3",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field k3"
+      },
+      {
+        "name": "checkpoint_missing_camera_max_normalized_radius",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: missing field max_normalized_radius"
+      },
+      {
+        "name": "unsaturated_count_unreachable_time_span",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: landmark checkpoint evidence span exceeds its sample continuity"
+      },
+      {
+        "name": "unit_gap_cannot_bridge_distinct_timestamps",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: landmark checkpoint cannot bridge a one-microsecond gap limit"
+      },
+      {
+        "name": "fractional_checkpoint_streak_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: observations must be a positive 32-bit integer"
+      }
+    ],
+    "complete_prefix_preserved": true,
+    "failed_checkpoint_has_no_output": true,
+    "mathematical_integer_token": "passed"
+  },
+  "bounded_transport": {
+    "crlf_and_unterminated_eof": "passed",
+    "exact_physical_line_bytes": 532,
+    "physical_one_byte_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "221e2756a4c4b9e3476af23e70157c784b674f8c7526cfb174854706f80d657a",
+      "stdout_bytes": 1147,
+      "stderr": "line 3: line byte limit exceeded"
+    },
+    "exact_source_utf16_units": 8388619,
+    "source_one_unit_overflow": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 1: checkpoint exceeds 8388619 UTF-16 code units"
+    }
+  },
+  "web_interchange": {
+    "status": "passed",
+    "node": "v26.2.0",
+    "command": "node --test --test-reporter=tap web/health.test.mjs",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "cross_runtime": {
+      "cut_points": 32,
+      "continuations": 128,
+      "directions": [
+        "native-native",
+        "native-javascript",
+        "javascript-native",
+        "javascript-javascript"
+      ]
+    },
+    "test_script_sha256": "c935505c0399de03e958534f4c96441b10e35ec5fc10845b47f635f117825389",
+    "bridge_sha256": "24217d326bc69b0c028ef6a9e54373098d544a7fe49d26bce5a076504f3b28b4",
+    "stdout_sha256": "3c8b3ae849bb9e1a00fcb9f61488876c0c1c0c796e0f5952af047e306e1c460c",
+    "stderr": ""
+  },
+  "elapsed_seconds": 24.2049509,
+  "status": "passed"
+}
