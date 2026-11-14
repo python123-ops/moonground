@@ -45,6 +45,8 @@ options(
         "moonground_footprint_run_windows",
         "moonground_footprint_run_window_analysis",
         "moonground_footprint_run_window_preview",
+        "moonground_footprint_run_window_guarded",
+        "moonground_footprint_run_window_guarded_preview",
       ],
       "format": "esm",
     },
