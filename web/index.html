@@ -1012,6 +1012,95 @@
               <tbody id="zone-unavailable"></tbody>
             </table>
           </div>
+          <div id="disk-zone-results">
+            <h3>显式圆盘足迹</h3>
+            <p class="hint">
+              圆盘以当前模型的米制锚点为圆心，半径由调用者明确给定，同批所有目标共用。
+              使用上方区域配置，分别保留位置支持区间与加入物理半径后的区间；
+              不从像素框估计尺寸，不包含朝向或形状误差。
+            </p>
+            <label for="disk-zone-input" class="hint"
+              >圆盘选项 JSON · 半径单位 m</label
+            >
+            <textarea id="disk-zone-input" spellcheck="false">
+{"radius_m":0.25}</textarea
+            >
+            <div class="actions">
+              <button id="disk-zone-compute" disabled>
+                计算圆盘足迹区域证据
+              </button>
+              <button id="disk-zone-example" class="quiet" disabled>
+                载入 0.25 m 圆盘示例
+              </button>
+              <button id="download-disk-zones" class="quiet" disabled>
+                下载整批圆盘足迹证据
+              </button>
+            </div>
+            <p
+              id="disk-zone-message"
+              class="hint"
+              role="status"
+              aria-live="polite"
+            >
+              两份配置原文交核心验证；圆盘尺寸与位置协方差分别处理。
+            </p>
+            <p id="disk-zone-frame" class="hint"></p>
+            <p class="hint">
+              三态判定应用于位置支持范围加上显式圆盘。半径为 0
+              时与上方点证据逐值一致；
+              角点附近未确认仍不表示相交，区间不是概率置信区间。
+            </p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>目标 / 片段</th>
+                    <th>区域 ID</th>
+                    <th>半径 · m</th>
+                    <th>k</th>
+                    <th>圆盘区域证据</th>
+                    <th>首条分离边 · 从 0 编号</th>
+                  </tr>
+                </thead>
+                <tbody id="disk-zone-evidence"></tbody>
+              </table>
+            </div>
+            <label class="hint result-mode"
+              >查看圆盘证据各边<select
+                id="disk-zone-face-selection"
+                disabled
+                aria-label="选择圆盘目标与区域各边证据"
+              ></select
+            ></label>
+            <p id="disk-zone-face-summary" class="hint"></p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>边编号</th>
+                    <th>外法向 x, y</th>
+                    <th>有符号距离 · m</th>
+                    <th>位置法向 σ · m</th>
+                    <th>原位置闭区间 · m</th>
+                    <th>含圆盘闭区间 · m</th>
+                  </tr>
+                </thead>
+                <tbody id="disk-zone-faces"></tbody>
+              </table>
+            </div>
+            <p class="hint">圆盘证据本帧不可判定目标</p>
+            <div class="table-wrap">
+              <table class="gate-table">
+                <thead>
+                  <tr>
+                    <th>目标 / 片段</th>
+                    <th>原测量状态</th>
+                  </tr>
+                </thead>
+                <tbody id="disk-zone-unavailable"></tbody>
+              </table>
+            </div>
+          </div>
         </details>
       </section>
       <section class="panel" aria-labelledby="health-heading">

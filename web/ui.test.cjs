@@ -265,6 +265,7 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
           await new Promise((resolve) => setTimeout(resolve, remaining));
         downloadsInBurst = 0;
       }
+      assert.equal(await page.locator(selector).isEnabled(), true, selector);
       const pending = page.waitForEvent("download");
       await page.locator(selector).click();
       const download = await pending;
@@ -9240,6 +9241,382 @@ test("desktop, mobile, local import and stale-result prevention", async (t) => {
     await page.setViewportSize({ width: 1440, height: 1050 });
     await page.locator("#zone-section").screenshot({
       path: path.join(directory, "zone-evidence-desktop-preview.png"),
+    });
+    // Explicit disk support uses the existing raw position configuration and
+    // original ordinary frames, with an independent result and no checkpoint.
+    await runVelocity(7);
+    const diskVelocityReference = await exportVelocity();
+    const diskConfiguration = '{"radius_m":0.25}';
+    const runDiskZones = async (count) => {
+      await page.locator("#disk-zone-compute").click();
+      await page.waitForFunction((expected) => {
+        const message = document.querySelector("#disk-zone-message");
+        return (
+          message.classList.contains("error") ||
+          message.textContent.includes("已计算 " + expected + " 帧")
+        );
+      }, count);
+      const text = await page.locator("#disk-zone-message").textContent();
+      assert.equal(
+        await page.locator("#disk-zone-message.error").count(),
+        0,
+        text,
+      );
+    };
+    const exportDiskZones = () =>
+      exportJson("#download-disk-zones", "moonground-disk-zone-evidence.json");
+    await page.locator("#disk-zone-input").fill('{"radius_m":0}');
+    await runDiskZones(7);
+    const diskZero = await exportDiskZones();
+    assert.deepEqual(Object.keys(diskZero), ["frames"]);
+    diskZero.frames.forEach((frame, index) => {
+      const point = zoneEvidence.frames[index];
+      assert.equal(frame.kind, "disk_zone_evidence_frame");
+      assert.equal(
+        frame.evidence_scope,
+        "model_position_halfplane_bands_plus_explicit_disk",
+      );
+      assert.equal(frame.session_id, point.session_id);
+      assert.equal(frame.timestamp_us, point.timestamp_us);
+      assert.deepEqual(frame.unavailable, point.unavailable);
+      assert.equal(frame.evidence.length, point.evidence.length);
+      frame.evidence.forEach((row, rowIndex) => {
+        const original = point.evidence[rowIndex];
+        assert.equal(row.radius_m, 0);
+        assert.equal(row.track_id, original.track_id);
+        assert.equal(row.segment_id, original.segment_id);
+        assert.equal(row.zone_id, original.zone_id);
+        assert.equal(row.decision, original.decision);
+        assert.equal(row.separating_edge_index, original.separating_edge_index);
+        assert.equal(row.sigma_multiplier, original.sigma_multiplier);
+        row.faces.forEach((face, faceIndex) => {
+          const oldFace = original.faces[faceIndex];
+          const { position_lower_m, position_upper_m, ...baseFace } = face;
+          assert.deepEqual(baseFace, oldFace);
+          assert.equal(position_lower_m, oldFace.lower_m);
+          assert.equal(position_upper_m, oldFace.upper_m);
+        });
+      });
+    });
+    await page.locator("#disk-zone-input").fill(diskConfiguration);
+    assert.equal(await page.locator("#download-disk-zones").isDisabled(), true);
+    assert.deepEqual(await exportZones(), zoneEvidence);
+    await runDiskZones(7);
+    const diskEvidence = await exportDiskZones();
+    diskEvidence.frames.forEach((frame, index) => {
+      assert.deepEqual(
+        frame.unavailable,
+        zoneEvidence.frames[index].unavailable,
+      );
+      frame.evidence.forEach((row, rowIndex) => {
+        const point = zoneEvidence.frames[index].evidence[rowIndex];
+        assert.equal(row.radius_m, 0.25);
+        row.faces.forEach((face, faceIndex) => {
+          const original = point.faces[faceIndex];
+          assert.equal(face.distance_m, original.distance_m);
+          assert.equal(face.normal_std_m, original.normal_std_m);
+          assert.deepEqual(face.outward_normal, original.outward_normal);
+          assert.equal(face.position_lower_m, original.lower_m);
+          assert.equal(face.position_upper_m, original.upper_m);
+          assert.ok(face.lower_m < original.lower_m);
+          assert.ok(face.upper_m > original.upper_m);
+        });
+      });
+    });
+    // The point lies on a closed boundary at k=0, but the nonzero body
+    // straddles it. The original statistical sigma is still reported.
+    const diskBoundary = diskEvidence.frames[5].evidence[3];
+    assert.equal(zoneLast.evidence[3].decision, "inside");
+    assert.equal(diskBoundary.decision, "indeterminate");
+    assert.equal(diskBoundary.faces[0].position_lower_m, 0);
+    assert.equal(diskBoundary.faces[0].position_upper_m, 0);
+    assert.equal(diskBoundary.faces[0].lower_m, -0.25);
+    assert.equal(diskBoundary.faces[0].upper_m, 0.25);
+    assert.ok(diskBoundary.faces[0].normal_std_m > 0);
+    await selectVelocityFrame(5);
+    assert.equal(await page.locator("#disk-zone-evidence tr").count(), 10);
+    await page.locator("#disk-zone-face-selection").selectOption("3");
+    assert.deepEqual(
+      JSON.parse(
+        await page.locator("#disk-zone-faces tr").first().getAttribute("title"),
+      ),
+      diskBoundary.faces[0],
+    );
+    assert.equal(
+      await page.locator("#disk-zone-faces tr").first().locator("td").count(),
+      6,
+    );
+    await selectVelocityFrame(4);
+    assert.equal(
+      await page.locator("#disk-zone-face-selection").inputValue(),
+      "3",
+    );
+    await selectVelocityFrame(0);
+    assert.match(
+      await page.locator("#disk-zone-unavailable").textContent(),
+      /初始化/,
+    );
+    await selectVelocityFrame(6);
+    assert.equal(await page.locator("#disk-zone-faces tr").count(), 0);
+    assert.equal(
+      await page.locator("#disk-zone-face-selection").isDisabled(),
+      true,
+    );
+    await selectVelocityFrame(5);
+    // Raw original numeric tokens and duplicate keys reach MoonBit unchanged.
+    // Failures leave the ordinary/point/velocity products independently usable.
+    const diskBadInputs = [
+      "{}",
+      '{"radius_m":-0.25}',
+      '{"radius_m":"0.25"}',
+      '{"radius_m":0.25,"unknown":true}',
+      '{"radius_m":0.25,"radius_m":0}',
+      '{"radius_m":1e309}',
+      '{"radius_m":5e-324}',
+      '{"radius_m":1e308}',
+      '{"resume":{}}',
+      diskConfiguration + " ".repeat(1048577),
+    ];
+    for (const raw of diskBadInputs) {
+      await page.locator("#disk-zone-input").fill(raw);
+      await page.locator("#disk-zone-compute").click();
+      await page.waitForFunction(() =>
+        document
+          .querySelector("#disk-zone-message")
+          .classList.contains("error"),
+      );
+      assert.equal(await page.locator("#disk-zone-input").inputValue(), raw);
+      assert.equal(
+        await page.locator("#download-disk-zones").isDisabled(),
+        true,
+      );
+      assert.deepEqual(await exportZones(), zoneEvidence);
+      assert.deepEqual(await exportVelocity(), diskVelocityReference);
+    }
+    await page.locator("#disk-zone-input").fill(diskConfiguration);
+    await runDiskZones(7);
+    await page
+      .locator("#zone-input")
+      .fill(
+        zoneConfiguration.replace(
+          '"zones":',
+          '"max_tracks":1000.0000000000000001,"zones":',
+        ),
+      );
+    assert.equal(await page.locator("#download-zones").isDisabled(), true);
+    assert.equal(await page.locator("#download-disk-zones").isDisabled(), true);
+    await page.locator("#disk-zone-compute").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#disk-zone-message").classList.contains("error"),
+    );
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await runZones(7);
+    await runDiskZones(7);
+    // A failed preparation under unchanged inputs retains the displayed result.
+    await page.evaluate(() => {
+      window.diskOriginalTextEncoder = window.TextEncoder;
+      window.TextEncoder = class {
+        encode() {
+          throw new Error("disk UI preparation failed");
+        }
+      };
+    });
+    await page.locator("#disk-zone-compute").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#disk-zone-message").classList.contains("error"),
+    );
+    await page.evaluate(() => {
+      window.TextEncoder = window.diskOriginalTextEncoder;
+      delete window.diskOriginalTextEncoder;
+    });
+    assert.deepEqual(await exportDiskZones(), diskEvidence);
+    assert.deepEqual(await exportZones(), zoneEvidence);
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 7 帧"),
+    );
+    assert.deepEqual(await exportDiskZones(), diskEvidence);
+    // Unrelated directions, gates and health inputs do not own disk evidence.
+    for (const selector of [
+      "#velocity-input",
+      "#gate-input",
+      "#guarded-input",
+    ]) {
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      assert.deepEqual(await exportDiskZones(), diskEvidence);
+      await page.locator(selector).fill(previous);
+    }
+    await runVelocity(7);
+
+    // Closed inner tangency is inside. Outer tangency is unconfirmed, since
+    // a single-face lower bound of zero is not sufficient separation.
+    const diskTangencyConfig = JSON.stringify({
+      ...zoneUnitSquare,
+      session_id: "disk-tangency",
+      zones: zoneUnitSquare.zones.map((zone) => ({
+        ...zone,
+        sigma_multiplier: 0,
+      })),
+    });
+    for (const [x, expected] of [
+      [0.25, "inside"],
+      [-0.25, "indeterminate"],
+    ]) {
+      const input =
+        [
+          { ...velocityHeader, session_id: "disk-tangency" },
+          ...[0, 200000].map((time) => ({
+            timestamp_us: String(time),
+            observations: [
+              { track_id: 1, point: [x, 0.5], covariance: [0.0001, 0, 0.0001] },
+            ],
+          })),
+        ]
+          .map(JSON.stringify)
+          .join("\n") + "\n";
+      await runVelocityBase(input, 2);
+      await page.locator("#zone-input").fill(diskTangencyConfig);
+      await runDiskZones(2);
+      const tangency = (await exportDiskZones()).frames[1].evidence[0];
+      assert.equal(tangency.decision, expected);
+      assert.equal(tangency.separating_edge_index, null);
+      assert.ok(
+        tangency.faces.some((face) =>
+          expected === "inside" ? face.upper_m === 0 : face.lower_m === 0,
+        ),
+      );
+    }
+    for (const [input, count, reason] of [
+      [velocityUncertainInput, 7, "uncertain"],
+      [velocityRejectedInput, 7, "rejected_innovation"],
+      [velocityPixelInput, 11, "rejected_projection"],
+    ]) {
+      await runVelocityBase(input, count);
+      await page.locator("#zone-input").fill(zoneConfiguration);
+      await runDiskZones(count);
+      const frame = (await exportDiskZones()).frames[count === 11 ? 10 : 5];
+      assert.deepEqual(frame.evidence, []);
+      assert.ok(frame.unavailable.length > 0);
+      assert.ok(frame.unavailable.every((row) => row.reason === reason));
+    }
+    await runVelocityBase(velocitySource, 7);
+    await runZones(7);
+    await runVelocity(7);
+    await runDiskZones(7);
+    // Preparing either point or disk evidence does not supersede the other.
+    for (const [held, concurrent] of [
+      ["#disk-zone-compute", () => runZones(7)],
+      ["#zone-compute", () => runDiskZones(7)],
+      ["#disk-zone-compute", () => runVelocity(7)],
+    ]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator(held).click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      await concurrent();
+      await releaseEvidenceTransitPreparation();
+      assert.deepEqual(await exportDiskZones(), diskEvidence);
+      assert.deepEqual(await exportZones(), zoneEvidence);
+    }
+    for (const selector of ["#disk-zone-input", "#zone-input", "#source"]) {
+      await holdEvidenceTransitPreparation();
+      await page.locator("#disk-zone-compute").click();
+      await page.waitForFunction(
+        () => typeof window.releaseEvidenceTransitRun === "function",
+      );
+      const previous = await page.locator(selector).inputValue();
+      await page.locator(selector).fill(previous + " ");
+      await releaseEvidenceTransitPreparation();
+      assert.equal(
+        await page.locator("#download-disk-zones").isDisabled(),
+        true,
+      );
+      assert.equal(await page.locator(selector).inputValue(), previous + " ");
+      if (selector === "#disk-zone-input")
+        assert.deepEqual(await exportZones(), zoneEvidence);
+      else
+        assert.equal(await page.locator("#download-zones").isDisabled(), true);
+      await page.locator(selector).fill(previous);
+      if (selector === "#source") await runVelocityBase(previous, 7);
+      await runZones(7);
+      await runDiskZones(7);
+    }
+    await holdEvidenceTransitPreparation();
+    await page.locator("#disk-zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#disk-zone-example").click();
+    assert.deepEqual(await exportZones(), zoneEvidence);
+    assert.equal(await page.locator("#download-disk-zones").isDisabled(), true);
+    await runDiskZones(7);
+    const diskSampleResult = await exportDiskZones();
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportDiskZones(), diskSampleResult);
+    await holdEvidenceTransitPreparation();
+    await page.locator("#disk-zone-compute").click();
+    await page.waitForFunction(
+      () => typeof window.releaseEvidenceTransitRun === "function",
+    );
+    await page.locator("#run").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#message").textContent.includes("已完成 7 帧"),
+    );
+    await releaseEvidenceTransitPreparation();
+    assert.deepEqual(await exportDiskZones(), diskSampleResult);
+    await page.locator("#zone-example").click();
+    assert.equal(await page.locator("#download-zones").isDisabled(), true);
+    assert.equal(await page.locator("#download-disk-zones").isDisabled(), true);
+    // Only the selected row's faces are rendered; folded details keep exports.
+    await page.locator("#zone-input").fill(
+      JSON.stringify({
+        session_id: "velocity-ui",
+        zones: [{ zone_id: "z".repeat(128), vertices_m: zoneWide }],
+      }),
+    );
+    await runDiskZones(7);
+    await selectVelocityFrame(5);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#zone-input").fill(zoneConfiguration);
+    await runZones(7);
+    await runDiskZones(7);
+    await page.locator("#disk-zone-face-selection").selectOption("3");
+    await page.locator("#zone-section").evaluate((details) => {
+      details.open = false;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#disk-zone-faces tr").length === 0,
+    );
+    assert.equal(
+      await page.locator("#download-disk-zones").isDisabled(),
+      false,
+    );
+    await page.locator("#zone-section").evaluate((details) => {
+      details.open = true;
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll("#disk-zone-faces tr").length === 4,
+    );
+    await page.locator("#disk-zone-results").screenshot({
+      path: path.join(directory, "disk-zone-evidence-mobile-preview.png"),
+    });
+    await page.setViewportSize({ width: 1440, height: 1050 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      true,
+    );
+    await page.locator("#disk-zone-results").screenshot({
+      path: path.join(directory, "disk-zone-evidence-desktop-preview.png"),
     });
     assert.deepEqual(errors, []);
   } finally {

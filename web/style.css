@@ -169,7 +169,8 @@ button:disabled {
 #transit-windows-joint-message.error,
 #transit-windows-guarded-message.error,
 #velocity-message.error,
-#zone-message.error {
+#zone-message.error,
+#disk-zone-message.error {
   color: #ad4335;
 }
 .gate-layout {
@@ -414,7 +415,13 @@ summary {
   margin-top: 8px;
 }
 
-#zone-face-selection {
+#disk-zone-input {
+  height: 70px;
+  margin-top: 8px;
+}
+
+#zone-face-selection,
+#disk-zone-face-selection {
   max-width: 100%;
   min-width: 0;
 }

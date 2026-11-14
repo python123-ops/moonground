@@ -23,6 +23,7 @@ import {
   moonground_evidence_guarded_transit_window,
   moonground_velocity_evidence,
   moonground_zone_evidence,
+  moonground_disk_zone_evidence,
 } from "./moonground.mjs";
 
 const $ = (id) => document.getElementById(id);
@@ -37,6 +38,7 @@ const evidenceTransitInput = $("evidence-transit-input");
 const transitWindowsInput = $("transit-windows-input");
 const velocityInput = $("velocity-input");
 const zoneInput = $("zone-input");
+const diskZoneInput = $("disk-zone-input");
 const slider = $("frame");
 const canvas = $("ground");
 const context = canvas.getContext("2d");
@@ -173,6 +175,17 @@ let zoneMeasurements = "";
 let zoneReference = null;
 let zonePending = null;
 let zoneSelectedKey = null;
+let diskZoneRevision = 0;
+let diskZoneRunToken = 0;
+let diskZoneReport = null;
+let diskZoneResponse = null;
+let diskZoneConfiguration = "";
+let diskZoneOptions = "";
+let diskZoneSource = "";
+let diskZoneMeasurements = "";
+let diskZoneReference = null;
+let diskZonePending = null;
+let diskZoneSelectedKey = null;
 const states = {
   initializing: "初始化",
   ready: "可读取速度",
@@ -194,6 +207,7 @@ function stop() {
 }
 
 function invalidate() {
+  cancelDiskZonePreparation();
   cancelZonePreparation();
   cancelVelocityPreparation();
   revision++;
@@ -949,6 +963,7 @@ function renderZoneFaces(frame) {
   );
 }
 function renderZones() {
+  renderDiskZones();
   if (
     zoneReport !== null &&
     (zoneConfiguration !== zoneInput.value || zoneSource !== source.value)
@@ -1097,13 +1112,295 @@ $("zone-compute").addEventListener("click", async () => {
     }
   }
 });
+function diskZoneMessage(text, error = false) {
+  $("disk-zone-message").textContent = text;
+  $("disk-zone-message").classList.toggle("error", error);
+}
+function cancelDiskZonePreparation() {
+  diskZoneRevision++;
+  if (diskZonePending !== null)
+    diskZoneMessage("上一次圆盘足迹区域证据准备已取消。");
+  diskZonePending = null;
+}
+function clearDiskZoneResult() {
+  cancelDiskZonePreparation();
+  diskZoneReport = null;
+  diskZoneResponse = null;
+  diskZoneConfiguration = "";
+  diskZoneOptions = "";
+  diskZoneSource = "";
+  diskZoneMeasurements = "";
+  diskZoneReference = null;
+  diskZoneSelectedKey = null;
+}
+function diskZoneIsCurrent() {
+  return (
+    diskZoneReport !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    diskZoneConfiguration === zoneInput.value &&
+    diskZoneOptions === diskZoneInput.value &&
+    diskZoneSource === source.value &&
+    diskZoneReference === measurementLines
+  );
+}
+function diskZoneEvidenceKey(row) {
+  return JSON.stringify([row.track_id, row.segment_id, row.zone_id]);
+}
+function renderDiskZoneFaces(frame) {
+  const selection = $("disk-zone-face-selection");
+  const selected = frame.evidence.findIndex(
+    (row) => diskZoneEvidenceKey(row) === diskZoneSelectedKey,
+  );
+  const index = selected >= 0 ? selected : 0;
+  const row = frame.evidence[index];
+  selection.replaceChildren(
+    ...frame.evidence.map((item, itemIndex) => {
+      const option = document.createElement("option");
+      option.value = String(itemIndex);
+      option.textContent =
+        item.track_id + " / " + item.segment_id + " · " + item.zone_id;
+      return option;
+    }),
+  );
+  selection.disabled = !row;
+  if (!row) {
+    diskZoneSelectedKey = null;
+    $("disk-zone-face-summary").textContent = "本帧没有可展开的区域证据。";
+    $("disk-zone-faces").replaceChildren();
+    return;
+  }
+  selection.value = String(index);
+  diskZoneSelectedKey = diskZoneEvidenceKey(row);
+  $("disk-zone-face-summary").textContent =
+    "边按输入顶点顺序从 0 编号；仅展开当前目标与区域的 " +
+    row.faces.length +
+    " 条边；位置区间与加入圆盘半径后的区间分别列出。";
+  $("disk-zone-faces").replaceChildren(
+    ...row.faces.map((face) => {
+      const detail = reportRow([
+        face.edge_index,
+        face.outward_normal.map(reportNumber).join(", "),
+        reportNumber(face.distance_m),
+        reportNumber(face.normal_std_m),
+        "[" +
+          reportNumber(face.position_lower_m) +
+          ", " +
+          reportNumber(face.position_upper_m) +
+          "]",
+        "[" +
+          reportNumber(face.lower_m) +
+          ", " +
+          reportNumber(face.upper_m) +
+          "]",
+      ]);
+      detail.title = JSON.stringify(face);
+      return detail;
+    }),
+  );
+}
+function renderDiskZones() {
+  if (
+    diskZoneReport !== null &&
+    (diskZoneConfiguration !== zoneInput.value ||
+      diskZoneOptions !== diskZoneInput.value ||
+      diskZoneSource !== source.value)
+  ) {
+    clearDiskZoneResult();
+    diskZoneMessage("原始测量输入或区域配置已修改，请重新计算证据。");
+  }
+  if (
+    diskZoneReport !== null &&
+    ordinaryVelocitySourceCurrent() &&
+    diskZoneReference !== measurementLines
+  ) {
+    if (diskZoneMeasurements === measurementLines.join("\n") + "\n")
+      diskZoneReference = measurementLines;
+    else {
+      clearDiskZoneResult();
+      diskZoneMessage("普通测量结果已变化，请重新计算圆盘足迹区域证据。");
+    }
+  }
+  $("disk-zone-compute").disabled =
+    !ordinaryVelocitySourceCurrent() || diskZonePending !== null;
+  $("disk-zone-example").disabled = !ordinaryVelocitySourceCurrent();
+  $("download-disk-zones").disabled = !diskZoneIsCurrent();
+  for (const id of [
+    "disk-zone-evidence",
+    "disk-zone-unavailable",
+    "disk-zone-faces",
+  ])
+    $(id).replaceChildren();
+  $("disk-zone-face-selection").replaceChildren();
+  $("disk-zone-face-selection").disabled = true;
+  $("disk-zone-face-summary").textContent = "";
+  if (!diskZoneIsCurrent()) {
+    $("disk-zone-frame").textContent =
+      "先计算上方普通测量，再显式计算圆盘足迹区域证据。";
+    return;
+  }
+  const index = Number(slider.value),
+    frame = diskZoneReport.frames[index];
+  if (!frame) return;
+  $("disk-zone-frame").textContent =
+    index +
+    1 +
+    " / " +
+    diskZoneReport.frames.length +
+    " · " +
+    frame.timestamp_us +
+    " μs · 区域证据 " +
+    frame.evidence.length +
+    " 行；不可判定目标 " +
+    frame.unavailable.length +
+    " 个。";
+  if (!$("zone-section").open) return;
+  const decisions = {
+    inside: "确认在区域内",
+    outside: "确认在区域外",
+    indeterminate: "区域关系未确认",
+  };
+  const rows = frame.evidence.map((row) => {
+    const summary = reportRow([
+      row.track_id + " / " + row.segment_id,
+      row.zone_id,
+      reportNumber(row.radius_m),
+      reportNumber(row.sigma_multiplier),
+      decisions[row.decision],
+      row.separating_edge_index ?? "—",
+    ]);
+    summary.title = JSON.stringify(row);
+    return summary;
+  });
+  if (!rows.length) {
+    const empty = reportRow(["本帧没有可判定的圆盘足迹区域证据。"]);
+    empty.firstChild.colSpan = 6;
+    rows.push(empty);
+  }
+  $("disk-zone-evidence").replaceChildren(...rows);
+  $("disk-zone-unavailable").replaceChildren(
+    ...frame.unavailable.map((row) =>
+      reportRow([
+        row.track_id + " / " + (row.segment_id ?? "—"),
+        states[row.reason] ?? row.reason,
+      ]),
+    ),
+  );
+  renderDiskZoneFaces(frame);
+}
+function requestDiskZones(position, disk, measurements) {
+  const configuration = JSON.stringify({ position, disk });
+  const encoder = new TextEncoder();
+  if (
+    encoder.encode(configuration).length + encoder.encode(measurements).length >
+    8 * 1024 * 1024
+  )
+    throw new Error("浏览器圆盘足迹区域证据输入上限为 8 MiB。");
+  const request = JSON.stringify({ source: configuration, measurements });
+  if (request.length > 16 * 1024 * 1024)
+    throw new Error("圆盘足迹区域证据请求超过 16 Mi 字符上限。");
+  const response = moonground_disk_zone_evidence(request);
+  if (encoder.encode(response).length > 8 * 1024 * 1024)
+    throw new Error("浏览器圆盘足迹区域证据结果超过 8 MiB。");
+  return { response, report: unpack(response) };
+}
+$("disk-zone-compute").addEventListener("click", async () => {
+  if (!ordinaryVelocitySourceCurrent()) return;
+  const current = ++diskZoneRevision,
+    runToken = ++diskZoneRunToken,
+    upstream = revision,
+    reference = measurementLines,
+    configuration = zoneInput.value,
+    options = diskZoneInput.value,
+    input = loadedSource;
+  diskZonePending = { reference, configuration, options, input };
+  diskZoneMessage("正在计算当前米制模型的圆盘足迹区域位置证据…");
+  renderDiskZones();
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (
+      current !== diskZoneRevision ||
+      upstream !== revision ||
+      configuration !== zoneInput.value ||
+      options !== diskZoneInput.value ||
+      input !== source.value ||
+      reference !== measurementLines ||
+      !ordinaryVelocitySourceCurrent()
+    )
+      return;
+    const measurements = reference.join("\n") + "\n";
+    const { response, report } = requestDiskZones(
+      configuration,
+      options,
+      measurements,
+    );
+    if (
+      current !== diskZoneRevision ||
+      upstream !== revision ||
+      configuration !== zoneInput.value ||
+      options !== diskZoneInput.value ||
+      input !== source.value ||
+      reference !== measurementLines
+    )
+      return;
+    diskZoneReport = report;
+    diskZoneResponse = response;
+    diskZoneConfiguration = configuration;
+    diskZoneOptions = options;
+    diskZoneSource = input;
+    diskZoneMeasurements = measurements;
+    diskZoneReference = reference;
+    diskZoneSelectedKey = null;
+    diskZoneMessage(
+      "已计算 " +
+        report.frames.length +
+        " 帧圆盘足迹区域位置证据；结果跟随上方普通测量回放。",
+    );
+  } catch (error) {
+    if (current === diskZoneRevision) diskZoneMessage(error.message, true);
+  } finally {
+    if (runToken === diskZoneRunToken) {
+      diskZonePending = null;
+      renderDiskZones();
+    }
+  }
+});
+diskZoneInput.addEventListener("input", () => {
+  clearDiskZoneResult();
+  diskZoneMessage(
+    "圆盘半径配置已修改，请显式重新计算；点位置证据仍可单独使用。",
+  );
+  renderDiskZones();
+});
+$("disk-zone-example").addEventListener("click", () => {
+  if (!ordinaryVelocitySourceCurrent()) return;
+  clearDiskZoneResult();
+  diskZoneInput.value = '{"radius_m":0.25}';
+  diskZoneMessage(
+    "已载入半径 0.25 m 的圆盘；以当前模型锚点为圆心，使用上方区域配置。",
+  );
+  renderDiskZones();
+});
+$("disk-zone-face-selection").addEventListener("change", (event) => {
+  if (!diskZoneIsCurrent()) return;
+  const frame = diskZoneReport.frames[Number(slider.value)];
+  const row = frame?.evidence[Number(event.target.value)];
+  if (row) diskZoneSelectedKey = diskZoneEvidenceKey(row);
+  renderDiskZones();
+});
+$("download-disk-zones").addEventListener("click", () => {
+  if (diskZoneIsCurrent())
+    saveFile(diskZoneResponse + "\n", "moonground-disk-zone-evidence.json");
+});
+
 zoneInput.addEventListener("input", () => {
+  clearDiskZoneResult();
   clearZoneResult();
   zoneMessage("区域配置已修改，请显式重新计算。");
   renderZones();
 });
 $("zone-example").addEventListener("click", () => {
   if (!ordinaryVelocitySourceCurrent()) return;
+  clearDiskZoneResult();
   clearZoneResult();
   zoneInput.value = JSON.stringify(
     {
@@ -1215,6 +1512,7 @@ $("analyze").addEventListener("click", async () => {
   if (analysisBusy) return;
   cancelVelocityPreparation();
   cancelZonePreparation();
+  cancelDiskZonePreparation();
   renderVelocity();
   renderZones();
   const current = ++revision,
