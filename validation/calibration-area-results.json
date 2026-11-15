@@ -1,0 +1,271 @@
+{
+  "status": "passed",
+  "seed": 20261118,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/calibration_area_verify.py --binary _build/native/release/build/cmd/main/main.exe --web",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "pinned_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "source_sha256": "e03219c3187758426fa73b58b1798eb602d4afce32c9a991c7a6a67735ae5c12",
+  "projection_reference_sha256": "8a026616ae3a1be0bec735547f29288042ab2ef756a761b1583f5c5ec86f7332",
+  "binary_sha256": "ddb12e4c888b5176b2f496bcc1b96d4e623b8224867e42dea0e2e22b149d89b1",
+  "reference": "Exact Fraction full cyclic shoelace and differentiated rational projective quotients; 110-digit Decimal moments and square roots, 800 digits for extreme areas",
+  "error_scope": "Numerical errors are recorded separately by unit, not physical area accuracy. Only explicit shared first-order calibration mode contributions are compared.",
+  "tolerance": "Quotient term scales propagate through anchor offsets only for conditioning tolerances; the exact golden area and derivatives use the full cyclic formula. Tolerances are fixture checks, not certified bounds.",
+  "finite_difference": {
+    "step": 0.000244140625,
+    "rtol": 2e-05,
+    "atol": 5e-08,
+    "formula": "Nonlinear projective mapping followed by mean-centered cyclic shoelace; areas, difference and ratio"
+  },
+  "statistics": {
+    "requests": 31,
+    "comparisons": 297,
+    "scalars": 44339,
+    "maximum_absolute_error_by_unit": {
+      "m": 3.0622599318737638e-15,
+      "m2": 1.7161071686656257e+291,
+      "m4": 5.281649420912636e-13,
+      "dimensionless": 6.041496220146346e-15
+    },
+    "maximum_tolerance_fraction": 0.00161954650504158,
+    "finite_difference_vectors": 2460,
+    "maximum_finite_difference_absolute_error_by_unit": {
+      "m2": 9.42964106798172e-09,
+      "dimensionless": 8.326500730224118e-11
+    }
+  },
+  "cases": [
+    {
+      "case": "shared-scale-and-translation",
+      "modes": 2,
+      "comparisons": 2,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 1250
+    },
+    {
+      "case": "zero-rank",
+      "modes": 0,
+      "comparisons": 2,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 1219
+    },
+    {
+      "case": "empty",
+      "modes": 0,
+      "comparisons": 0,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 207
+    },
+    {
+      "case": "translation-1e-100",
+      "modes": 1,
+      "comparisons": 2,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 1227
+    },
+    {
+      "case": "translation-1e+100",
+      "modes": 1,
+      "comparisons": 2,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 1227
+    },
+    {
+      "case": "homogeneous-gauge",
+      "modes": 1,
+      "comparisons": 2,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 1227
+    },
+    {
+      "case": "negative-correlation",
+      "modes": 1,
+      "comparisons": 1,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 753
+    },
+    {
+      "case": "rotation-first-order-zero",
+      "modes": 1,
+      "comparisons": 1,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 717
+    },
+    {
+      "case": "reflection-and-winding",
+      "modes": 2,
+      "comparisons": 2,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 1263
+    },
+    {
+      "case": "large-origin-small-patches",
+      "modes": 1,
+      "comparisons": 1,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 903
+    },
+    {
+      "case": "extreme-area-1.5e+154",
+      "modes": 0,
+      "comparisons": 1,
+      "decimal_precision": 800,
+      "encoded_json_utf16": 803
+    },
+    {
+      "case": "extreme-area-1e-150",
+      "modes": 0,
+      "comparisons": 1,
+      "decimal_precision": 800,
+      "encoded_json_utf16": 727
+    },
+    {
+      "case": "perspective-0-rank-1",
+      "modes": 1,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 15419
+    },
+    {
+      "case": "perspective-1-rank-2",
+      "modes": 2,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 16882
+    },
+    {
+      "case": "perspective-2-rank-8",
+      "modes": 8,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 23233
+    },
+    {
+      "case": "perspective-3-rank-9",
+      "modes": 9,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 24273
+    },
+    {
+      "case": "perspective-4-rank-16",
+      "modes": 16,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 31769
+    },
+    {
+      "case": "perspective-5-rank-32",
+      "modes": 32,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 48443
+    },
+    {
+      "case": "perspective-6-rank-1",
+      "modes": 1,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 15358
+    },
+    {
+      "case": "perspective-7-rank-2",
+      "modes": 2,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 16428
+    },
+    {
+      "case": "perspective-8-rank-8",
+      "modes": 8,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 23321
+    },
+    {
+      "case": "perspective-9-rank-9",
+      "modes": 9,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 24350
+    },
+    {
+      "case": "perspective-10-rank-16",
+      "modes": 16,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 31699
+    },
+    {
+      "case": "perspective-11-rank-32",
+      "modes": 32,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 48617
+    },
+    {
+      "case": "perspective-12-rank-1",
+      "modes": 1,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 15523
+    },
+    {
+      "case": "perspective-13-rank-2",
+      "modes": 2,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 16446
+    },
+    {
+      "case": "perspective-14-rank-8",
+      "modes": 8,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 22860
+    },
+    {
+      "case": "perspective-15-rank-9",
+      "modes": 9,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 24346
+    },
+    {
+      "case": "perspective-16-rank-16",
+      "modes": 16,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 31871
+    },
+    {
+      "case": "perspective-17-rank-32",
+      "modes": 32,
+      "comparisons": 12,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 48792
+    },
+    {
+      "case": "maximum-32x64x64",
+      "modes": 32,
+      "comparisons": 64,
+      "decimal_precision": 110,
+      "encoded_json_utf16": 427973
+    }
+  ],
+  "web_interchange": {
+    "status": "passed",
+    "summary": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0
+    },
+    "command": "node --test --test-reporter=tap web/calibration-area.test.mjs",
+    "source_sha256": "d941140fde84a6c29c9238d45b32376b3e780fd98714311e78acc077ce6b3945",
+    "bridge_sha256": "c80a746d9cc918610b88f96664f84c19ebd38cf9d37ecec95bb977ec3a4847de",
+    "stdout_sha256": "ba8d0589fbf7e73c5070af1a6d0cb602fee60fbe06a5a8aa0e4a825c08df01fd",
+    "node": "v26.2.0"
+  },
+  "elapsed_seconds": 14.4725959
+}

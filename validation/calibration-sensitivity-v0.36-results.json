@@ -1,0 +1,181 @@
+{
+  "status": "passed",
+  "seed": 20261115,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/calibration_sensitivity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-sensitivity-v0.36-results.json",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "pinned_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "source_sha256": "8a026616ae3a1be0bec735547f29288042ab2ef756a761b1583f5c5ec86f7332",
+  "binary_sha256": "ddb12e4c888b5176b2f496bcc1b96d4e623b8224867e42dea0e2e22b149d89b1",
+  "reference": "Exact Fraction derivative of projective quotient; exact shared marginal/cross/relative moments; floating comparison tolerances, no certified error bound; secondary nonlinear central differences",
+  "response_tolerance": "256*binary64_epsilon*sum(abs(original derivative terms)); moment tolerances propagate response tolerances plus 256*epsilon*sum(abs(products))",
+  "finite_difference": {
+    "step": 0.000244140625,
+    "rtol": 2e-05,
+    "atol": 2e-09
+  },
+  "statistics": {
+    "requests": 23,
+    "pairs": 524,
+    "scalars": 52756,
+    "maximum_absolute_error": 2.482906400280379e+184,
+    "maximum_tolerance_fraction": 0.005651214014670521,
+    "finite_difference_vectors": 5004,
+    "maximum_finite_difference_absolute_error": 1.4609537538068373e-11
+  },
+  "cases": [
+    {
+      "case": "translation-and-scale",
+      "modes": 2,
+      "pairs": 2,
+      "output_utf16": 979
+    },
+    {
+      "case": "zero-rank",
+      "modes": 0,
+      "pairs": 2,
+      "output_utf16": 746
+    },
+    {
+      "case": "zero-mode",
+      "modes": 1,
+      "pairs": 2,
+      "output_utf16": 766
+    },
+    {
+      "case": "translation-1e-100",
+      "modes": 1,
+      "pairs": 2,
+      "output_utf16": 906
+    },
+    {
+      "case": "translation-1e+100",
+      "modes": 1,
+      "pairs": 2,
+      "output_utf16": 906
+    },
+    {
+      "case": "scale-gauge-null",
+      "modes": 1,
+      "pairs": 2,
+      "output_utf16": 766
+    },
+    {
+      "case": "perspective-0-rank-1",
+      "modes": 1,
+      "pairs": 16,
+      "output_utf16": 11887
+    },
+    {
+      "case": "perspective-1-rank-2",
+      "modes": 2,
+      "pairs": 16,
+      "output_utf16": 13370
+    },
+    {
+      "case": "perspective-2-rank-8",
+      "modes": 8,
+      "pairs": 16,
+      "output_utf16": 22179
+    },
+    {
+      "case": "perspective-3-rank-9",
+      "modes": 9,
+      "pairs": 16,
+      "output_utf16": 23233
+    },
+    {
+      "case": "perspective-4-rank-16",
+      "modes": 16,
+      "pairs": 16,
+      "output_utf16": 33454
+    },
+    {
+      "case": "perspective-5-rank-32",
+      "modes": 32,
+      "pairs": 16,
+      "output_utf16": 56607
+    },
+    {
+      "case": "perspective-6-rank-1",
+      "modes": 1,
+      "pairs": 16,
+      "output_utf16": 11920
+    },
+    {
+      "case": "perspective-7-rank-2",
+      "modes": 2,
+      "pairs": 16,
+      "output_utf16": 13312
+    },
+    {
+      "case": "perspective-8-rank-8",
+      "modes": 8,
+      "pairs": 16,
+      "output_utf16": 21950
+    },
+    {
+      "case": "perspective-9-rank-9",
+      "modes": 9,
+      "pairs": 16,
+      "output_utf16": 23270
+    },
+    {
+      "case": "perspective-10-rank-16",
+      "modes": 16,
+      "pairs": 16,
+      "output_utf16": 33603
+    },
+    {
+      "case": "perspective-11-rank-32",
+      "modes": 32,
+      "pairs": 16,
+      "output_utf16": 56520
+    },
+    {
+      "case": "perspective-12-rank-1",
+      "modes": 1,
+      "pairs": 16,
+      "output_utf16": 11883
+    },
+    {
+      "case": "perspective-13-rank-2",
+      "modes": 2,
+      "pairs": 16,
+      "output_utf16": 13277
+    },
+    {
+      "case": "perspective-14-rank-8",
+      "modes": 8,
+      "pairs": 16,
+      "output_utf16": 21947
+    },
+    {
+      "case": "perspective-15-rank-9",
+      "modes": 9,
+      "pairs": 16,
+      "output_utf16": 23463
+    },
+    {
+      "case": "maximum-32x256",
+      "modes": 32,
+      "pairs": 256,
+      "output_utf16": 250960
+    }
+  ],
+  "web_interchange": {
+    "status": "passed",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0
+    },
+    "command": "node --test --test-reporter=tap web/calibration-sensitivity.test.mjs",
+    "source_sha256": "5c32b0c4137922ba3bccc9d1c954e8ef52e5570e2591b5d5f35b99c7ec2aac5e",
+    "bridge_sha256": "c80a746d9cc918610b88f96664f84c19ebd38cf9d37ecec95bb977ec3a4847de",
+    "stdout_sha256": "3c003a8f3444126b602bec3f2cae4776c27ba8ba54b8bcb4b78d48b9efd0c67f",
+    "node": "v26.2.0"
+  },
+  "elapsed_seconds": 15.162772
+}
