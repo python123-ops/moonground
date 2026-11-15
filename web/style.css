@@ -299,6 +299,22 @@ canvas {
 .table-wrap {
   overflow-x: auto;
 }
+#calibration-sensitivity-section table {
+  min-width: 0;
+  table-layout: fixed;
+}
+#calibration-sensitivity-section th:first-child {
+  width: 26%;
+}
+#calibration-sensitivity-section td {
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+#calibration-sensitivity-section td details {
+  margin-top: 8px;
+  border: 0;
+  padding: 0;
+}
 table {
   width: 100%;
   min-width: 760px;

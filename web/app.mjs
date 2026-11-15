@@ -4,6 +4,7 @@ import {
   moonground_close,
   moonground_project,
   moonground_calibrate,
+  moonground_calibration_sensitivity,
   moonground_checkpoint,
   moonground_restore,
   moonground_reframe,
@@ -7990,3 +7991,151 @@ drawGuardedTimeline();
 drawHealthTimeline();
 draw();
 example();
+
+// Explicit baseline and modes live in this diagnostic's own request.
+const calibrationSensitivity = {
+  revision: 0,
+  token: 0,
+  exampleToken: 0,
+  response: null,
+  report: null,
+  input: "",
+};
+const sensitivityInput = $("calibration-sensitivity-input");
+function sensitivityMessage(text, error = false) {
+  $("calibration-sensitivity-message").textContent = text;
+  $("calibration-sensitivity-message").classList.toggle("error", error);
+}
+function clearSensitivity() {
+  calibrationSensitivity.revision++;
+  calibrationSensitivity.token++;
+  calibrationSensitivity.exampleToken++;
+  calibrationSensitivity.response = null;
+  calibrationSensitivity.report = null;
+  calibrationSensitivity.input = "";
+  $("download-calibration-sensitivity").disabled = true;
+  $("calibration-sensitivity-compute").disabled = false;
+  $("calibration-sensitivity-rows").replaceChildren();
+}
+function renderSensitivity() {
+  const state = calibrationSensitivity;
+  const rows = $("calibration-sensitivity-rows");
+  rows.replaceChildren();
+  if (
+    !state.report ||
+    state.input !== sensitivityInput.value ||
+    !$("calibration-sensitivity-section").open
+  )
+    return;
+  const block = (values) =>
+    values
+      .map((value) => (value === 0 ? "0" : value.toExponential(4)))
+      .join(", ");
+  rows.replaceChildren(
+    ...state.report.probes.map((probe) => {
+      const row = document.createElement("tr");
+      for (const value of [
+        probe.probe_id,
+        block(probe.displacement_contribution_m2),
+      ]) {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.append(cell);
+      }
+      const details = document.createElement("details"),
+        summary = document.createElement("summary");
+      summary.textContent = "单点与交叉贡献";
+      details.append(summary);
+      for (const [label, values] of [
+        ["第一点", probe.first.contribution_m2],
+        ["第二点", probe.second.contribution_m2],
+        ["交叉块", probe.cross_contribution_m2],
+      ]) {
+        const item = document.createElement("p");
+        item.textContent = `${label}：${block(values)}`;
+        details.append(item);
+      }
+      row.lastElementChild.append(details);
+      row.title = JSON.stringify(probe);
+      return row;
+    }),
+  );
+}
+sensitivityInput.addEventListener("input", () => {
+  clearSensitivity();
+  sensitivityMessage("标定或模式已修改，请重新计算共享误差。");
+});
+$("calibration-sensitivity-section").addEventListener(
+  "toggle",
+  renderSensitivity,
+);
+$("calibration-sensitivity-compute").addEventListener("click", async () => {
+  const state = calibrationSensitivity;
+  state.exampleToken++;
+  const current = state.revision,
+    token = ++state.token,
+    input = sensitivityInput.value;
+  const isCurrent = () =>
+    current === state.revision &&
+    token === state.token &&
+    input === sensitivityInput.value;
+  $("calibration-sensitivity-compute").disabled = true;
+  sensitivityMessage("正在计算给定模式下的一阶共享误差…");
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (!isCurrent()) return;
+    if (
+      input.length > 1048576 ||
+      new TextEncoder().encode(input).length > 1048576
+    )
+      throw new Error("共享误差输入上限为 1 MiB。");
+    const response = moonground_calibration_sensitivity(input),
+      report = unpack(response);
+    if (!isCurrent()) return;
+    Object.assign(state, { response, report, input });
+    $("download-calibration-sensitivity").disabled = false;
+    sensitivityMessage(
+      `已计算 ${report.probes.length} 对像素点、${report.mode_count} 个共享模式。矩阵为归一化基线；贡献为一阶近似。`,
+    );
+    renderSensitivity();
+  } catch (error) {
+    if (isCurrent()) sensitivityMessage(error.message, true);
+  } finally {
+    if (isCurrent()) $("calibration-sensitivity-compute").disabled = false;
+  }
+});
+$("download-calibration-sensitivity").addEventListener("click", () => {
+  const state = calibrationSensitivity;
+  if (state.response === null || state.input !== sensitivityInput.value) {
+    clearSensitivity();
+    return;
+  }
+  saveFile(state.response + "\n", "moonground-calibration-sensitivity.json");
+});
+async function loadSensitivityExample(explicit = false) {
+  const state = calibrationSensitivity;
+  if (explicit) clearSensitivity();
+  const token = ++state.exampleToken,
+    current = state.revision,
+    input = sensitivityInput.value;
+  const isCurrent = () =>
+    token === state.exampleToken &&
+    current === state.revision &&
+    input === sensitivityInput.value;
+  try {
+    const response = await fetch("./calibration-sensitivity.json");
+    if (!response.ok) throw new Error("无法读取标定共享误差示例");
+    const text = await response.text();
+    if (!isCurrent()) return;
+    sensitivityInput.value = text;
+    sensitivityMessage(
+      "示例包含共同平移与尺度扰动；点击计算可比较单点和位移贡献。",
+    );
+  } catch (error) {
+    if (isCurrent()) sensitivityMessage(error.message, true);
+  }
+}
+$("calibration-sensitivity-example").addEventListener("click", () =>
+  loadSensitivityExample(true),
+);
+loadSensitivityExample();

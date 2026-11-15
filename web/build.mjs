@@ -87,3 +87,8 @@ copyFileSync(
   path.join(output, "robust-calibration.json"),
 );
 console.log(`Built ${output}`);
+
+copyFileSync(
+  path.join(root, "examples", "calibration-sensitivity.json"),
+  path.join(output, "calibration-sensitivity.json"),
+);
