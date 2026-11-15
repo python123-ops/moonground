@@ -28,7 +28,7 @@ C(b-a) = Σ (r_i(b)-r_i(a)) (r_i(b)-r_i(a))ᵀ
 - `evaluate_pair(first_pixel, second_pixel)`：返回两点结果、second-first 位移、交叉块及位移贡献。
 - `matrix()`、`modes()`、`mode_responses_m()`、`cross_contribution_m2()`：均返回防御性副本。
 
-`CalibrationContribution2` 是只读结果，提供 xx、xy、yy；允许零矩阵和奇异矩阵，独立于严格 SPD 的 `types.Covariance2`。交叉块使用行优先 `[xx,xy,yx,yy]`。它们均为普通 binary64 数值估计，舍入后不承诺精确半正定，不添加噪声底或修补特征值。
+`CalibrationContribution2` 是只读结果，提供 xx、xy、yy；允许零矩阵和奇异矩阵，独立于严格 SPD 的 `types.Covariance2`。交叉块使用行优先 `[xx,xy,yx,yy]`。它们均为普通 binary64 数值估计，舍入可能使矩阵偏离精确半正定关系，不添加噪声底或修补特征值。
 
 点必须位于原标定的闭 ROI 中，并使用已去畸变像素。拒绝非有限数、不可表示的中间运算，以及非零乘积或商下溢成零的情况。支持域以内仍可能存在近零响应的相对精度损失；接口不提供经过认证的数值误差界。错误不修改模型，修正输入后可重复计算。
 
@@ -68,6 +68,8 @@ python validation/calibration_sensitivity_verify.py --binary _build/native/relea
 展开“从地面控制点生成标定”内的“标定参数的共享误差”。编辑框自带完整标定、模式和点对，独立于普通轨迹和控制点拟合；上方轨迹修改不会改变这里已经计算的明确基线。点击计算后先显示位移贡献，逐行展开可查看单点与交叉块，下载保留基线与全部模式响应。
 
 修改本输入会清除结果并取消待计算任务；迟到的示例不会覆盖用户草稿。同一输入的重新计算失败保留上次成功结果。折叠面板释放表格行，下载仍可使用。浏览器额外使用 1 MiB UTF-8 输入上限。
+
+在“比较内容”选择“两段长度”可检查共享标定下的长度差值和比值；两种模式分别保留草稿与结果。计算与输入约定见 [长度比较说明](calibration-distance.md)。
 
 ## 独立核对与生态边界
 

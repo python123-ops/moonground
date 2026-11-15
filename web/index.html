@@ -134,10 +134,15 @@
             <details id="calibration-sensitivity-section">
               <summary>标定参数的共享误差</summary>
               <p class="hint">
-                为给定标定输入扰动模式和已校正像素点对，比较单点与相对位移的误差贡献。
+                输入给定标定、扰动模式及已校正像素锚点，可检查点对位移，或比较两段地面长度的差值与比值。
                 模式使用归一化标定矩阵的九个行优先系数；同一模式在两点间共享。
                 这是给定模式下的一阶近似，不从拟合残差估计模式，也不包含像素噪声或镜头参数误差。
               </p>
+              <label for="calibration-sensitivity-mode">比较内容</label>
+              <select id="calibration-sensitivity-mode">
+                <option value="position">点对位移</option>
+                <option value="distance">两段长度</option>
+              </select>
               <button id="calibration-sensitivity-example" class="quiet">
                 共享平移与尺度示例
               </button>
@@ -166,7 +171,7 @@
                 role="status"
                 aria-live="polite"
               ></p>
-              <p class="hint">
+              <p id="calibration-sensitivity-scope" class="hint">
                 本输入自带完整标定，独立于上方轨迹与控制点拟合。下表单位为
                 m²；对称块按 xx、xy、yy 排列，交叉块按 xx、xy、yx、yy
                 排列。下载包含原精度基线和逐模式响应。
@@ -175,8 +180,10 @@
                 <table aria-label="标定共享误差贡献">
                   <thead>
                     <tr>
-                      <th>点对</th>
-                      <th>位移贡献</th>
+                      <th id="calibration-sensitivity-probe-heading">点对</th>
+                      <th id="calibration-sensitivity-evidence-heading">
+                        位移贡献
+                      </th>
                     </tr>
                   </thead>
                   <tbody id="calibration-sensitivity-rows"></tbody>

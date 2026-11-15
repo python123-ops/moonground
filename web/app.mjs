@@ -5,6 +5,7 @@ import {
   moonground_project,
   moonground_calibrate,
   moonground_calibration_sensitivity,
+  moonground_calibration_distance,
   moonground_checkpoint,
   moonground_restore,
   moonground_reframe,
@@ -7992,34 +7993,51 @@ drawHealthTimeline();
 draw();
 example();
 
-// Explicit baseline and modes live in this diagnostic's own request.
-const calibrationSensitivity = {
-  revision: 0,
-  token: 0,
-  exampleToken: 0,
-  response: null,
-  report: null,
-  input: "",
-};
+// Explicit baseline and modes live in each diagnostic's own request.
+const sensitivityStates = Object.fromEntries(
+  ["position", "distance"].map((mode) => [
+    mode,
+    {
+      revision: 0,
+      token: 0,
+      exampleToken: 0,
+      response: null,
+      report: null,
+      input: "",
+      draft: "",
+      message: "",
+      error: false,
+      pending: false,
+    },
+  ]),
+);
+let sensitivityMode = "position";
 const sensitivityInput = $("calibration-sensitivity-input");
+const sensitivityState = () => sensitivityStates[sensitivityMode];
 function sensitivityMessage(text, error = false) {
+  Object.assign(sensitivityState(), { message: text, error });
   $("calibration-sensitivity-message").textContent = text;
   $("calibration-sensitivity-message").classList.toggle("error", error);
 }
 function clearSensitivity() {
-  calibrationSensitivity.revision++;
-  calibrationSensitivity.token++;
-  calibrationSensitivity.exampleToken++;
-  calibrationSensitivity.response = null;
-  calibrationSensitivity.report = null;
-  calibrationSensitivity.input = "";
+  const state = sensitivityState();
+  state.revision++;
+  state.token++;
+  state.exampleToken++;
+  Object.assign(state, {
+    response: null,
+    report: null,
+    input: "",
+    draft: sensitivityInput.value,
+    pending: false,
+  });
   $("download-calibration-sensitivity").disabled = true;
   $("calibration-sensitivity-compute").disabled = false;
   $("calibration-sensitivity-rows").replaceChildren();
 }
 function renderSensitivity() {
-  const state = calibrationSensitivity;
-  const rows = $("calibration-sensitivity-rows");
+  const state = sensitivityState(),
+    rows = $("calibration-sensitivity-rows");
   rows.replaceChildren();
   if (
     !state.report ||
@@ -8027,39 +8045,83 @@ function renderSensitivity() {
     !$("calibration-sensitivity-section").open
   )
     return;
-  const block = (values) =>
-    values
-      .map((value) => (value === 0 ? "0" : value.toExponential(4)))
-      .join(", ");
+  const number = (value) => (value === 0 ? "0" : value.toExponential(4));
+  const block = (values) => values.map(number).join(", ");
+  const comparisons = sensitivityMode === "distance";
   rows.replaceChildren(
-    ...state.report.probes.map((probe) => {
-      const row = document.createElement("tr");
-      for (const value of [
-        probe.probe_id,
-        block(probe.displacement_contribution_m2),
-      ]) {
-        const cell = document.createElement("td");
-        cell.textContent = value;
-        row.append(cell);
-      }
-      const details = document.createElement("details"),
-        summary = document.createElement("summary");
-      summary.textContent = "单点与交叉贡献";
-      details.append(summary);
-      for (const [label, values] of [
-        ["第一点", probe.first.contribution_m2],
-        ["第二点", probe.second.contribution_m2],
-        ["交叉块", probe.cross_contribution_m2],
-      ]) {
-        const item = document.createElement("p");
-        item.textContent = `${label}：${block(values)}`;
-        details.append(item);
-      }
-      row.lastElementChild.append(details);
-      row.title = JSON.stringify(probe);
-      return row;
-    }),
+    ...(comparisons ? state.report.comparisons : state.report.probes).map(
+      (probe) => {
+        const row = document.createElement("tr"),
+          label = document.createElement("td"),
+          evidence = document.createElement("td");
+        label.textContent = probe.probe_id;
+        const details = document.createElement("details"),
+          summary = document.createElement("summary");
+        let values;
+        if (comparisons) {
+          for (const text of [
+            `差值 ${number(probe.difference_m)} m · σ ${number(probe.difference_std_m)} m`,
+            `比值 ${number(probe.ratio)} · σ ${number(probe.ratio_std)}`,
+          ]) {
+            const item = document.createElement("p");
+            item.textContent = text;
+            evidence.append(item);
+          }
+          summary.textContent = "两段长度与共同贡献";
+          values = [
+            [
+              "第一段",
+              `${number(probe.first.distance_m)} m · σ ${number(probe.first.std_m)} m`,
+            ],
+            [
+              "第二段",
+              `${number(probe.second.distance_m)} m · σ ${number(probe.second.std_m)} m`,
+            ],
+            ["交叉贡献", `${number(probe.cross_contribution_m2)} m²`],
+          ];
+        } else {
+          evidence.textContent = block(probe.displacement_contribution_m2);
+          summary.textContent = "单点与交叉贡献";
+          values = [
+            ["第一点", block(probe.first.contribution_m2)],
+            ["第二点", block(probe.second.contribution_m2)],
+            ["交叉块", block(probe.cross_contribution_m2)],
+          ];
+        }
+        details.append(summary);
+        for (const [label, text] of values) {
+          const item = document.createElement("p");
+          item.textContent = `${label}：${text}`;
+          details.append(item);
+        }
+        evidence.append(details);
+        row.append(label, evidence);
+        row.title = JSON.stringify(probe);
+        return row;
+      },
+    ),
   );
+}
+function syncSensitivityView() {
+  const state = sensitivityState(),
+    distance = sensitivityMode === "distance";
+  $("calibration-sensitivity-example").textContent = distance
+    ? "长度与比值示例"
+    : "共享平移与尺度示例";
+  $("calibration-sensitivity-probe-heading").textContent = distance
+    ? "比较"
+    : "点对";
+  $("calibration-sensitivity-evidence-heading").textContent = distance
+    ? "差值与比值"
+    : "位移贡献";
+  $("calibration-sensitivity-scope").textContent = distance
+    ? "本输入自带完整标定。差值为第一段减第二段，比值为第一段除第二段；σ 仅为给定模式的一阶标准差。重合地面端点会报错。下载保留原精度基线、交叉贡献和逐模式响应。"
+    : "本输入自带完整标定，独立于上方轨迹与控制点拟合。下表单位为 m²；对称块按 xx、xy、yy 排列，交叉块按 xx、xy、yx、yy 排列。下载包含原精度基线和逐模式响应。";
+  $("download-calibration-sensitivity").disabled =
+    state.response === null || state.input !== sensitivityInput.value;
+  $("calibration-sensitivity-compute").disabled = state.pending;
+  sensitivityMessage(state.message, state.error);
+  renderSensitivity();
 }
 sensitivityInput.addEventListener("input", () => {
   clearSensitivity();
@@ -8069,16 +8131,38 @@ $("calibration-sensitivity-section").addEventListener(
   "toggle",
   renderSensitivity,
 );
+$("calibration-sensitivity-mode").addEventListener("change", () => {
+  const next = $("calibration-sensitivity-mode").value;
+  if (!Object.hasOwn(sensitivityStates, next)) return;
+  const previous = sensitivityState();
+  previous.draft = sensitivityInput.value;
+  previous.token++;
+  previous.exampleToken++;
+  if (previous.pending)
+    Object.assign(previous, {
+      pending: false,
+      message: "计算已取消；可重新计算当前草稿。",
+      error: false,
+    });
+  sensitivityMode = next;
+  sensitivityInput.value = sensitivityState().draft;
+  syncSensitivityView();
+  if (sensitivityInput.value === "") loadSensitivityExample();
+});
 $("calibration-sensitivity-compute").addEventListener("click", async () => {
-  const state = calibrationSensitivity;
+  const state = sensitivityState(),
+    mode = sensitivityMode;
   state.exampleToken++;
+  state.draft = sensitivityInput.value;
   const current = state.revision,
     token = ++state.token,
     input = sensitivityInput.value;
   const isCurrent = () =>
+    mode === sensitivityMode &&
     current === state.revision &&
     token === state.token &&
     input === sensitivityInput.value;
+  state.pending = true;
   $("calibration-sensitivity-compute").disabled = true;
   sensitivityMessage("正在计算给定模式下的一阶共享误差…");
   try {
@@ -8089,47 +8173,69 @@ $("calibration-sensitivity-compute").addEventListener("click", async () => {
       new TextEncoder().encode(input).length > 1048576
     )
       throw new Error("共享误差输入上限为 1 MiB。");
-    const response = moonground_calibration_sensitivity(input),
+    const response = (
+        mode === "distance"
+          ? moonground_calibration_distance
+          : moonground_calibration_sensitivity
+      )(input),
       report = unpack(response);
     if (!isCurrent()) return;
     Object.assign(state, { response, report, input });
     $("download-calibration-sensitivity").disabled = false;
     sensitivityMessage(
-      `已计算 ${report.probes.length} 对像素点、${report.mode_count} 个共享模式。矩阵为归一化基线；贡献为一阶近似。`,
+      mode === "distance"
+        ? `已计算 ${report.comparisons.length} 组长度比较、${report.mode_count} 个共享模式。差值、比值及其贡献为一阶近似。`
+        : `已计算 ${report.probes.length} 对像素点、${report.mode_count} 个共享模式。矩阵为归一化基线；贡献为一阶近似。`,
     );
     renderSensitivity();
   } catch (error) {
     if (isCurrent()) sensitivityMessage(error.message, true);
   } finally {
-    if (isCurrent()) $("calibration-sensitivity-compute").disabled = false;
+    if (isCurrent()) {
+      state.pending = false;
+      $("calibration-sensitivity-compute").disabled = false;
+    }
   }
 });
 $("download-calibration-sensitivity").addEventListener("click", () => {
-  const state = calibrationSensitivity;
+  const state = sensitivityState();
   if (state.response === null || state.input !== sensitivityInput.value) {
     clearSensitivity();
     return;
   }
-  saveFile(state.response + "\n", "moonground-calibration-sensitivity.json");
+  const name =
+    sensitivityMode === "distance"
+      ? "moonground-calibration-distance.json"
+      : "moonground-calibration-sensitivity.json";
+  saveFile(state.response + "\n", name);
 });
 async function loadSensitivityExample(explicit = false) {
-  const state = calibrationSensitivity;
   if (explicit) clearSensitivity();
+  const state = sensitivityState(),
+    mode = sensitivityMode;
   const token = ++state.exampleToken,
     current = state.revision,
     input = sensitivityInput.value;
   const isCurrent = () =>
+    mode === sensitivityMode &&
     token === state.exampleToken &&
     current === state.revision &&
     input === sensitivityInput.value;
   try {
-    const response = await fetch("./calibration-sensitivity.json");
+    const response = await fetch(
+      mode === "distance"
+        ? "./calibration-distance.json"
+        : "./calibration-sensitivity.json",
+    );
     if (!response.ok) throw new Error("无法读取标定共享误差示例");
     const text = await response.text();
     if (!isCurrent()) return;
     sensitivityInput.value = text;
+    state.draft = text;
     sensitivityMessage(
-      "示例包含共同平移与尺度扰动；点击计算可比较单点和位移贡献。",
+      mode === "distance"
+        ? "示例比较两段长度及同段反向端点；点击计算查看共同尺度如何影响差值和比值。"
+        : "示例包含共同平移与尺度扰动；点击计算可比较单点和位移贡献。",
     );
   } catch (error) {
     if (isCurrent()) sensitivityMessage(error.message, true);
@@ -8138,4 +8244,5 @@ async function loadSensitivityExample(explicit = false) {
 $("calibration-sensitivity-example").addEventListener("click", () =>
   loadSensitivityExample(true),
 );
+syncSensitivityView();
 loadSensitivityExample();
