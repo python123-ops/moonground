@@ -2,7 +2,7 @@
 
 MoonGround 把固定相机中的目标轨迹转换为米制地面位置、速度和观测路径，面向园区、仓储和其他近似平面的场地。输入是已有目标身份、地面接触锚点和真实时间戳；库负责标定有效域、投影协方差、运动估计、轨迹分段和双向通道过线统计，并支持原子组合更新与完整状态恢复。固定地标检查持续核对原标定的米制残差；需要按检查结果决定是否计算对象测量时，可显式使用 `guarded` 入口。
 
-当前开发版本为 `0.34.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
+当前开发版本为 `0.35.0`，尚未发布到 Mooncakes。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
 
 ## 与现有项目的衔接
 
@@ -20,7 +20,7 @@ MoonGround 复用 `moon-cv-geometry@0.2.2` 的几何能力与 `moon-kalman@0.2.1
 | 入口 | 用途 |
 | --- | --- |
 | 根包 | `GroundCalibration`、`MeasurementSession`、`MeasurementCheckpoint`、`PixelTransform`、像素观测和测量结果 |
-| `calibration` | 严格与稳健控制点拟合、逐点诊断、独立检查点、矩阵导入、有效域、像素协方差投影，以及显式共享标定模式的点对、长度差值及比值误差传播 |
+| `calibration` | 严格与稳健控制点拟合、逐点诊断、独立检查点、矩阵导入、有效域、像素协方差投影，以及显式共享标定模式的点对、长度差值／比值、方向及有向夹角误差传播 |
 | `camera` | 有效域受限的 Brown–Conrady 镜头校正、像素协方差转换与地面投影组合 |
 | `motion` | 已有米制观测的时间处理、运动估计、分段与 `MotionCheckpoint` |
 | `events` | 消费 `motion.FrameResult` 的有向有限通道；均值计数 `GateCounter` 与法向协方差证据计数 `EvidenceGateCounter` 各自保存完整状态 |
@@ -337,6 +337,42 @@ test "README: shared calibration scale cancels from a length ratio" {
 ```
 
 两段端点都需映成不同地面坐标；零长度处的距离导数不唯一，空模式也会拒绝重合端点。一阶贡献为零仍可能有二阶效应，输入像素噪声和镜头参数误差不在本模型中。严格单请求 CLI、纯 JavaScript 桥、原标定面板的“两段长度”模式及复现命令见 [长度比较说明](docs/calibration-distance.md)。
+
+### 共享标定下比较方向与夹角
+
+`HomographySensitivity::segment_direction` 计算明确给出的静态地面线段方向；`compare_directions` 返回从第一段转向第二段的有向夹角。方向从标定地面 +x 逆时针计，单位 rad，范围 `(−π, π]`；交叉贡献及方差单位为 rad²。共同转动可以影响两段方向，同时在相对夹角中抵消。
+
+```mbt check
+///|
+test "README: shared calibration rotation cancels from a directed angle" {
+  let calibration = @moonground.GroundCalibration::from_homography(
+    [0.125, 0.0, 0.0, 0.0, 0.125, 0.0, 0.0, 0.0, 1.0],
+    [
+      { x: 0.0, y: 0.0, },
+      { x: 100.0, y: 0.0, },
+      { x: 100.0, y: 100.0, },
+      { x: 0.0, y: 100.0, },
+    ],
+  )
+  let model = @calibration.HomographySensitivity::new(calibration, [
+    [0.0, -0.015625, 0.0, 0.015625, 0.0, 0.0, 0.0, 0.0, 0.0],
+  ])
+  let comparison = model.compare_directions(
+    { x: 0.0, y: 0.0, },
+    { x: 24.0, y: 32.0, },
+    { x: 0.0, y: 0.0, },
+    { x: 0.0, y: 80.0, },
+  )
+  assert_eq(comparison.first.std_rad, 0.125)
+  assert_eq(comparison.second.std_rad, 0.125)
+  assert_eq(comparison.cross_contribution_rad2, 0.015625)
+  assert_eq(comparison.mode_responses_rad(), [0.0])
+  assert_eq(comparison.contribution_rad2, 0.0)
+  assert_true((comparison.angle_rad - 0.6435011087932844).abs() < 1.0e-14)
+}
+```
+
+精确反向显示为 +π；切口两侧的响应是局部圆周切向变化，比较残差时须先折回，不能直接把显示角度加减标准差当作普通实数区间。线段端点需映成不同地面坐标；模式规范、一阶范围及原噪声排除项沿用前述模型。完整协议、`--calibration-angle`、JavaScript 桥和浏览器模式见[方向与夹角说明](docs/calibration-angle.md)。
 
 ### 用独立固定地标检查原标定
 
@@ -2700,51 +2736,54 @@ moon build --target all --deny-warn
 moon test --target all --deny-warn
 node web/build.mjs
 node --test web/parity.test.mjs
-python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.34-results.json
-python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.34-results.json
-python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.34-results.json
-python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.34-results.json
-python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.34-results.json
-python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.34-results.json
-python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.34-results.json
-python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.34-results.json
-python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.34-results.json
-python validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.34-results.json
-python validation/evidence_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-analysis-v0.34-results.json
-python validation/evidence_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-v0.34-results.json
-python validation/evidence_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-v0.34-results.json
-python validation/evidence_transit_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-analysis-v0.34-results.json
-python validation/evidence_guarded_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-v0.34-results.json
-python validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-v0.34-results.json
-python validation/evidence_transit_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-window-analysis-v0.34-results.json
-python validation/evidence_guarded_transit_window_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-window-v0.34-results.json
-python validation/velocity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/velocity-v0.34-results.json
-python validation/zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-v0.34-results.json
-python validation/disk_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/disk-zone-v0.34-results.json
-python validation/footprint_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-zone-v0.34-results.json
-python validation/assigned_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/assigned-zone-v0.34-results.json
-python validation/footprint_run_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-v0.34-results.json
-python validation/footprint_run_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-analysis-v0.34-results.json
-python validation/footprint_run_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-guarded-v0.34-results.json
-python validation/footprint_run_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-windows-v0.34-results.json
-python validation/footprint_run_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-window-analysis-v0.34-results.json
-python validation/footprint_run_window_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-window-guarded-v0.34-results.json
-python validation/calibration_distance_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-distance-results.json
-python validation/calibration_sensitivity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-sensitivity-v0.34-results.json
-python validation/zone_intersection_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-intersection-v0.34-results.json
+python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.35-results.json
+python validation/robust_fit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/robust-fit-v0.35-results.json
+python validation/reframe_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/reframe-v0.35-results.json
+python validation/gates_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/gates-v0.35-results.json
+python validation/analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/analysis-v0.35-results.json
+python validation/health_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/health-v0.35-results.json
+python validation/guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/guarded-v0.35-results.json
+python validation/transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-v0.35-results.json
+python validation/projection_replace_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/projection-replace-v0.35-results.json
+python validation/evidence_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-v0.35-results.json
+python validation/evidence_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-analysis-v0.35-results.json
+python validation/evidence_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-v0.35-results.json
+python validation/evidence_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-v0.35-results.json
+python validation/evidence_transit_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-analysis-v0.35-results.json
+python validation/evidence_guarded_transit_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-v0.35-results.json
+python validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-v0.35-results.json
+python validation/evidence_transit_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-transit-window-analysis-v0.35-results.json
+python validation/evidence_guarded_transit_window_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evidence-guarded-transit-window-v0.35-results.json
+python validation/velocity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/velocity-v0.35-results.json
+python validation/zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-v0.35-results.json
+python validation/disk_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/disk-zone-v0.35-results.json
+python validation/footprint_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-zone-v0.35-results.json
+python validation/assigned_zone_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/assigned-zone-v0.35-results.json
+python validation/footprint_run_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-v0.35-results.json
+python validation/footprint_run_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-analysis-v0.35-results.json
+python validation/footprint_run_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-guarded-v0.35-results.json
+python validation/footprint_run_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-windows-v0.35-results.json
+python validation/footprint_run_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-window-analysis-v0.35-results.json
+python validation/footprint_run_window_guarded_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-window-guarded-v0.35-results.json
+python validation/calibration_angle_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-angle-results.json
+python validation/calibration_distance_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-distance-v0.35-results.json
+python validation/calibration_sensitivity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-sensitivity-v0.35-results.json
+python validation/zone_intersection_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-intersection-v0.35-results.json
 ```
 
-浏览器交互测试需要外部安装 Playwright 或 Playwright Core `1.62.1` 与浏览器。设置 `PLAYWRIGHT_MODULE` 为该包路径后，执行 `node --test web/ui.test.cjs web/calibration-sensitivity.ui.test.cjs web/calibration-distance.ui.test.cjs`；默认使用配套 Chromium，设置 `MOONGROUND_BROWSER_CHANNEL=chrome` 可使用已安装的 Google Chrome。CI 使用 GitHub Ubuntu runner 预装的 Chrome，并从固定上游 blob 下载、校验 Noto Sans CJK SC 字体，记录实际浏览器版本与字体，避开系统软件源下载。交互用例覆盖桌面与 390 像素移动视口、本地导入、下载、旧结果失效、原始像素标定配置、选帧检查点的导出与续接、坐标变换、双向过线与死区、独立配对恢复和完整联合恢复、固定地标状态、门控阻断、标定切换与末帧完整检查点、区间统计来源选择和下游恢复、整数 token 保留、控制点草稿保护和异步操作取消。
+浏览器交互测试需要外部安装 Playwright 或 Playwright Core `1.62.1` 与浏览器。设置 `PLAYWRIGHT_MODULE` 为该包路径后，执行 `node --test web/ui.test.cjs web/calibration-sensitivity.ui.test.cjs web/calibration-distance.ui.test.cjs web/calibration-angle.ui.test.cjs`；默认使用配套 Chromium，设置 `MOONGROUND_BROWSER_CHANNEL=chrome` 可使用已安装的 Google Chrome。CI 使用 GitHub Ubuntu runner 预装的 Chrome，并从固定上游 blob 下载、校验 Noto Sans CJK SC 字体，记录实际浏览器版本与字体，避开系统软件源下载。交互用例覆盖桌面与 390 像素移动视口、本地导入、下载、旧结果失效、原始像素标定配置、选帧检查点的导出与续接、坐标变换、双向过线与死区、独立配对恢复和完整联合恢复、固定地标状态、门控阻断、标定切换与末帧完整检查点、区间统计来源选择和下游恢复、整数 token 保留、控制点草稿保护和异步操作取消。
 
 安装 NumPy 后，可执行独立参考与长流检查。固定工具链在 Linux 和 Windows 上的原生产物均命名为 `main.exe`。
 
 ```sh
-python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.34-results.json
-python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.34-results.json
+python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.35-results.json
+python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.35-results.json
 moon package
-python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.34-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.34.0.zip --output validation/package-v0.34-results.json
+python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.35-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.35.0.zip --output validation/package-v0.35-results.json
 ```
+
+v0.35.0 的方向与夹角验证见 [`validation/calibration-angle-results.json`](validation/calibration-angle-results.json)：27 组配置、564 组有向比较和 47,967 个标量检查通过。Fraction 独立求投影与角度导数，110 位 Decimal 约简级数 atan、Machin π 和范数核对均值及贡献；1e±200 线段尺度案例提高到 800 位。另有 3,279 个三分量非线性中心差分向量按圆周残差核对。本次数值比较最大误差／容差比为 0.00341；各单位分别记录误差，数值容差不表示物理角度精度或认证界。8 项原生／JavaScript 用例覆盖共同转动、负交叉贡献、角度切口、极小正夹角、严格数值 token、32 模式×256 比较及晚阶段退化。库四后端各 1,007 项通过，独立 ZIP 消费者记录见 [`validation/package-v0.35-results.json`](validation/package-v0.35-results.json)。共享面板在 Chromium 151 和 Chrome 157 核对三种模式的独立草稿／结果、切换取消、迟到示例、原精度下载、最大批量及 390／1440 宽布局；两种浏览器的完整旧流程同时通过。既有接口的本版回归记录使用 `*-v0.35-results.json` 命名。
 
 v0.34.0 的长度比较验证见 [`validation/calibration-distance-results.json`](validation/calibration-distance-results.json)：23 组配置、552 组长度比较和 59,656 个数值与 Fraction／110 位 Decimal 独立参考比较通过，另有 3,268 个四分量非线性中心差分向量核对。参考使用记录中的浮点比较容差，不作为认证误差界；本次数值比较的最大误差／容差比为 0.00352；中心差分的混合单位分量分别按记录中的绝对与相对容差核对，这些数值检查不表示实际场地的测量精度。7 项原生／JavaScript 用例覆盖负交叉贡献、共同尺度抵消、原始数值 token、32 模式×256 比较、晚阶段退化及原单请求边界。库四后端各 989 项、消费者连库各 1070 项通过；独立 ZIP 见 [`validation/package-v0.34-results.json`](validation/package-v0.34-results.json)。原有 33 项参考及 23 项流进程检查以当前产物重跑，保存为 `*-v0.34-results.json`。共享面板的两种模式在 Chromium 151 和 Chrome 157 核对独立草稿／结果、模式切换取消、迟到示例、精确下载、最大批量及 390／1440 宽布局，完整旧浏览器流程同时通过。
 

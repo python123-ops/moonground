@@ -1,0 +1,183 @@
+{
+  "status": "passed",
+  "seed": 20261116,
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/calibration_distance_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-distance-v0.35-results.json",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "pinned_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "source_sha256": "b6a8440eaff30056d0efc8216550a58f9efbc7e098efada3a4bddedac2f519ae",
+  "projection_reference_sha256": "8a026616ae3a1be0bec735547f29288042ab2ef756a761b1583f5c5ec86f7332",
+  "binary_sha256": "0ea0970c89ea3c2925d09869743e2807999decb232e9c90a2f40a0497986c84d",
+  "reference": "Fraction homography quotient derivative; 110-digit Decimal Euclidean lengths, differences, ratios and shared moments; scale-aware floating comparison tolerances, no certified error bound",
+  "error_scope": "Absolute error maxima aggregate numeric fields with different units (m, m2 and dimensionless); they are numerical checks, not physical distance accuracy metrics. The tolerance fraction is dimensionless.",
+  "tolerance": "Length 1024*epsilon*absolute position scale; response errors include endpoint derivative error and length conditioning; contrast and moment errors propagate those tolerances. Formulas are in the reference source.",
+  "finite_difference": {
+    "step": 0.000244140625,
+    "rtol": 2e-05,
+    "atol": 5e-08
+  },
+  "statistics": {
+    "requests": 23,
+    "comparisons": 552,
+    "scalars": 59656,
+    "maximum_absolute_error": 2.2384265293209e-14,
+    "maximum_tolerance_fraction": 0.003513787834731189,
+    "finite_difference_vectors": 3268,
+    "maximum_finite_difference_absolute_error": 3.278832691466782e-10
+  },
+  "cases": [
+    {
+      "case": "shared-translation-scale",
+      "modes": 2,
+      "comparisons": 2,
+      "encoded_json_utf16": 1385
+    },
+    {
+      "case": "zero-rank",
+      "modes": 0,
+      "comparisons": 2,
+      "encoded_json_utf16": 1276
+    },
+    {
+      "case": "translation-1e-100",
+      "modes": 1,
+      "comparisons": 2,
+      "encoded_json_utf16": 1284
+    },
+    {
+      "case": "translation-1e+100",
+      "modes": 1,
+      "comparisons": 2,
+      "encoded_json_utf16": 1284
+    },
+    {
+      "case": "perspective-0-rank-1",
+      "modes": 1,
+      "comparisons": 16,
+      "encoded_json_utf16": 16991
+    },
+    {
+      "case": "perspective-1-rank-2",
+      "modes": 2,
+      "comparisons": 16,
+      "encoded_json_utf16": 18395
+    },
+    {
+      "case": "perspective-2-rank-8",
+      "modes": 8,
+      "comparisons": 16,
+      "encoded_json_utf16": 26676
+    },
+    {
+      "case": "perspective-3-rank-9",
+      "modes": 9,
+      "comparisons": 16,
+      "encoded_json_utf16": 27868
+    },
+    {
+      "case": "perspective-4-rank-16",
+      "modes": 16,
+      "comparisons": 16,
+      "encoded_json_utf16": 37355
+    },
+    {
+      "case": "perspective-5-rank-32",
+      "modes": 32,
+      "comparisons": 16,
+      "encoded_json_utf16": 59139
+    },
+    {
+      "case": "perspective-6-rank-1",
+      "modes": 1,
+      "comparisons": 16,
+      "encoded_json_utf16": 17006
+    },
+    {
+      "case": "perspective-7-rank-2",
+      "modes": 2,
+      "comparisons": 16,
+      "encoded_json_utf16": 18379
+    },
+    {
+      "case": "perspective-8-rank-8",
+      "modes": 8,
+      "comparisons": 16,
+      "encoded_json_utf16": 26553
+    },
+    {
+      "case": "perspective-9-rank-9",
+      "modes": 9,
+      "comparisons": 16,
+      "encoded_json_utf16": 27931
+    },
+    {
+      "case": "perspective-10-rank-16",
+      "modes": 16,
+      "comparisons": 16,
+      "encoded_json_utf16": 37473
+    },
+    {
+      "case": "perspective-11-rank-32",
+      "modes": 32,
+      "comparisons": 16,
+      "encoded_json_utf16": 59251
+    },
+    {
+      "case": "perspective-12-rank-1",
+      "modes": 1,
+      "comparisons": 16,
+      "encoded_json_utf16": 17056
+    },
+    {
+      "case": "perspective-13-rank-2",
+      "modes": 2,
+      "comparisons": 16,
+      "encoded_json_utf16": 18340
+    },
+    {
+      "case": "perspective-14-rank-8",
+      "modes": 8,
+      "comparisons": 16,
+      "encoded_json_utf16": 26531
+    },
+    {
+      "case": "perspective-15-rank-9",
+      "modes": 9,
+      "comparisons": 16,
+      "encoded_json_utf16": 27892
+    },
+    {
+      "case": "perspective-16-rank-16",
+      "modes": 16,
+      "comparisons": 16,
+      "encoded_json_utf16": 37604
+    },
+    {
+      "case": "perspective-17-rank-32",
+      "modes": 32,
+      "comparisons": 16,
+      "encoded_json_utf16": 59327
+    },
+    {
+      "case": "maximum-32x256",
+      "modes": 32,
+      "comparisons": 256,
+      "encoded_json_utf16": 313705
+    }
+  ],
+  "web_interchange": {
+    "status": "passed",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0
+    },
+    "command": "node --test --test-reporter=tap web/calibration-distance.test.mjs",
+    "source_sha256": "b66d5149faf80b7f2f721fd518b86035d4b45f2c6f74d4d9d3a79e70eb31ee81",
+    "bridge_sha256": "616dc25dcffd3eb28c0772efc0c89b4691d03150b40f7890a0fc2b0b25e0d3aa",
+    "stdout_sha256": "7e59945eae2c43aab2f39990261f0f438a0bc531e11f6f28ac003e0d98bf0438",
+    "node": "v26.2.0"
+  },
+  "elapsed_seconds": 12.9630987
+}

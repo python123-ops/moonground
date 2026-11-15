@@ -1,0 +1,543 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/footprint_run_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-windows-v0.35-results.json",
+  "python": "3.8.7",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "inherited_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "source_sha256": "5c03ecacef145439ba0fc974254cf4db6e7f3bb5c7dc59884ad3c67e3ae84c2f",
+  "suffix_reference_sha256": "a366e8aa9c465752e5fad1bacbcbed5a9b3e2c65eec0781019741eff974ba4e7",
+  "assigned_reference_sha256": "ad22944dcfd5c25433a7f5040ca93243904c3efff6841908696d0c988ec1d88e",
+  "binary_sha256": "0ea0970c89ea3c2925d09869743e2807999decb232e9c90a2f40a0497986c84d",
+  "scope": "observed_footprint_run_outcome_windows_not_occupancy_or_dwell",
+  "independent_reference": "v25 assigned evidence plus backward suffix v26 oracle, then Python bigint quotient offline groups of genuine report-time outcomes and opening pools",
+  "offline_component_reference": {
+    "cases": 27,
+    "frames": 100,
+    "cut_points": 127,
+    "first_confirmations": 16,
+    "all_eight_end_reasons": [
+      "decision_changed",
+      "gap_exceeded",
+      "indeterminate_evidence",
+      "missing_target",
+      "segment_changed",
+      "segment_closed",
+      "shape_changed",
+      "unavailable_evidence"
+    ],
+    "v25_plus_independent_suffix_runs_and_bigint_quotient_windows_exact": true,
+    "records": [
+      {
+        "name": "and_confirmation",
+        "frames": 7,
+        "source_baseline": null,
+        "buckets": 3,
+        "first_confirmations": 2,
+        "endings": 1
+      },
+      {
+        "name": "instant_first",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 1,
+        "first_confirmations": 2,
+        "endings": 1
+      },
+      {
+        "name": "samples_only",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 1,
+        "first_confirmations": 1,
+        "endings": 0
+      },
+      {
+        "name": "span_only",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 1,
+        "endings": 0
+      },
+      {
+        "name": "break_indeterminate",
+        "frames": 4,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "break_missing",
+        "frames": 4,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "break_initializing",
+        "frames": 4,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "break_uncertain",
+        "frames": 4,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "break_rejected",
+        "frames": 4,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "break_numerical",
+        "frames": 4,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "break_projection",
+        "frames": 4,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "break_absent",
+        "frames": 4,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "break_outside",
+        "frames": 4,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 2
+      },
+      {
+        "name": "shape_radius",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 1,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "shape_kind",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 1,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "shape_vertex_order",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 1,
+        "first_confirmations": 0,
+        "endings": 0
+      },
+      {
+        "name": "segment",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 1,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "closed",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 1,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "gap_priority",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "beyond_double",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "near_max",
+        "frames": 3,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "multi_target_zone_mixed",
+        "frames": 5,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 3,
+        "endings": 1
+      },
+      {
+        "name": "started_confirmed_no_backfill",
+        "frames": 3,
+        "source_baseline": "2",
+        "buckets": 1,
+        "first_confirmations": 0,
+        "endings": 1
+      },
+      {
+        "name": "started_unconfirmed_later_confirms",
+        "frames": 5,
+        "source_baseline": "0",
+        "buckets": 1,
+        "first_confirmations": 1,
+        "endings": 1
+      },
+      {
+        "name": "end_equal_MAX_then_terminal",
+        "frames": 4,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 1,
+        "endings": 0
+      },
+      {
+        "name": "width_one_huge_unobserved",
+        "frames": 2,
+        "source_baseline": null,
+        "buckets": 2,
+        "first_confirmations": 2,
+        "endings": 1
+      },
+      {
+        "name": "nonzero_origin",
+        "frames": 5,
+        "source_baseline": null,
+        "buckets": 3,
+        "first_confirmations": 3,
+        "endings": 2
+      }
+    ]
+  },
+  "strict_restore_and_raw": {
+    "rejected_cases": 28,
+    "records": [
+      {
+        "name": "unknown_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run windows source: unknown field extra"
+      },
+      {
+        "name": "runs_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: runs must be a string"
+      },
+      {
+        "name": "window_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window must be a string"
+      },
+      {
+        "name": "bad_number_window",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window_us must be a string"
+      },
+      {
+        "name": "noncanonical_window",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "zero_width",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window width or origin is invalid"
+      },
+      {
+        "name": "version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported footprint run windows checkpoint format or version"
+      },
+      {
+        "name": "missing_observed_bucket",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unobserved footprint run statistics differ from their baseline"
+      },
+      {
+        "name": "wrong_start",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window bounds chronology or zone shape is invalid"
+      },
+      {
+        "name": "wrong_end",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window bounds chronology or zone shape is invalid"
+      },
+      {
+        "name": "wrong_watermark",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window bounds chronology or zone shape is invalid"
+      },
+      {
+        "name": "frame_slots",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window bounds chronology or zone shape is invalid"
+      },
+      {
+        "name": "opening_fresh",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window zone pools counts or order are invalid"
+      },
+      {
+        "name": "active_flow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window flow does not match its retained active state"
+      },
+      {
+        "name": "confirmed_flow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window zone pools counts or order are invalid"
+      },
+      {
+        "name": "matching_decision_confirmation_minimum",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window zone pools counts or order are invalid"
+      },
+      {
+        "name": "reason_order",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window ending counts or reason order are invalid"
+      },
+      {
+        "name": "zone_identity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window zone pools counts or order are invalid"
+      },
+      {
+        "name": "negative_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: started must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "aggregate_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window outcomes exceed the supplied frame capacity"
+      },
+      {
+        "name": "instant_unconfirmed_end",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window ending counts or reason order are invalid"
+      },
+      {
+        "name": "suffix_frame_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window has inconsistent sample suffix anchors"
+      },
+      {
+        "name": "suffix_run_count",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window has inconsistent sample suffix anchors"
+      },
+      {
+        "name": "cross_zone_suffix_count_time_difference",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run sample suffix order contradicts exact timestamps"
+      },
+      {
+        "name": "wrong_assignment_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "cf1eb270d494e50ab2838066f62c4b451cbaadadce43fd4cfd2004bd29e89ce4",
+        "stdout_bytes": 2742,
+        "stderr": "line 3: footprint assignment must match a reported target and segment"
+      },
+      {
+        "name": "duplicate_raw_wrapper",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "cf1eb270d494e50ab2838066f62c4b451cbaadadce43fd4cfd2004bd29e89ce4",
+        "stdout_bytes": 2742,
+        "stderr": "line 3: invalid JSON: Duplicate key \"measurement\" at line 1, column 21"
+      },
+      {
+        "name": "fractional_raw_id",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "cf1eb270d494e50ab2838066f62c4b451cbaadadce43fd4cfd2004bd29e89ce4",
+        "stdout_bytes": 2742,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "unknown_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "cf1eb270d494e50ab2838066f62c4b451cbaadadce43fd4cfd2004bd29e89ce4",
+        "stdout_bytes": 2742,
+        "stderr": "line 3: footprint run windows frame: unknown field extra"
+      }
+    ],
+    "old_component_valid_CP_corruptions_checked": true,
+    "origin_failure_requires_corrected_time_not_same_time": true
+  },
+  "late_window_overflow": {
+    "status": "passed",
+    "saved_started_and_confirmed": "9223372036854775807",
+    "observed_frames": "4611686018427387904",
+    "capacity": 2,
+    "failure": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 2: footprint run window count overflows Int64"
+    },
+    "same_timestamp_retry": "9223372036854775806",
+    "pool_balances_and_multiword_capacity_valid": true,
+    "live_rollback_tested_by_core_consumer": true
+  },
+  "transport": {
+    "frame_utf16": 1048576,
+    "source_utf16": 8388619,
+    "LF_CRLF_unterminated_EOF": "passed",
+    "failed_checkpoint_no_output": true
+  },
+  "web_interchange": {
+    "status": "passed",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "details": {
+      "cross_runtime": {
+        "cut_points": 9,
+        "runtime_directions": 4,
+        "continuations": 36,
+        "first_timestamp": "9007199254740993"
+      },
+      "actual_budgets": {
+        "empty_frame_count": 5000,
+        "successful_formal_frames": 5000,
+        "whole_return_utf16": 8132608,
+        "whole_output_limit_utf16": 8388608
+      },
+      "maximum_work": {
+        "maximum_actual_face_expansions": 65536,
+        "maximum_actual_support_vertex_projections": 2097152,
+        "ready_targets": 128,
+        "zones": 16,
+        "retained_states": 2048,
+        "equivalent_whole_return_utf16": 24712695,
+        "checkpoint_utf16": 1364478
+      }
+    },
+    "command": "node --test --test-reporter=tap web/footprint-run-windows.test.mjs",
+    "node": "v26.2.0",
+    "source_sha256": "6b51a59cefbf64b2511e9327f071630af2b71bd6491b761b78b5220fc5043e53",
+    "bridge_sha256": "616dc25dcffd3eb28c0772efc0c89b4691d03150b40f7890a0fc2b0b25e0d3aa",
+    "stdout_sha256": "aec8640c7ab97783d641c9e32bda6e46855bf39a3ee3aa7fba592ffa978aff2d"
+  },
+  "status": "passed",
+  "elapsed_seconds": 31.803607599999996
+}
