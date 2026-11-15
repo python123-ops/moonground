@@ -14,6 +14,8 @@ pub fn assigned_zone_evidence_json(String) -> String raise @types.GroundError
 
 pub fn calibrate_json(String) -> String raise @types.GroundError
 
+pub fn calibration_sensitivity_json(String) -> String raise @types.GroundError
+
 pub fn disk_zone_evidence_json(String) -> String raise @types.GroundError
 
 pub fn evidence_analysis_json(String) -> String raise @types.GroundError

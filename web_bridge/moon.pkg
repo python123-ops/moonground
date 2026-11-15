@@ -11,6 +11,7 @@ options(
     "js": {
       "exports": [
         "moonground_calibrate",
+        "moonground_calibration_sensitivity",
         "moonground_create",
         "moonground_update",
         "moonground_close",

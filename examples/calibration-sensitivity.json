@@ -1,0 +1,15 @@
+{
+  "calibration": {
+    "matrix": [0.1, 0, 0, 0, 0.1, 0, 0, 0, 1],
+    "roi": [[0, 0], [100, 0], [100, 100], [0, 100]],
+    "max_meters_per_pixel": 0.5
+  },
+  "modes": [
+    [0, 0, 0.25, 0, 0, 0.5, 0, 0, 0],
+    [0.001, 0, 0, 0, 0.001, 0, 0, 0, 0]
+  ],
+  "probes": [
+    {"probe_id": "across-floor", "first_pixel": [20, 20], "second_pixel": [80, 60]},
+    {"probe_id": "same-anchor", "first_pixel": [20, 20], "second_pixel": [20, 20]}
+  ]
+}
