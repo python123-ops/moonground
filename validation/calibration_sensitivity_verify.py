@@ -81,6 +81,7 @@ def check_value(actual, expected, tolerance, stats):
 
 
 def check_moment(actual, a, b, ea, eb, indices, stats):
+    assert len(actual) == len(indices)
     for got, (i, j) in zip(actual, indices):
         expected = sum(x[i] * y[j] for x, y in zip(a, b))
         tolerance = sum(abs(x[i]) * dy[j] + abs(y[j]) * dx[i] + dx[i] * dy[j]
@@ -104,10 +105,12 @@ def check_request(binary, request, stats, finite_difference=False):
         a, da, ea = exact_responses(normalized, request["modes"], probe["first_pixel"])
         b, db, eb = exact_responses(normalized, request["modes"], probe["second_pixel"])
         for output, position, derivatives, errors in [(row["first"], a, da, ea), (row["second"], b, db, eb)]:
+            assert len(output["position_m"]) == 2
             assert len(output["mode_responses_m"]) == len(derivatives)
             for got, want in zip(output["position_m"], position):
                 check_value(got, want, 256 * EPS * max(abs(want), F(1)), stats)
             for got, want, tolerance in zip(output["mode_responses_m"], derivatives, errors):
+                assert len(got) == 2
                 for axis in range(2):
                     check_value(got[axis], want[axis], tolerance[axis], stats)
             check_moment(output["contribution_m2"], derivatives, derivatives, errors, errors,
@@ -118,6 +121,7 @@ def check_request(binary, request, stats, finite_difference=False):
                      [(0, 0), (0, 1), (1, 0), (1, 1)], stats)
         check_moment(row["displacement_contribution_m2"], relative, relative, erel, erel,
                      [(0, 0), (0, 1), (1, 1)], stats)
+        assert len(row["displacement_m"]) == 2
         for i in range(2):
             check_value(row["displacement_m"][i], b[i] - a[i],
                         512 * EPS * max(abs(a[i]), abs(b[i]), F(1)), stats)

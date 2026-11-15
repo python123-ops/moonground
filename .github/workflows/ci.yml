@@ -132,7 +132,7 @@ jobs:
           moon -C examples/consumer check --target all --deny-warn
           moon -C examples/consumer test --target all --deny-warn
           moon package
-          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.32.0.zip --output _build/ci-package.json
+          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.33.0.zip --output _build/ci-package.json
       - name: Prepare browser test driver
         if: runner.os == 'Linux'
         run: |
@@ -155,7 +155,7 @@ jobs:
         env:
           PLAYWRIGHT_MODULE: ${{ github.workspace }}/_build/browser/node_modules/playwright-core
           MOONGROUND_BROWSER_CHANNEL: chrome
-        run: node --test web/ui.test.cjs
+        run: node --test web/ui.test.cjs web/calibration-sensitivity.ui.test.cjs
       - name: Retain validation records
         if: always()
         uses: actions/upload-artifact@v4
