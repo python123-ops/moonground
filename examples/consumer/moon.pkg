@@ -4,6 +4,7 @@ import {
 }
 
 import {
+  "python123-ops/moonground/calibration",
   "python123-ops/moonground/motion",
   "python123-ops/moonground/events",
   "python123-ops/moonground/analysis",
