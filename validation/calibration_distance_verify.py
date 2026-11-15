@@ -28,7 +28,7 @@ import calibration_sensitivity_verify as projection_reference
 
 ROOT = Path(__file__).resolve().parents[1]
 SEED = 20261116
-EPS = Decimal(2) ** -52
+EPS = Decimal.from_float(2.0 ** -52)
 TINY = Decimal("1e-300")
 
 
@@ -222,6 +222,7 @@ def main():
                   projection_reference_sha256=hashlib.sha256((ROOT / "validation/calibration_sensitivity_verify.py").read_bytes()).hexdigest(),
                   binary_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
                   reference="Fraction homography quotient derivative; 110-digit Decimal Euclidean lengths, differences, ratios and shared moments; scale-aware floating comparison tolerances, no certified error bound",
+                  error_scope="Absolute error maxima aggregate numeric fields with different units (m, m2 and dimensionless); they are numerical checks, not physical distance accuracy metrics. The tolerance fraction is dimensionless.",
                   tolerance="Length 1024*epsilon*absolute position scale; response errors include endpoint derivative error and length conditioning; contrast and moment errors propagate those tolerances. Formulas are in the reference source.",
                   finite_difference=dict(step=2 ** -12, rtol=2e-5, atol=5e-8), statistics=stats, cases=cases)
     if args.web:

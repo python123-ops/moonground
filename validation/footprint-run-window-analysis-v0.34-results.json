@@ -1,0 +1,435 @@
+{
+  "format_version": "1",
+  "fixtures": "deterministic",
+  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/footprint_run_window_analysis_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-window-analysis-v0.34-results.json",
+  "python": "3.8.7",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "pinned_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "source_sha256": "f3a085659f62ec4e2edbb2e221d252453444fb7235cf5c1d187fe5ce4c42b150",
+  "run_reference_sha256": "a366e8aa9c465752e5fad1bacbcbed5a9b3e2c65eec0781019741eff974ba4e7",
+  "window_reference_sha256": "5c03ecacef145439ba0fc974254cf4db6e7f3bb5c7dc59884ad3c67e3ae84c2f",
+  "binary_sha256": "99e99aebce370ff7afb26a2557f36d4e2773fc239a0039639736eedd3e078ede",
+  "independent_reference": "Original motion stream/checkpoint plus v25 evidence, v26 backward suffix oracle and v29 Python bigint grouping; complete frames and checkpoints",
+  "scope": "observed_report_frame_run_confirmations_and_endings_not_visits_or_physical_dwell",
+  "component_reference": {
+    "cases": 19,
+    "frames": 126,
+    "cut_points": 145,
+    "statuses": [
+      "initializing",
+      "numerical_failure",
+      "ready",
+      "rejected_innovation",
+      "rejected_projection",
+      "uncertain"
+    ],
+    "ending_reasons_observed": [
+      "missing_target",
+      "segment_closed",
+      "shape_changed",
+      "unavailable_evidence"
+    ],
+    "full_original_motion_v29_and_offline_bigint_windows_exact": true,
+    "every_preview_noncommitting_and_exact": true,
+    "records": [
+      {
+        "name": "identity_path_lifecycle",
+        "frames": 11,
+        "baseline_frames": 0,
+        "confirmations": 0,
+        "endings": 0,
+        "buckets": 5
+      },
+      {
+        "name": "raw_camera_projection_rejection",
+        "frames": 10,
+        "baseline_frames": 0,
+        "confirmations": 1,
+        "endings": 3,
+        "buckets": 4
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 4,
+        "baseline_frames": 0,
+        "confirmations": 0,
+        "endings": 0,
+        "buckets": 3
+      },
+      {
+        "name": "effective_defaults",
+        "frames": 4,
+        "baseline_frames": 0,
+        "confirmations": 0,
+        "endings": 1,
+        "buckets": 2
+      },
+      {
+        "name": "extreme_scale_failure_retains_restorable_state",
+        "frames": 2,
+        "baseline_frames": 0,
+        "confirmations": 0,
+        "endings": 0,
+        "buckets": 1
+      },
+      {
+        "name": "warehouse",
+        "frames": 10,
+        "baseline_frames": 0,
+        "confirmations": 0,
+        "endings": 4,
+        "buckets": 7
+      },
+      {
+        "name": "distorted-camera",
+        "frames": 15,
+        "baseline_frames": 0,
+        "confirmations": 3,
+        "endings": 5,
+        "buckets": 5
+      },
+      {
+        "name": "reframe",
+        "frames": 15,
+        "baseline_frames": 0,
+        "confirmations": 3,
+        "endings": 5,
+        "buckets": 5
+      },
+      {
+        "name": "repeated_crossings",
+        "frames": 9,
+        "baseline_frames": 0,
+        "confirmations": 0,
+        "endings": 0,
+        "buckets": 3
+      },
+      {
+        "name": "quality_rejects_current_positions",
+        "frames": 9,
+        "baseline_frames": 0,
+        "confirmations": 0,
+        "endings": 0,
+        "buckets": 3
+      },
+      {
+        "name": "steady",
+        "frames": 6,
+        "baseline_frames": 0,
+        "confirmations": 2,
+        "endings": 6,
+        "buckets": 2
+      },
+      {
+        "name": "large_clock",
+        "frames": 6,
+        "baseline_frames": 0,
+        "confirmations": 2,
+        "endings": 6,
+        "buckets": 3
+      },
+      {
+        "name": "near_max",
+        "frames": 4,
+        "baseline_frames": 0,
+        "confirmations": 0,
+        "endings": 2,
+        "buckets": 1
+      },
+      {
+        "name": "started_baseline_1",
+        "frames": 5,
+        "baseline_frames": 1,
+        "confirmations": 2,
+        "endings": 6,
+        "buckets": 1
+      },
+      {
+        "name": "started_baseline_3",
+        "frames": 3,
+        "baseline_frames": 3,
+        "confirmations": 0,
+        "endings": 6,
+        "buckets": 1
+      },
+      {
+        "name": "started_baseline_4",
+        "frames": 2,
+        "baseline_frames": 4,
+        "confirmations": 0,
+        "endings": 4,
+        "buckets": 1
+      },
+      {
+        "name": "empty_exact_MAX_terminal",
+        "frames": 3,
+        "baseline_frames": 0,
+        "confirmations": 0,
+        "endings": 0,
+        "buckets": 2
+      },
+      {
+        "name": "width_one_huge_unobserved",
+        "frames": 2,
+        "baseline_frames": 0,
+        "confirmations": 0,
+        "endings": 0,
+        "buckets": 2
+      },
+      {
+        "name": "nonzero_origin",
+        "frames": 6,
+        "baseline_frames": 0,
+        "confirmations": 2,
+        "endings": 6,
+        "buckets": 2
+      }
+    ]
+  },
+  "strict_restore_and_raw": {
+    "rejected_cases": 19,
+    "independently_valid_components_joint_suffix_counterexamples": 3,
+    "records": [
+      {
+        "name": "unknown_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window analysis source: unknown field extra"
+      },
+      {
+        "name": "analysis_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: analysis must be a string"
+      },
+      {
+        "name": "window_not_raw",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window must be a string"
+      },
+      {
+        "name": "window_number",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window_us must be a string"
+      },
+      {
+        "name": "window_noncanonical",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: window_us must be a canonical nonnegative Int64 decimal string"
+      },
+      {
+        "name": "zero_width",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run window width or origin is invalid"
+      },
+      {
+        "name": "joint_version",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: unsupported footprint run window analysis checkpoint format or version"
+      },
+      {
+        "name": "watermark",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid footprint run identity time or decision"
+      },
+      {
+        "name": "current_anchor",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run current point or upper covariance differs from motion"
+      },
+      {
+        "name": "current_covariance",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run current point or upper covariance differs from motion"
+      },
+      {
+        "name": "initializing_motion",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint run motion is not Ready or has a different segment"
+      },
+      {
+        "name": "missing_saved_first",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: footprint window omits a saved accepted input"
+      },
+      {
+        "name": "three_accepted_in_two_suffix_inputs",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: accepted footprint samples exceed their window interval budget"
+      },
+      {
+        "name": "hidden_witness_exceeds_anchor_interval",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: saved accepted inputs exceed a footprint window suffix interval"
+      },
+      {
+        "name": "duplicate_wrapper",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7779616c83847980147d40621af9b6c66c3bc8428d4d810ca09cc280bc24b9cf",
+        "stdout_bytes": 2774,
+        "stderr": "line 3: invalid JSON: Duplicate key \"measurement\" at line 1, column 21"
+      },
+      {
+        "name": "unknown_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7779616c83847980147d40621af9b6c66c3bc8428d4d810ca09cc280bc24b9cf",
+        "stdout_bytes": 2774,
+        "stderr": "line 3: footprint run window analysis frame: unknown field extra"
+      },
+      {
+        "name": "fractional_id",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7779616c83847980147d40621af9b6c66c3bc8428d4d810ca09cc280bc24b9cf",
+        "stdout_bytes": 2774,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "wrong_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7779616c83847980147d40621af9b6c66c3bc8428d4d810ca09cc280bc24b9cf",
+        "stdout_bytes": 2774,
+        "stderr": "line 3: footprint assignment must match a reported target and segment"
+      },
+      {
+        "name": "precomputed_measurement",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "7779616c83847980147d40621af9b6c66c3bc8428d4d810ca09cc280bc24b9cf",
+        "stdout_bytes": 2774,
+        "stderr": "line 3: frame: unknown field schema_version"
+      }
+    ]
+  },
+  "atomic_failed_candidate": {
+    "status": "passed",
+    "late_footprint_numeric_failure": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "8c614c35ed66b5feabb9048c214375044002890e1b0654ef113e4e963c508368",
+      "stdout_bytes": 2777,
+      "stderr": "line 3: disk and position radius exceed supported precision"
+    },
+    "same_timestamp_retry": "100000",
+    "complete_motion_P_path_nextsegment_runs_and_windows_checkpoint_exact": true,
+    "origin_failure_corrected_time_segment_one": true,
+    "live_same_preparation_retry_core_and_consumer": true
+  },
+  "overflow": {
+    "status": "passed",
+    "counter": "9223372036854775807",
+    "input_frames": "9223372036854775806",
+    "same_timestamp_retry": "9223372036854775806",
+    "failure": {
+      "exit_code": 2,
+      "complete_output_lines": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_bytes": 0,
+      "stderr": "line 2: footprint run window count overflows Int64"
+    },
+    "all_components_and_joint_restored_before_probe": true
+  },
+  "transport_and_preview": {
+    "frame_utf16": 1048576,
+    "source_utf16": 8388619,
+    "LF_CRLF_unterminated_EOF": "passed",
+    "preview_extra_complete_prefix": {
+      "exit_code": 2,
+      "complete_output_lines": 1,
+      "stdout_sha256": "5a53b8ca6a9b0dc3b41f37bc41f4f1a6c304f8ca42b2e5e392605e5290982bfb",
+      "stdout_bytes": 625,
+      "stderr": "line 3: footprint run window preview accepts exactly one observation frame"
+    }
+  },
+  "web_interchange": {
+    "status": "passed",
+    "summary": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "details": {
+      "cross_runtime": {
+        "cut_points": 19,
+        "runtime_directions": 4,
+        "comparisons": 76,
+        "original_decimal_timestamps": true
+      },
+      "warm_reframe": {
+        "warm_reframe_maximum_absolute_error": 2.4683387115937566e-15,
+        "numerical_values": 954,
+        "relative_tolerance": 3e-08,
+        "absolute_tolerance": 1e-11
+      },
+      "actual_budgets": {
+        "empty_frame_count": 5000,
+        "successful_empty_frames": 5000,
+        "whole_return_utf16": 8331223,
+        "whole_output_including_checkpoint_limit": 8388608,
+        "frame_count_5001_rejected": true
+      },
+      "maximum_work": {
+        "maximum_actual_face_expansions": 65536,
+        "maximum_actual_support_vertex_projections": 2097152,
+        "ready_targets": 128,
+        "zones": 16,
+        "retained_states": 2048,
+        "equivalent_whole_return_utf16": 25381550,
+        "checkpoint_utf16": 1502695
+      }
+    },
+    "command": "node --test --test-reporter=tap web/footprint-run-window-analysis.test.mjs",
+    "node": "v26.2.0",
+    "source_sha256": "6a5e8f3ed56d70ec9e41de4bae6f77749378491a8610aba5db63f84a67d1b8e3",
+    "bridge_sha256": "75ef4c2e0027e3abb7488a6fc5508fafda07c84df6ed0f64bf6c2891146f34a4",
+    "stdout_sha256": "7133cc46255ba6624b8ff9fda7b01ab89d12cb634d5ba656468212561f61e793"
+  },
+  "status": "passed",
+  "elapsed_seconds": 51.7674822
+}
