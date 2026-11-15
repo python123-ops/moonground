@@ -16,6 +16,8 @@ pub fn calibrate_json(String) -> String raise @types.GroundError
 
 pub fn calibration_angle_json(String) -> String raise @types.GroundError
 
+pub fn calibration_area_json(String) -> String raise @types.GroundError
+
 pub fn calibration_distance_json(String) -> String raise @types.GroundError
 
 pub fn calibration_sensitivity_json(String) -> String raise @types.GroundError
