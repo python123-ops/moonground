@@ -11,6 +11,13 @@ import {
 // Errors
 
 // Types and methods
+pub struct CalibrationContribution2 {
+  xx : Double
+  xy : Double
+  yy : Double
+} derive(@debug.Debug)
+pub fn CalibrationContribution2::to_repr(Self) -> @debug.Repr
+
 pub struct CalibrationReport {
   // private fields
 } derive(@debug.Debug)
@@ -22,6 +29,24 @@ pub fn CalibrationReport::fit_max_error_m(Self) -> Double?
 pub fn CalibrationReport::fit_rms_m(Self) -> Double?
 pub fn CalibrationReport::roi_scale_bound_m_per_pixel(Self) -> Double
 pub fn CalibrationReport::to_repr(Self) -> @debug.Repr
+
+pub struct CalibrationSensitivityPair {
+  first : CalibrationSensitivityPoint
+  second : CalibrationSensitivityPoint
+  displacement_m : @types.Point2
+  displacement_contribution_m2 : CalibrationContribution2
+  // private fields
+} derive(@debug.Debug)
+pub fn CalibrationSensitivityPair::cross_contribution_m2(Self) -> Array[Double]
+pub fn CalibrationSensitivityPair::to_repr(Self) -> @debug.Repr
+
+pub struct CalibrationSensitivityPoint {
+  position_m : @types.Point2
+  contribution_m2 : CalibrationContribution2
+  // private fields
+} derive(@debug.Debug)
+pub fn CalibrationSensitivityPoint::mode_responses_m(Self) -> Array[@types.Point2]
+pub fn CalibrationSensitivityPoint::to_repr(Self) -> @debug.Repr
 
 type ConvexRoi
 
@@ -46,6 +71,15 @@ pub struct GroundPoint {
 pub fn GroundPoint::covariance(Self) -> @types.Covariance2
 pub fn GroundPoint::position(Self) -> @types.Point2
 pub fn GroundPoint::to_repr(Self) -> @debug.Repr
+
+pub struct HomographySensitivity {
+  // private fields
+}
+pub fn HomographySensitivity::evaluate(Self, @types.Point2) -> CalibrationSensitivityPoint raise @types.GroundError
+pub fn HomographySensitivity::evaluate_pair(Self, @types.Point2, @types.Point2) -> CalibrationSensitivityPair raise @types.GroundError
+pub fn HomographySensitivity::matrix(Self) -> Array[Double]
+pub fn HomographySensitivity::modes(Self) -> Array[Array[Double]]
+pub fn HomographySensitivity::new(GroundCalibration, Array[Array[Double]]) -> Self raise @types.GroundError
 
 pub struct RobustCalibration {
   // private fields
