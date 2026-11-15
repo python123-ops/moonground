@@ -12,6 +12,7 @@ options(
       "exports": [
         "moonground_calibrate",
         "moonground_calibration_sensitivity",
+        "moonground_calibration_distance",
         "moonground_create",
         "moonground_update",
         "moonground_close",
