@@ -23,6 +23,33 @@ pub struct CalibrationAngleComparison {
 pub fn CalibrationAngleComparison::mode_responses_rad(Self) -> Array[Double]
 pub fn CalibrationAngleComparison::to_repr(Self) -> @debug.Repr
 
+pub struct CalibrationAreaComparison {
+  first : CalibrationAreaSensitivity
+  second : CalibrationAreaSensitivity
+  cross_contribution_m4 : Double
+  difference_m2 : Double
+  difference_contribution_m4 : Double
+  difference_std_m2 : Double
+  ratio : Double
+  ratio_contribution : Double
+  ratio_std : Double
+  // private fields
+} derive(@debug.Debug)
+pub fn CalibrationAreaComparison::difference_mode_responses_m2(Self) -> Array[Double]
+pub fn CalibrationAreaComparison::ratio_mode_responses(Self) -> Array[Double]
+pub fn CalibrationAreaComparison::to_repr(Self) -> @debug.Repr
+
+pub struct CalibrationAreaSensitivity {
+  signed_area_m2 : Double
+  area_m2 : Double
+  contribution_m4 : Double
+  std_m2 : Double
+  // private fields
+} derive(@debug.Debug)
+pub fn CalibrationAreaSensitivity::mode_responses_m2(Self) -> Array[Double]
+pub fn CalibrationAreaSensitivity::positions_m(Self) -> Array[@types.Point2]
+pub fn CalibrationAreaSensitivity::to_repr(Self) -> @debug.Repr
+
 pub struct CalibrationContribution2 {
   xx : Double
   xy : Double
@@ -128,6 +155,7 @@ pub fn GroundPoint::to_repr(Self) -> @debug.Repr
 pub struct HomographySensitivity {
   // private fields
 }
+pub fn HomographySensitivity::compare_areas(Self, Array[@types.Point2], Array[@types.Point2]) -> CalibrationAreaComparison raise @types.GroundError
 pub fn HomographySensitivity::compare_directions(Self, @types.Point2, @types.Point2, @types.Point2, @types.Point2) -> CalibrationAngleComparison raise @types.GroundError
 pub fn HomographySensitivity::compare_distances(Self, @types.Point2, @types.Point2, @types.Point2, @types.Point2) -> CalibrationDistanceComparison raise @types.GroundError
 pub fn HomographySensitivity::distance(Self, @types.Point2, @types.Point2) -> CalibrationDistanceSensitivity raise @types.GroundError
@@ -136,6 +164,7 @@ pub fn HomographySensitivity::evaluate_pair(Self, @types.Point2, @types.Point2) 
 pub fn HomographySensitivity::matrix(Self) -> Array[Double]
 pub fn HomographySensitivity::modes(Self) -> Array[Array[Double]]
 pub fn HomographySensitivity::new(GroundCalibration, Array[Array[Double]]) -> Self raise @types.GroundError
+pub fn HomographySensitivity::polygon_area(Self, Array[@types.Point2]) -> CalibrationAreaSensitivity raise @types.GroundError
 pub fn HomographySensitivity::segment_direction(Self, @types.Point2, @types.Point2) -> CalibrationDirectionSensitivity raise @types.GroundError
 
 pub struct RobustCalibration {
