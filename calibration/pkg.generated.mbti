@@ -18,6 +18,34 @@ pub struct CalibrationContribution2 {
 } derive(@debug.Debug)
 pub fn CalibrationContribution2::to_repr(Self) -> @debug.Repr
 
+pub struct CalibrationDistanceComparison {
+  first : CalibrationDistanceSensitivity
+  second : CalibrationDistanceSensitivity
+  cross_contribution_m2 : Double
+  difference_m : Double
+  difference_contribution_m2 : Double
+  difference_std_m : Double
+  ratio : Double
+  ratio_contribution : Double
+  ratio_std : Double
+  // private fields
+} derive(@debug.Debug)
+pub fn CalibrationDistanceComparison::difference_mode_responses_m(Self) -> Array[Double]
+pub fn CalibrationDistanceComparison::ratio_mode_responses(Self) -> Array[Double]
+pub fn CalibrationDistanceComparison::to_repr(Self) -> @debug.Repr
+
+pub struct CalibrationDistanceSensitivity {
+  first_position_m : @types.Point2
+  second_position_m : @types.Point2
+  direction : @types.Point2
+  distance_m : Double
+  contribution_m2 : Double
+  std_m : Double
+  // private fields
+} derive(@debug.Debug)
+pub fn CalibrationDistanceSensitivity::mode_responses_m(Self) -> Array[Double]
+pub fn CalibrationDistanceSensitivity::to_repr(Self) -> @debug.Repr
+
 pub struct CalibrationReport {
   // private fields
 } derive(@debug.Debug)
@@ -75,6 +103,8 @@ pub fn GroundPoint::to_repr(Self) -> @debug.Repr
 pub struct HomographySensitivity {
   // private fields
 }
+pub fn HomographySensitivity::compare_distances(Self, @types.Point2, @types.Point2, @types.Point2, @types.Point2) -> CalibrationDistanceComparison raise @types.GroundError
+pub fn HomographySensitivity::distance(Self, @types.Point2, @types.Point2) -> CalibrationDistanceSensitivity raise @types.GroundError
 pub fn HomographySensitivity::evaluate(Self, @types.Point2) -> CalibrationSensitivityPoint raise @types.GroundError
 pub fn HomographySensitivity::evaluate_pair(Self, @types.Point2, @types.Point2) -> CalibrationSensitivityPair raise @types.GroundError
 pub fn HomographySensitivity::matrix(Self) -> Array[Double]
