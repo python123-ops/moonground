@@ -3,5 +3,6 @@ import {
   "python123-ops/moon-cv-geometry/core" @geometry,
   "python123-ops/moon-cv-geometry/multiview",
   "moonbitlang/core/debug",
+  "moonbitlang/core/math",
   "moonbitlang/core/random",
 }
