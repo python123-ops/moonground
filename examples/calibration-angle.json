@@ -1,0 +1,17 @@
+{
+  "calibration": {
+    "matrix": [0.125, 0, 0, 0, 0.125, 0, 0, 0, 1],
+    "roi": [[0, 0], [100, 0], [100, 100], [0, 100]],
+    "max_meters_per_pixel": 0.5
+  },
+  "modes": [
+    [0, -0.015625, 0, 0.015625, 0, 0, 0, 0, 0],
+    [0, 0, 0.25, 0, 0, -0.125, 0, 0, 0],
+    [0.015625, 0, 0, 0, 0.015625, 0, 0, 0, 0]
+  ],
+  "comparisons": [
+    {"probe_id": "common-rotation", "first_segment": [[0, 0], [24, 32]], "second_segment": [[0, 0], [0, 80]]},
+    {"probe_id": "opposite-directed", "first_segment": [[0, 0], [24, 32]], "second_segment": [[24, 32], [0, 0]]},
+    {"probe_id": "near-cut", "first_segment": [[0, 0], [80, 0]], "second_segment": [[80, 40], [0, 40.000008]]}
+  ]
+}

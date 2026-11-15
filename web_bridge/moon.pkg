@@ -13,6 +13,7 @@ options(
         "moonground_calibrate",
         "moonground_calibration_sensitivity",
         "moonground_calibration_distance",
+        "moonground_calibration_angle",
         "moonground_create",
         "moonground_update",
         "moonground_close",
