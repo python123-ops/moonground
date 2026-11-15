@@ -6,6 +6,7 @@ import {
   moonground_calibrate,
   moonground_calibration_sensitivity,
   moonground_calibration_distance,
+  moonground_calibration_angle,
   moonground_checkpoint,
   moonground_restore,
   moonground_reframe,
@@ -7994,8 +7995,25 @@ draw();
 example();
 
 // Explicit baseline and modes live in each diagnostic's own request.
+const sensitivityModes = {
+  position: {
+    compute: moonground_calibration_sensitivity,
+    example: "calibration-sensitivity.json",
+    filename: "moonground-calibration-sensitivity.json",
+  },
+  distance: {
+    compute: moonground_calibration_distance,
+    example: "calibration-distance.json",
+    filename: "moonground-calibration-distance.json",
+  },
+  angle: {
+    compute: moonground_calibration_angle,
+    example: "calibration-angle.json",
+    filename: "moonground-calibration-angle.json",
+  },
+};
 const sensitivityStates = Object.fromEntries(
-  ["position", "distance"].map((mode) => [
+  Object.keys(sensitivityModes).map((mode) => [
     mode,
     {
       revision: 0,
@@ -8047,7 +8065,7 @@ function renderSensitivity() {
     return;
   const number = (value) => (value === 0 ? "0" : value.toExponential(4));
   const block = (values) => values.map(number).join(", ");
-  const comparisons = sensitivityMode === "distance";
+  const comparisons = sensitivityMode !== "position";
   rows.replaceChildren(
     ...(comparisons ? state.report.comparisons : state.report.probes).map(
       (probe) => {
@@ -8058,7 +8076,7 @@ function renderSensitivity() {
         const details = document.createElement("details"),
           summary = document.createElement("summary");
         let values;
-        if (comparisons) {
+        if (sensitivityMode === "distance") {
           for (const text of [
             `差值 ${number(probe.difference_m)} m · σ ${number(probe.difference_std_m)} m`,
             `比值 ${number(probe.ratio)} · σ ${number(probe.ratio_std)}`,
@@ -8078,6 +8096,22 @@ function renderSensitivity() {
               `${number(probe.second.distance_m)} m · σ ${number(probe.second.std_m)} m`,
             ],
             ["交叉贡献", `${number(probe.cross_contribution_m2)} m²`],
+          ];
+        } else if (sensitivityMode === "angle") {
+          const item = document.createElement("p");
+          item.textContent = `相对夹角 ${number(probe.angle_rad)} rad · σ ${number(probe.std_rad)} rad`;
+          evidence.append(item);
+          summary.textContent = "两段方向与共同贡献";
+          values = [
+            [
+              "第一段方向",
+              `${number(probe.first.angle_rad)} rad · σ ${number(probe.first.std_rad)} rad · 长度 ${number(probe.first.distance_m)} m`,
+            ],
+            [
+              "第二段方向",
+              `${number(probe.second.angle_rad)} rad · σ ${number(probe.second.std_rad)} rad · 长度 ${number(probe.second.distance_m)} m`,
+            ],
+            ["交叉贡献", `${number(probe.cross_contribution_rad2)} rad²`],
           ];
         } else {
           evidence.textContent = block(probe.displacement_contribution_m2);
@@ -8104,19 +8138,25 @@ function renderSensitivity() {
 }
 function syncSensitivityView() {
   const state = sensitivityState(),
-    distance = sensitivityMode === "distance";
-  $("calibration-sensitivity-example").textContent = distance
-    ? "长度与比值示例"
-    : "共享平移与尺度示例";
-  $("calibration-sensitivity-probe-heading").textContent = distance
-    ? "比较"
-    : "点对";
-  $("calibration-sensitivity-evidence-heading").textContent = distance
-    ? "差值与比值"
-    : "位移贡献";
-  $("calibration-sensitivity-scope").textContent = distance
-    ? "本输入自带完整标定。差值为第一段减第二段，比值为第一段除第二段；σ 仅为给定模式的一阶标准差。重合地面端点会报错。下载保留原精度基线、交叉贡献和逐模式响应。"
-    : "本输入自带完整标定，独立于上方轨迹与控制点拟合。下表单位为 m²；对称块按 xx、xy、yy 排列，交叉块按 xx、xy、yx、yy 排列。下载包含原精度基线和逐模式响应。";
+    distance = sensitivityMode === "distance",
+    angle = sensitivityMode === "angle";
+  $("calibration-sensitivity-example").textContent = angle
+    ? "方向与共享转动示例"
+    : distance
+      ? "长度与比值示例"
+      : "共享平移与尺度示例";
+  $("calibration-sensitivity-probe-heading").textContent =
+    distance || angle ? "比较" : "点对";
+  $("calibration-sensitivity-evidence-heading").textContent = angle
+    ? "有向夹角 · rad"
+    : distance
+      ? "差值与比值"
+      : "位移贡献";
+  $("calibration-sensitivity-scope").textContent = angle
+    ? "本输入自带完整标定。静态线段的端点先后决定方向；方向从地面 +x 逆时针计，夹角为第二段相对第一段的转角，范围 (−π, π]。σ 是给定模式的一阶角度标准差，跨越切口时须按圆周处理，不能直接拼成普通角度区间。下载保留基线与逐模式响应。"
+    : distance
+      ? "本输入自带完整标定。差值为第一段减第二段，比值为第一段除第二段；σ 仅为给定模式的一阶标准差。重合地面端点会报错。下载保留原精度基线、交叉贡献和逐模式响应。"
+      : "本输入自带完整标定，独立于上方轨迹与控制点拟合。下表单位为 m²；对称块按 xx、xy、yy 排列，交叉块按 xx、xy、yx、yy 排列。下载包含原精度基线和逐模式响应。";
   $("download-calibration-sensitivity").disabled =
     state.response === null || state.input !== sensitivityInput.value;
   $("calibration-sensitivity-compute").disabled = state.pending;
@@ -8173,19 +8213,17 @@ $("calibration-sensitivity-compute").addEventListener("click", async () => {
       new TextEncoder().encode(input).length > 1048576
     )
       throw new Error("共享误差输入上限为 1 MiB。");
-    const response = (
-        mode === "distance"
-          ? moonground_calibration_distance
-          : moonground_calibration_sensitivity
-      )(input),
+    const response = sensitivityModes[mode].compute(input),
       report = unpack(response);
     if (!isCurrent()) return;
     Object.assign(state, { response, report, input });
     $("download-calibration-sensitivity").disabled = false;
     sensitivityMessage(
-      mode === "distance"
-        ? `已计算 ${report.comparisons.length} 组长度比较、${report.mode_count} 个共享模式。差值、比值及其贡献为一阶近似。`
-        : `已计算 ${report.probes.length} 对像素点、${report.mode_count} 个共享模式。矩阵为归一化基线；贡献为一阶近似。`,
+      mode === "angle"
+        ? `已计算 ${report.comparisons.length} 组有向夹角、${report.mode_count} 个共享模式。角度和 σ 使用 rad，贡献是一阶圆周切向估计。`
+        : mode === "distance"
+          ? `已计算 ${report.comparisons.length} 组长度比较、${report.mode_count} 个共享模式。差值、比值及其贡献为一阶近似。`
+          : `已计算 ${report.probes.length} 对像素点、${report.mode_count} 个共享模式。矩阵为归一化基线；贡献为一阶近似。`,
     );
     renderSensitivity();
   } catch (error) {
@@ -8203,11 +8241,7 @@ $("download-calibration-sensitivity").addEventListener("click", () => {
     clearSensitivity();
     return;
   }
-  const name =
-    sensitivityMode === "distance"
-      ? "moonground-calibration-distance.json"
-      : "moonground-calibration-sensitivity.json";
-  saveFile(state.response + "\n", name);
+  saveFile(state.response + "\n", sensitivityModes[sensitivityMode].filename);
 });
 async function loadSensitivityExample(explicit = false) {
   if (explicit) clearSensitivity();
@@ -8222,20 +8256,18 @@ async function loadSensitivityExample(explicit = false) {
     current === state.revision &&
     input === sensitivityInput.value;
   try {
-    const response = await fetch(
-      mode === "distance"
-        ? "./calibration-distance.json"
-        : "./calibration-sensitivity.json",
-    );
+    const response = await fetch(`./${sensitivityModes[mode].example}`);
     if (!response.ok) throw new Error("无法读取标定共享误差示例");
     const text = await response.text();
     if (!isCurrent()) return;
     sensitivityInput.value = text;
     state.draft = text;
     sensitivityMessage(
-      mode === "distance"
-        ? "示例比较两段长度及同段反向端点；点击计算查看共同尺度如何影响差值和比值。"
-        : "示例包含共同平移与尺度扰动；点击计算可比较单点和位移贡献。",
+      mode === "angle"
+        ? "示例包含共享转动、平移与尺度模式；点击计算查看单段方向误差、相对夹角与反向端点。"
+        : mode === "distance"
+          ? "示例比较两段长度及同段反向端点；点击计算查看共同尺度如何影响差值和比值。"
+          : "示例包含共同平移与尺度扰动；点击计算可比较单点和位移贡献。",
     );
   } catch (error) {
     if (isCurrent()) sensitivityMessage(error.message, true);
