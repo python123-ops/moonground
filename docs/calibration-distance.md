@@ -77,10 +77,12 @@ python validation/calibration_distance_verify.py --binary _build/native/release/
 
 ## 浏览器与验证
 
-在原“标定参数的共享误差”面板选择“两段长度”。三种比较内容分别保留草稿和结果；切换模式取消旧模式的待任务和示例加载，旧续接不会改写当前模式。修改当前输入仅使当前模式结果失效；同输入重算失败保留已有成功结果。折叠释放表格行，下载保留原精度基线、响应及交叉贡献。
+在原“标定参数的共享误差”面板选择“两段长度”。四种比较内容分别保留草稿和结果；切换模式取消旧模式的待任务和示例加载，旧续接不会改写当前模式。修改当前输入仅使当前模式结果失效；同输入重算失败保留已有成功结果。折叠释放表格行，下载保留原精度基线、响应及交叉贡献。
 
 长度模式先显示差值与比值及各自模式标准差，展开查看两段长度及交叉贡献。输入自带明确标定，独立于上方轨迹和控制点拟合；普通测量编辑不会隐式换掉这里的基线。下载文件为 `moonground-calibration-distance.json`。浏览器另有 1 MiB UTF-8 输入上限。
 
 独立参考直接用 Fraction 对单应投影商式求导，再用 110 位 Decimal 计算欧氏长度及差值／比值的导数和贡献；以记录中的浮点比较容差核对实际产物，不把该数值比较当成认证界。非线性中心差分另行核对两段长度、差值和比值响应。实际命令、固定种子、依赖版本、计数与摘要见 [`validation/calibration-distance-results.json`](../validation/calibration-distance-results.json)。
 
 2026-11-15 定向核对了官方 Mooncakes 的 [moon-cv-geometry@0.2.2/core](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/core) 和 [camera](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/camera)。这些页面提供基础几何、投影及标定接口；本批增加共享参数模式下的标量长度对比与相关贡献。未在这些被检查的版本／接口页发现同语义入口，检查范围为上述页面及两条定向查询。
+
+有序凸多边形的地面面积、共享误差交叉贡献及面积差／比值见[面积比较说明](calibration-area.md)。

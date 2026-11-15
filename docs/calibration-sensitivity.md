@@ -69,7 +69,7 @@ python validation/calibration_sensitivity_verify.py --binary _build/native/relea
 
 修改本输入会清除结果并取消待计算任务；迟到的示例不会覆盖用户草稿。同一输入的重新计算失败保留上次成功结果。折叠面板释放表格行，下载仍可使用。浏览器额外使用 1 MiB UTF-8 输入上限。
 
-在“比较内容”选择“两段长度”可检查共享标定下的长度差值和比值；点对位移、两段长度、方向与夹角三种模式分别保留草稿与结果。计算与输入约定见 [长度比较说明](calibration-distance.md)。
+在“比较内容”选择“两段长度”可检查共享标定下的长度差值和比值；点对位移、两段长度、方向与夹角、两片面积四种模式分别保留草稿与结果。计算与输入约定见 [长度比较说明](calibration-distance.md)。
 
 ## 独立核对与生态边界
 
@@ -78,3 +78,5 @@ python validation/calibration_sensitivity_verify.py --binary _build/native/relea
 2026-11-15 对官方 Mooncakes 的定向查询与接口页核对，检查了 [moon-cv-geometry@0.2.2/camera](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/camera)、[multiview](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/multiview) 和 [core](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/core)。这些页面已有相机标定、单应矩阵估计、重投影误差和投影 Jacobian，本批复用原矩阵与有效域能力，新增明确模式下的共享参数及两点位移传播。未在这些被检查的版本／接口页中发现同语义入口；该检查不等于全站所有包的穷尽证明。
 
 有向线段的角度约定、圆周切口及共享转动传播见[方向与夹角说明](calibration-angle.md)。
+
+有序凸多边形的地面面积、共享误差交叉贡献及面积差／比值见[面积比较说明](calibration-area.md)。

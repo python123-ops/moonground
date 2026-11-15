@@ -102,3 +102,7 @@ copyFileSync(
   path.join(root, "examples", "calibration-angle.json"),
   path.join(output, "calibration-angle.json"),
 );
+copyFileSync(
+  path.join(root, "examples", "calibration-area.json"),
+  path.join(output, "calibration-area.json"),
+);
