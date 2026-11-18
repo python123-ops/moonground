@@ -22,7 +22,7 @@
 
 ## 结果、检查点和输入变化
 
-“下载联合结果与完整共同检查点”保存 moonground-footprint-run-analysis.json。每帧同时包含 measurement 和 runs，最终 checkpoint 包含原测量检查点与完整序列检查点，水位一致。Web 本批不提供检查点导入或所选帧检查点。
+“下载联合结果与完整共同检查点”保存 moonground-footprint-run-analysis.json。每帧同时包含 measurement 和 runs，最终 checkpoint 包含原测量检查点与完整序列检查点，水位一致。Web 暂未提供检查点导入或所选帧检查点。
 
 检查点恢复会验证共同会话与水位、片段、当前 Ready 质量、原始位置和上三角协方差、预热条件、样本数及必要时间见证的一致性；不认证全部历史观测。已启动的独立测量恢复起点不能悄悄接上全新序列监测器。此类组合会报错，实际续接在 API 使用完整共同检查点，不修改旧输入来掩盖失配。
 
@@ -63,13 +63,3 @@ moonground_footprint_run_analysis(
 首帧预览为 moonground_footprint_run_preview({source, frame}) 的 JSON 字符串请求，返回 {measurement}，不返回状态或检查点。CLI 对应 --analyze-footprint-runs、--analyze-footprint-runs-checkpoint 和 --preview-footprint-run。CLI 预览严格接收配置后恰好一帧；缺帧或多帧报错。Web 从已有多帧输入显式选取第一帧发送。
 
 浏览器只包装原字符串和移除 NDJSON 行终止符，不预解析用户数字。核心 source 上限为 8 Mi UTF16 单元加恢复 envelope，完整检查点 8 Mi；每个 wrapper、内部帧和分配文档 1 Mi，frames 共 8 Mi／5000 行，外层请求 16 Mi，包含最终检查点的全部输出 8 Mi。Web 每次发送与接收各限 8 MiB UTF8。完整输出或检查点达到上限时会明确报错；流式 CLI 成功前缀与纯函数整批错误语义沿用项目约定。
-
-## 本批官方生态核查
-
-本批执行三次限定 Mooncakes 的查询，并核对三个官方版本页面：
-
-- [MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 的 SpatialAnalyzer::update 已提供逐帧原子空间分析。所查 TrackSample 是 ID、bbox、类别，页面未见 checkpoint、prepare／commit 或 segment_id。
-- [Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1) 已有 KalmanND::checkpoint / restore_checkpoint，FilterCheckpoint 保存 state、covariance 和 Int timestamp。所查页未见足迹、segment_id 或 prepare／commit。
-- [Fiducial Marker 0.1.1](https://mooncakes.io/docs/2515050242/fiducial_marker@0.1.1) 已有 CameraCalibrator 和含协方差的 ExtendedKalmanFilter6DOF predict／update。所查页未见上述共同事务或完整检查点接口。
-
-原子更新、标定、滤波与检查点已有实现。本批补充原始米制测量候选、精确目标片段分配、同形状三态证据序列的共同提交与恢复契约；结论限于上述版本和公开 API 页面。

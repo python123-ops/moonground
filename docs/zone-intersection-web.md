@@ -107,12 +107,3 @@ evidence 逐行包含 track_id、segment_id、zone_id、sigma_multiplier、minim
 每个配置仍允许 1—16 个严格凸区域、每区最多 32 条边、最多 10000 个目标，max_tracks × 所有区域边数之和 ≤ 65536。配置与单帧各限 1 Mi UTF16 单元，深度 32；测量共 8 Mi／5000 帧，外层请求 16 Mi，整批输出 8 Mi。浏览器输入和输出各限 8 MiB UTF8。
 
 核心对原始二进制浮点输入计算外向包围界。有限且 SPD 的输入仍可能超出可支持的数值域：若中间界不可表示、条件数使行列式区间包含零或算术溢出，会返回明确错误，不修复协方差或输出猜测判定。一般尺度变化使用二次幂缩放；精度与支持域以实际验证记录为准。
-
-## 本批官方生态核查
-
-本批针对椭圆／凸多边形又进行了两次 Mooncakes 限定查询，并实际核对两个版本页面：
-
-- [moon-cv-geometry 0.2.2 core](https://mooncakes.io/docs/python123-ops/moon-cv-geometry@0.2.2/core) 已有 segment_distance、robust_weighted_covariance3 和通用几何运算；本次所查公开页面未见 ellipse 或 Mahalanobis 多边形最小值接口。
-- [mooncollider 0.2.1](https://mooncakes.io/docs/uiwcvb/mooncollider@0.2.1) 已有圆形、多边形、凸支持、GJK/EPA 和 CCD；本次所查页面未见 ellipse 接口。
-
-普通凸碰撞、距离与协方差运算已有实现。本批补充当前 Ready 米制位置完整协方差椭圆与原闭凸区域之间的全局二次型界及保守三态接口；结论限定上述版本和页面。

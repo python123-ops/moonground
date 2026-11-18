@@ -69,13 +69,3 @@
 修改逐帧分配只清除该策略结果。修改共享区域、普通原始输入或实际测量载荷使相应结果失效；同原文重算且测量全文相同可重新绑定旧结果。统一足迹、速度、过线或健康输入编辑不会清除逐目标结果。准备期间的编辑、示例或上游重算取消旧任务，迟到结果不能覆盖新输入；相同依赖下计算失败保留已显示结果。
 
 Web 输入和输出各限 8 MiB UTF8；核心 source、每个 wrapper、内部文档和原测量帧各限 1 Mi UTF16 单元，转义计入 wrapper。批次最多 5000 行、总输入 8 Mi UTF16 单元，外层请求 16 Mi，整批输出 8 Mi。原 `max_tracks × 所有区域边数 ≤ 65536` 保持不变；混合形状每次最多 65536 次物理边扩展、2097152 次原边支持投影，成本高于单一统一形状的共享预计算。
-
-## 本批官方生态核查
-
-本批核查了以下三个官方版本的公开接口：
-
-- [mooncollider 0.2.1](https://mooncakes.io/docs/uiwcvb/mooncollider@0.2.1) 已有按刚体 ID 保存 shape、`World::add_body/body` 及凸形支持。普通逐对象形状映射已有实现。
-- [moon_rapier 0.5.2 collision](https://mooncakes.io/docs/Milky2018/moon_rapier@0.5.2/collision) 已有 collider handle 的插入、查询和 parent 关联；`round_convex_hull/round_convex_polyline` 已接受 `border_radius`，圆角凸形本身也已有接口。
-- [MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 的 `TrackSample::new(track_id,bbox,class_id)` 和 `SpatialAnalyzer::update(frame_id,samples,lost,removed)` 支持目标、区域和生命周期分析；所查页没有 segment_id 或 covariance。
-
-所查接口未见直接将当前 Ready 米制位置及完整协方差，与逐帧精确时间和目标片段绑定的显式混合足迹组合，并区分 missing、stale、duplicate 和 extra 的接口。本批增量是该测量与身份契约，补齐不同形状需由调用者外部分组的使用缺口；不把普通映射、多 collider 或圆角凸形作为新增算法。结论限于上述版本和页面。

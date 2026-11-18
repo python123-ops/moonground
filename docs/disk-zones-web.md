@@ -40,13 +40,3 @@
 准备期间的新编辑、示例或普通测量重算取消旧请求，迟到结果不能覆盖新状态。相同有效输入下计算失败保留已显示结果；原普通测量不会被下游错误覆盖。初始化、不确定性超限、异常观测、数值不可用和投影拒绝沿用原不可判定原因；缺测不补零，不读取隐藏预测。
 
 Web 输入与输出各限 8 MiB；核心 source wrapper、两份内部文档和单帧各限 1 Mi UTF16 单元，原始测量总计 8 Mi、最多 5000 帧。原区域的 `max_tracks × 全部区域边数 ≤ 65536` 工作量限制保持不变。
-
-## 与本批查验的生态能力的关系
-
-本批做了 3 次有界官方检索，查看 3 个候选的详情或源码：
-
-- [moon_rapier 官方页](https://mooncakes.io/docs/Milky2018/moon_rapier) 当前列出 0.5.1，提供 2D/3D 物理碰撞和查询。[所查官方 0.3.0 源码](https://mooncakes.io/assets/Milky2018/moon_rapier%400.3.0/collision/narrow_phase3d.mbt.html) 已有凸形 Minkowski 支持与 GJK，支持函数本身已有生态实现。
-- [mooncollider 0.2.1 官方源码](https://assets.mooncakes.io/assets/uiwcvb/mooncollider%400.2.1/narrowphase.mbt.html) 有多边形双侧 SAT 和圆与多边形碰撞；所查文件的输入为几何形状，没有位置协方差参数。
-- [moonslicer 0.1.2 官方 API](https://mooncakes.io/docs/chgttyyr/moonslicer) 有多边形包含、相交、距离与内外偏置，服务打印轮廓和间隙分析。
-
-本功能的增量是当前已接受米制测量契约下，将显式固定圆盘与完整位置协方差分开保留，输出逐边位置区间、合成区间和保守三态。上述所查页面未见这一直接接口；结论限于这些版本和页面，不将通用碰撞、偏置或 Minkowski 运算作为新增能力。

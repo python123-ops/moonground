@@ -1414,8 +1414,6 @@ python -c 'from pathlib import Path; print(Path("examples/evidence-transit-sourc
 
 纯函数 `codec.evidence_transit_json`／JavaScript `moonground_evidence_transit` 接受 `{"source":<原始首行字符串>,"measurements":<原始测量NDJSON字符串>}`，返回 `{"frames":[...],"checkpoint":...}`。请求限 16,777,216 个 UTF-16 代码单元，测量文本及完整返回各限 8,388,608、最多 5,000 帧；无持久句柄，失败不返回前缀。浏览器提供独立证据通行面板，显式选择普通或证据健康门控测量，操作与恢复边界见 [Web 使用说明](docs/evidence-transit-web.md)。
 
-本批的有限 Mooncakes 检索核读了 [MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 的空间事件、区域转换与帧数停留，以及 [Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1) 的滤波协方差和检查点 API。所查公开 API 未见“协方差确认双门通行、原时钟时长括号、独立完整恢复”的直接对应；这一结论限于所查页面。
-
 ### 联合证据通行协议
 
 `--analyze-transit-evidence` 首行为 `{"measurement":<原始测量来源JSON字符串>,"transit":<原始证据区间来源JSON字符串>}`，两侧可分别为 fresh 或完整 resume；也可直接使用 `{"resume":<完整联合检查点对象>}`。后续直接输入原 pixel／ground 观测行，保留原始整数 token、重复键和未知字段检查。
@@ -1432,7 +1430,7 @@ python -c 'import json; from pathlib import Path; lines=Path("examples/warehouse
 
 纯函数 `codec.evidence_transit_analysis_json`／JavaScript `moonground_evidence_transit_analysis` 接受 `{"source":<原始联合首行字符串>,"observations":<原始观测NDJSON字符串>}`，返回 `{"frames":[...],"checkpoint":...}`。请求限 16,777,216 个 UTF-16 代码单元，观测文本及整个返回各限 8,388,608、最多 5,000 帧；无持久句柄，失败不返回批次前缀。联合提交覆盖内存计算状态；外部日志、存储和事件交付由宿主管理。
 
-浏览器在证据区间面板增加原观测联合模式，读取上方观测原文与本区原始配置，提供独立滑块、完整结果、所选帧完整检查点及共同恢复。与独立下游模式分别保存结果，操作说明见 [Web 使用说明](docs/evidence-transit-web.md)。本批沿用所查 Mooncakes 基础滤波／空间事件的复用边界，所查公开 API 未见原始测量与协方差确认双门通行的完整原子恢复组合，检索范围见该说明。
+浏览器在证据区间面板增加原观测联合模式，读取上方观测原文与本区原始配置，提供独立滑块、完整结果、所选帧完整检查点及共同恢复。与独立下游模式分别保存结果，操作说明见 [Web 使用说明](docs/evidence-transit-web.md)。
 
 ### 健康门控的联合证据通行协议
 
@@ -1465,7 +1463,7 @@ source 原文限 8,388,619 个 UTF-16 代码单元、完整检查点合计限 8,
 
 纯函数 `codec.transit_windows_json` 与 JavaScript `moonground_transit_windows` 接受 `{"source":<原始统计首行字符串>,"transits":<原始通行NDJSON字符串>}`，返回 `{"frames":[...],"checkpoint":...}`，不分配会话句柄。外层限 16,777,216、通行文本限 8,388,608／5,000 行、完整返回限 8,388,608；批量失败无部分结果。
 
-浏览器“通行时限分窗统计”显式选择已有独立区间、原观测联合或健康门控通行结果，跟随所选来源滑块。统计报告、配置和完整检查点独立保存；导入先由核心验证，追加帧仍须晚于共同水位，不自动筛除旧帧。来源变化只使依赖该来源的统计失效。交互和本批所查生态能力关系见 [`docs/evidence-transit-web.md`](docs/evidence-transit-web.md)。
+浏览器“通行时限分窗统计”显式选择已有独立区间、原观测联合或健康门控通行结果，跟随所选来源滑块。统计报告、配置和完整检查点独立保存；导入先由核心验证，追加帧仍须晚于共同水位，不自动筛除旧帧。来源变化只使依赖该来源的统计失效。交互说明见 [`docs/evidence-transit-web.md`](docs/evidence-transit-web.md)。
 
 ### 原始观测与分窗的共同恢复
 
@@ -1548,7 +1546,7 @@ CLI `--analyze-transit-windows` 首行为 `{"analysis":<原始v0.16配置或resu
 
 `codec.EvidenceTransitWindowAnalysisReplay` 共用该协议，帧为 `kind:"evidence_transit_window_analysis_frame"`、`schema_version:"0.1.0"`，内嵌原 `analysis` 和 `windows`。完整检查点格式为 `moonground.evidence-transit-window-analysis`、版本 `1`。纯函数 `codec.evidence_transit_window_analysis_json` 和 JavaScript `moonground_evidence_transit_window_analysis` 接受 `{"source":<原始首行字符串>,"observations":<原始观测NDJSON字符串>}`，返回帧和完整检查点，不占用会话句柄。
 
-纯函数外层请求限 16 Mi UTF-16 代码单元，观测文本 8 Mi／5,000 行，原观测单行 1 Mi，完整输出含检查点 8 Mi；新统计选项限 1 Mi，完整检查点限 8 Mi。CLI 沿用默认 1 Mi 物理行预算及显式放宽选项，普通模式错误前的完整前缀可以已输出，检查点模式失败无输出。浏览器在现分窗面板选择“原观测联合”模式，可导出所选帧的完整检查点并恢复三份输入；导入先验证共同状态再提交，追加观测仍须晚于共同水位。交互及所查生态 API 边界见 [`docs/evidence-transit-web.md`](docs/evidence-transit-web.md)。
+纯函数外层请求限 16 Mi UTF-16 代码单元，观测文本 8 Mi／5,000 行，原观测单行 1 Mi，完整输出含检查点 8 Mi；新统计选项限 1 Mi，完整检查点限 8 Mi。CLI 沿用默认 1 Mi 物理行预算及显式放宽选项，普通模式错误前的完整前缀可以已输出，检查点模式失败无输出。浏览器在现分窗面板选择“原观测联合”模式，可导出所选帧的完整检查点并恢复三份输入；导入先验证共同状态再提交，追加观测仍须晚于共同水位。交互说明见 [`docs/evidence-transit-web.md`](docs/evidence-transit-web.md)。
 
 ### 健康门控、通行与分窗的共同提交
 
@@ -1757,7 +1755,7 @@ CLI `--velocity-evidence` 首行是 `{"session_id":"warehouse","probes":[{"probe
 
 `codec.VelocityEvidenceReplay::open/process_line` 共用该协议。结果帧为 `kind:"velocity_evidence_frame"`、`schema_version:"0.1.0"`、`evidence_scope:"model_velocity_component_band"`，包含 `evidence` 和 `unavailable`。纯函数 `codec.velocity_evidence_json` 及 JavaScript `moonground_velocity_evidence` 接受 `{"source":<原始配置字符串>,"measurements":<原始测量NDJSON字符串>}`，返回 `{"frames":[...]}`，不分配句柄或返回检查点。
 
-配置与原测量单行各限 1 Mi UTF-16 代码单元；纯请求外层 16 Mi、测量文本 8 Mi／5,000 行、完整输出 8 Mi。CLI 沿用默认 1 Mi 物理行预算及显式放宽选项；流错误前可以已输出完整前缀，纯函数失败不返回部分结果。浏览器在当前普通测量后增加折叠证据表，显式计算后跟随原滑块，支持批量结果下载。交互及本批所查生态 API 边界见 [`docs/velocity-web.md`](docs/velocity-web.md)。
+配置与原测量单行各限 1 Mi UTF-16 代码单元；纯请求外层 16 Mi、测量文本 8 Mi／5,000 行、完整输出 8 Mi。CLI 沿用默认 1 Mi 物理行预算及显式放宽选项；流错误前可以已输出完整前缀，纯函数失败不返回部分结果。浏览器在当前普通测量后增加折叠证据表，显式计算后跟随原滑块，支持批量结果下载。交互说明见 [`docs/velocity-web.md`](docs/velocity-web.md)。
 
 ### 米制凸区域的位置协方差证据
 
@@ -1857,7 +1855,7 @@ CLI `--zone-evidence` 首行为 `{"session_id":"warehouse","zones":[{"zone_id":"
 
 `codec.ZoneEvidenceReplay::open/process_line` 共用该协议。输出 `schema_version:"0.1.0"`、`kind:"zone_evidence_frame"`、`evidence_scope:"model_position_halfplane_bands"`，包括逐目标／区域证据、全部边及不可用项。纯函数 `codec.zone_evidence_json` 和 JavaScript `moonground_zone_evidence` 接受 `{"source":<原配置字符串>,"measurements":<原测量NDJSON字符串>}`，只返回 `{"frames":[...]}`。没有句柄、时间水位或新检查点。
 
-配置和测量单行各限 1 Mi UTF-16 代码单元，纯请求外层 16 Mi、测量文本 8 Mi／5,000 行、完整输出 8 Mi。CLI 默认物理行 1 Mi，可显式放宽至 16 Mi；错误退出码为 2，保留成功的完整前缀，纯批量失败不返回部分结果。Web 在普通测量区增加小型折叠表，沿用原滑块并支持整批下载，使用说明和已查生态边界见 [`docs/zones-web.md`](docs/zones-web.md)。
+配置和测量单行各限 1 Mi UTF-16 代码单元，纯请求外层 16 Mi、测量文本 8 Mi／5,000 行、完整输出 8 Mi。CLI 默认物理行 1 Mi，可显式放宽至 16 Mi；错误退出码为 2，保留成功的完整前缀，纯批量失败不返回部分结果。Web 在普通测量区增加小型折叠表，沿用原滑块并支持整批下载，使用说明见 [`docs/zones-web.md`](docs/zones-web.md)。
 
 ### 显式圆盘足迹与区域证据
 
@@ -2043,7 +2041,7 @@ CLI `--footprint-zone-evidence` 首行为 `{ "position": <原区域配置JSON字
 
 `codec.FootprintZoneEvidenceReplay::open/process_line`、纯函数 `codec.footprint_zone_evidence_json` 和 JavaScript `moonground_footprint_zone_evidence` 使用同一协议。纯请求为 `{source:<原始新配置字符串>,measurements:<原始测量NDJSON字符串>}`，返回 `{frames}`；没有检查点或新句柄。包装、每份内部文档和单帧各限 1 Mi UTF-16 单元，内部转义同时计入包装上限；纯外层 16 Mi，测量文本 8 Mi／5,000 行，完整输出 8 Mi，嵌套 32 层。CLI 默认物理行 1 MiB，可显式放宽至 16 MiB；失败退出 2 并保留已输出完整前缀，纯函数失败不返回部分结果。
 
-Web 在现足迹区切换圆盘／凸足迹显示，分别保存原文选项、结果和任务；切换显示不触发计算。表格比较原位置区间、带符号形状支持和合成区间，跟随原普通测量滑块并支持整批下载。交互与本批有界生态核查见 [`docs/footprint-zones-web.md`](docs/footprint-zones-web.md)。
+Web 在现足迹区切换圆盘／凸足迹显示，分别保存原文选项、结果和任务；切换显示不触发计算。表格比较原位置区间、带符号形状支持和合成区间，跟随原普通测量滑块并支持整批下载。交互说明见 [`docs/footprint-zones-web.md`](docs/footprint-zones-web.md)。
 
 ### 同帧逐目标显式足迹
 
@@ -2137,7 +2135,7 @@ CLI `--assigned-zone-evidence` 首行直接使用原区域配置，之后每帧�
 
 `codec.AssignedZoneEvidenceReplay::open/process_line`、纯函数 `codec.assigned_zone_evidence_json` 和 JavaScript `moonground_assigned_zone_evidence` 共用协议。纯请求是 `{source:<原区域配置字符串>,frames:<逐帧包装 NDJSON 字符串>}`，返回 `{frames}`，没有检查点或句柄。source、单帧包装和每份内文各限 1 Mi UTF-16 单元，内文转义同时计入包装预算；纯外层 16 Mi，输入帧文本 8 Mi／5,000 行，完整输出 8 Mi，嵌套 32 层。CLI 默认物理行 1 MiB，可显式放宽至 16 MiB；失败退出 2 并保留完整成功前缀，纯函数失败不返回部分结果。
 
-Web 在现足迹区增加逐目标策略，原文分配文档逐行对应普通测量帧，由核心检查时间和身份；不在浏览器过滤多余项或自动沿用形状。示例按钮仅生成待核对的固定圆盘／凸形样例，不估计真实目标尺寸。策略切换只改变显示，逐目标配置和结果独立保存，跟随原滑块并支持整批下载。使用说明和本批有界生态核查见 [`docs/assigned-zones-web.md`](docs/assigned-zones-web.md)。
+Web 在现足迹区增加逐目标策略，原文分配文档逐行对应普通测量帧，由核心检查时间和身份；不在浏览器过滤多余项或自动沿用形状。示例按钮仅生成待核对的固定圆盘／凸形样例，不估计真实目标尺寸。策略切换只改变显示，逐目标配置和结果独立保存，跟随原滑块并支持整批下载。使用说明见 [`docs/assigned-zones-web.md`](docs/assigned-zones-web.md)。
 
 ### 同形状的区域证据确认序列
 
@@ -2223,7 +2221,7 @@ CLI `--footprint-runs` 首行是 `{position:<原区域配置原文>,options:<确
 
 `codec.FootprintRunReplay::open/process_line/checkpoint_json`、纯 `codec.footprint_runs_json` 和 JavaScript `moonground_footprint_runs` 共用协议。纯请求 `{source:<配置或恢复原文>,frames:<逐帧包装 NDJSON>}` 返回 `{frames,checkpoint}`。结果 kind 为 `footprint_run_frame`，scope 为 `current_target_footprint_confirmed_sample_runs`，时间、跨度和样本数均为十进制字符串。首次配置、每帧及内部文档各限 1 Mi UTF16 单元，恢复检查点限 8 Mi；纯外层 16 Mi，帧文本 8 Mi／5000 行，含最终检查点的完整输出 8 Mi，嵌套上限 32。展开后的检查点超过 8 Mi 时明确报错；最大核心或流式几何输入可计算，不意味着其完整诊断与检查点必定容纳于纯函数预算。CLI 沿用成功前缀及退出码 2，纯函数失败无部分结果。
 
-Web 在混合足迹下提供小型确认序列区，选项、准备任务和结果独立，跟随原普通测量滑块，下载包含完整最终检查点。浏览器不归约状态或计算几何。使用说明及本批有界官方生态核查见 [`docs/footprint-runs-web.md`](docs/footprint-runs-web.md)。
+Web 在混合足迹下提供小型确认序列区，选项、准备任务和结果独立，跟随原普通测量滑块，下载包含完整最终检查点。浏览器不归约状态或计算几何。使用说明见 [`docs/footprint-runs-web.md`](docs/footprint-runs-web.md)。
 
 ### 原始观测与足迹序列的共同提交
 
@@ -2302,7 +2300,7 @@ CLI `--analyze-footprint-runs` 首行为 `{measurement:<原测量配置或恢复
 
 `codec.FootprintRunAnalysisReplay::open/process_line/checkpoint_json/preview_line` 与 JavaScript 纯函数共用协议。`moonground_footprint_run_analysis({source:<联合源原文>,frames:<原文包装 NDJSON>})` 返回 `{frames,checkpoint}`；`moonground_footprint_run_preview({source:<联合源原文>,frame:<一份原观测原文>})` 只返回候选测量。纯预览每次从明确提供的已提交基线开始，不保留句柄，也不接受此前返回值作为提交依据。完整恢复检查点限 8 Mi UTF16 单元，源外壳沿已有联合入口允许 8 Mi+11；每帧及内部文档各限 1 Mi，纯外层 16 Mi，帧文本 8 Mi／5000 行，含检查点的完整输出 8 Mi，嵌套上限 32。CLI 沿用物理行限额、完整成功前缀及错误退出码 2；纯函数失败无部分结果。
 
-Web 在原确认序列区切换“独立下游／原始联合”，复用序列表；联合结果、滑块和准备任务独立，读取原始观测与显式分配，不覆盖已有普通测量或下游结果。首帧候选预览显示实际时间与片段身份供调用方核对；批量操作可先通过普通预览显式生成待审分配，再从同一起点联合重放。下载包含完整共同检查点。界面及本批有界官方生态核查见 [`docs/footprint-run-analysis-web.md`](docs/footprint-run-analysis-web.md)。
+Web 在原确认序列区切换“独立下游／原始联合”，复用序列表；联合结果、滑块和准备任务独立，读取原始观测与显式分配，不覆盖已有普通测量或下游结果。首帧候选预览显示实际时间与片段身份供调用方核对；批量操作可先通过普通预览显式生成待确认的分配，再从同一起点联合重放。下载包含完整共同检查点。界面见 [`docs/footprint-run-analysis-web.md`](docs/footprint-run-analysis-web.md)。
 
 ### 地标健康控制的足迹确认序列
 
@@ -2415,7 +2413,7 @@ CLI `--guarded-footprint-runs` 首行为 `{analysis:<原 v0.27 联合源原文>,
 
 正式纯入口 `codec.footprint_run_guarded_json`／`moonground_footprint_run_guarded` 读取 `{source,frames}`，返回 `{frames,checkpoint}`。源限 8 Mi UTF16 单元加原恢复外壳，完整检查点 8 Mi；每帧 wrapper 及内部原文各限 1 Mi，嵌套上限 32；纯外层 16 Mi，帧文本 8 Mi／5000 行，全部输出含检查点限 8 Mi。CLI 沿用物理行字节预算、错误退出码 2 和完整成功前缀，失败不输出最终检查点。
 
-Web 在现序列区新增“健康门控联合”，读取原始像素流、原始健康流及现区域、分配和序列选项。专用全程身份预览覆盖阻断后的新片段，不用普通测量结果代替；结果、滑块、任务与旧两种模式独立，共用一张序列表。界面操作、控制行对齐和本批有界官方生态核查见 [`docs/footprint-run-guarded-web.md`](docs/footprint-run-guarded-web.md)。
+Web 在现序列区新增“健康门控联合”，读取原始像素流、原始健康流及现区域、分配和序列选项。专用全程身份预览覆盖阻断后的新片段，不用普通测量结果代替；结果、滑块、任务与旧两种模式独立，共用一张序列表。界面操作和控制行对齐说明见 [`docs/footprint-run-guarded-web.md`](docs/footprint-run-guarded-web.md)。
 
 ### 足迹确认与结束结果的有界分窗
 
@@ -2499,7 +2497,7 @@ CLI `--footprint-run-windows` 首行为 `{runs:<原 v0.26 序列源原文>,windo
 
 `codec.FootprintRunWindowReplay::open/process_line/checkpoint_json`、纯 `codec.footprint_run_windows_json` 和 JavaScript `moonground_footprint_run_windows` 共用协议。纯请求 `{source,frames}` 返回 `{frames,checkpoint}`，Int64 计数和时刻均为十进制字符串。源限 8 Mi UTF16 单元加恢复外壳，完整检查点 8 Mi，内部原配置及每帧文档各限 1 Mi，嵌套 32；纯外层 16 Mi、帧文本 8 Mi／5000 帧、含检查点的全部输出 8 Mi。CLI 沿用物理行预算、错误退出码 2 和完整成功前缀。
 
-Web 在原足迹序列区增加小型独立分窗面板，复用普通测量、区域、分配与序列选项，跟随普通回放滑块；不依赖三种序列模式已经生成的报告。界面、可运行输入示例及本批有界官方生态核查见 [`docs/footprint-run-windows-web.md`](docs/footprint-run-windows-web.md)。通用事件时间分窗和窗口数值汇总已有 Mooncakes 实现，本批提供视觉确认／结束口径与原序列监测器的共同事务和完整恢复。
+Web 在原足迹序列区增加小型独立分窗面板，复用普通测量、区域、分配与序列选项，跟随普通回放滑块；不依赖三种序列模式已经生成的报告。界面、可运行输入示例见 [`docs/footprint-run-windows-web.md`](docs/footprint-run-windows-web.md)。
 
 ### 原始观测到足迹分窗的共同会话
 
@@ -2591,7 +2589,7 @@ CLI `--analyze-footprint-run-windows` 首行为 `{analysis:<原 v0.27 联合源�
 
 `--preview-footprint-run-window` 接受同一源和恰好一帧原始观测，返回实际候选 `measurement`，无需足迹分配。纯函数 `codec.footprint_run_window_analysis_json`／`footprint_run_window_preview_json` 及 JavaScript `moonground_footprint_run_window_analysis`／`moonground_footprint_run_window_preview` 使用同一严格原文协议。源 8 Mi UTF16 加恢复外壳、完整检查点 8 Mi、内层原文及每帧 1 Mi、嵌套 32；纯外层 16 Mi、帧文本 8 Mi／5000 帧、含最终检查点的全部输出 8 Mi。CLI 保留物理行预算、退出码 2 和完整成功前缀。
 
-Web 在现分窗区增加“原始联合”显示，复用一张统计表，提供独立滑块、实际身份预览和完整结果下载。它直接读取原始观测及区域、分配、序列和窗口原文；普通测量分窗结果仍保留。可运行输入、完整检查点续接及本批有界官方生态核查见 [`docs/footprint-run-window-analysis-web.md`](docs/footprint-run-window-analysis-web.md)。通用分窗、原子更新和快照已有生态实现，本批补充原始视觉测量、精确片段足迹确认和窗口的共同事务与完整恢复。
+Web 在现分窗区增加“原始联合”显示，复用一张统计表，提供独立滑块、实际身份预览和完整结果下载。它直接读取原始观测及区域、分配、序列和窗口原文；普通测量分窗结果仍保留。可运行输入、完整检查点续接见 [`docs/footprint-run-window-analysis-web.md`](docs/footprint-run-window-analysis-web.md)。
 
 ### 地标健康控制的原始足迹分窗
 
@@ -2717,7 +2715,7 @@ CLI `--guarded-footprint-run-windows` 首行为 `{guarded:<原 v0.28 门控源�
 
 正式纯入口 `codec.footprint_run_window_guarded_json`／`moonground_footprint_run_window_guarded` 返回 `{frames,checkpoint}`。源 8 Mi UTF16 加恢复外壳，完整检查点 8 Mi，内部原文及每帧各 1 Mi，嵌套 32；纯外层 16 Mi，帧文本 8 Mi／5000 行，含最终检查点的全部输出 8 Mi。帧数上限与输出预算同时执行，5000 行请求也可能先超过输出预算。CLI 保留物理行预算、退出码 2、完整成功前缀和失败不输出最终检查点的规则。
 
-Web 在现分窗区增加“健康门控联合”显示，三种分窗结果共用一张表，各自保存结果与滑块；全程身份预览使用新会话的真实门控候选。输入例、控制行对齐、完整 CP 续接及有界官方生态核查见 [`docs/footprint-run-window-guarded-web.md`](docs/footprint-run-window-guarded-web.md)。通用健康监测、分窗、原子更新和滤波检查点已有生态实现，本批补充固定地标健康、精确片段足迹及报告帧分窗的共同事务和完整恢复。
+Web 在现分窗区增加“健康门控联合”显示，三种分窗结果共用一张表，各自保存结果与滑块；全程身份预览使用新会话的真实门控候选。输入例、控制行对齐、完整 CP 续接见 [`docs/footprint-run-window-guarded-web.md`](docs/footprint-run-window-guarded-web.md)。
 
 ### 位置协方差椭圆与凸区域的相交诊断
 
@@ -2761,6 +2759,8 @@ CLI `--zone-intersection` 首行采用原区域配置，随后逐行读取原 sc
 源和单帧各 1 Mi UTF16 单元、深度 32；纯外层 16 Mi，帧文本共 8 Mi／5000 行，完整返回 8 Mi。CLI 保留原物理字节上限、LF／CRLF／无末尾换行、退出码 2 和完整成功前缀。Web 在现区域面板提供独立计算、选帧、上下界、见证和整批下载，见 [`相交诊断说明`](docs/zone-intersection-web.md)。
 
 ## 验证与复现
+
+公开结果记录使用仓库相对路径。运行验证后执行 `python validation/public_reports.py` 整理报告路径，指标、参数与校验值保持原样。
 
 以下开发命令在完整项目目录运行。Mooncakes 源码包只保留库、命令、JavaScript 桥及其必要文件，开发示例、验证脚本和网页资源保留在项目仓库中。
 
@@ -2834,29 +2834,29 @@ v0.32.0 的椭圆相交验证见 [`validation/zone-intersection-results.json`](v
 
 Node 7/7，9 个切点完成 36 次原生／JavaScript 四向重算。5000 个空帧完整返回成功；最大工作量实际覆盖 128 目标×16 区域×32 边，共 65536 次边求值及 2048 条结果。单个最大帧返回 530036 个 UTF16 单元；重复 32 次的完整返回约 16960780 单元，按 8 Mi 输出预算拒绝。Brown 预热换算前后的两种表达分别通过各自原始输入的 Fraction 证明。
 
-库四后端各 959 项、消费者连库各 1034 项通过，其中消费者 75 项。本批补充角点分离、边参数见证、真实旧 CP 续接及 Brown 换算的公开 API 消费者；独立 ZIP 记录见 [`validation/package-v0.32-results.json`](validation/package-v0.32-results.json)。原有 31 项参考及 23 项流进程检查使用当前产物重跑，记录为 `*-v0.32-results.json`；3000 帧×10 目标性能仍针对原运动协议。Web 的独立结果、取消与续接示例见 [`相交诊断说明`](docs/zone-intersection-web.md)。
+库四后端各 959 项、消费者连库各 1034 项通过，其中消费者 75 项。该版本补充角点分离、边参数见证、真实旧 CP 续接及 Brown 换算的公开 API 消费者；独立 ZIP 记录见 [`validation/package-v0.32-results.json`](validation/package-v0.32-results.json)。原有 31 项参考及 23 项流进程检查使用当前产物重跑，记录为 `*-v0.32-results.json`；3000 帧×10 目标性能仍针对原运动协议。Web 的独立结果、取消与续接示例见 [`相交诊断说明`](docs/zone-intersection-web.md)。
 
 v0.31.0 的健康门控原始足迹分窗验证见 [`validation/footprint-run-window-guarded-results.json`](validation/footprint-run-window-guarded-results.json)：16 组确定性场景、221 帧、237 个原生恢复切点。完整输出与原门控链、独立序列后缀和大整数归桶参考一致，覆盖 pending、healthy、drift、insufficient、投影替换及已启动基线。12 项严格拒绝、4 个分组件独立合法但健康／窗口联合矛盾的恢复反例通过，另有 2 个边界正例。固定地标的 NumPy 独立参考最大残差范数差约 `4.20e-11 m`。
 
 同一记录包含 Node 8/8，27 个切点完成 108 次原生／JavaScript 四向续接。Brown 预热换算核对 1295 个数值，最大绝对差 `2.47e-15`，相对／绝对容差为 `3e-8`／`1e-11`。5000 帧原生流和全程身份发现成功；相同正式批量因完整返回超过 8 Mi 输出预算而拒绝。最大工作量实际覆盖 65536 次面展开、2097152 次支持顶点投影及 2048 条保留状态，完整检查点 1502543 个 UTF16 单元并恢复成功。
 
-库四后端各 929 项、消费者连库各 1001 项通过；其中消费者 72 项，包含本批新增的首次 Healthy／Ready 失败重试、阻断恢复、Brown 换算及投影替换。独立 ZIP 记录见 [`validation/package-v0.31-results.json`](validation/package-v0.31-results.json)。本批沿用固定工具链重新运行原有 30 项参考验证及 23 项流进程检查，版本记录使用 `*-v0.31-results.json`；3000 帧×10 目标性能仍针对原运动协议。新 Web 交互与可执行续接示例见 [`健康门控分窗说明`](docs/footprint-run-window-guarded-web.md)。
+库四后端各 929 项、消费者连库各 1001 项通过；其中消费者 72 项，包含该版本新增的首次 Healthy／Ready 失败重试、阻断恢复、Brown 换算及投影替换。独立 ZIP 记录见 [`validation/package-v0.31-results.json`](validation/package-v0.31-results.json)。该版本沿用固定工具链重新运行原有 30 项参考验证及 23 项流进程检查，版本记录使用 `*-v0.31-results.json`；3000 帧×10 目标性能仍针对原运动协议。新 Web 交互与可执行续接示例见 [`健康门控分窗说明`](docs/footprint-run-window-guarded-web.md)。
 
 v0.30.0 的原始观测联合分窗验证见 [`validation/footprint-run-window-analysis-results.json`](validation/footprint-run-window-analysis-results.json)：19 组场景、126 帧、145 个原生恢复切点，核对 15 次确认和 54 次结束。原测量、原分窗及独立 Python 序列后缀／大整数归桶的完整结果与检查点一致，各非终端切点的实际预览均不推进原状态。19 项严格拒绝通过，包含三个分组件合法但联合输入见证或样本后缀矛盾的反例。Node 8/8，19 个切点四向续接共 76 次通过；Brown 镜头预热后换算核对 954 个数值，最大绝对误差 2.47e-15，采用既有相对 3e-8、绝对 1e-11 容差。
 
-本批实际运行 5000 帧原始空观测重放，含完整最终检查点的返回为 8,331,223 UTF16 单元。最大几何案例执行 65,536 次面展开、2,097,152 次支撑顶点投影，保留 2048 条序列；1,502,695 UTF16 单元的三层完整检查点可恢复，25,381,550 UTF16 单元的等价完整输出按 8 Mi 预算拒绝。Int64.MAX 新建／确认计数检查点先通过分组件和联合恢复，下一次形状替换引发计数溢出后，从同一基线以同时间原形状可成功续接。四后端库测试各 895/895，含消费者各 964/964。结果描述已提供观测和确认报告，不推断连续覆盖或物理停留。
+该版本实际运行 5000 帧原始空观测重放，含完整最终检查点的返回为 8,331,223 UTF16 单元。最大几何案例执行 65,536 次面展开、2,097,152 次支撑顶点投影，保留 2048 条序列；1,502,695 UTF16 单元的三层完整检查点可恢复，25,381,550 UTF16 单元的等价完整输出按 8 Mi 预算拒绝。Int64.MAX 新建／确认计数检查点先通过分组件和联合恢复，下一次形状替换引发计数溢出后，从同一基线以同时间原形状可成功续接。四后端库测试各 895/895，含消费者各 964/964。结果描述已提供观测和确认报告，不推断连续覆盖或物理停留。
 
 v0.29.0 的分窗验证见 [`validation/footprint-run-windows-results.json`](validation/footprint-run-windows-results.json)：27 组场景、100 帧、127 个原生恢复切点；Python 从原当前足迹证据独立重算序列后缀，再用大整数离线归桶，核对 16 次首次确认、25 次结束及全部八类原因。28 项严格恢复与原文拒绝通过，包括活动／确认守恒、确认方向下界和跨区域样本后缀矛盾。Node 7/7，9 个切点四向续接共 36 次通过。可达的 Int64.MAX 新建／确认计数可恢复，下一次计数溢出保持原监测器与窗口，同时间修正输入可成功重试。
 
-本批实际运行 5000 帧空对象重放，含最终检查点的完整返回为 8,132,608 UTF16 单元。最大几何案例执行 65,536 次面展开、2,097,152 次支撑顶点投影，保留 2048 条序列；1,364,478 UTF16 单元的完整检查点在原生与纯入口均可恢复，24,712,695 UTF16 单元的等价完整输出按 8 Mi 预算拒绝。四后端库测试各 860/860，含消费者各 926/926。样本帧数与跨度不表示连续覆盖或物理停留。
+该版本实际运行 5000 帧空对象重放，含最终检查点的完整返回为 8,132,608 UTF16 单元。最大几何案例执行 65,536 次面展开、2,097,152 次支撑顶点投影，保留 2048 条序列；1,364,478 UTF16 单元的完整检查点在原生与纯入口均可恢复，24,712,695 UTF16 单元的等价完整输出按 8 Mi 预算拒绝。四后端库测试各 860/860，含消费者各 926/926。样本帧数与跨度不表示连续覆盖或物理停留。
 
 v0.28.0 的健康联合验证见 [`validation/footprint-run-guarded-results.json`](validation/footprint-run-guarded-results.json)：14 组场景、218 帧、232 个原生恢复切点，各验证两种恢复源形式，完整输出和共同检查点与原健康模块及原 v0.27 联合模块逐值相同。20 项原文／跨组件拒绝和另外 4 项即时健康重确认反例通过；覆盖首次健康确认的错误身份、Ready 足迹数值错误，以及即时重确认时下游失败后同时间修正。Node 8/8，10 个切点四向续接共 40 次通过。Brown 镜头预热后换算核对 1295 个数值，最大绝对误差 2.47e-15，采用既有相对 3e-8、绝对 1e-11 容差。
 
-本批实际运行 5000 帧正式空对象重放及全程身份发现，完整返回分别为 8,093,283 和 5,337,792 UTF16 单元。最大几何案例执行 65,536 次面展开、2,097,152 次支撑顶点投影，保留 2048 条序列；1,491,879 UTF16 单元的完整检查点在原生与纯入口均可恢复，25,393,507 UTF16 单元的等价完整输出按 8 Mi 预算拒绝。四后端库测试各 824/824，含消费者各 887/887；27 组旧功能参考验证全部通过，本批记录为 `*-v0.28-results.json`。样本跨度仍不表示连续物理停留。
+该版本实际运行 5000 帧正式空对象重放及全程身份发现，完整返回分别为 8,093,283 和 5,337,792 UTF16 单元。最大几何案例执行 65,536 次面展开、2,097,152 次支撑顶点投影，保留 2048 条序列；1,491,879 UTF16 单元的完整检查点在原生与纯入口均可恢复，25,393,507 UTF16 单元的等价完整输出按 8 Mi 预算拒绝。四后端库测试各 824/824，含消费者各 887/887；27 组旧功能参考验证全部通过，该版本记录为 `*-v0.28-results.json`。样本跨度仍不表示连续物理停留。
 
 v0.27.0 的联合验证见 [`validation/footprint-run-analysis-results.json`](validation/footprint-run-analysis-results.json)：13 组场景、105 帧、118 个原生恢复切点，逐值比对原测量与原 v0.26 序列入口的完整帧和双方检查点；22 项原文与跨组件恢复拒绝通过。Node 8/8，9 个切点的四向跨运行时续接共 36 次通过。Brown 镜头预热后坐标换算核对 954 个数值，最大绝对误差为 2.47e-15，采用相对 3e-8、绝对 1e-11 的既有换算容差；普通组合保持逐值相同。
 
-本批实际运行了 5000 帧空输入，完整返回为 3,323,589 UTF16 单元。另以 128 个 Ready 目标、16 个区域、每区域 32 面和每足迹 32 顶点，执行 65,536 次面展开与 2,097,152 次支撑顶点投影，保留 2048 条序列状态，完整检查点为 1,492,024 UTF16 单元；对应完整纯函数输出为 25,349,493 UTF16 单元，按 8 Mi 输出预算拒绝。四个后端的库测试各 788/788，含消费者的测试各 848/848；26 组旧功能参考验证均通过，记录为本目录 `*-v0.27-results.json`。这些结果检验组合、恢复和资源边界，不新增物理停留或速度精度结论。
+该版本实际运行了 5000 帧空输入，完整返回为 3,323,589 UTF16 单元。另以 128 个 Ready 目标、16 个区域、每区域 32 面和每足迹 32 顶点，执行 65,536 次面展开与 2,097,152 次支撑顶点投影，保留 2048 条序列状态，完整检查点为 1,492,024 UTF16 单元；对应完整纯函数输出为 25,349,493 UTF16 单元，按 8 Mi 输出预算拒绝。四个后端的库测试各 788/788，含消费者的测试各 848/848；26 组旧功能参考验证均通过，记录为本目录 `*-v0.27-results.json`。这些结果检验组合、恢复和资源边界，不新增物理停留或速度精度结论。
 
 v0.26.0 的同形状确认序列验证见 [`validation/footprint-run-results.json`](validation/footprint-run-results.json)：22 个代表场景、81 帧、103 个原生恢复切点；另对三态四帧序列的 81 种组合共 324 帧穷举。独立 Python 参考从原 v0.25 当前证据计算最长合法样本后缀，逐值核对全部序列字段、结束优先级与检查点；原当前足迹证据保持相同。40 项原文与恢复拒绝检查通过，Int64 最大样本数溢出保留原状态，同一最大时刻改变判定后可成功重试。
 
@@ -2918,9 +2918,9 @@ v0.17 原有功能回归记录见 [`regression`](validation/regression-v0.17-res
 
 v0.16.0 的联合证据通行验证见 [`validation/evidence-transit-analysis-results.json`](validation/evidence-transit-analysis-results.json)：17 个确定性场景、111 帧、212 条证据、17 次过线、5 次完成通行，覆盖全部六种运动输出状态。完整运动状态、协方差、路径、段号、证据参考点、待入口两端协方差和累计与原测量／独立通行链路逐值一致；128 个原生切点分别从完整检查点和两份组件检查点续接，44 项严格输入及状态关系拒绝通过。
 
-独立 `Fraction`／`Decimal` 参考核对相对时长及法向证据：本批最大插值时长绝对差约 `1.32e-11 μs`、相对差约 `6.59e-17`，法向标准差最大相对差约 `3.33e-16`，带端点尺度归一化最大差约 `6.66e-16`，有限交点最大绝对差约 `2.22e-16 m`。另用大绝对时钟的微秒间隔实际完成双门通行，精确时长界为 `[1,3] μs`；未把绝对时钟转为 Double。
+独立 `Fraction`／`Decimal` 参考核对相对时长及法向证据：该版本最大插值时长绝对差约 `1.32e-11 μs`、相对差约 `6.59e-17`，法向标准差最大相对差约 `3.33e-16`，带端点尺度归一化最大差约 `6.66e-16`，有限交点最大绝对差约 `2.22e-16 m`。另用大绝对时钟的微秒间隔实际完成双门通行，精确时长界为 `[1,3] μs`；未把绝对时钟转为 Double。
 
-同一记录包含 Node 9 项测试，28 个切点完成 112 次原生／JavaScript 四方向续接；Brown 预热四帧后共同像素换算，再续接 11 帧，米制运动和待入口状态保持。库四后端各 421 项、工作区消费者连库各 448 项通过，其中消费者 27 项；独立 ZIP 结果见 [`validation/package-v0.16-results.json`](validation/package-v0.16-results.json)。本批新增消费者验证公开 API 的同时间修正、完整待入口恢复、Brown 换算与关闭隐藏片段。
+同一记录包含 Node 9 项测试，28 个切点完成 112 次原生／JavaScript 四方向续接；Brown 预热四帧后共同像素换算，再续接 11 帧，米制运动和待入口状态保持。库四后端各 421 项、工作区消费者连库各 448 项通过，其中消费者 27 项；独立 ZIP 结果见 [`validation/package-v0.16-results.json`](validation/package-v0.16-results.json)。该版本新增消费者验证公开 API 的同时间修正、完整待入口恢复、Brown 换算与关闭隐藏片段。
 
 v0.16 原有功能回归记录见 [`regression`](validation/regression-v0.16-results.json)、[`camera`](validation/camera-v0.16-results.json)、[`checkpoint`](validation/checkpoint-v0.16-results.json)、[`robust-fit`](validation/robust-fit-v0.16-results.json)、[`reframe`](validation/reframe-v0.16-results.json)、[`gates`](validation/gates-v0.16-results.json)、[`analysis`](validation/analysis-v0.16-results.json)、[`health`](validation/health-v0.16-results.json)、[`guarded`](validation/guarded-v0.16-results.json)、[`transit`](validation/transit-v0.16-results.json)、[`projection-replace`](validation/projection-replace-v0.16-results.json)、[`evidence`](validation/evidence-v0.16-results.json)、[`evidence-analysis`](validation/evidence-analysis-v0.16-results.json)、[`evidence-guarded`](validation/evidence-guarded-v0.16-results.json)、[`evidence-transit`](validation/evidence-transit-v0.16-results.json) 和 [`stream`](validation/stream-v0.16-results.json)。长流性能仍针对既有运动协议。
 

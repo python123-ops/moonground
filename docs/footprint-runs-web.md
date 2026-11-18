@@ -72,13 +72,3 @@ JavaScript 纯函数 moonground_footprint_runs 接收：
 核心先验证整帧、数值与计数上限，再共同提交。错误保留原状态，纯函数不返回部分帧；CLI 保留完整成功前缀并以 2 退出。检查点恢复会重建区域并重算末样本证据，核对形状、片段、时间、计数、资格和跨区域锚点一致性，不信任外部传入的判定。
 
 Web 输入与输出各限 8 MiB UTF8。核心 source、每个 wrapper 及内部文档各限 1 Mi UTF16 单元；完整恢复检查点限 8 Mi。批次最多 5000 行、总 frames 8 Mi，外层请求 16 Mi，含最终检查点的全部输出 8 Mi。原 max_tracks × 所有区域边数 ≤ 65536 和混合足迹支持投影工作上限保持不变；合法核心流不代表完整纯函数输出或扩展检查点一定容得下。
-
-## 本批官方生态核查
-
-本批采用三次限定 Mooncakes 的查询，并核对以下三个官方版本的公开 API：
-
-- [MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 已有 RegionEntered、RegionExited(dwell_frames)、区域占用、累计按帧停留和原子 SpatialAnalyzer::update。所查 TrackSample 接口是 track_id、bbox、class_id，没有 covariance 或 segment_id。
-- [Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1) 已有标量 ConfidenceBand、UncertaintyBox3D、SafetyEnvelope 位置与协方差检查。所查页未见区域停留接口。
-- [mooncollider 0.2.1](https://mooncakes.io/docs/uiwcvb/mooncollider@0.2.1) 已有 contains、overlaps、Shape::support、SAT/GJK 和连续碰撞检测。所查页未见协方差或停留接口。
-
-普通区域进入、离开、停留和形状判定已有实现。本批补充当前协方差三态证据、精确 Int64 时钟、片段与显式形状绑定、未知证据中断及完整当前状态恢复的组合契约；没有把普通事件或计时作为新增算法。结论限于上述版本和页面。

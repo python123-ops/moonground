@@ -67,8 +67,7 @@ V(D) = Σ d_i²         V(R) = Σ q_i²
 CLI `--calibration-area` 恰读一行 UTF-8 JSON，接受 LF、CRLF 或 EOF；默认物理行上限 1 MiB，不接受流专用 --max-line-bytes。错误退出 2。首行成功后再读到多余行，会保留首行完整输出并报错。
 
 ```powershell
-$env:MOON_HOME='C:/Users/px830/.codex/tools/moonground-moon-0.10.18'
-$env:PATH=$env:MOON_HOME+'/bin;'+$env:PATH
+moon version --all --no-path
 moon build cmd/main --target native --release --deny-warn
 python -c "import json,subprocess; x=json.load(open('examples/calibration-area.json',encoding='utf-8')); r=subprocess.run(['_build/native/release/build/cmd/main/main.exe','--calibration-area'],input=json.dumps(x).encode(),stdout=subprocess.PIPE,check=True); print(r.stdout.decode())"
 node web/build.mjs
@@ -84,5 +83,3 @@ python validation/calibration_area_verify.py --binary _build/native/release/buil
 独立参考用 Fraction 对完整闭合鞋带公式和单应商式求精确面积、导数，再用 110 位 Decimal 核对贡献和平方根；极端面积用例提高到 800 位。它不复用库的三角扇面积实现。非线性中心差分使用投影后去均值的闭合鞋带公式，分别检查两片面积、面积差和比值。位置商式的绝对项尺度传播为数值比较容差；这些容差不是认证界。
 
 实际参考覆盖 31 个请求、297 组比较、44,339 个标量和 2,460 组非线性差分，包括负交叉贡献、共同平移／转动／尺度／齐次规范、绕向与反射、远原点小区域、有限极大和极小面积、随机透视及最大容量。数值误差按 m、m²、m⁴ 和无量纲分别记录；极大面积的绝对误差不能当作普通尺度的物理误差。命令、种子、版本、产物摘要和实际结果见 [`validation/calibration-area-results.json`](../validation/calibration-area-results.json)。
-
-2026-11-15 的生态检查使用 `site:mooncakes.io homography "area" covariance` 与 `site:mooncakes.io "polygon" "shared" calibration` 两条定向检索，并查阅官方 [moon-cv-geometry@0.2.2/core](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/core) 与 [multiview](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/multiview)。基础库已经提供 `polygon_signed_area`、单应投影等能力；本批增加同一组标定参数模式下两片面积的交叉贡献、差值和比值传播。在本次检查的版本与接口页中未发现同语义入口。

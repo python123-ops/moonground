@@ -182,7 +182,7 @@ inputs;
 
 健康、测量和同足迹确认序列全部成功后才共同提交。分配错误、容量或数值错误不会提前推进任一组件、消耗新片段或部分替换投影。序列语义沿用 [确认序列](footprint-runs-web.md)：按同形状三态证据确认样本，样本跨度不表示物理停留、到访或连续占用。阻断与投影切换显示核心原始结束原因，例如 segment_closed。
 
-“下载门控结果与完整共同检查点”保存 moonground-footprint-run-guarded.json。每帧包含 decision、health、suppressed_track_ids 和 analysis；analysis 含原测量与完整序列帧。最终 checkpoint 的 format 为 moonground.footprint-run-guarded，checkpoint_version 为字符串 1，组件为完整 analysis 和 health。恢复会核对健康、投影、水位、真实片段与确认序列见证。Web 本批提供整批最终检查点下载，API 可使用完整 resume；界面没有导入或所选帧检查点。
+“下载门控结果与完整共同检查点”保存 moonground-footprint-run-guarded.json。每帧包含 decision、health、suppressed_track_ids 和 analysis；analysis 含原测量与完整序列帧。最终 checkpoint 的 format 为 moonground.footprint-run-guarded，checkpoint_version 为字符串 1，组件为完整 analysis 和 health。恢复会核对健康、投影、水位、真实片段与确认序列见证。Web 该版本提供整批最终检查点下载，API 可使用完整 resume；界面没有导入或所选帧检查点。
 
 五份原文实际编辑会使正式结果和待请求失效；预览忽略分配编辑。相同原文的普通或健康重算不影响门控结果，旧任务不能覆盖新草稿。任务失败且原文未改时保留成功结果，模式切换不取消任务。表和候选摘要仅在相应区域展开时渲染。
 
@@ -193,13 +193,3 @@ inputs;
 正式普通行保留三个原字符串 measurement、health、assignments；预览行只有 measurement 和 health。批量预览返回 {frames:[候选]}，无 runs、分配或检查点。CLI --guarded-footprint-runs、--guarded-footprint-runs-checkpoint 提供正式流；--preview-guarded-footprint-run 仍严格只接收一条配对普通帧，不提交或预览控制行。
 
 核心源上限 8 Mi UTF16 单元加恢复 envelope，完整检查点 8 Mi，普通 wrapper 与内部文档各 1 Mi；frames 共 8 Mi／5000 行，外层请求 16 Mi，包含最终检查点的全部输出 8 Mi。浏览器每次输入与输出各限 8 MiB UTF8。浏览器只包装原字符串与识别最外层控制键，原始数值、重复键及未知字段交给核心验证。
-
-## 本批官方生态核查
-
-三次 Mooncakes 限定查询之外，本批核对以下三个官方版本的公开 API：
-
-- [MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 的 SpatialAnalyzer::update 已说明逐帧原子更新。所查 TrackSample 使用 ID、bbox 和类别，页面未见 prepare／commit、footprint 或 segment_id。
-- [Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1) 已有 OperationalMonitor 的 warmup、failure、NIS 监测与滤波状态／协方差快照，以及 KalmanND::checkpoint／restore_checkpoint。所查页未见动态足迹或精确片段分配事务。
-- [Fiducial Marker 0.1.1](https://mooncakes.io/docs/2515050242/fiducial_marker@0.1.1) 已有 CameraCalibrator、Brown 参数和含协方差的 ExtendedKalmanFilter6DOF predict／update。所查页未见健康门控后的候选身份发现与足迹序列共同提交／恢复接口。
-
-原子更新、滤波健康与检查点、标定均已有能力。本批补充固定地标标定健康控制下的实际候选身份、显式足迹确认序列及完整共同恢复；差异限定在上述版本和所查 API 页面，不代表全站不存在其他实现。

@@ -32,9 +32,3 @@
 实际普通源或方向配置变化使结果失效；同原文重算的原始测量帧完全相同时可继续使用旧证据，测量载荷变化则需重算。新的配置、示例和上游计算会取消旧准备；失败的证据计算不修改普通测量结果。表内显示六位有效数字，行悬停显示核心原值，下载保留完整数值。
 
 本入口只消费普通测量，不隐式选择健康门控或其他联合结果。Web 输入与输出各限制 8 MiB；核心另限制配置 1 Mi 字符、单帧 1 Mi 字符和批次 5000 帧。需要更长数据流时使用原生 `--velocity-evidence`。
-
-## 与已查生态能力的关系
-
-本批有界核对了 [Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1)、[MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 和 [moonbitSPC 0.2.0](https://mooncakes.io/docs/mwqcodex/moonbitSPC@0.2.0) 官方 API。Moon-Kalman 已有速度限值检查、标量 ConfidenceBand 和滑窗；MBMOT 已有逐帧原子空间事件；moonbitSPC 已有多窗比较、均值和汇总合并。
-
-所查 API 未见直接消费 MoonGround 当前已接受米制速度及完整二维协方差、沿显式方向给出三态阈值证据并遵守既有质量状态的接口。方向投影、标量区间和普通阈值判断已有通用数学基础；本功能的区别是这些基础与现有米制测量契约的具体结合。该结论限于已查版本和页面。

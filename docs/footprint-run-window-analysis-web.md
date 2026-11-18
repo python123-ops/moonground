@@ -112,7 +112,7 @@ inputs;
 
 ## 完整检查点与实际续接
 
-“下载联合分窗与完整共同检查点”保存 moonground-footprint-run-window-analysis.json，包含全部 measurement、windows 帧和批末完整 checkpoint。滑块选帧不改变最终检查点水位。Web 本批不提供检查点导入或所选帧检查点。
+“下载联合分窗与完整共同检查点”保存 moonground-footprint-run-window-analysis.json，包含全部 measurement、windows 帧和批末完整 checkpoint。滑块选帧不改变最终检查点水位。Web 暂未提供检查点导入或所选帧检查点。
 
 完整 CP 的 format 为 moonground.footprint-run-window-analysis，checkpoint_version 为字符串 1，组件为原完整 measurement 和完整 v29 windows；唯一的 runs 副本在 windows 内。恢复会校验原组件、共同水位、像素／米制会话、当前质量、位置与协方差、片段、序列及窗口稀疏输入见证的一致性；不认证全部历史观测。
 
@@ -204,13 +204,3 @@ continuation;
 返回帧 kind 为 footprint_run_window_analysis_frame，measurement 沿用原 schema 0.2，windows 保持原完整 footprint_run_window_frame。moonground_footprint_run_window_preview({source, frame}) 的 JSON 字符串请求严格预览一帧，返回 {measurement}，不含 CP 或分配。CLI 为 --analyze-footprint-run-windows、--analyze-footprint-run-windows-checkpoint 和 --preview-footprint-run-window。
 
 源上限为 8 Mi UTF16 单元加恢复 envelope，完整 CP 8 Mi；原组件、普通 wrapper 和内部文档各 1 Mi，深度 32。frames 共 8 Mi／5000 帧，外层请求 16 Mi，包含最终 CP 的全部输出 8 Mi，preview 输出 8 Mi。Web 每次输入和输出各限 8 MiB UTF8。浏览器只包装原字符串，不重写整数、时间、重复键、未知字段或分配。
-
-## 本批官方生态核查
-
-本批重新执行三次限定 Mooncakes 的查询，实际核对三个官方版本页面：
-
-- [MoonEventTime 0.2.1](https://mooncakes.io/docs/Ag108/MoonEventTime@0.2.1) 仍提供通用 tumbling／sliding／session、自定义聚合、水位线和原子 ingest。旧 Engine 支持版本化 snapshot／restore；新泛型 WindowEngine 的聚合器不由旧快照格式序列化。
-- [MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 已有原子 SpatialAnalyzer::update、区域进入／离开和按帧 dwell。所查 TrackSample 是 ID、bbox、类别，页面未见 footprint、covariance、segment_id 或 checkpoint。
-- [robust_stats 0.2.2](https://mooncakes.io/docs/hxiuzheng/robust_stats@0.2.2) 已有 StreamingWindow、aggregate_window_summary 和通用数值汇总，所查页未见显式足迹或片段接口。
-
-通用窗口、原子更新和快照已有实现。本批补充原始视觉测量候选、精确片段足迹确认序列与报告帧分窗共同事务、完整共同 CP 的视觉域组合；结论限定于上述版本和已查页面。

@@ -319,13 +319,3 @@ continuation;
 source 8 Mi UTF16 单元加恢复 envelope，完整 CP 8 Mi；普通 wrapper 和内部文档各 1 Mi，深度 32。frames 共 8 Mi／5000 行，外层请求 16 Mi；包含最终 CP 的全部输出 8 Mi，全程预览输出 8 Mi。Web 每次输入与输出各限 8 MiB UTF8。输入达到 5000 行仍可能先超过整批输出预算。浏览器仅包装原文本和识别最外层控制键，数值、重复键、未知字段、时间与片段均由核心验证。
 
 首次确认、结束次数、开窗池及未观察窗口沿用 [原分窗契约](footprint-run-windows-web.md)，不表示实际到访、连续占用或物理停留。
-
-## 本批官方生态核查
-
-本批执行三次 Mooncakes 限定查询并实际核对以下三个官方版本页面：
-
-- [MoonEventTime 0.2.1](https://mooncakes.io/docs/Ag108/MoonEventTime@0.2.1) 已有通用 tumbling／sliding／session、自定义聚合、水位线与原子 ingest。旧 Engine 提供 snapshot／restore；新泛型 WindowEngine 尚无快照，其聚合器不由旧快照格式序列化。
-- [Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1) 已有 OperationalMonitor 健康统计、状态／协方差视图，以及 KalmanND::checkpoint／restore_checkpoint。所查页未见精确片段足迹与报告帧分窗的共同事务。
-- [MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 已有原子 SpatialAnalyzer::update 和区域分析。所查 TrackSample 使用 ID、bbox、类别，页面未见 checkpoint、footprint 或 segment_id。
-
-通用健康监测、窗口、原子更新与滤波检查点已有实现。本批补充固定地标健康控制下真实候选身份、精确片段足迹确认及报告帧分窗的共同提交和完整恢复；差异限定上述版本和已查页面。

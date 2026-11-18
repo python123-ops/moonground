@@ -2288,7 +2288,7 @@ $("assigned-zone-example").addEventListener("click", () => {
     clearAssignedZoneResult();
     assignedZoneInput.value = lines.join("\n") + "\n";
     assignedZoneMessage(
-      "已按核心接受的每帧时间、目标与片段生成待审草稿：固定 r=0.25 m 圆盘／固定凸形交替示例，不推断尺寸。",
+      "已生成每帧时间、目标与片段对应的分配示例，交替使用半径 0.25 m 的圆盘与固定凸形。请根据实际目标核对形状和尺寸。",
     );
     renderAssignedZones();
     renderFootprintRuns();

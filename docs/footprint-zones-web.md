@@ -53,13 +53,3 @@ Web 将共享区域配置与凸足迹选项分别作为原文字符串交给核�
 迟到准备不能覆盖新编辑、示例或上游计算；同一有效输入下计算失败保留已经显示的结果。初始化、不确定性超限、异常观测、数值不可用与投影拒绝沿用原不可判定原因，缺测不补零，不读隐藏预测。原普通测量不会被下游错误覆盖。
 
 输入和输出各限 8 MiB UTF8；核心 wrapper、各内部文档和单帧各限 1 Mi UTF16 单元，内部 JSON 转义也计入 wrapper 限额。原始测量总计 8 Mi UTF16 单元、最多 5000 帧；外层纯函数请求上限 16 Mi。原 `max_tracks × 全部区域边数 ≤ 65536` 限制保持不变。核心每帧先按区域边和形状计算一次支持，再复用于当前可判定目标，不按目标重复投影形状。
-
-## 本批官方生态核查
-
-本批限定 3 次官方站点检索和 3 个候选详情页：
-
-- [mooncollider 0.2.1](https://mooncakes.io/docs/uiwcvb/mooncollider@0.2.1) 已有 `Shape::support`、凸包与有序凸顶点构造、SAT、GJK/EPA。凸支持和普通形状碰撞已有公开实现。
-- [moon_rapier 0.5.2 collision](https://mooncakes.io/docs/Milky2018/moon_rapier@0.5.2/collision) 已有 `ColliderBuilder::convex_hull / convex_polyline`，以及三维凸形和凸分解接口。
-- [moonslicer 0.1.2](https://mooncakes.io/docs/chgttyyr/moonslicer@0.1.2) 已有多边形包含、相交、距离与内外偏置；所查偏置接口服务打印轮廓，使用角平分线和 miter 限制。
-
-这三个所查 API 页未检索到 covariance 字段或直接接收当前 Ready 米制位置与完整二维协方差、组合锚点相对非对称足迹并输出逐边保守三态的接口。这里的增量是该测量契约与分开保留的位置、物理形状和合成证据；不把通用凸支持、凸包或碰撞算法作为新增能力。结论限于所查版本和页面。

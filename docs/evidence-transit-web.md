@@ -75,15 +75,3 @@
 完整格式为 `moonground.evidence-guarded-transit-windows`，拥有原健康证据通行和分窗检查点。“保存所选帧完整健康分窗检查点”重放所选前缀，包括其中的标定切换；结果下载包含全部帧及批末完整检查点。导入先验证完整原文，再以核心返回的 canonical 两份 resume 验证新空批次，全部成功后一次性回填健康通行与分窗输入，保留普通测量和证据区间输入。添加更晚配对观测或替换控制行即可继续。
 
 三种分窗模式各自保留结果，导出对应当前模式。同原文重跑健康证据通行不会清除健康联合分窗；实际健康输入或分窗配置修改使它失效。普通测量或独立证据区间修改不影响它。模式切换、新运行、导入与迟到文件仍按依赖取消旧准备，错误检查点保留现有输入和有效显示。
-
-## 与已查生态能力的关系
-
-本批核对限于 Mooncakes 官方搜索与以下公开 API：[MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics)、[Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1)。前者提供过线、区域转换及按帧停留，后者提供协方差、ConfidenceBand 和滤波检查点。所查 API 未见“法向协方差确认的双门通行＋原始时钟观测区间＋完整独立检查点”这一组合；该结论不覆盖整个 registry。
-
-健康门控联合通行另核对了 [Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1) 与 [Fiducial Marker 0.1.1](https://mooncakes.io/docs/2515050242/fiducial_marker@0.1.1) 的官方 API。前者的 OperationalMonitor、FilterCheckpoint 覆盖滤波健康与滤波状态恢复，后者提供 CameraCalibrator、ExtendedKalmanFilter6DOF 及协方差能力。在这些版本与已查页面中，未见固定地标标定健康、法向协方差确认的双门通行和原始目标测量共同提交、整体恢复的直接对应接口。基础标定和滤波能力存在交集，此处结论只针对已查组合。
-
-分窗统计另核对了 [robust_stats 0.2.2](https://mooncakes.io/docs/hxiuzheng/robust_stats@0.2.2) 与 [moonbitSPC 0.2.0](https://mooncakes.io/docs/mwqcodex/moonbitSPC@0.2.0)，它们与 Moon-Kalman 已提供通用数值滑窗及流式汇总。所查 API 未见以证据通行确认帧划分 Int64 固定窗、按通行时长闭区间作三类时限计数、保留取消原因与未观察窗口并整体恢复的直接组合。
-
-原观测联合分窗本轮重查了上述 MBMOT、Moon-Kalman 官方 API，并核对定向搜索命中的 [MoonLoudness 0.1.3](https://mooncakes.io/docs/hutingyu-nuist/moonloudness@0.1.3)。MBMOT 已有单帧原子空间分析，Moon-Kalman 已有滤波检查点，MoonLoudness 提供音频窗口及原子输入验证。所查页面未见原始 pixel / ground 运动、协方差确认通行和 Int64 确认分窗共同回滚、完整检查点共同恢复的直接对应接口；该区别针对这一视觉流程，未把原子更新或状态恢复机制本身作为新能力。
-
-健康联合分窗本轮核对了 Moon-Kalman 0.2.1、MBMOT 0.3.1 analytics 和 Fiducial Marker 0.1.1 的上述官方页面。它们分别提供滤波健康及恢复、原子空间事件、相机标定和标记跟踪等基础能力；所查 API 未见固定地标健康控制、协方差确认通行与 Int64 确认分窗共同更新、整体恢复的直接组合。该结论限于已查版本和页面。

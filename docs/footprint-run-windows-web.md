@@ -126,7 +126,7 @@ inputs;
 
 检查点 format 为 moonground.footprint-run-windows，checkpoint_version 为字符串 1，包含完整旧 runs 检查点、window_us、origin_us、baseline_timestamp_us 和可空 current_window。它共同恢复序列与窗口，不拥有上游运动会话。恢复时需另行从相同水位恢复上游，提供全部更晚原测量与显式分配。已启动的序列起点不追补历史确认；后续结束仍按实际确认资格分别累计。
 
-恢复验证原 monitor、精确时钟、桶边界、各区域／结束原因顺序、计数容量、活动／确认流平衡及稀疏样本见证。这些检查约束当前可验证事实，不重建全部历史。界面本批不提供检查点导入或所选帧检查点。
+恢复验证原 monitor、精确时钟、桶边界、各区域／结束原因顺序、计数容量、活动／确认流平衡及稀疏样本见证。这些检查约束当前可验证事实，不重建全部历史。界面该版本不提供检查点导入或所选帧检查点。
 
 结果绑定普通原始流和实际测量载荷、区域、分配、序列选项、窗口选项。实际编辑使分窗结果失效；相同原文重算且测量全文相同可重新绑定。普通重算取消旧准备，迟到请求不能覆盖新草稿，旧 finally 不能清除新任务。相同依赖下失败保留成功结果。健康、其他联合结果和统一形状配置不属于依赖，切换原三种序列显示模式也不计算或清除本统计。折叠时不生成分窗表格明细。
 
@@ -146,13 +146,3 @@ runs 源仍为 {position:原区域配置字符串, options:原序列选项字符
 返回 {frames, checkpoint}；帧 schema_version 为 0.1.0、kind 为 footprint_run_window_frame。窗口右界在数学值超过 Int64 最大值时为 null，其余精确时间及计数使用十进制字符串。
 
 Web 输入和输出各限 8 MiB UTF8；核心源 8 Mi UTF16 单元加恢复 envelope、完整检查点 8 Mi，窗口选项及每个 wrapper／内部测量／分配文档各 1 Mi。批次 frames 共 8 Mi／5000 帧，外层请求 16 Mi，包含最终检查点的全部输出 8 Mi。原足迹几何、状态及支持工作上限保持不变。
-
-## 与已查官方生态能力的关系
-
-本批有界执行三次 Mooncakes 限定查询，核对三个官方版本页面：
-
-- [MoonEventTime 0.2.1](https://mooncakes.io/docs/Ag108/MoonEventTime@0.2.1) 已提供 keyed tumbling／sliding／session、精确整数、自定义聚合、水位线、资源上限和溢出原子拒绝。旧 Engine 支持 canonical 版本化快照／恢复；页面明确新泛型 WindowEngine 当前没有快照或通用 JSONL CLI。
-- [MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 已提供原子 SpatialAnalyzer::update、RegionEntered／RegionExited、区域 entries／exits 和按帧 dwell。所查 TrackSample 是 ID、bbox、类别，页面未见 covariance、segment_id 或显式 footprint 接口。
-- [robust_stats 0.2.2](https://mooncakes.io/docs/hxiuzheng/robust_stats@0.2.2) 已有 StreamingWindow、aggregate_window_summary 和数值汇总接口。
-
-通用分窗、有界聚合、整数计数、原子更新和快照均已有实现。本批补充严格视觉足迹序列的首次确认与八种结束原因适配，以及原 monitor 和窗口共同更新、完整源域检查点的组合；结论限于上述版本和已查页面。

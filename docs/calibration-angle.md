@@ -68,8 +68,7 @@ Var_mode(φ) = Σ g_i²
 CLI `--calibration-angle` 恰读一个 UTF-8 请求行，接受 LF、CRLF 或 EOF 结束；默认物理行上限 1 MiB，不接受流专用 --max-line-bytes。错误退出 2。若首行已成功输出，随后才读到多余请求行，会保留首行完整输出并报错。
 
 ```powershell
-$env:MOON_HOME='C:/Users/px830/.codex/tools/moonground-moon-0.10.18'
-$env:PATH=$env:MOON_HOME+'/bin;'+$env:PATH
+moon version --all --no-path
 moon build cmd/main --target native --release --deny-warn
 python -c "import json,subprocess; x=json.load(open('examples/calibration-angle.json',encoding='utf-8')); r=subprocess.run(['_build/native/release/build/cmd/main/main.exe','--calibration-angle'],input=json.dumps(x).encode(),stdout=subprocess.PIPE,check=True); print(r.stdout.decode())"
 node web/build.mjs
@@ -84,6 +83,5 @@ python validation/calibration_angle_verify.py --binary _build/native/release/bui
 
 独立参考以 Fraction 对原单应商式及角度求精确有理导数，用 110 位 Decimal 的约简级数 atan、Machin π 和范数核对方向、夹角及共享贡献；1e±200 线段尺度用例提高到 800 位，避免参考舍入主导米制绝对误差。非线性中心差分按圆周折回残差后检查两段方向和相对夹角。统计分别记录 m、rad、rad² 和无量纲数值误差，比较容差及误差不表示物理测量精度或认证界。实际命令、种子、依赖版本、产物摘要和结果见 [`validation/calibration-angle-results.json`](../validation/calibration-angle-results.json)。
 
-2026-11-15 的生态检查使用两条定向检索，并查阅官方 [moon-cv-geometry@0.2.2/core](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/core) 与 [camera](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/camera) 接口页。被检查的接口提供基础几何、相机与投影能力；本批在已有基础之上增加共享单应参数模式的方向导数与圆周夹角贡献，未在本次检查范围发现同语义入口。
 
 有序凸多边形的地面面积、共享误差交叉贡献及面积差／比值见[面积比较说明](calibration-area.md)。

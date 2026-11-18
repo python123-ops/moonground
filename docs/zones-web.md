@@ -38,9 +38,3 @@
 普通源或区域配置实际编辑使区域证据失效。同原文重算且原始测量全文相同可继续使用旧结果，载荷改变则需显式重算。速度配置、过线和健康门控输入不影响区域结果；区域配置也不清除它们。迟到准备不能覆盖新配置、示例或上游计算。证据失败保留原普通测量。
 
 每个配置允许 1—16 个区域、最多 10000 个目标；`max_tracks × 所有区域的边数之和 ≤ 65536`，核心在计算前校验工作量。Web 输入、输出各限 8 MiB，核心配置与单帧各限 1 Mi UTF16 单元、批次最多 5000 帧。原生命令为 `--zone-evidence`。
-
-## 与已查生态能力的关系
-
-本批有界核对了 [MBMOT 0.3.1 analytics](https://mooncakes.io/docs/python123-ops/mbmot@0.3.1/analytics) 和 [Moon-Kalman 0.2.1](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1) 官方 API。MBMOT 已有 PolygonRegion、区域进入／离开、占用及按帧停留；其所查 TrackSample 接口使用身份、分类和 bbox。Moon-Kalman 已有位置边界、协方差检查、SafetyEnvelope 和标量 ConfidenceBand。
-
-所查页面未见直接消费当前已接受米制位置及完整二维协方差、输出任意严格凸区域逐边支持区间和 Inside／Outside／Indeterminate 的接口。本功能区别在该测量契约和保守分离证据，不把区域事件、通用几何或标量区间本身作为新增能力；结论限于已查版本及页面。

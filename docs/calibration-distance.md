@@ -67,8 +67,7 @@ Var_mode(D) = Σ gD_i²     Var_mode(R) = Σ gR_i²
 原生命令 `--calibration-distance` 恰读一个请求行，接受 LF、CRLF 或 EOF 结束；默认字节行上限 1 MiB，不接受流专用 --max-line-bytes。错误退出 2。若第一行已成功，随后才输入额外行，保留第一行完整输出并对额外请求报错。
 
 ```powershell
-$env:MOON_HOME='C:/Users/px830/.codex/tools/moonground-moon-0.10.18'
-$env:PATH=$env:MOON_HOME+'/bin;'+$env:PATH
+moon version --all --no-path
 moon build cmd/main --target native --release --deny-warn
 python -c "import json,subprocess; x=json.load(open('examples/calibration-distance.json',encoding='utf-8')); r=subprocess.run(['_build/native/release/build/cmd/main/main.exe','--calibration-distance'],input=json.dumps(x).encode(),stdout=subprocess.PIPE,check=True); print(r.stdout.decode())"
 node web/build.mjs
@@ -83,6 +82,5 @@ python validation/calibration_distance_verify.py --binary _build/native/release/
 
 独立参考直接用 Fraction 对单应投影商式求导，再用 110 位 Decimal 计算欧氏长度及差值／比值的导数和贡献；以记录中的浮点比较容差核对实际产物，不把该数值比较当成认证界。非线性中心差分另行核对两段长度、差值和比值响应。实际命令、固定种子、依赖版本、计数与摘要见 [`validation/calibration-distance-results.json`](../validation/calibration-distance-results.json)。
 
-2026-11-15 定向核对了官方 Mooncakes 的 [moon-cv-geometry@0.2.2/core](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/core) 和 [camera](https://mooncakes.io/docs/python123-ops/moon-cv-geometry%400.2.2/camera)。这些页面提供基础几何、投影及标定接口；本批增加共享参数模式下的标量长度对比与相关贡献。未在这些被检查的版本／接口页发现同语义入口，检查范围为上述页面及两条定向查询。
 
 有序凸多边形的地面面积、共享误差交叉贡献及面积差／比值见[面积比较说明](calibration-area.md)。
