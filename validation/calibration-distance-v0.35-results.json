@@ -1,9 +1,9 @@
 {
   "status": "passed",
   "seed": 20261116,
-  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/calibration_distance_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-distance-v0.35-results.json",
+  "command": "python validation/calibration_distance_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-distance-v0.35-results.json",
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
-  "pinned_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "pinned_moon_home": "${MOON_HOME}",
   "python": "3.8.7",
   "numpy": "1.24.4",
   "source_sha256": "b6a8440eaff30056d0efc8216550a58f9efbc7e098efada3a4bddedac2f519ae",

@@ -1,7 +1,7 @@
 {
   "status": "passed",
   "platform": "WSL Ubuntu-24.04 Linux x86_64",
-  "isolated_workspace": "/var/tmp/moonground-linux-20261111-tp1t8wy1",
+  "isolated_workspace": "<isolated-run>",
   "windows_shared_build_used": false,
   "steps": [
     {
@@ -13,7 +13,7 @@
         "--max-time",
         "90",
         "-o",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/moonbit.tar.gz",
+        "<isolated-run>/moonbit.tar.gz",
         "https://cli.moonbitlang.com/binaries/0.10.18%2B6c83a7f62/moonbit-linux-x86_64.tar.gz"
       ],
       "exit_code": 0,
@@ -25,9 +25,9 @@
       "command": [
         "tar",
         "xf",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/moonbit.tar.gz",
+        "<isolated-run>/moonbit.tar.gz",
         "-C",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain"
+        "${MOON_HOME}"
       ],
       "exit_code": 0,
       "seconds": 1.4093151840000075,
@@ -43,7 +43,7 @@
         "--max-time",
         "40",
         "-o",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/core.tar.gz",
+        "<isolated-run>/core.tar.gz",
         "https://cli.moonbitlang.com/cores/core-0.10.18%2B6c83a7f62.tar.gz"
       ],
       "exit_code": 0,
@@ -55,9 +55,9 @@
       "command": [
         "tar",
         "xf",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/core.tar.gz",
+        "<isolated-run>/core.tar.gz",
         "-C",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain/lib"
+        "<isolated-run>/toolchain/lib"
       ],
       "exit_code": 0,
       "seconds": 0.06352237600000876,
@@ -80,7 +80,7 @@
       "command": [
         "moon",
         "-C",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain/lib/core",
+        "<isolated-run>/toolchain/lib/core",
         "bundle",
         "--warn-list",
         "-a",
@@ -100,7 +100,7 @@
         "--max-time",
         "60",
         "-o",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/node.tar.xz",
+        "<isolated-run>/node.tar.xz",
         "https://nodejs.org/dist/v22.14.0/node-v22.14.0-linux-x64.tar.xz"
       ],
       "exit_code": 28,
@@ -112,9 +112,9 @@
       "command": [
         "tar",
         "xf",
-        "/mnt/c/Users/px830/AppData/Local/Temp/moonground-node-v22.14.0-linux-x64.tar.xz",
+        "<local-environment>/moonground-node-v22.14.0-linux-x64.tar.xz",
         "-C",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/node",
+        "<isolated-run>/node",
         "--strip-components=1"
       ],
       "exit_code": 0,
@@ -170,36 +170,36 @@
       "exit_code": 0,
       "seconds": 6.389836543,
       "captured_output_sha256": "2bbf3452111c4f6423b9c522c33040501972ee8bd034e99784e7709d6a2b0954",
-      "summary": "Finished. moon: ran 78 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/cmd/main  native  /var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe"
+      "summary": "Finished. moon: ran 78 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/cmd/main  native  _build/native/release/build/cmd/main/main.exe"
     },
     {
       "command": [
         "python3",
         "validation/verify.py",
         "--binary",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--output",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/numerical.json"
+        "<isolated-run>/numerical.json"
       ],
       "exit_code": 0,
       "seconds": 0.5197880799999997,
       "captured_output_sha256": "9991797e5cfbd7bf279563ddc19768430628f9d7c0e522f8555071a4430eda77",
-      "summary": "{\"status\": \"passed\", \"output\": \"/var/tmp/moonground-linux-20261111-tp1t8wy1/numerical.json\", \"projection_cases\": 384, \"motion_cases\": 4, \"implementation_verified\": true}"
+      "summary": "{\"status\": \"passed\", \"output\": \"<isolated-run>/numerical.json\", \"projection_cases\": 384, \"motion_cases\": 4, \"implementation_verified\": true}"
     },
     {
       "command": [
         "python3",
         "validation/stream_test.py",
         "--binary",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--output",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/stream.json",
+        "<isolated-run>/stream.json",
         "--protocol-only"
       ],
       "exit_code": 0,
       "seconds": 0.05370630699999879,
       "captured_output_sha256": "e2739d6d6c18d65608eda9e6540989dc0a0ab778df8bba80112dbf6370fab7a5",
-      "summary": "protocol: 23/23 passed\nsaved /var/tmp/moonground-linux-20261111-tp1t8wy1/stream.json"
+      "summary": "protocol: 23/23 passed\nsaved <isolated-run>/stream.json"
     }
   ],
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg\n",
@@ -230,10 +230,10 @@
   ],
   "registry_acquisition": "Offline original published ZIP archives checked against Mooncakes registry checksums; project .mooncakes and all build artifacts were excluded from the source copy.",
   "isolated_environment": {
-    "MOON_HOME": "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain",
-    "PYTHONPATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/python",
-    "CPATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/include:/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/include/x86_64-linux-gnu",
-    "LIBRARY_PATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/lib/x86_64-linux-gnu"
+    "MOON_HOME": "${MOON_HOME}",
+    "PYTHONPATH": "python",
+    "CPATH": "<isolated-run>/deps/usr/include:<isolated-run>/deps/usr/include/x86_64-linux-gnu",
+    "LIBRARY_PATH": "<isolated-run>/deps/usr/lib/x86_64-linux-gnu"
   },
   "all_target_check": "passed",
   "test_summaries": [
@@ -249,7 +249,7 @@
       "absolute": 1e-08,
       "relative": 1e-08
     },
-    "command": "/usr/bin/python3 validation/verify.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/numerical.json",
+    "command": "/usr/bin/python3 validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output <isolated-run>/numerical.json",
     "python": "3.12.3",
     "numpy": "1.26.4",
     "moonbit": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
@@ -410,10 +410,10 @@
     "status": "passed"
   },
   "stream_protocol": {
-    "command": "/usr/bin/python3 /var/tmp/moonground-linux-20261111-tp1t8wy1/source/validation/stream_test.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/stream.json --protocol-only",
+    "command": "/usr/bin/python3 validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --output <isolated-run>/stream.json --protocol-only",
     "python": "3.12.3",
     "platform": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "binary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source/_build/native/release/build/cmd/main/main.exe",
+    "binary": "_build/native/release/build/cmd/main/main.exe",
     "binary_sha256": "6d7c2d35727dbc7207ab2d719529bfd6806af09e184662d378b989d6d1a03775",
     "protocol": [
       {

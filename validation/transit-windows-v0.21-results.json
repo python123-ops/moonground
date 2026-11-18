@@ -1,7 +1,7 @@
 {
   "format_version": "1",
   "fixtures": "deterministic",
-  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-v0.21-results.json",
+  "command": "python validation/transit_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/transit-windows-v0.21-results.json",
   "python": "3.8.7",
   "toolchain": "moon 0.1.20260920 (914d7da 2026-09-20)\nmoonc v0.10.14+7d59c7ec9 (2026-09-18)\nmoonc moonrun 0.1.20260920 (914d7da 2026-09-20)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
   "source_sha256": "0823ef996248fc051f985a8f45ece8dd2692cb7a937a954e5f40612f4f86bb6d",

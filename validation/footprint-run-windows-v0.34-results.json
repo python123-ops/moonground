@@ -1,10 +1,10 @@
 {
   "format_version": "1",
   "fixtures": "deterministic",
-  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/footprint_run_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-windows-v0.34-results.json",
+  "command": "python validation/footprint_run_windows_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/footprint-run-windows-v0.34-results.json",
   "python": "3.8.7",
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
-  "inherited_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "inherited_moon_home": "${MOON_HOME}",
   "source_sha256": "5c03ecacef145439ba0fc974254cf4db6e7f3bb5c7dc59884ad3c67e3ae84c2f",
   "suffix_reference_sha256": "a366e8aa9c465752e5fad1bacbcbed5a9b3e2c65eec0781019741eff974ba4e7",
   "assigned_reference_sha256": "ad22944dcfd5c25433a7f5040ca93243904c3efff6841908696d0c988ec1d88e",

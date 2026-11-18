@@ -1,11 +1,11 @@
 {
   "format_version": "1",
   "seed": 20261211,
-  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/zone_intersection_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-intersection-v0.36-results.json",
+  "command": "python validation/zone_intersection_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-intersection-v0.36-results.json",
   "python": "3.8.7",
   "numpy": "1.24.4",
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
-  "pinned_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "pinned_moon_home": "${MOON_HOME}",
   "source_sha256": "c60e7f69b9cf722f9adaf88652c8badcc50f2eabd119a1a93bf1f9d27ddcd774",
   "binary_sha256": "ddb12e4c888b5176b2f496bcc1b96d4e623b8224867e42dea0e2e22b149d89b1",
   "independent_reference": "Fraction inverse covariance, exact original input differences, clamped rational segment minimization, closed centre membership; strict rational enclosure and decision checks without tolerance; NumPy secondary only",

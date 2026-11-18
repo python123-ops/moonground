@@ -2,7 +2,7 @@
   "format_version": "1",
   "seed": 20261113,
   "tolerance": 2e-08,
-  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.28-results.json",
+  "command": "python validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/checkpoint-v0.28-results.json",
   "python": "3.8.7",
   "numpy": "1.24.4",
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
@@ -486,7 +486,7 @@
     "node": "v26.2.0",
     "command": "node --test --test-reporter=tap web/checkpoint.test.mjs",
     "binary_environment": {
-      "MOONGROUND_CLI": "C:\\Users\\px830\\Documents\\ChatGPT\\\u5f20\u666f\u607a11\u6708\u4efdmoonbit\\moonground\\_build\\native\\release\\build\\cmd\\main\\main.exe"
+      "MOONGROUND_CLI": "_build/native/release/build/cmd/main/main.exe"
     },
     "test_script_sha256": "34cdac9701904c9efa936f8f7bed5e3c4a93feb68dbef4c3f8bcc79427c2caab",
     "bridge_sha256": "b93bb8457d0622851d853663b5d0855a94f9449fc5e39988cfa27219ad1735d4",

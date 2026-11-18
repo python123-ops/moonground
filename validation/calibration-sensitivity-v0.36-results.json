@@ -1,9 +1,9 @@
 {
   "status": "passed",
   "seed": 20261115,
-  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/calibration_sensitivity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-sensitivity-v0.36-results.json",
+  "command": "python validation/calibration_sensitivity_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-sensitivity-v0.36-results.json",
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
-  "pinned_moon_home": "C:/Users/px830/.codex/tools/moonground-moon-0.10.18",
+  "pinned_moon_home": "${MOON_HOME}",
   "python": "3.8.7",
   "numpy": "1.24.4",
   "source_sha256": "8a026616ae3a1be0bec735547f29288042ab2ef756a761b1583f5c5ec86f7332",

@@ -2,9 +2,9 @@
   "schema_version": "0.1.0",
   "completed": true,
   "source": {
-    "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\seq_hotel.avi",
+    "path": "validation/data/seq_hotel.avi",
     "sha256": "3681e9fe98e6fe4c6317349b05d1307d2bf729ef78da191ba99f600431bd00bb",
-    "homography_path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\H.txt",
+    "homography_path": "validation/data/H.txt",
     "homography_sha256": "b62940ea5f69c89990673f91f88724937ed41387a39d8d68ad5bbc6d5ee5c8b7",
     "provided_homography_input_order": "yx",
     "provided_homography": [
@@ -91,7 +91,7 @@
     "moonground_binary_sha256": "ebf84ce4651795b37407cda05ca3a3da9ffb5e2ba787d8d19f97e02843b2ac4e",
     "tracker_run": {
       "command": [
-        "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\_build\\mbmot-0.3.0\\_build\\native\\release\\build\\replay\\replay.exe"
+        "_build/mbmot-0.3.0/_build/native/release/build/replay/replay.exe"
       ],
       "exit_code": 0,
       "seconds": 0.0801648000000057,
@@ -99,7 +99,7 @@
     },
     "measurement_run": {
       "command": [
-        "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\_build\\native\\release\\build\\cmd\\main\\main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--stream"
       ],
       "exit_code": 0,
@@ -128,22 +128,22 @@
   },
   "artifacts": {
     "detections.ndjson": {
-      "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\detections.ndjson",
+      "path": "validation/data/video-hotel-60s/detections.ndjson",
       "sha256": "e32ad3bae433c3786514e92f5c599322341d08fc774507e424cd264599fa54b1",
       "bytes": 102655
     },
     "tracks.ndjson": {
-      "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\tracks.ndjson",
+      "path": "validation/data/video-hotel-60s/tracks.ndjson",
       "sha256": "9ac26e743e99be50a5b54e7f227da3fccab192c4667c05a4e9ed409c30443dec",
       "bytes": 171500
     },
     "measurements-input.ndjson": {
-      "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\measurements-input.ndjson",
+      "path": "validation/data/video-hotel-60s/measurements-input.ndjson",
       "sha256": "59edc6581a7abe81a1bae4c70fd93c575ce1047ec503a73142033557e426f6ff",
       "bytes": 152419
     },
     "ground.ndjson": {
-      "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\ground.ndjson",
+      "path": "validation/data/video-hotel-60s/ground.ndjson",
       "sha256": "46ba5bfdc1eb628d180f8b5a859eec6f3e339d684ceda356536e42d5b3abce8f",
       "bytes": 569466
     }
@@ -158,8 +158,8 @@
     "uncertainty": "conditional on fixed homography and selected anchor; pixel noise is an explicit demonstration parameter"
   },
   "reproduce": [
-    "C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe",
-    "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\examples\\video_demo.py",
+    "python",
+    "examples/video_demo.py",
     "--source",
     "validation\\data\\seq_hotel.avi",
     "--homography",
@@ -174,14 +174,14 @@
     "4"
   ],
   "rendered_video": {
-    "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\measurement.mp4",
+    "path": "validation/data/video-hotel-60s/measurement.mp4",
     "sha256": "29367211eaed6f4683b52b4c2120b5f8513894cf470ed1b5f49e304590fe48b7",
     "bytes": 20588333,
     "frames": 1500,
     "first_frame_readable": true,
     "audio": false,
     "preview": {
-      "path": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\data\\video-hotel-60s\\preview.png",
+      "path": "validation/data/video-hotel-60s/preview.png",
       "sha256": "f27c1d84d09e720fac0d527d454e7295abeaa99521bc4126a347f802da45e98a"
     },
     "seconds": 3.3973212

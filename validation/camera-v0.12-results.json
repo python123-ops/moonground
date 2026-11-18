@@ -2,7 +2,7 @@
   "format_version": "1",
   "seed": 20261112,
   "tolerance": 2e-08,
-  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.12-results.json",
+  "command": "python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.12-results.json",
   "python": "3.8.7",
   "numpy": "1.24.4",
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",

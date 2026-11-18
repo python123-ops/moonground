@@ -3,7 +3,7 @@
   "archive_sha256": "908a8a649893fc2232b9bbfee5a6d15467d8278c6d85c196fb59f8d44d62dfa0",
   "archive_files": 149,
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
-  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.11.0.zip --output validation/package-v0.11-results.json",
+  "command": "python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.11.0.zip --output validation/package-v0.11-results.json",
   "targets": [
     "wasm",
     "wasm-gc",

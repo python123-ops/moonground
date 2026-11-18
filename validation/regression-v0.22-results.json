@@ -5,7 +5,7 @@
     "absolute": 1e-08,
     "relative": 1e-08
   },
-  "command": "'C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe' validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.22-results.json",
+  "command": "python validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/regression-v0.22-results.json",
   "python": "3.8.7",
   "numpy": "1.24.4",
   "moonbit": "moon 0.1.20260920 (914d7da 2026-09-20)\nmoonc v0.10.14+7d59c7ec9 (2026-09-18)\nmoonc moonrun 0.1.20260920 (914d7da 2026-09-20)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",

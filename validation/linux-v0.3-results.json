@@ -1,17 +1,17 @@
 {
   "status": "passed",
   "platform": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-  "isolated_workspace": "/var/tmp/moonground-linux-20261111-tp1t8wy1",
-  "source_directory": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3",
+  "isolated_workspace": "<isolated-run>",
+  "source_directory": ".",
   "windows_shared_build_used": false,
   "project_build_cache_copied": false,
   "project_dependencies_copied": false,
   "reused_isolated_environment": {
-    "MOON_HOME": "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain",
-    "PYTHONPATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/python",
-    "CPATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/include:/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/include/x86_64-linux-gnu",
-    "LIBRARY_PATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/lib/x86_64-linux-gnu",
-    "LD_LIBRARY_PATH": "/var/tmp/moonground-linux-20261111-tp1t8wy1/deps/usr/lib/x86_64-linux-gnu"
+    "MOON_HOME": "${MOON_HOME}",
+    "PYTHONPATH": "python",
+    "CPATH": "<isolated-run>/deps/usr/include:<isolated-run>/deps/usr/include/x86_64-linux-gnu",
+    "LIBRARY_PATH": "<isolated-run>/deps/usr/lib/x86_64-linux-gnu",
+    "LD_LIBRARY_PATH": "<isolated-run>/deps/usr/lib/x86_64-linux-gnu"
   },
   "environment_reuse": "Reuses the previously checksum-verified pinned Linux MoonBit/core, Node, NumPy, OpenSSL and private registry ZIP cache. No network dependency update is attempted. Source, project dependency extraction, compilation and execution use a new Linux directory; no Windows project build or .mooncakes directory is copied.",
   "source_copy_excludes": [
@@ -508,7 +508,7 @@
       "version": "0.21.3",
       "archive_sha256": "e949f1678bd2694a18c14be656b90174ae0a8d562542235822a5969510de3b87",
       "matches_registry_index": true,
-      "cached_archive": "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain/registry/cache/moonbitlang/async/0.21.3.zip",
+      "cached_archive": "<isolated-run>/toolchain/registry/cache/moonbitlang/async/0.21.3.zip",
       "rechecked_sha256": "e949f1678bd2694a18c14be656b90174ae0a8d562542235822a5969510de3b87"
     },
     {
@@ -516,7 +516,7 @@
       "version": "0.2.2",
       "archive_sha256": "abac041f0d939fbd30cd33a0b21c33a4058dbf93624a98bfdd69d3a598de11eb",
       "matches_registry_index": true,
-      "cached_archive": "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain/registry/cache/python123-ops/moon-cv-geometry/0.2.2.zip",
+      "cached_archive": "../moon-cv-geometry/0.2.2.zip",
       "rechecked_sha256": "abac041f0d939fbd30cd33a0b21c33a4058dbf93624a98bfdd69d3a598de11eb"
     },
     {
@@ -524,7 +524,7 @@
       "version": "0.2.1",
       "archive_sha256": "ccfbeb152c06bedde07a9dba30923450a7ce370412dd7fb255e1d84b7337bf13",
       "matches_registry_index": true,
-      "cached_archive": "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain/registry/cache/Lyllyl789/moon-kalman/0.2.1.zip",
+      "cached_archive": "<isolated-run>/toolchain/registry/cache/Lyllyl789/moon-kalman/0.2.1.zip",
       "rechecked_sha256": "ccfbeb152c06bedde07a9dba30923450a7ce370412dd7fb255e1d84b7337bf13"
     }
   ],
@@ -539,7 +539,7 @@
       "exit_code": 0,
       "seconds": 0.04089952800001129,
       "captured_output_sha256": "781549d15e8da07a89e683398ec2e8d98d54be25a3bda3d078987efc634a7452",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/00.log",
+      "log_path": "<isolated-run>/v0.3-logs/00.log",
       "summary": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg"
     },
     {
@@ -550,7 +550,7 @@
       "exit_code": 0,
       "seconds": 0.05455162100000166,
       "captured_output_sha256": "7703fd79909af9b17df6395137bee2b07c3f3b27b6e96e18c909f433cce84f19",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/01.log",
+      "log_path": "<isolated-run>/v0.3-logs/01.log",
       "summary": "v22.14.0"
     },
     {
@@ -562,7 +562,7 @@
       "exit_code": 0,
       "seconds": 0.21904403000002048,
       "captured_output_sha256": "047b7a5304db9f81e8705e53586b18b18ec3fac3708402131f1796d2e3bda715",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/02.log",
+      "log_path": "<isolated-run>/v0.3-logs/02.log",
       "summary": "3.12.3\n1.26.4"
     },
     {
@@ -573,7 +573,7 @@
       "exit_code": 0,
       "seconds": 0.004097733999998354,
       "captured_output_sha256": "8497f84b2b8334c413d9c6166bd39d009ba55d2ff60a8f23e66dfa5819c2b048",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/03.log",
+      "log_path": "<isolated-run>/v0.3-logs/03.log",
       "summary": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0\nCopyright (C) 2023 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
     },
     {
@@ -585,7 +585,7 @@
       "exit_code": 0,
       "seconds": 0.05100148599998988,
       "captured_output_sha256": "1b9133d458ddb675fd3f53f1dbcc8efb91b2710173c932389c6689fa5e0a295b",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/04.log",
+      "log_path": "<isolated-run>/v0.3-logs/04.log",
       "summary": "Finished. moon: ran 52 tasks, now up to date"
     },
     {
@@ -598,7 +598,7 @@
       "exit_code": 0,
       "seconds": 0.5394289019999974,
       "captured_output_sha256": "f27cbbe0c6c0efcc0b9f4ef57cf94069a55063107e6c2a05cf2d637fcd328d21",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/05.log",
+      "log_path": "<isolated-run>/v0.3-logs/05.log",
       "summary": "+pub fn moonground_restore(String) -> String\n+\n+pub fn moonground_update(Int32, String) -> String\n+\n+// Errors\n+\n+// Types and methods\n+\n+// Type aliases\n+\n+// Traits\n# ------"
     },
     {
@@ -612,7 +612,7 @@
       "exit_code": 0,
       "seconds": 0.46601340899999855,
       "captured_output_sha256": "8e65c4069a063445847fd4b77da95326467dee366a5f0dd308e1e6b46ebb8843",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/06.log",
+      "log_path": "<isolated-run>/v0.3-logs/06.log",
       "summary": "Finished. moon: ran 92 tasks, now up to date"
     },
     {
@@ -626,8 +626,8 @@
       "exit_code": 0,
       "seconds": 1.3618066070000054,
       "captured_output_sha256": "7261e959b5741a46346fb80b4b66c02ec5efebd07be3872d4c2f8d1604af03b2",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/07.log",
-      "summary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c: In function \u2018cancellation_signal_handler\u2019:\n/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of \u2018write\u2019 declared with attribute \u2018warn_unused_result\u2019 [-Wunused-result]\n  468 |     write(pool.notify_send, &data, sizeof(data));\n      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nFinished. moon: ran 111 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/web_bridge  js      /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/js/debug/build/web_bridge/web_bridge.js\n  python123-ops/moonground/cmd/main    native  /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/debug/build/cmd/main/main.exe"
+      "log_path": "<isolated-run>/v0.3-logs/07.log",
+      "summary": ".mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c: In function \u2018cancellation_signal_handler\u2019:\n.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of \u2018write\u2019 declared with attribute \u2018warn_unused_result\u2019 [-Wunused-result]\n  468 |     write(pool.notify_send, &data, sizeof(data));\n      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nFinished. moon: ran 111 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/web_bridge  js      _build/js/debug/build/web_bridge/web_bridge.js\n  python123-ops/moonground/cmd/main    native  _build/native/debug/build/cmd/main/main.exe"
     },
     {
       "command": [
@@ -640,8 +640,8 @@
       "exit_code": 0,
       "seconds": 4.956575366999999,
       "captured_output_sha256": "0ea114ee3d5fb5281cdb14a0c5b73faa7f91b1e3590966388dd7d26d2ce1c447",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/08.log",
-      "summary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c: In function \u2018cancellation_signal_handler\u2019:\n/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of \u2018write\u2019 declared with attribute \u2018warn_unused_result\u2019 [-Wunused-result]\n  468 |     write(pool.notify_send, &data, sizeof(data));\n      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTotal tests: 105, passed: 105, failed: 0. [wasm]\nTotal tests: 105, passed: 105, failed: 0. [wasm-gc]\nTotal tests: 105, passed: 105, failed: 0. [js]\nTotal tests: 105, passed: 105, failed: 0. [native]"
+      "log_path": "<isolated-run>/v0.3-logs/08.log",
+      "summary": ".mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c: In function \u2018cancellation_signal_handler\u2019:\n.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of \u2018write\u2019 declared with attribute \u2018warn_unused_result\u2019 [-Wunused-result]\n  468 |     write(pool.notify_send, &data, sizeof(data));\n      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTotal tests: 105, passed: 105, failed: 0. [wasm]\nTotal tests: 105, passed: 105, failed: 0. [wasm-gc]\nTotal tests: 105, passed: 105, failed: 0. [js]\nTotal tests: 105, passed: 105, failed: 0. [native]"
     },
     {
       "command": [
@@ -656,19 +656,19 @@
       "exit_code": 0,
       "seconds": 6.528660980000012,
       "captured_output_sha256": "654c0b6163344d25e808394d13f20310a8dc96d1f7eee367783d087081eee01f",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/09.log",
-      "summary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c: In function \u2018cancellation_signal_handler\u2019:\n/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of \u2018write\u2019 declared with attribute \u2018warn_unused_result\u2019 [-Wunused-result]\n  468 |     write(pool.notify_send, &data, sizeof(data));\n      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nFinished. moon: ran 79 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/cmd/main  native  /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe"
+      "log_path": "<isolated-run>/v0.3-logs/09.log",
+      "summary": ".mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c: In function \u2018cancellation_signal_handler\u2019:\n.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of \u2018write\u2019 declared with attribute \u2018warn_unused_result\u2019 [-Wunused-result]\n  468 |     write(pool.notify_send, &data, sizeof(data));\n      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nFinished. moon: ran 79 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/cmd/main  native  _build/native/release/build/cmd/main/main.exe"
     },
     {
       "command": [
         "file",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe"
+        "_build/native/release/build/cmd/main/main.exe"
       ],
       "exit_code": 0,
       "seconds": 0.006849419000019452,
       "captured_output_sha256": "4e330d0c674f38971583735aaf29d399dfd34d9eaed8ea5144f8b8427b803496",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/10.log",
-      "summary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=a3c22ac489e06f94ecc4d28bf96526caa2e9a681, for GNU/Linux 3.2.0, with debug_info, not stripped"
+      "log_path": "<isolated-run>/v0.3-logs/10.log",
+      "summary": "_build/native/release/build/cmd/main/main.exe: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=a3c22ac489e06f94ecc4d28bf96526caa2e9a681, for GNU/Linux 3.2.0, with debug_info, not stripped"
     },
     {
       "command": [
@@ -678,8 +678,8 @@
       "exit_code": 0,
       "seconds": 0.4532395930000064,
       "captured_output_sha256": "916f0896632f843ad1331d02db7186f087a72c200d2ca14defcec0e30ac0aed0",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/11.log",
-      "summary": "Finished. moon: ran 12 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/web_bridge  js  /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/js/release/build/web_bridge/web_bridge.js\nBuilt /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/site"
+      "log_path": "<isolated-run>/v0.3-logs/11.log",
+      "summary": "Finished. moon: ran 12 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/web_bridge  js  _build/js/release/build/web_bridge/web_bridge.js\nBuilt _build/site"
     },
     {
       "command": [
@@ -690,7 +690,7 @@
       "exit_code": 0,
       "seconds": 0.0911078009999926,
       "captured_output_sha256": "75d31a3673047123d8c17fe66356a9b4644911d182d57d6c5292c66bd722d913",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/12.log",
+      "log_path": "<isolated-run>/v0.3-logs/12.log",
       "summary": "  ---\n  duration_ms: 3.097101\n  ...\n1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 74.483606"
     },
     {
@@ -698,55 +698,55 @@
         "python3",
         "validation/verify.py",
         "--binary",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--output",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/numerical-v0.3.json"
+        "<isolated-run>/numerical-v0.3.json"
       ],
       "exit_code": 0,
       "seconds": 0.45679013500000565,
       "captured_output_sha256": "1f7db763d8f904adae70bc2af3c5fc14924640587e35901921cf97ff1aa448a4",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/13.log",
-      "summary": "{\"status\": \"passed\", \"output\": \"/var/tmp/moonground-linux-20261111-tp1t8wy1/numerical-v0.3.json\", \"projection_cases\": 384, \"motion_cases\": 4, \"implementation_verified\": true}"
+      "log_path": "<isolated-run>/v0.3-logs/13.log",
+      "summary": "{\"status\": \"passed\", \"output\": \"<isolated-run>/numerical-v0.3.json\", \"projection_cases\": 384, \"motion_cases\": 4, \"implementation_verified\": true}"
     },
     {
       "command": [
         "python3",
         "validation/camera_verify.py",
         "--binary",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--output",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/camera-v0.3.json"
+        "<isolated-run>/camera-v0.3.json"
       ],
       "exit_code": 0,
       "seconds": 0.6480915039999786,
       "captured_output_sha256": "a9d10f81487d350a4e170b20e75018da304c77f53d05b25078f18016fcde590f",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/14.log",
-      "summary": "{\"status\": \"passed\", \"output\": \"/var/tmp/moonground-linux-20261111-tp1t8wy1/camera-v0.3.json\", \"dense_points\": 2350, \"motion_frames\": 80, \"uncertainty_frames\": 64}"
+      "log_path": "<isolated-run>/v0.3-logs/14.log",
+      "summary": "{\"status\": \"passed\", \"output\": \"<isolated-run>/camera-v0.3.json\", \"dense_points\": 2350, \"motion_frames\": 80, \"uncertainty_frames\": 64}"
     },
     {
       "command": [
         "python3",
         "validation/checkpoint_verify.py",
         "--binary",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--output",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/checkpoint-v0.3.json",
+        "<isolated-run>/checkpoint-v0.3.json",
         "--web"
       ],
       "exit_code": 0,
       "seconds": 1.8097662470000273,
       "captured_output_sha256": "2354f244937be2794c4978d8aa1c969e1ecd082fc07612e8404dfced866b584a",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/15.log",
-      "summary": "{\"status\":\"passed\",\"output\":\"/var/tmp/moonground-linux-20261111-tp1t8wy1/checkpoint-v0.3.json\",\"native_restart_points\":36,\"strict_rejections\":38,\"large_resume_bytes\":2012898}"
+      "log_path": "<isolated-run>/v0.3-logs/15.log",
+      "summary": "{\"status\":\"passed\",\"output\":\"<isolated-run>/checkpoint-v0.3.json\",\"native_restart_points\":36,\"strict_rejections\":38,\"large_resume_bytes\":2012898}"
     },
     {
       "command": [
         "python3",
         "validation/stream_test.py",
         "--binary",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--output",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/stream-v0.3.json",
+        "<isolated-run>/stream-v0.3.json",
         "--frames",
         "3000",
         "--targets",
@@ -757,8 +757,8 @@
       "exit_code": 0,
       "seconds": 0.5383566269999847,
       "captured_output_sha256": "8a5f93008399da4706faac331acc14b76d8601170cd120ba0a831615a2a00d16",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/16.log",
-      "summary": "protocol: 23/23 passed\nthroughput: {\"frames\": 3000, \"targets_per_frame\": 10, \"target_observations\": 30000, \"wall_seconds\": 0.45165159100000096, \"frames_per_second\": 6642.288126025872, \"target_observations_per_second\": 66422.88126025871, \"average_frame_ms\": 0.15055053033333365, \"stdout_bytes_hashed\": 13401185, \"stdout_sha256\": \"8185376f11414db17259b1b13a53cad2250e675838ade08689452cfd0ac89354\", \"output_storage\": \"No accumulated stdout; first and final frames only.\", \"measurement_scope\": \"Native subprocess + Python producer, pipes, line counting and SHA-256; not isolated kernel time.\", \"memory\": {\"samples\": 9, \"peak_working_set_bytes\": 3149824, \"sampled_peak_rss_bytes\": 3149824, \"first_rss_bytes\": 2871296, \"last_rss_bytes\": 3149824, \"late_min_rss_bytes\": 3149824, \"late_max_rss_bytes\": 3149824}}\nlatency: {\"samples\": 100, \"warmup_frames\": 100, \"targets_per_frame\": 10, \"average_ms\": 0.17095215, \"p50_ms\": 0.1618365, \"p95_ms\": 0.2101796, \"min_ms\": 0.153133, \"max_ms\": 0.364629, \"stdout_sha256\": \"549a0b92133520aa261082016eef3fb40bc13f8e894f42c27feb6c2a0022c870\", \"measurement_scope\": \"One flushed frame write and one complete output line read, including subprocess pipes and scheduling.\"}\nsaved /var/tmp/moonground-linux-20261111-tp1t8wy1/stream-v0.3.json"
+      "log_path": "<isolated-run>/v0.3-logs/16.log",
+      "summary": "protocol: 23/23 passed\nthroughput: {\"frames\": 3000, \"targets_per_frame\": 10, \"target_observations\": 30000, \"wall_seconds\": 0.45165159100000096, \"frames_per_second\": 6642.288126025872, \"target_observations_per_second\": 66422.88126025871, \"average_frame_ms\": 0.15055053033333365, \"stdout_bytes_hashed\": 13401185, \"stdout_sha256\": \"8185376f11414db17259b1b13a53cad2250e675838ade08689452cfd0ac89354\", \"output_storage\": \"No accumulated stdout; first and final frames only.\", \"measurement_scope\": \"Native subprocess + Python producer, pipes, line counting and SHA-256; not isolated kernel time.\", \"memory\": {\"samples\": 9, \"peak_working_set_bytes\": 3149824, \"sampled_peak_rss_bytes\": 3149824, \"first_rss_bytes\": 2871296, \"last_rss_bytes\": 3149824, \"late_min_rss_bytes\": 3149824, \"late_max_rss_bytes\": 3149824}}\nlatency: {\"samples\": 100, \"warmup_frames\": 100, \"targets_per_frame\": 10, \"average_ms\": 0.17095215, \"p50_ms\": 0.1618365, \"p95_ms\": 0.2101796, \"min_ms\": 0.153133, \"max_ms\": 0.364629, \"stdout_sha256\": \"549a0b92133520aa261082016eef3fb40bc13f8e894f42c27feb6c2a0022c870\", \"measurement_scope\": \"One flushed frame write and one complete output line read, including subprocess pipes and scheduling.\"}\nsaved <isolated-run>/stream-v0.3.json"
     },
     {
       "command": [
@@ -770,7 +770,7 @@
       "exit_code": 0,
       "seconds": 0.02057334500000252,
       "captured_output_sha256": "81a677771334385895bc0ebfef26a4af4d319fd300182f0918976f6e1f185489",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/17.log",
+      "log_path": "<isolated-run>/v0.3-logs/17.log",
       "summary": "Finished. moon: ran 1 task, now up to date"
     },
     {
@@ -785,7 +785,7 @@
       "exit_code": 0,
       "seconds": 0.791139471000001,
       "captured_output_sha256": "0c351425078c225fbd9d8b42986fd8385d5f4ef4e01ee5079a449245a3bbdeca",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/18.log",
+      "log_path": "<isolated-run>/v0.3-logs/18.log",
       "summary": "Total tests: 1, passed: 1, failed: 0. [wasm]\nTotal tests: 1, passed: 1, failed: 0. [wasm-gc]\nTotal tests: 1, passed: 1, failed: 0. [js]\nTotal tests: 1, passed: 1, failed: 0. [native]"
     },
     {
@@ -801,7 +801,7 @@
       "exit_code": 0,
       "seconds": 0.5127108550000017,
       "captured_output_sha256": "a895dfab4147d2502fc7da0b22b3de0e7b998ca810fcb63c1b0877fe627528ef",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/19.log",
+      "log_path": "<isolated-run>/v0.3-logs/19.log",
       "summary": "Using cached Lyllyl789/moon-kalman@0.2.1\nUsing cached python123-ops/moon-cv-geometry@0.2.2\nUsing cached python123-ops/mbmot@0.3.0\nUsing cached python123-ops/moondeteval@0.2.1\nUsing cached moonbitlang/async@0.21.3\nFinished. moon: ran 115 tasks, now up to date"
     },
     {
@@ -817,8 +817,8 @@
       "exit_code": 0,
       "seconds": 5.730284535000003,
       "captured_output_sha256": "213cc5d2de69da99370ad40d1928ff67059a37bcc3f830681e08840ca3ae75de",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/20.log",
-      "summary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/examples/consumer/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c: In function \u2018cancellation_signal_handler\u2019:\n/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/examples/consumer/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of \u2018write\u2019 declared with attribute \u2018warn_unused_result\u2019 [-Wunused-result]\n  468 |     write(pool.notify_send, &data, sizeof(data));\n      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTotal tests: 110, passed: 110, failed: 0. [wasm]\nTotal tests: 110, passed: 110, failed: 0. [wasm-gc]\nTotal tests: 110, passed: 110, failed: 0. [js]\nTotal tests: 110, passed: 110, failed: 0. [native]"
+      "log_path": "<isolated-run>/v0.3-logs/20.log",
+      "summary": "examples/consumer/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c: In function \u2018cancellation_signal_handler\u2019:\nexamples/consumer/.mooncakes/moonbitlang/async/src/internal/event_loop/thread_pool.c:468:5: warning: ignoring return value of \u2018write\u2019 declared with attribute \u2018warn_unused_result\u2019 [-Wunused-result]\n  468 |     write(pool.notify_send, &data, sizeof(data));\n      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nTotal tests: 110, passed: 110, failed: 0. [wasm]\nTotal tests: 110, passed: 110, failed: 0. [wasm-gc]\nTotal tests: 110, passed: 110, failed: 0. [js]\nTotal tests: 110, passed: 110, failed: 0. [native]"
     },
     {
       "command": [
@@ -828,8 +828,8 @@
       "exit_code": 0,
       "seconds": 0.2015872900000062,
       "captured_output_sha256": "09f99ef23d27056ee914f383eea84783bef656310f22553e59419c3299db23bb",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/21.log",
-      "summary": "Finished. moon: ran 3 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/web_bridge  js  /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/js/release/build/web_bridge/web_bridge.js\nBuilt /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/site"
+      "log_path": "<isolated-run>/v0.3-logs/21.log",
+      "summary": "Finished. moon: ran 3 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/web_bridge  js  _build/js/release/build/web_bridge/web_bridge.js\nBuilt _build/site"
     },
     {
       "command": [
@@ -841,7 +841,7 @@
       "exit_code": 0,
       "seconds": 0.0032035960000058594,
       "captured_output_sha256": "30ec13dbdad8330682289e0f37415033da68d27500ec282757b7d943ce8227b5",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/22.log",
+      "log_path": "<isolated-run>/v0.3-logs/22.log",
       "summary": "Finished. moon: no work to do"
     },
     {
@@ -856,7 +856,7 @@
       "exit_code": 0,
       "seconds": 0.2700372309999892,
       "captured_output_sha256": "0c351425078c225fbd9d8b42986fd8385d5f4ef4e01ee5079a449245a3bbdeca",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/23.log",
+      "log_path": "<isolated-run>/v0.3-logs/23.log",
       "summary": "Total tests: 1, passed: 1, failed: 0. [wasm]\nTotal tests: 1, passed: 1, failed: 0. [wasm-gc]\nTotal tests: 1, passed: 1, failed: 0. [js]\nTotal tests: 1, passed: 1, failed: 0. [native]"
     },
     {
@@ -872,7 +872,7 @@
       "exit_code": 0,
       "seconds": 0.0572140619999999,
       "captured_output_sha256": "30ec13dbdad8330682289e0f37415033da68d27500ec282757b7d943ce8227b5",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/24.log",
+      "log_path": "<isolated-run>/v0.3-logs/24.log",
       "summary": "Finished. moon: no work to do"
     },
     {
@@ -888,7 +888,7 @@
       "exit_code": 0,
       "seconds": 3.1838822650000083,
       "captured_output_sha256": "161a17d07d5c9d4cba86a517ee7b1e6dff21af47556f8c59f55aa808d3ec494f",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/25.log",
+      "log_path": "<isolated-run>/v0.3-logs/25.log",
       "summary": "Total tests: 110, passed: 110, failed: 0. [wasm]\nTotal tests: 110, passed: 110, failed: 0. [wasm-gc]\nTotal tests: 110, passed: 110, failed: 0. [js]\nTotal tests: 110, passed: 110, failed: 0. [native]"
     },
     {
@@ -899,8 +899,8 @@
       "exit_code": 0,
       "seconds": 0.033291485999995984,
       "captured_output_sha256": "f6f0a06b63bb0fa5afc2400904e3665635e36d503d0097c3e5d752f98b3336b0",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/26.log",
-      "summary": "Finished. moon: no work to do\nArtifacts:\n  python123-ops/moonground/web_bridge  js  /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/js/release/build/web_bridge/web_bridge.js\nBuilt /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/site"
+      "log_path": "<isolated-run>/v0.3-logs/26.log",
+      "summary": "Finished. moon: no work to do\nArtifacts:\n  python123-ops/moonground/web_bridge  js  _build/js/release/build/web_bridge/web_bridge.js\nBuilt _build/site"
     },
     {
       "command": [
@@ -911,7 +911,7 @@
       "exit_code": 0,
       "seconds": 0.10469606499999973,
       "captured_output_sha256": "6126828c8e86fe3c5be3be88c3825b1b5c2d1cbbde371534b119e8089013a720",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/27.log",
+      "log_path": "<isolated-run>/v0.3-logs/27.log",
       "summary": "Finished. moon: ran 2 tasks, now up to date"
     },
     {
@@ -924,7 +924,7 @@
       "exit_code": 0,
       "seconds": 1.9026818730000006,
       "captured_output_sha256": "21d97e00def9ec170e96910c3dbc19793af5e2a44b10264d3e45838e0046f68b",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/28.log",
+      "log_path": "<isolated-run>/v0.3-logs/28.log",
       "summary": "+pub fn moonground_restore(String) -> String\n+\n+pub fn moonground_update(Int32, String) -> String\n+\n+// Errors\n+\n+// Types and methods\n+\n+// Type aliases\n+\n+// Traits\n# ------"
     },
     {
@@ -938,7 +938,7 @@
       "exit_code": 0,
       "seconds": 0.9560928230000005,
       "captured_output_sha256": "44b559c0ddcd744018649e7e1af1d10254304de86bb960f5b8d10a23f33f1838",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/29.log",
+      "log_path": "<isolated-run>/v0.3-logs/29.log",
       "summary": "Finished. moon: ran 72 tasks, now up to date"
     },
     {
@@ -952,8 +952,8 @@
       "exit_code": 0,
       "seconds": 1.3709840789999994,
       "captured_output_sha256": "9969aee70f47265d84fdaec5faa43fd5f37e76e27c2f2506ad07d2d745a21c93",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/30.log",
-      "summary": "Finished. moon: ran 9 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/web_bridge  js      /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/js/debug/build/web_bridge/web_bridge.js\n  python123-ops/moonground/cmd/main    native  /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/debug/build/cmd/main/main.exe"
+      "log_path": "<isolated-run>/v0.3-logs/30.log",
+      "summary": "Finished. moon: ran 9 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/web_bridge  js      _build/js/debug/build/web_bridge/web_bridge.js\n  python123-ops/moonground/cmd/main    native  _build/native/debug/build/cmd/main/main.exe"
     },
     {
       "command": [
@@ -966,7 +966,7 @@
       "exit_code": 0,
       "seconds": 5.48421495,
       "captured_output_sha256": "adec40120f1c41e939544dc5b7d6bc46fbfc91bdf4fd58d7689a2239e449922f",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/31.log",
+      "log_path": "<isolated-run>/v0.3-logs/31.log",
       "summary": "Total tests: 105, passed: 105, failed: 0. [wasm]\nTotal tests: 105, passed: 105, failed: 0. [wasm-gc]\nTotal tests: 105, passed: 105, failed: 0. [js]\nTotal tests: 105, passed: 105, failed: 0. [native]"
     },
     {
@@ -982,8 +982,8 @@
       "exit_code": 0,
       "seconds": 6.973224420999998,
       "captured_output_sha256": "c6c6570321a14a58a58a34ae7e8a5e95026dfdd30377cf44f6d4f708e90527c0",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/32.log",
-      "summary": "Finished. moon: ran 4 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/cmd/main  native  /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe"
+      "log_path": "<isolated-run>/v0.3-logs/32.log",
+      "summary": "Finished. moon: ran 4 tasks, now up to date\nArtifacts:\n  python123-ops/moonground/cmd/main  native  _build/native/release/build/cmd/main/main.exe"
     },
     {
       "command": [
@@ -995,7 +995,7 @@
       "exit_code": 0,
       "seconds": 0.0037194969999987393,
       "captured_output_sha256": "30ec13dbdad8330682289e0f37415033da68d27500ec282757b7d943ce8227b5",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/33.log",
+      "log_path": "<isolated-run>/v0.3-logs/33.log",
       "summary": "Finished. moon: no work to do"
     },
     {
@@ -1010,7 +1010,7 @@
       "exit_code": 0,
       "seconds": 0.3604193969999976,
       "captured_output_sha256": "0c351425078c225fbd9d8b42986fd8385d5f4ef4e01ee5079a449245a3bbdeca",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/34.log",
+      "log_path": "<isolated-run>/v0.3-logs/34.log",
       "summary": "Total tests: 1, passed: 1, failed: 0. [wasm]\nTotal tests: 1, passed: 1, failed: 0. [wasm-gc]\nTotal tests: 1, passed: 1, failed: 0. [js]\nTotal tests: 1, passed: 1, failed: 0. [native]"
     },
     {
@@ -1026,7 +1026,7 @@
       "exit_code": 0,
       "seconds": 0.09457007900000036,
       "captured_output_sha256": "30ec13dbdad8330682289e0f37415033da68d27500ec282757b7d943ce8227b5",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/35.log",
+      "log_path": "<isolated-run>/v0.3-logs/35.log",
       "summary": "Finished. moon: no work to do"
     },
     {
@@ -1042,7 +1042,7 @@
       "exit_code": 0,
       "seconds": 3.4919557419999983,
       "captured_output_sha256": "161a17d07d5c9d4cba86a517ee7b1e6dff21af47556f8c59f55aa808d3ec494f",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/36.log",
+      "log_path": "<isolated-run>/v0.3-logs/36.log",
       "summary": "Total tests: 110, passed: 110, failed: 0. [wasm]\nTotal tests: 110, passed: 110, failed: 0. [wasm-gc]\nTotal tests: 110, passed: 110, failed: 0. [js]\nTotal tests: 110, passed: 110, failed: 0. [native]"
     },
     {
@@ -1053,8 +1053,8 @@
       "exit_code": 0,
       "seconds": 0.04145960900000034,
       "captured_output_sha256": "f6f0a06b63bb0fa5afc2400904e3665635e36d503d0097c3e5d752f98b3336b0",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/37.log",
-      "summary": "Finished. moon: no work to do\nArtifacts:\n  python123-ops/moonground/web_bridge  js  /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/js/release/build/web_bridge/web_bridge.js\nBuilt /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/site"
+      "log_path": "<isolated-run>/v0.3-logs/37.log",
+      "summary": "Finished. moon: no work to do\nArtifacts:\n  python123-ops/moonground/web_bridge  js  _build/js/release/build/web_bridge/web_bridge.js\nBuilt _build/site"
     },
     {
       "command": [
@@ -1065,7 +1065,7 @@
       "exit_code": 0,
       "seconds": 0.09722554800000083,
       "captured_output_sha256": "d6e291dfe70a534c66920d8dfe0a03acba8b3c5d86d76144c91e724512a9a7f9",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/38.log",
+      "log_path": "<isolated-run>/v0.3-logs/38.log",
       "summary": "  ---\n  duration_ms: 3.834743\n  ...\n1..8\n# tests 8\n# suites 0\n# pass 8\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 78.833077"
     },
     {
@@ -1073,55 +1073,55 @@
         "python3",
         "validation/verify.py",
         "--binary",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--output",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/numerical-v0.3-final.json"
+        "<isolated-run>/numerical-v0.3-final.json"
       ],
       "exit_code": 0,
       "seconds": 0.5508924099999994,
       "captured_output_sha256": "7eaae0b12bb6a31eedf31c391872db08d0e03e8678551c5c97673be40442f950",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/39.log",
-      "summary": "{\"status\": \"passed\", \"output\": \"/var/tmp/moonground-linux-20261111-tp1t8wy1/numerical-v0.3-final.json\", \"projection_cases\": 384, \"motion_cases\": 4, \"implementation_verified\": true}"
+      "log_path": "<isolated-run>/v0.3-logs/39.log",
+      "summary": "{\"status\": \"passed\", \"output\": \"<isolated-run>/numerical-v0.3-final.json\", \"projection_cases\": 384, \"motion_cases\": 4, \"implementation_verified\": true}"
     },
     {
       "command": [
         "python3",
         "validation/camera_verify.py",
         "--binary",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--output",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/camera-v0.3-final.json"
+        "<isolated-run>/camera-v0.3-final.json"
       ],
       "exit_code": 0,
       "seconds": 0.7921642339999977,
       "captured_output_sha256": "c6b35fad8d7f03e09994f97409a333b35a5e2eea3f51a148e313d32cbdc72d55",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/40.log",
-      "summary": "{\"status\": \"passed\", \"output\": \"/var/tmp/moonground-linux-20261111-tp1t8wy1/camera-v0.3-final.json\", \"dense_points\": 2350, \"motion_frames\": 80, \"uncertainty_frames\": 64}"
+      "log_path": "<isolated-run>/v0.3-logs/40.log",
+      "summary": "{\"status\": \"passed\", \"output\": \"<isolated-run>/camera-v0.3-final.json\", \"dense_points\": 2350, \"motion_frames\": 80, \"uncertainty_frames\": 64}"
     },
     {
       "command": [
         "python3",
         "validation/checkpoint_verify.py",
         "--binary",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--output",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/checkpoint-v0.3-final.json",
+        "<isolated-run>/checkpoint-v0.3-final.json",
         "--web"
       ],
       "exit_code": 0,
       "seconds": 2.8456152699999997,
       "captured_output_sha256": "e2a6406656ab6a395afe6d49fda0a085dbba23da661e427cd3c893eb13dd0952",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/41.log",
-      "summary": "{\"status\":\"passed\",\"output\":\"/var/tmp/moonground-linux-20261111-tp1t8wy1/checkpoint-v0.3-final.json\",\"native_restart_points\":36,\"strict_rejections\":38,\"large_resume_bytes\":2012898}"
+      "log_path": "<isolated-run>/v0.3-logs/41.log",
+      "summary": "{\"status\":\"passed\",\"output\":\"<isolated-run>/checkpoint-v0.3-final.json\",\"native_restart_points\":36,\"strict_rejections\":38,\"large_resume_bytes\":2012898}"
     },
     {
       "command": [
         "python3",
         "validation/stream_test.py",
         "--binary",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe",
+        "_build/native/release/build/cmd/main/main.exe",
         "--output",
-        "/var/tmp/moonground-linux-20261111-tp1t8wy1/stream-v0.3-final.json",
+        "<isolated-run>/stream-v0.3-final.json",
         "--frames",
         "3000",
         "--targets",
@@ -1132,8 +1132,8 @@
       "exit_code": 0,
       "seconds": 0.5615395740000011,
       "captured_output_sha256": "a295577b6ab8d54509502222d8ad7ffe0808a64cc6eab0bf70bd89ffb6b29d72",
-      "log_path": "/var/tmp/moonground-linux-20261111-tp1t8wy1/v0.3-logs/42.log",
-      "summary": "protocol: 23/23 passed\nthroughput: {\"frames\": 3000, \"targets_per_frame\": 10, \"target_observations\": 30000, \"wall_seconds\": 0.46808135399999884, \"frames_per_second\": 6409.14228768875, \"target_observations_per_second\": 64091.4228768875, \"average_frame_ms\": 0.1560271179999996, \"stdout_bytes_hashed\": 13401185, \"stdout_sha256\": \"8185376f11414db17259b1b13a53cad2250e675838ade08689452cfd0ac89354\", \"output_storage\": \"No accumulated stdout; first and final frames only.\", \"measurement_scope\": \"Native subprocess + Python producer, pipes, line counting and SHA-256; not isolated kernel time.\", \"memory\": {\"samples\": 10, \"peak_working_set_bytes\": 3178496, \"sampled_peak_rss_bytes\": 3178496, \"first_rss_bytes\": 2863104, \"last_rss_bytes\": 3178496, \"late_min_rss_bytes\": 3178496, \"late_max_rss_bytes\": 3178496}}\nlatency: {\"samples\": 100, \"warmup_frames\": 100, \"targets_per_frame\": 10, \"average_ms\": 0.17830945, \"p50_ms\": 0.171678, \"p95_ms\": 0.2130782, \"min_ms\": 0.167785, \"max_ms\": 0.298861, \"stdout_sha256\": \"549a0b92133520aa261082016eef3fb40bc13f8e894f42c27feb6c2a0022c870\", \"measurement_scope\": \"One flushed frame write and one complete output line read, including subprocess pipes and scheduling.\"}\nsaved /var/tmp/moonground-linux-20261111-tp1t8wy1/stream-v0.3-final.json"
+      "log_path": "<isolated-run>/v0.3-logs/42.log",
+      "summary": "protocol: 23/23 passed\nthroughput: {\"frames\": 3000, \"targets_per_frame\": 10, \"target_observations\": 30000, \"wall_seconds\": 0.46808135399999884, \"frames_per_second\": 6409.14228768875, \"target_observations_per_second\": 64091.4228768875, \"average_frame_ms\": 0.1560271179999996, \"stdout_bytes_hashed\": 13401185, \"stdout_sha256\": \"8185376f11414db17259b1b13a53cad2250e675838ade08689452cfd0ac89354\", \"output_storage\": \"No accumulated stdout; first and final frames only.\", \"measurement_scope\": \"Native subprocess + Python producer, pipes, line counting and SHA-256; not isolated kernel time.\", \"memory\": {\"samples\": 10, \"peak_working_set_bytes\": 3178496, \"sampled_peak_rss_bytes\": 3178496, \"first_rss_bytes\": 2863104, \"last_rss_bytes\": 3178496, \"late_min_rss_bytes\": 3178496, \"late_max_rss_bytes\": 3178496}}\nlatency: {\"samples\": 100, \"warmup_frames\": 100, \"targets_per_frame\": 10, \"average_ms\": 0.17830945, \"p50_ms\": 0.171678, \"p95_ms\": 0.2130782, \"min_ms\": 0.167785, \"max_ms\": 0.298861, \"stdout_sha256\": \"549a0b92133520aa261082016eef3fb40bc13f8e894f42c27feb6c2a0022c870\", \"measurement_scope\": \"One flushed frame write and one complete output line read, including subprocess pipes and scheduling.\"}\nsaved <isolated-run>/stream-v0.3-final.json"
     }
   ],
   "backend_tests": [
@@ -1162,7 +1162,7 @@
       "target": "native"
     }
   ],
-  "binary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe",
+  "binary": "_build/native/release/build/cmd/main/main.exe",
   "binary_sha256": "7319be2ed020fd7bd78a619e6155f635aefb570e0fed93bc43837b3a7bca712c",
   "numerical": {
     "format_version": "1",
@@ -1171,7 +1171,7 @@
       "absolute": 1e-08,
       "relative": 1e-08
     },
-    "command": "/usr/bin/python3 validation/verify.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/numerical-v0.3-final.json",
+    "command": "/usr/bin/python3 validation/verify.py --binary _build/native/release/build/cmd/main/main.exe --output <isolated-run>/numerical-v0.3-final.json",
     "python": "3.12.3",
     "numpy": "1.26.4",
     "moonbit": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
@@ -1335,7 +1335,7 @@
     "format_version": "1",
     "seed": 20261112,
     "tolerance": 2e-08,
-    "command": "/usr/bin/python3 validation/camera_verify.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/camera-v0.3-final.json",
+    "command": "/usr/bin/python3 validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output <isolated-run>/camera-v0.3-final.json",
     "python": "3.12.3",
     "numpy": "1.26.4",
     "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
@@ -1524,7 +1524,7 @@
     "format_version": "1",
     "seed": 20261113,
     "tolerance": 2e-08,
-    "command": "/usr/bin/python3 validation/checkpoint_verify.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/checkpoint-v0.3-final.json --web",
+    "command": "/usr/bin/python3 validation/checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --output <isolated-run>/checkpoint-v0.3-final.json --web",
     "python": "3.12.3",
     "numpy": "1.26.4",
     "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
@@ -2008,7 +2008,7 @@
       "node": "v22.14.0",
       "command": "node --test --test-reporter=tap web/checkpoint.test.mjs",
       "binary_environment": {
-        "MOONGROUND_CLI": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe"
+        "MOONGROUND_CLI": "_build/native/release/build/cmd/main/main.exe"
       },
       "test_script_sha256": "34cdac9701904c9efa936f8f7bed5e3c4a93feb68dbef4c3f8bcc79427c2caab",
       "bridge_sha256": "bc847ada2f40a819250be8452c066d9923f5946476dad033245a586760e902c4",
@@ -2039,10 +2039,10 @@
     "status": "passed"
   },
   "stream": {
-    "command": "/usr/bin/python3 /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/validation/stream_test.py --binary /var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe --output /var/tmp/moonground-linux-20261111-tp1t8wy1/stream-v0.3-final.json --frames 3000 --targets 10 --latency-samples 100",
+    "command": "/usr/bin/python3 validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --output <isolated-run>/stream-v0.3-final.json --frames 3000 --targets 10 --latency-samples 100",
     "python": "3.12.3",
     "platform": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
-    "binary": "/var/tmp/moonground-linux-20261111-tp1t8wy1/source-v0.3/_build/native/release/build/cmd/main/main.exe",
+    "binary": "_build/native/release/build/cmd/main/main.exe",
     "binary_sha256": "7319be2ed020fd7bd78a619e6155f635aefb570e0fed93bc43837b3a7bca712c",
     "protocol": [
       {
@@ -2362,8 +2362,8 @@
       "version": "0.3.0",
       "archive_sha256": "589c3d7d653ad2ba15d1d631c576c058630a3fe395bc5e45f0ec2f3b703f9063",
       "matches_registry_index": true,
-      "archive_source": "/mnt/c/Users/px830/.moon/registry/cache/python123-ops/mbmot/0.3.0.zip",
-      "cached_archive": "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain/registry/cache/python123-ops/mbmot/0.3.0.zip",
+      "archive_source": "../mbmot/0.3.0.zip",
+      "cached_archive": "../mbmot/0.3.0.zip",
       "registry_view": "Exact pinned version entry copied from the local checksum-verified registry index; no network fetch or compiled artifact copied."
     },
     {
@@ -2371,8 +2371,8 @@
       "version": "0.2.1",
       "archive_sha256": "7ce2bcc8308675b29365a4f0ac0fc4a2f2a274cf97dbbc14b0a43c4ed259df02",
       "matches_registry_index": true,
-      "archive_source": "/mnt/c/Users/px830/.moon/registry/cache/python123-ops/moondeteval/0.2.1.zip",
-      "cached_archive": "/var/tmp/moonground-linux-20261111-tp1t8wy1/toolchain/registry/cache/python123-ops/moondeteval/0.2.1.zip",
+      "archive_source": "../moondeteval/0.2.1.zip",
+      "cached_archive": "../moondeteval/0.2.1.zip",
       "registry_view": "Exact pinned version entry copied from the local checksum-verified registry index; no network fetch or compiled artifact copied."
     }
   ],

@@ -43,6 +43,7 @@ jobs:
           python -m pip install numpy==1.26.4
       - name: Verify source and public interfaces
         run: |
+          python validation/public_reports.py --check
           moon fmt --check
           moon info
           git diff --exit-code -- '*.mbti'
@@ -162,6 +163,9 @@ jobs:
           PLAYWRIGHT_MODULE: ${{ github.workspace }}/_build/browser/node_modules/playwright-core
           MOONGROUND_BROWSER_CHANNEL: chrome
         run: node --test web/ui.test.cjs web/calibration-sensitivity.ui.test.cjs web/calibration-distance.ui.test.cjs web/calibration-angle.ui.test.cjs web/calibration-area.ui.test.cjs
+      - name: Make report paths portable
+        if: always()
+        run: python validation/public_reports.py '_build/ci-*.json'
       - name: Retain validation records
         if: always()
         uses: actions/upload-artifact@v4

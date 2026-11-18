@@ -1,8 +1,8 @@
 {
-  "command": "C:\\Users\\px830\\AppData\\Local\\Programs\\Python\\Python38\\python.exe C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\validation\\stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.31-results.json",
+  "command": "python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.31-results.json",
   "python": "3.8.7",
   "platform": "Windows-10-10.0.26100-SP0",
-  "binary": "C:\\Users\\px830\\Documents\\ChatGPT\\张景恺11月份moonbit\\moonground\\_build\\native\\release\\build\\cmd\\main\\main.exe",
+  "binary": "_build/native/release/build/cmd/main/main.exe",
   "binary_sha256": "1619e32569452087c2bb99d53cd71fb83d19dc0007e4bc25b0bd5a92d0af646b",
   "protocol": [
     {
