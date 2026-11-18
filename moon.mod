@@ -2,7 +2,7 @@ name = "python123-ops/moonground"
 
 version = "0.36.0"
 
-readme = "README.mbt.md"
+readme = "README.md"
 
 repository = "https://github.com/python123-ops/moonground"
 

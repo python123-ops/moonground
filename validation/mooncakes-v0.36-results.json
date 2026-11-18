@@ -1,0 +1,89 @@
+{
+  "status": "passed",
+  "verified_at_utc": "2026-11-18T09:56:29.773961+00:00",
+  "module": "python123-ops/moonground",
+  "version": "0.36.0",
+  "module_url": "https://mooncakes.io/docs/python123-ops/moonground",
+  "registry_created_at": "2026-11-18T09:54:07.695552+00:00",
+  "registry_checksum": "f0421d52fc4c3ece25f8e5adea907814ffc11a869e95e826362f58193e3cdaf9",
+  "archive_sha256": "f0421d52fc4c3ece25f8e5adea907814ffc11a869e95e826362f58193e3cdaf9",
+  "downloaded_entries_match_uploaded_archive": 360,
+  "source": "Mooncakes registry; new standalone consumer with no workspace or path override",
+  "source_checkout_linked": false,
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "commands": [
+    [
+      "moon",
+      "view",
+      "python123-ops/moonground@0.36.0",
+      "--json"
+    ],
+    [
+      "moon",
+      "add",
+      "python123-ops/moonground@0.36.0"
+    ],
+    [
+      "moon",
+      "update"
+    ],
+    [
+      "moon",
+      "check",
+      "--target",
+      "all",
+      "--deny-warn"
+    ],
+    [
+      "moon",
+      "test",
+      "--target",
+      "all",
+      "--deny-warn"
+    ]
+  ],
+  "test_summaries": [
+    "Total tests: 87, passed: 87, failed: 0. [wasm]",
+    "Total tests: 87, passed: 87, failed: 0. [wasm-gc]",
+    "Total tests: 87, passed: 87, failed: 0. [js]",
+    "Total tests: 87, passed: 87, failed: 0. [native]"
+  ],
+  "test_output_sha256": "c01eca7d33bb46904a936b914fa91371bf0258c27d004308cb915934a97511bc",
+  "publication_http_status": 200,
+  "landing_page_http_status": 200,
+  "landing_page_title": "python123-ops/moonground - mooncakes.io",
+  "archive_verification": {
+    "status": "passed",
+    "archive_sha256": "f0421d52fc4c3ece25f8e5adea907814ffc11a869e95e826362f58193e3cdaf9",
+    "archive_files": 360,
+    "code_baseline_commit": "6a4d396a3519de647a2178239f7d19bceb5c1109",
+    "changed_from_baseline": [
+      "CHANGELOG.md",
+      "README.mbt.md",
+      "README.md",
+      "moon.mod"
+    ],
+    "all_other_archive_entries_match_baseline": true,
+    "private_material_excluded": true,
+    "pending_ai_disclosure_excluded": true
+  },
+  "packaged_consumer_test_summaries": [
+    "Total tests: 1114, passed: 1114, failed: 0. [wasm]",
+    "Total tests: 1114, passed: 1114, failed: 0. [wasm-gc]",
+    "Total tests: 1114, passed: 1114, failed: 0. [js]",
+    "Total tests: 1114, passed: 1114, failed: 0. [native]"
+  ],
+  "library_test_summaries": [
+    "Total tests: 1027, passed: 1027, failed: 0. [wasm]",
+    "Total tests: 1027, passed: 1027, failed: 0. [wasm-gc]",
+    "Total tests: 1027, passed: 1027, failed: 0. [js]",
+    "Total tests: 1027, passed: 1027, failed: 0. [native]"
+  ],
+  "consumer_setup": {
+    "source_directory": "examples/consumer",
+    "copied_files": "*.mbt and moon.pkg",
+    "standalone_manifest": "name = \"local/consumer\"\nversion = \"0.1.0\"\nimport { \"python123-ops/mbmot@0.3.0\", \"python123-ops/moondeteval@0.2.1\" }\n",
+    "workspace_or_path_dependency": false,
+    "installation": "moon add python123-ops/moonground@0.36.0"
+  }
+}
