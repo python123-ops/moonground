@@ -35,6 +35,10 @@
       "passed": true
     },
     {
+      "name": "truncated-native-header-rejected",
+      "passed": true
+    },
+    {
       "name": "manifest-target-mismatch",
       "passed": true
     },
@@ -127,12 +131,12 @@
       "passed": true
     }
   ],
-  "case_count": 31,
+  "case_count": 32,
   "artifacts": {
     "current_version": "0.39.0",
     "previous_candidate_version": "0.39.0-rc.1",
     "current_binary_sha256": "f7db686d8d50cc5d8427a24927421d8afe67500d0730e7969590545da2cc6b9b",
-    "previous_candidate_binary_sha256": "a57a4d06d8481084cafa611bc719bdb04fa7bdfa2894f2cfd7afd63cfc4d3653",
+    "previous_candidate_binary_sha256": "a775b178ddd38ad3ef497a74ec5b71397893d13daae0100c9bd9b650bdf9f525",
     "runtime": {
       "minimum_os": "Windows x86-64; validated on Windows 11 and Server 2022",
       "dependencies": [
@@ -144,13 +148,13 @@
       ],
       "glibc_min": null
     },
-    "archive_sha256": "c18b2d20f4d1233c601a45c7304c35f52a70f29467790bf840b672da161dc850",
+    "archive_sha256": "bf3b661636b3c8bf5cef9cd79c3676501c3e9df398ae7b725921cc4e9c6ea1e6",
     "archive_files": 7
   },
-  "elapsed_seconds": 51.6069611,
+  "elapsed_seconds": 44.323285,
   "command": "python validation/cli_distribution_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/cli-distribution-results.json",
-  "source_sha256": "76d12d15caacecc3741755f78ae850569fee44420a02f6a56c0def7f98aef1b9",
-  "manager_sha256": "5eacc5b54083d8aa9c3c0f08b9ce6eb50a7af93acff6acae89406e97cde74494",
+  "source_sha256": "f282e6d0ef11cbd20a254d5bbf3ad1fc36e867d6098245a75f1d9edd137734e0",
+  "manager_sha256": "7ee0adc631b88801d71480b5ab701d8e6d3d477efcef7efb3e54858024fc6099",
   "packager_sha256": "4418e8d6076bb410b573b581f8a4fedf2a01069499edd12c124297ec58f38d99",
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg"
 }

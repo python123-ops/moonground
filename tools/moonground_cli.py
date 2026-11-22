@@ -83,6 +83,8 @@ def regular_file(path):
 def binary_target(path):
     with path.open('rb') as stream:
         header = stream.read(64)
+        if len(header) < 64:
+            raise ValueError('native executable header is truncated')
         if header[:4] == b'\x7fELF' and header[4:6] == b'\x02\x01' and struct.unpack_from('<H', header, 18)[0] == 62:
             return 'linux-x86_64'
         if header[:2] == b'MZ':

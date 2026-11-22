@@ -158,6 +158,13 @@ def run_suite(binary):
         rejected('payload-size-or-digest-mismatch',bad,mutate_archive(new_archive,bad,broken_payload))
         rejected('native-identity-mismatch',bad,mutate_archive(new_archive,bad,
             lambda e:manifest_change(e,lambda m:m.update(version='9.9.9'))))
+        def truncated_binary(entries):
+            data=b'MZ'
+            entries=[(item,data if item.filename==new['manifest']['executable'] else payload)
+                     for item,payload in entries]
+            return manifest_change(entries,lambda m:m['files'][m['executable']].update(
+                sha256=hashlib.sha256(data).hexdigest(),size=len(data)))
+        rejected('truncated-native-header-rejected',bad,mutate_archive(new_archive,bad,truncated_binary))
         wrong = 'linux-x86_64' if target=='windows-x86_64' else 'windows-x86_64'
         rejected('manifest-target-mismatch',bad,mutate_archive(new_archive,bad,
             lambda e:manifest_change(e,lambda m:m.update(target=wrong))))
