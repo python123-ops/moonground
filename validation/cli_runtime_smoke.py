@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""Install the Linux release in a clean Ubuntu 22.04 container and replay stdin."""
+
+import argparse
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+
+ROOT=Path(__file__).resolve().parent.parent
+sys.path.insert(0,str(ROOT/'tools'))
+import moonground_cli as manager
+
+
+def run(command,**kwargs):
+    result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=600,**kwargs)
+    if result.returncode:
+        raise ValueError(result.stdout.decode('utf-8','replace')[-6000:])
+    return result.stdout
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--archive',type=Path,required=True)
+    parser.add_argument('--binary',type=Path,required=True)
+    parser.add_argument('--output',type=Path,required=True)
+    args=parser.parse_args()
+    if manager.host_target()!='linux-x86_64':
+        parser.error('clean runtime smoke runs on Linux x86-64')
+    fixture=(ROOT/'examples/warehouse.ndjson').read_bytes()
+    expected=run([str(args.binary.resolve()),'--stream'],input=fixture)
+    expected_rows=[json.loads(line) for line in expected.splitlines()]
+    archive_sha=manager.digest_file(args.archive)
+    run(['docker','pull','ubuntu:22.04'])
+    image=run(['docker','image','inspect','ubuntu:22.04','--format','{{.Id}}']).decode().strip()
+    with tempfile.TemporaryDirectory(prefix='cli-runtime-',dir=str(ROOT/'_build')) as temporary:
+        directory=Path(temporary)
+        shutil.copy2(args.archive,directory/'release.zip')
+        shutil.copy2(ROOT/'tools/moonground_cli.py',directory/'moonground_cli.py')
+        (directory/'warehouse.ndjson').write_bytes(fixture)
+        (directory/'expected.json').write_bytes(json.dumps(expected_rows).encode('utf-8'))
+        script='''#!/bin/sh
+set -eu
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -qq
+apt-get install -y --no-install-recommends python3 libssl3 >/dev/null
+for tool in moon moonc gcc clang cc node; do
+  if command -v "$tool" >/dev/null 2>&1; then
+    echo "unexpected build tool in clean runtime: $tool" >&2
+    exit 1
+  fi
+done
+python3 /input/moonground_cli.py --prefix /tmp/moonground install --archive /input/release.zip --sha256 "$CLI_SHA256" >/tmp/install.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground run -- --version-json >/tmp/version.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground run -- --stream </input/warehouse.ndjson >/tmp/output.ndjson
+python3 - <<'PY'
+import json
+with open('/input/expected.json') as stream: expected=json.load(stream)
+with open('/tmp/output.ndjson') as stream: actual=[json.loads(line) for line in stream]
+assert actual==expected
+with open('/tmp/version.json') as stream: version=json.load(stream)
+with open('/tmp/install.json') as stream: installed=json.load(stream)
+assert version['version']==installed['version']
+print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'])))
+PY
+'''
+        (directory/'smoke.sh').write_bytes(script.encode('utf-8'))
+        output=run(['docker','run','--rm','--env','CLI_SHA256='+archive_sha,
+                    '--volume',str(directory.resolve())+':/input:ro',image,'/bin/sh','/input/smoke.sh'])
+    line=next(line for line in output.decode('utf-8').splitlines() if line.startswith('MOONGROUND_RUNTIME_RESULT='))
+    result=json.loads(line.split('=',1)[1])
+    result.update(image=image,image_label='ubuntu:22.04',archive_sha256=archive_sha,
+                  installed_runtime_packages=['python3','libssl3'],build_tools_present=False)
+    args.output.parent.mkdir(parents=True,exist_ok=True)
+    args.output.write_bytes((json.dumps(result,indent=2)+'\n').encode('utf-8'))
+    print(json.dumps(result))
+
+
+if __name__=='__main__':
+    main()

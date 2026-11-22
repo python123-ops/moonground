@@ -1,0 +1,156 @@
+{
+  "status": "passed",
+  "target": "windows-x86_64",
+  "cases": [
+    {
+      "name": "native-version-matches-module",
+      "passed": true
+    },
+    {
+      "name": "deterministic-zip-for-identical-inputs",
+      "passed": true
+    },
+    {
+      "name": "empty-prefix-and-missing-rollback",
+      "passed": true
+    },
+    {
+      "name": "first-install-real-prerelease-candidate",
+      "passed": true
+    },
+    {
+      "name": "idempotent-install-and-uppercase-offline-checksum",
+      "passed": true
+    },
+    {
+      "name": "archive-digest-mismatch",
+      "passed": true
+    },
+    {
+      "name": "payload-size-or-digest-mismatch",
+      "passed": true
+    },
+    {
+      "name": "native-identity-mismatch",
+      "passed": true
+    },
+    {
+      "name": "manifest-target-mismatch",
+      "passed": true
+    },
+    {
+      "name": "boolean-schema-rejected",
+      "passed": true
+    },
+    {
+      "name": "unknown-manifest-field",
+      "passed": true
+    },
+    {
+      "name": "oversized-file-declaration",
+      "passed": true
+    },
+    {
+      "name": "archive-traversal-member",
+      "passed": true
+    },
+    {
+      "name": "duplicate-archive-member",
+      "passed": true
+    },
+    {
+      "name": "archive-symbolic-link-member",
+      "passed": true
+    },
+    {
+      "name": "native-architecture-mismatch",
+      "passed": true
+    },
+    {
+      "name": "selection-write-failure-keeps-old-version",
+      "passed": true
+    },
+    {
+      "name": "concurrent-operation-rejected",
+      "passed": true
+    },
+    {
+      "name": "operating-system-lock-released-after-process-exit",
+      "passed": true
+    },
+    {
+      "name": "managed-stdio-and-native-protocol-parity",
+      "passed": true
+    },
+    {
+      "name": "upgrade-preserves-running-old-process",
+      "passed": true
+    },
+    {
+      "name": "upgrade-selects-new-binary",
+      "passed": true
+    },
+    {
+      "name": "same-version-different-build-rejected",
+      "passed": true
+    },
+    {
+      "name": "rollback-preserves-running-new-process",
+      "passed": true
+    },
+    {
+      "name": "checkpoint-created-before-rollback-resumes-after-rollback",
+      "passed": true
+    },
+    {
+      "name": "managed-native-error-exit-code-preserved",
+      "passed": true
+    },
+    {
+      "name": "corrupt-previous-version-blocks-rollback",
+      "passed": true
+    },
+    {
+      "name": "valid-previous-version-recovers-corrupt-active-binary",
+      "passed": true
+    },
+    {
+      "name": "undeclared-installed-files-rejected",
+      "passed": true
+    },
+    {
+      "name": "operator-owned-files-preserved",
+      "passed": true
+    },
+    {
+      "name": "native-run-without-moonbit-or-compiler-path",
+      "passed": true
+    }
+  ],
+  "case_count": 31,
+  "artifacts": {
+    "current_version": "0.39.0",
+    "previous_candidate_version": "0.39.0-rc.1",
+    "current_binary_sha256": "f7db686d8d50cc5d8427a24927421d8afe67500d0730e7969590545da2cc6b9b",
+    "previous_candidate_binary_sha256": "a57a4d06d8481084cafa611bc719bdb04fa7bdfa2894f2cfd7afd63cfc4d3653",
+    "runtime": {
+      "minimum_os": "Windows x86-64; validated on Windows 11 and Server 2022",
+      "dependencies": [
+        "bcrypt.dll",
+        "dbghelp.dll",
+        "KERNEL32.dll",
+        "SHELL32.dll",
+        "WS2_32.dll"
+      ],
+      "glibc_min": null
+    },
+    "archive_sha256": "c18b2d20f4d1233c601a45c7304c35f52a70f29467790bf840b672da161dc850",
+    "archive_files": 7
+  },
+  "elapsed_seconds": 51.6069611,
+  "command": "python validation/cli_distribution_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/cli-distribution-results.json",
+  "source_sha256": "76d12d15caacecc3741755f78ae850569fee44420a02f6a56c0def7f98aef1b9",
+  "manager_sha256": "5eacc5b54083d8aa9c3c0f08b9ce6eb50a7af93acff6acae89406e97cde74494",
+  "packager_sha256": "4418e8d6076bb410b573b581f8a4fedf2a01069499edd12c124297ec58f38d99",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg"
+}
