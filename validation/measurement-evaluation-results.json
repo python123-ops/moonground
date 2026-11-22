@@ -158,10 +158,10 @@
   "command": "python validation/measurement_evaluation_verify.py --binary _build/native/release/build/cmd/main/main.exe --web",
   "python": "3.8.7",
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
-  "source_sha256": "d572cf045f4d9349def5ae704eb8327a1167bf3819073376c29e1d3dd58ca1ad",
-  "adapter_sha256": "920d1da6595465651d9efb278e3eb77a30b8dccd8ab055fc12367f6ef1b5af4a",
+  "source_sha256": "8c5e787fc1a1a152efc1f9a1355793c9a27ff85d129faaab3797b166150c670a",
+  "adapter_sha256": "9025e4df92ab8ae59e4bc901c7c97f813b90f50c94e1b94205087e1a44d28e7a",
   "binary_sha256": "0fef221e1372ab72224b5887d7263cb942dfcb13c8843471a9cc01021c12f909",
-  "elapsed_seconds": 2.0371411999999998,
+  "elapsed_seconds": 2.2562853,
   "web_interchange": {
     "status": "passed",
     "summary": {

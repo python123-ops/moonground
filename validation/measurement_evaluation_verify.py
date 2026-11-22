@@ -205,6 +205,10 @@ def file_adapter(binary):
         assert result['inputs']['measurements_sha256'] == hashlib.sha256(source.read_bytes()).hexdigest()
         assert result['inputs']['references_sha256'] == hashlib.sha256(reference_source.read_bytes()).hexdigest()
         assert result['binary_sha256'] == hashlib.sha256(binary.read_bytes()).hexdigest()
+        assert result['adapter_sha256'] == hashlib.sha256(script.read_bytes()).hexdigest()
+        assert result['configuration'] == dict(session_id='evaluation-example', max_tracks=4096,
+                                               max_samples=10000000, max_line_bytes=1048576,
+                                               timeout_seconds=300.0)
         for name, bad in [
                 ('raw-underflow-retained', b'{"timestamp_us":"800000","samples":[{"track_id":1,"position_m":[0,0],"speed_mps":1e-999}]}\n'),
                 ('duplicate-raw-fields', b'{"timestamp_us":"800000","samples":[],"samples":[]}\n'),

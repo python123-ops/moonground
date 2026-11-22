@@ -135,9 +135,13 @@ def evaluate(args):
         output.seek(0)
         report = json.loads(output.read().decode('utf-8'), parse_constant=invalid_constant)
     return dict(schema_version='0.1.0', kind='measurement_evaluation_run', evaluation=report,
+                configuration=dict(session_id=session_id, max_tracks=args.max_tracks,
+                                   max_samples=args.max_samples, max_line_bytes=args.max_line_bytes,
+                                   timeout_seconds=args.timeout),
                 inputs=dict(measurements_sha256=measured_hash.hexdigest(),
                             references_sha256=reference_hash.hexdigest()),
                 alignment=join_counts, binary_sha256=binary_hash,
+                adapter_sha256=digest_file(Path(__file__)),
                 elapsed_seconds=time.perf_counter() - started)
 
 
