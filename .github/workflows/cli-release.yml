@@ -1,0 +1,81 @@
+name: Publish MoonGround CLI
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Module version to publish, for example 0.39.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: moonground-cli-release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-22.04
+    outputs:
+      run_id: ${{ steps.checks.outputs.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Require successful main checks for this exact source
+        id: checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLI_VERSION: ${{ inputs.version }}
+          CLI_COMMIT: ${{ github.sha }}
+        run: python tools/cli_release.py check-ci --version "$CLI_VERSION" --commit "$CLI_COMMIT"
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      actions: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download the already tested platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ needs.verify.outputs.run_id }}
+          github-token: ${{ github.token }}
+          pattern: cli-*
+          path: _build/cli-artifacts
+      - name: Verify package identity, tested hashes and source
+        env:
+          CLI_VERSION: ${{ inputs.version }}
+          CLI_COMMIT: ${{ github.sha }}
+          CI_RUN_ID: ${{ needs.verify.outputs.run_id }}
+        run: python tools/cli_release.py prepare --input _build/cli-artifacts --output _build/releases --version "$CLI_VERSION" --commit "$CLI_COMMIT" --run-id "$CI_RUN_ID"
+      - name: Attest release metadata and the standalone manager
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            _build/releases/SHA256SUMS
+            _build/releases/RELEASE_MANIFEST.json
+            _build/releases/moonground_cli.py
+      - name: Publish verified assets without replacing existing versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLI_VERSION: ${{ inputs.version }}
+          CLI_COMMIT: ${{ github.sha }}
+        run: python tools/cli_release.py publish --output _build/releases --version "$CLI_VERSION" --commit "$CLI_COMMIT"

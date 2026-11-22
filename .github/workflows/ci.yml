@@ -12,10 +12,18 @@ jobs:
   check:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-22.04
+            target: linux-x86_64
+          - os: windows-2022
+            target: windows-x86_64
     defaults:
       run:
         shell: bash
@@ -54,9 +62,16 @@ jobs:
           moon test --target all --deny-warn
       - name: Build release command and browser library
         run: |
-          moon build cmd/main --target native --release --deny-warn
+          moon build cmd/main --target native --release --strip --deny-warn
           node web/build.mjs
           echo "MOONGROUND_CLI=_build/native/release/build/cmd/main/main.exe" >> "$GITHUB_ENV"
+      - name: Verify native CLI installation, upgrade and rollback
+        run: python validation/cli_distribution_verify.py --binary "$MOONGROUND_CLI" --output _build/ci-cli-distribution.json
+      - name: Package the tested native CLI
+        run: python tools/package_cli.py --binary "$MOONGROUND_CLI" --release --output _build/cli-release
+      - name: Verify Linux release in a clean runtime without build tools
+        if: runner.os == 'Linux'
+        run: python validation/cli_runtime_smoke.py --binary "$MOONGROUND_CLI" --archive _build/cli-release/moonground-cli-0.39.0-linux-x86_64.zip --output _build/ci-cli-runtime.json
       - name: Compare native and JavaScript protocols
         run: node --test web/parity.test.mjs
       - name: Verify measurement evaluation and log joins independently
@@ -143,7 +158,7 @@ jobs:
           moon -C examples/consumer check --target all --deny-warn
           moon -C examples/consumer test --target all --deny-warn
           moon package
-          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.38.0.zip --output _build/ci-package.json
+          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.39.0.zip --output _build/ci-package.json
       - name: Prepare browser test driver
         if: runner.os == 'Linux'
         run: |
@@ -170,6 +185,22 @@ jobs:
       - name: Make report paths portable
         if: always()
         run: python validation/public_reports.py '_build/ci-*.json'
+      - name: Attest the tested CLI archives
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/attest@v4
+        with:
+          subject-path: _build/cli-release/*.zip
+      - name: Retain tested CLI distribution
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-${{ matrix.target }}
+          if-no-files-found: error
+          path: |
+            _build/cli-release/*.zip
+            _build/cli-release/*.sha256
+            _build/ci-cli-distribution.json
+            _build/ci-cli-runtime.json
       - name: Retain validation records
         if: always()
         uses: actions/upload-artifact@v4
@@ -215,6 +246,8 @@ jobs:
             _build/ci-calibration-area.json
             _build/ci-calibration-line-offset.json
             _build/ci-measurement-evaluation.json
+            _build/ci-cli-distribution.json
+            _build/ci-cli-runtime.json
             _build/ci-stream.json
             _build/ci-package.json
             _build/site/*preview.png
