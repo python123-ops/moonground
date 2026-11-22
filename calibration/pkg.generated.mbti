@@ -98,6 +98,32 @@ pub struct CalibrationDistanceSensitivity {
 pub fn CalibrationDistanceSensitivity::mode_responses_m(Self) -> Array[Double]
 pub fn CalibrationDistanceSensitivity::to_repr(Self) -> @debug.Repr
 
+pub struct CalibrationLineOffsetComparison {
+  line_start_m : @types.Point2
+  line_end_m : @types.Point2
+  direction : @types.Point2
+  line_length_m : Double
+  first : CalibrationLineOffsetSensitivity
+  second : CalibrationLineOffsetSensitivity
+  cross_contribution_m2 : Double
+  difference_m : Double
+  difference_contribution_m2 : Double
+  difference_std_m : Double
+  // private fields
+} derive(@debug.Debug)
+pub fn CalibrationLineOffsetComparison::difference_mode_responses_m(Self) -> Array[Double]
+pub fn CalibrationLineOffsetComparison::to_repr(Self) -> @debug.Repr
+
+pub struct CalibrationLineOffsetSensitivity {
+  position_m : @types.Point2
+  signed_offset_m : Double
+  contribution_m2 : Double
+  std_m : Double
+  // private fields
+} derive(@debug.Debug)
+pub fn CalibrationLineOffsetSensitivity::mode_responses_m(Self) -> Array[Double]
+pub fn CalibrationLineOffsetSensitivity::to_repr(Self) -> @debug.Repr
+
 pub struct CalibrationReport {
   // private fields
 } derive(@debug.Debug)
@@ -158,9 +184,11 @@ pub struct HomographySensitivity {
 pub fn HomographySensitivity::compare_areas(Self, Array[@types.Point2], Array[@types.Point2]) -> CalibrationAreaComparison raise @types.GroundError
 pub fn HomographySensitivity::compare_directions(Self, @types.Point2, @types.Point2, @types.Point2, @types.Point2) -> CalibrationAngleComparison raise @types.GroundError
 pub fn HomographySensitivity::compare_distances(Self, @types.Point2, @types.Point2, @types.Point2, @types.Point2) -> CalibrationDistanceComparison raise @types.GroundError
+pub fn HomographySensitivity::compare_line_offsets(Self, @types.Point2, @types.Point2, @types.Point2, @types.Point2) -> CalibrationLineOffsetComparison raise @types.GroundError
 pub fn HomographySensitivity::distance(Self, @types.Point2, @types.Point2) -> CalibrationDistanceSensitivity raise @types.GroundError
 pub fn HomographySensitivity::evaluate(Self, @types.Point2) -> CalibrationSensitivityPoint raise @types.GroundError
 pub fn HomographySensitivity::evaluate_pair(Self, @types.Point2, @types.Point2) -> CalibrationSensitivityPair raise @types.GroundError
+pub fn HomographySensitivity::line_offset(Self, @types.Point2, @types.Point2, @types.Point2) -> CalibrationLineOffsetSensitivity raise @types.GroundError
 pub fn HomographySensitivity::matrix(Self) -> Array[Double]
 pub fn HomographySensitivity::modes(Self) -> Array[Array[Double]]
 pub fn HomographySensitivity::new(GroundCalibration, Array[Array[Double]]) -> Self raise @types.GroundError
