@@ -1,0 +1,207 @@
+{
+  "status": "passed",
+  "seed": 20261122,
+  "statistics": {
+    "requests": 26,
+    "comparisons": 448,
+    "scalars": 36000,
+    "finite_difference_vectors": 671,
+    "maximum_tolerance_fraction": 9.123843129486454e-05,
+    "maximum_absolute_error_by_unit": {
+      "m": 3.1786281088644024e+125,
+      "m2": 2.0322180191026392e-15,
+      "dimensionless": 1.8792809715310914e-16
+    }
+  },
+  "cases": [
+    {
+      "name": "empty-batch",
+      "modes": 0,
+      "comparisons": 0,
+      "nonlinear_checked": false
+    },
+    {
+      "name": "empty-modes",
+      "modes": 0,
+      "comparisons": 5,
+      "nonlinear_checked": false
+    },
+    {
+      "name": "common-similarity-and-gauge",
+      "modes": 4,
+      "comparisons": 5,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "moving-reference-shear",
+      "modes": 2,
+      "comparisons": 5,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "perspective",
+      "modes": 2,
+      "comparisons": 5,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "reflection",
+      "modes": 3,
+      "comparisons": 5,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "short-reference",
+      "modes": 0,
+      "comparisons": 1,
+      "nonlinear_checked": false
+    },
+    {
+      "name": "near-coincident-reference",
+      "modes": 1,
+      "comparisons": 1,
+      "nonlinear_checked": false
+    },
+    {
+      "name": "extreme-scale-1e-140",
+      "modes": 0,
+      "comparisons": 5,
+      "nonlinear_checked": false
+    },
+    {
+      "name": "extreme-scale-1e+140",
+      "modes": 0,
+      "comparisons": 5,
+      "nonlinear_checked": false
+    },
+    {
+      "name": "far-reference",
+      "modes": 0,
+      "comparisons": 1,
+      "nonlinear_checked": false
+    },
+    {
+      "name": "random-0",
+      "modes": 1,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-1",
+      "modes": 2,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-2",
+      "modes": 3,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-3",
+      "modes": 4,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-4",
+      "modes": 5,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-5",
+      "modes": 6,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-6",
+      "modes": 7,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-7",
+      "modes": 1,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-8",
+      "modes": 2,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-9",
+      "modes": 3,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-10",
+      "modes": 4,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-11",
+      "modes": 5,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-12",
+      "modes": 6,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "random-13",
+      "modes": 7,
+      "comparisons": 11,
+      "nonlinear_checked": true
+    },
+    {
+      "name": "maximum-batch",
+      "modes": 32,
+      "comparisons": 256,
+      "nonlinear_checked": false
+    }
+  ],
+  "decimal_precision": 160,
+  "python": "3.8.7",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "command": "python validation/calibration_line_offset_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/calibration-line-offset-results.json",
+  "source_sha256": "44a9d81503b32e74f6e2b2c7c1765183234dc282390cd47db95bf787e8066bab",
+  "binary_sha256": "b7d90d31744824ef59c6dafb846b1289bd72d7c74ec0dffeda00eea2cc1eab0d",
+  "reference": "Exact Fraction inverse-transpose image-line transport and differentiated matrix inverse; 160-digit Decimal square roots and moments",
+  "finite_difference": {
+    "step": "0.000001",
+    "precision": 160,
+    "formula": "Nonlinear projected anchor cross products and norm; three signed offsets including direct point separation"
+  },
+  "tolerance": {
+    "rtol": 2e-10,
+    "scaled_atol": 3e-12
+  },
+  "units": {
+    "mean": "m",
+    "response": "m per latent mode",
+    "contribution": "m2"
+  },
+  "elapsed_seconds": 3.9427112,
+  "web_interchange": {
+    "status": "passed",
+    "summary": {
+      "tests": 5,
+      "pass": 5,
+      "fail": 0
+    },
+    "command": "node --test --test-reporter=tap web/calibration-line-offset.test.mjs",
+    "source_sha256": "63a1dba74b2691b7b8606e0eb8717b5f1430fa2a8e275da894faf255a170aa3f",
+    "bridge_sha256": "07f9b0dba8b1ef3afd348487f5531c188e54d9deb838108196b745ca3a0e300f"
+  }
+}
