@@ -184,3 +184,36 @@ fn point_json(point : @types.Point2) -> Json {
 fn covariance_json(value : @types.Covariance2) -> Json {
   Json([value.xx, value.xy, value.yy])
 }
+
+///|
+fn finite_number_tokens(
+  value : Json,
+  label : String,
+) -> Unit raise @types.GroundError {
+  match value {
+    Number(value, repr~) => {
+      if !@types.is_finite(value) {
+        raise invalid(label + " numbers must be finite")
+      }
+      if value == 0.0 && repr is Some(source) {
+        for code in source.iter() {
+          if code == 'e' || code == 'E' {
+            break
+          }
+          if code >= '1' && code <= '9' {
+            raise invalid("nonzero " + label + " number underflows binary64")
+          }
+        }
+      }
+    }
+    Array(values) =>
+      for child in values {
+        finite_number_tokens(child, label)
+      }
+    Object(fields) =>
+      for _, child in fields {
+        finite_number_tokens(child, label)
+      }
+    _ => ()
+  }
+}

@@ -11,6 +11,7 @@ import {
   "python123-ops/moonground/transit",
   "python123-ops/moonground/velocity",
   "python123-ops/moonground/zones",
+  "python123-ops/moonground/evaluation",
   "moonbitlang/core/json",
   "moonbitlang/core/string",
 }

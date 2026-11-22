@@ -18,34 +18,7 @@ fn sensitivity_point_json(
 
 ///|
 fn sensitivity_number_tokens(value : Json) -> Unit raise @types.GroundError {
-  match value {
-    Number(value, repr~) => {
-      if !@types.is_finite(value) {
-        raise invalid("calibration sensitivity numbers must be finite")
-      }
-      if value == 0.0 && repr is Some(source) {
-        for code in source.iter() {
-          if code == 'e' || code == 'E' {
-            break
-          }
-          if code >= '1' && code <= '9' {
-            raise invalid(
-              "nonzero calibration sensitivity number underflows binary64",
-            )
-          }
-        }
-      }
-    }
-    Array(values) =>
-      for child in values {
-        sensitivity_number_tokens(child)
-      }
-    Object(fields) =>
-      for _, child in fields {
-        sensitivity_number_tokens(child)
-      }
-    _ => ()
-  }
+  finite_number_tokens(value, "calibration sensitivity")
 }
 
 ///|

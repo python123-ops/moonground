@@ -16,6 +16,7 @@ options(
         "moonground_calibration_angle",
         "moonground_calibration_area",
         "moonground_calibration_line_offset",
+        "moonground_measurement_evaluation",
         "moonground_create",
         "moonground_update",
         "moonground_close",
