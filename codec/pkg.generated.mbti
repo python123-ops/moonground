@@ -20,6 +20,8 @@ pub fn calibration_area_json(String) -> String raise @types.GroundError
 
 pub fn calibration_distance_json(String) -> String raise @types.GroundError
 
+pub fn calibration_line_offset_json(String) -> String raise @types.GroundError
+
 pub fn calibration_sensitivity_json(String) -> String raise @types.GroundError
 
 pub fn disk_zone_evidence_json(String) -> String raise @types.GroundError
