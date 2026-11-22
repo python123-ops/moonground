@@ -4,14 +4,16 @@
 
 支持通道过线、证据通行、逐目标足迹、确认序列和有界分窗，可与固定地标健康检查共同提交、完整恢复，并显式切换标定。另提供指定方向的速度证据、区域支持区间，以及位置协方差椭圆与凸区域相交的上下界诊断。显式标定扰动模式可传播单点、位移、长度差值／比值、线段方向、有向夹角、凸多边形面积差值／比值，以及点到参考线偏移的一阶共享误差。
 
-当前版本为 `0.37.0`。完整说明、随测试执行的 MoonBit 示例、CLI 协议与复现命令见 [README.mbt.md](https://github.com/python123-ops/moonground/blob/main/README.mbt.md)，该文件是文档源文件。
+可用独立米制参考评估位置与 Ready 速度，统计误差、偏差、可用率以及缺测和拒绝状态。
+
+当前版本为 `0.38.0`。完整说明、随测试执行的 MoonBit 示例、CLI 协议与复现命令见 [README.mbt.md](https://github.com/python123-ops/moonground/blob/main/README.mbt.md)，该文件是文档源文件。
 
 ## 安装与接入
 
 本版本使用 MoonBit `0.10.18+6c83a7f62`，计算库支持 `wasm`、`wasm-gc`、`js` 和 `native`。
 
 ```sh
-moon add python123-ops/moonground@0.37.0
+moon add python123-ops/moonground@0.38.0
 ```
 
 在调用方的 `moon.pkg` 中导入根包：
@@ -29,6 +31,7 @@ import {
 相机需要固定，目标锚点位于标定有效域内的同一测量平面。调用方提供真实时间戳、稳定身份和显式选择的地面锚点；检测置信度不自动转换为测量噪声。库输出观测路径及其估计，实际场地的物理测量精度需要独立真值评估。
 
 - [核心接口、时间和协方差语义](https://github.com/python123-ops/moonground/blob/main/README.mbt.md)
+- [对照独立真值评估测量结果](https://github.com/python123-ops/moonground/blob/main/docs/measurement-evaluation.md)
 - [点到参考线的偏移比较](https://github.com/python123-ops/moonground/blob/main/docs/calibration-line-offset.md)
 - [共享标定误差与凸多边形面积比较](https://github.com/python123-ops/moonground/blob/main/docs/calibration-area.md)
 - [命令行与浏览器示例](https://github.com/python123-ops/moonground/tree/main/examples)

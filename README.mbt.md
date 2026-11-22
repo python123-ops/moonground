@@ -2,7 +2,7 @@
 
 MoonGround 把固定相机中的目标轨迹转换为米制地面位置、速度和观测路径，面向园区、仓储和其他近似平面的场地。输入是已有目标身份、地面接触锚点和真实时间戳；库负责标定有效域、投影协方差、运动估计、轨迹分段和双向通道过线统计，并支持原子组合更新与完整状态恢复。固定地标检查持续核对原标定的米制残差；需要按检查结果决定是否计算对象测量时，可显式使用 `guarded` 入口。
 
-当前版本为 `0.37.0`。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
+当前版本为 `0.38.0`。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
 
 ## 与现有项目的衔接
 
@@ -2794,7 +2794,51 @@ test "README: shared reference line offsets retain negative cross contribution" 
 
 完整协议和数值语义见 [参考线偏移说明](docs/calibration-line-offset.md)，输入示例见 [calibration-line-offset.json](examples/calibration-line-offset.json)。CLI 使用 `--calibration-line-offset`；浏览器在原共享误差面板选择“点到参考线”。
 
+### 对照独立真值评估测量结果
+
+`evaluation.EvaluationSession` 按精确时间和输出身份比较米制参考，累计位置与速度的 MAE、RMSE、最大误差、有符号偏差和可用率。位置采用新鲜接受的初始化、Ready 或 Uncertain 位置，速度采用具有显式速度参考的 Ready 输出；缺测与拒绝仍进入对应参考分母，没有样本的误差为 `null`。
+
+```mbt check
+///|
+test "README: metric evaluation retains misses and speed availability" {
+  let estimator = @motion.MotionEstimator::new(
+    "readme-evaluation",
+    @moonground.MotionConfig::new(),
+  )
+  let evaluation = @evaluation.EvaluationSession::new("readme-evaluation")
+  let observation = @moonground.GroundObservation::new(
+    1,
+    { x: 0.0, y: 0.0, },
+    @moonground.Covariance2::isotropic(0.1),
+  )
+  let reference = @evaluation.ReferenceSample::new(
+    1,
+    { x: 0.0, y: 0.0, },
+    speed_mps=0.0,
+  )
+  for time in [0L, 200000L, 400000L] {
+    ignore(
+      evaluation.update(estimator.update(time, [observation]), time, [reference]),
+    )
+  }
+  let report = evaluation.update(
+    estimator.update(600000L, [], removed=[1]),
+    600000L,
+    [reference],
+  )
+  assert_eq(report.counts.missing, 1)
+  assert_eq(report.position_error_m.samples, 3)
+  assert_eq(report.speed_error_mps.samples, 1)
+  assert_eq(report.position_coverage, Some(0.75))
+  assert_eq(report.speed_coverage, Some(0.25))
+}
+```
+
+CLI `--evaluate-measurements` 读取配置和逐行对齐输入，只在 EOF 输出摘要。现有测量与参考日志可通过 [`examples/evaluate_measurements.py`](examples/evaluate_measurements.py) 做完整时间连接，保存输入哈希及实际配置，完整报告生成后替换输出。库会话在输入、容量或数值错误时保留原累计状态；详细格式与示例见 [测量评估说明](docs/measurement-evaluation.md)。
+
 ## 验证与复现
+
+v0.38.0 的测量评估验证见 [`validation/measurement-evaluation-results.json`](validation/measurement-evaluation-results.json)：13 组请求、10,134 帧、2,451 条参考样本通过离线 160 位 Decimal 总体统计核对，最大误差／容差比为 0.000201，含 `1e±200` 合成尺度。13 项文件适配场景及 6 项原生／JavaScript 一致性用例通过；库四后端各 1,060 项，ZIP 消费者四后端各 1,151 项通过，见 [`validation/package-v0.38-results.json`](validation/package-v0.38-results.json)。Chrome 157 的六组浏览器回归通过。既有投影／运动参考、共享标定参数传播及 23 项流协议使用当前产物重跑，记录为对应 `*-v0.38-results.json`。合成参考用于核对软件统计，现场测量误差使用独立实测参考数据评估。
 
 v0.37.0 的参考线偏移验证见 [`validation/calibration-line-offset-results.json`](validation/calibration-line-offset-results.json)：26 组请求、448 组比较、36,000 个标量及 671 组三分量非线性中心差分通过。Fraction 以逆转置线方程和矩阵逆导数独立求参考，160 位 Decimal 计算归一化和贡献；最大误差／容差比为 0.0000913。5 项原生／JavaScript 用例覆盖有符号偏移、负交叉贡献、端点反转、严格原文、最大容量及单请求边界。库四后端各 1,043 项通过；独立 ZIP 消费者见 [`validation/package-v0.37-results.json`](validation/package-v0.37-results.json)。Chromium 151 与 Chrome 157 的六组交互回归均通过，包含五种比较的独立草稿、取消、迟到示例、原精度下载和 390／1440 宽布局。旧功能数值回归采用 `*-v0.37-results.json`，流协议记录仅运行 23 项协议检查。
 
@@ -2855,7 +2899,7 @@ python validation/verify.py --binary _build/native/release/build/cmd/main/main.e
 python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.36-results.json
 moon package
 python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.36-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.37.0.zip --output validation/package-v0.37-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.38.0.zip --output validation/package-v0.38-results.json
 ```
 
 v0.36.0 的面积比较验证见 [`validation/calibration-area-results.json`](validation/calibration-area-results.json)：31 个请求、297 组比较、44,339 个标量及 2,460 组四分量非线性中心差分通过。独立参考以 Fraction 对完整闭合鞋带公式及单应商式求精确面积和导数，110 位 Decimal 核对共享贡献；极端面积提高到 800 位。最大误差／容差比为 0.00162；数值误差分别按 m、m²、m⁴ 和无量纲记录，极大面积的绝对误差不代表普通场地的测量误差。8 项原生／JavaScript 用例覆盖共同尺度抵消、负交叉贡献、反射与绕向、严格原文、32 模式×64 比较×64 顶点、晚阶段退化及单请求边界。库四后端各 1,027 项通过，独立 ZIP 消费者记录见 [`validation/package-v0.36-results.json`](validation/package-v0.36-results.json)。共享面板的四种模式在 Chromium 151 和 Chrome 157 核对独立草稿／结果、切换取消、迟到示例、原精度下载、最大批量和 390／1440 宽布局；两种浏览器的完整五组交互测试均通过。既有接口的 35 项参考使用当前产物重跑，记录为 `*-v0.36-results.json`，保留各历史原始记录。

@@ -59,6 +59,8 @@ jobs:
           echo "MOONGROUND_CLI=_build/native/release/build/cmd/main/main.exe" >> "$GITHUB_ENV"
       - name: Compare native and JavaScript protocols
         run: node --test web/parity.test.mjs
+      - name: Verify measurement evaluation and log joins independently
+        run: python validation/measurement_evaluation_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-measurement-evaluation.json
       - name: Compare independent numerical reference
         run: python validation/verify.py --binary "$MOONGROUND_CLI" --output _build/ci-reference.json
       - name: Verify lens correction and uncertainty thresholds independently
@@ -141,7 +143,7 @@ jobs:
           moon -C examples/consumer check --target all --deny-warn
           moon -C examples/consumer test --target all --deny-warn
           moon package
-          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.37.0.zip --output _build/ci-package.json
+          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.38.0.zip --output _build/ci-package.json
       - name: Prepare browser test driver
         if: runner.os == 'Linux'
         run: |
@@ -212,6 +214,7 @@ jobs:
             _build/ci-calibration-angle.json
             _build/ci-calibration-area.json
             _build/ci-calibration-line-offset.json
+            _build/ci-measurement-evaluation.json
             _build/ci-stream.json
             _build/ci-package.json
             _build/site/*preview.png
