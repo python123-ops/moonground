@@ -57,6 +57,8 @@ moonground-install/
 
 发布构建固定 MoonBit `0.10.18+6c83a7f62`，Windows 使用 Server 2022 构建机，Linux 使用 Ubuntu 22.04 构建机。Linux 发行构建要求 glibc 符号基线不高于 2.35；实际系统库名称记录在每包的 `manifest.json`。Windows 包检查静态导入 DLL，拒绝未打包的非系统运行库。
 
+MoonBit 构建使用 `--release --strip`；Linux 产物还执行 `strip --strip-all _build/native/release/build/cmd/main/main.exe` 清理 ELF 符号及调试信息。打包前继续检查可执行文件中是否包含源码检出目录，残留路径会阻止打包。
+
 清单记录完整源码提交、工具链、各文件大小及哈希。主分支 CI 在上述平台构建并验证安装、升级和回退，对测试过的 ZIP 生成构建来源证明。发布流程等待同一提交的 CI 完成，下载这两份现成的受测包，核对哈希及来源后发布。可使用 `gh attestation verify <发行包.zip> --repo python123-ops/moonground --signer-workflow python123-ops/moonground/.github/workflows/ci.yml` 核对来源。
 
 发行包随附项目的 Apache-2.0 许可证及编译依赖的署名、标准库与原生运行库第三方许可文本。

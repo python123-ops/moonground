@@ -136,7 +136,7 @@
     "current_version": "0.39.0",
     "previous_candidate_version": "0.39.0-rc.1",
     "current_binary_sha256": "f7db686d8d50cc5d8427a24927421d8afe67500d0730e7969590545da2cc6b9b",
-    "previous_candidate_binary_sha256": "a775b178ddd38ad3ef497a74ec5b71397893d13daae0100c9bd9b650bdf9f525",
+    "previous_candidate_binary_sha256": "3bb56301d2a7d41ad858eae5c2b373b1de78305b5caef836f1c3518d21b114bf",
     "runtime": {
       "minimum_os": "Windows x86-64; validated on Windows 11 and Server 2022",
       "dependencies": [
@@ -148,13 +148,13 @@
       ],
       "glibc_min": null
     },
-    "archive_sha256": "bf3b661636b3c8bf5cef9cd79c3676501c3e9df398ae7b725921cc4e9c6ea1e6",
+    "archive_sha256": "a151ab20cb3793117b1ad71cef9346eed2f9349fc47c67284bdc0211e448f7c8",
     "archive_files": 7
   },
-  "elapsed_seconds": 44.323285,
+  "elapsed_seconds": 56.1039496,
   "command": "python validation/cli_distribution_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/cli-distribution-results.json",
-  "source_sha256": "f282e6d0ef11cbd20a254d5bbf3ad1fc36e867d6098245a75f1d9edd137734e0",
+  "source_sha256": "86c79d69a48c832b3afb8140ae9c59eb2e7754780e3551b1622b57c4e68bc2b7",
   "manager_sha256": "7ee0adc631b88801d71480b5ab701d8e6d3d477efcef7efb3e54858024fc6099",
-  "packager_sha256": "4418e8d6076bb410b573b581f8a4fedf2a01069499edd12c124297ec58f38d99",
+  "packager_sha256": "d03efd372ba214e55453946f3e1ecd64586a881977046365ebd84e158e42d399",
   "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg"
 }

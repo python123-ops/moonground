@@ -2860,6 +2860,8 @@ v0.37.0 的参考线偏移验证见 [`validation/calibration-line-offset-results
 
 以下开发命令在完整项目目录运行。Mooncakes 源码包只保留库、命令、JavaScript 桥及其必要文件，开发示例、验证脚本和网页资源保留在项目仓库中。
 
+Linux 在下列原生命令构建后、安装验证与二进制打包前，执行 `strip --strip-all _build/native/release/build/cmd/main/main.exe` 清理 ELF 调试信息。Windows 使用 MoonBit 构建产物。
+
 ```sh
 moon fmt --check
 moon info

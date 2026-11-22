@@ -101,7 +101,7 @@ def create_bundle(binary, output, version, commit, dirty, runtime=None):
     }
     forbidden = [str(ROOT.resolve()).encode('utf-8'), str(ROOT.resolve()).replace('\\','/').encode('utf-8')]
     if any(marker and marker in payload[executable] for marker in forbidden):
-        raise ValueError('native executable contains the source checkout path; build with --strip')
+        raise ValueError('native executable contains the source checkout path; remove native symbols/debug info before packaging (Linux: strip --strip-all)')
     value = dict(schema_version=1, name='moonground', version=version, target=target,
                  source_commit=commit, source_dirty=dirty,
                  toolchain=subprocess.check_output(['moon','version','--all','--no-path'], text=True, encoding='utf-8').strip(),

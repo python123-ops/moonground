@@ -69,6 +69,8 @@ def candidate_binary(directory, current_version):
     execute(['moon','update'],cwd=source)
     execute(['moon','build','cmd/main','--target','native','--release','--strip','--deny-warn'],cwd=source)
     binary = source/'_build/native/release/build/cmd/main/main.exe'
+    if manager.host_target() == 'linux-x86_64':
+        execute(['strip','--strip-all',str(binary)],cwd=source)
     manager.probe(binary,version)
     return binary, version
 
