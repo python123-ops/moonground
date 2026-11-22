@@ -1,3 +1,4 @@
+const { waitForDownloadSlot } = require("./browser-test-download.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -119,6 +120,7 @@ test("explicit calibration sensitivity draft, cancellation, download and mobile 
       );
     }
     async function exportResult() {
+      await waitForDownloadSlot(page);
       const waiting = page.waitForEvent("download");
       await download.click();
       const file = await waiting;

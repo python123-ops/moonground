@@ -1,3 +1,4 @@
+const { waitForDownloadSlot } = require("./browser-test-download.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -114,6 +115,7 @@ test("convex calibration areas, four independent drafts and cancelled work on mo
       );
     }
     async function exported() {
+      await waitForDownloadSlot(page);
       const selected = await mode.inputValue();
       const event = page.waitForEvent("download");
       await download.click();

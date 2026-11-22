@@ -1,3 +1,4 @@
+const { waitForDownloadSlot } = require("./browser-test-download.cjs");
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -131,6 +132,7 @@ test("shared length comparison modes, isolated drafts, cancellation and mobile l
       );
     }
     async function exportResult() {
+      await waitForDownloadSlot(page);
       const selected = await mode.inputValue();
       const waiting = page.waitForEvent("download");
       await download.click();
