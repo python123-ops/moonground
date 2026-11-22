@@ -1,0 +1,71 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123-ops/moonground/evaluation"
+
+import {
+  "moonbitlang/core/debug",
+  "python123-ops/moonground/motion",
+  "python123-ops/moonground/types",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct ErrorStatistics {
+  samples : Int32
+  mean_absolute_error : Double?
+  root_mean_square_error : Double?
+  maximum_absolute_error : Double?
+} derive(@debug.Debug)
+pub fn ErrorStatistics::to_repr(Self) -> @debug.Repr
+
+pub struct EvaluationCounts {
+  frames : Int64
+  references : Int32
+  speed_references : Int32
+  measurements : Int32
+  without_reference : Int32
+  missing : Int32
+  initializing : Int32
+  ready : Int32
+  uncertain : Int32
+  rejected_innovation : Int32
+  numerical_failure : Int32
+  rejected_projection : Int32
+} derive(@debug.Debug)
+pub fn EvaluationCounts::to_repr(Self) -> @debug.Repr
+
+pub struct EvaluationReport {
+  session_id : String
+  first_timestamp_us : Int64?
+  last_timestamp_us : Int64?
+  counts : EvaluationCounts
+  position_error_m : ErrorStatistics
+  position_bias_m : @types.Point2?
+  position_coverage : Double?
+  speed_error_mps : ErrorStatistics
+  speed_bias_mps : Double?
+  speed_coverage : Double?
+} derive(@debug.Debug)
+pub fn EvaluationReport::to_repr(Self) -> @debug.Repr
+
+pub struct EvaluationSession {
+  // private fields
+}
+pub fn EvaluationSession::fork(Self) -> Self
+pub fn EvaluationSession::new(String, max_tracks? : Int32, max_samples? : Int32) -> Self raise @types.GroundError
+pub fn EvaluationSession::report(Self) -> EvaluationReport
+pub fn EvaluationSession::update(Self, @motion.FrameResult, Int64, Array[ReferenceSample], projection_failures? : Array[Int32]) -> EvaluationReport raise @types.GroundError
+
+pub struct ReferenceSample {
+  track_id : Int32
+  position_m : @types.Point2
+  speed_mps : Double?
+} derive(@debug.Debug)
+pub fn ReferenceSample::new(Int32, @types.Point2, speed_mps? : Double) -> Self raise @types.GroundError
+pub fn ReferenceSample::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
