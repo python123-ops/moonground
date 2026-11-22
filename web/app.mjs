@@ -8,6 +8,7 @@ import {
   moonground_calibration_distance,
   moonground_calibration_angle,
   moonground_calibration_area,
+  moonground_calibration_line_offset,
   moonground_checkpoint,
   moonground_restore,
   moonground_reframe,
@@ -7997,6 +7998,11 @@ example();
 
 // Explicit baseline and modes live in each diagnostic's own request.
 const sensitivityModes = {
+  line_offset: {
+    compute: moonground_calibration_line_offset,
+    example: "calibration-line-offset.json",
+    filename: "moonground-calibration-line-offset.json",
+  },
   position: {
     compute: moonground_calibration_sensitivity,
     example: "calibration-sensitivity.json",
@@ -8103,6 +8109,24 @@ function renderSensitivity() {
             ],
             ["交叉贡献", `${number(probe.cross_contribution_m2)} m²`],
           ];
+        } else if (sensitivityMode === "line_offset") {
+          const item = document.createElement("p");
+          item.textContent = `偏移差 ${number(probe.difference_m)} m · σ ${number(probe.difference_std_m)} m`;
+          evidence.append(item);
+          summary.textContent = "参考线、两点偏移与共同贡献";
+          values = [
+            ["参考起点", block(probe.line_start_m) + " m"],
+            ["参考终点", block(probe.line_end_m) + " m"],
+            [
+              "第一点偏移",
+              `${number(probe.first.signed_offset_m)} m · σ ${number(probe.first.std_m)} m`,
+            ],
+            [
+              "第二点偏移",
+              `${number(probe.second.signed_offset_m)} m · σ ${number(probe.second.std_m)} m`,
+            ],
+            ["交叉贡献", `${number(probe.cross_contribution_m2)} m²`],
+          ];
         } else if (sensitivityMode === "area") {
           for (const text of [
             `面积差 ${number(probe.difference_m2)} m² · σ ${number(probe.difference_std_m2)} m²`,
@@ -8168,29 +8192,38 @@ function syncSensitivityView() {
     distance = sensitivityMode === "distance",
     angle = sensitivityMode === "angle",
     area = sensitivityMode === "area";
-  $("calibration-sensitivity-example").textContent = area
-    ? "面积与共同尺度示例"
-    : angle
-      ? "方向与共享转动示例"
-      : distance
-        ? "长度与比值示例"
-        : "共享平移与尺度示例";
+  $("calibration-sensitivity-example").textContent =
+    sensitivityMode === "line_offset"
+      ? "参考线与两侧测点示例"
+      : area
+        ? "面积与共同尺度示例"
+        : angle
+          ? "方向与共享转动示例"
+          : distance
+            ? "长度与比值示例"
+            : "共享平移与尺度示例";
   $("calibration-sensitivity-probe-heading").textContent =
-    distance || angle || area ? "比较" : "点对";
-  $("calibration-sensitivity-evidence-heading").textContent = area
-    ? "面积差与面积比"
-    : angle
-      ? "有向夹角 · rad"
-      : distance
-        ? "差值与比值"
-        : "位移贡献";
-  $("calibration-sensitivity-scope").textContent = area
-    ? "本输入自带完整标定。两片多边形各有 3..64 个有序顶点，像素及映射后的地面形状都须严格凸。面积取正值，差值为第一片减第二片，比值为第一片除第二片。面积和 σ 使用 m²，交叉贡献使用 m⁴；仅含给定共享模式的一阶贡献。下载保留顶点、绕向和逐模式响应。"
-    : angle
-      ? "本输入自带完整标定。静态线段的端点先后决定方向；方向从地面 +x 逆时针计，夹角为第二段相对第一段的转角，范围 (−π, π]。σ 是给定模式的一阶角度标准差，跨越切口时须按圆周处理，不能直接拼成普通角度区间。下载保留基线与逐模式响应。"
-      : distance
-        ? "本输入自带完整标定。差值为第一段减第二段，比值为第一段除第二段；σ 仅为给定模式的一阶标准差。重合地面端点会报错。下载保留原精度基线、交叉贡献和逐模式响应。"
-        : "本输入自带完整标定，独立于上方轨迹与控制点拟合。下表单位为 m²；对称块按 xx、xy、yy 排列，交叉块按 xx、xy、yx、yy 排列。下载包含原精度基线和逐模式响应。";
+    sensitivityMode !== "position" ? "比较" : "点对";
+  $("calibration-sensitivity-evidence-heading").textContent =
+    sensitivityMode === "line_offset"
+      ? "有符号偏移差 · m"
+      : area
+        ? "面积差与面积比"
+        : angle
+          ? "有向夹角 · rad"
+          : distance
+            ? "差值与比值"
+            : "位移贡献";
+  $("calibration-sensitivity-scope").textContent =
+    sensitivityMode === "line_offset"
+      ? "两个参考端点与两个测点使用同一标定。计算有向无限直线的垂距，参考起点到终点的左侧为正；偏移差为第一点减第二点，参考端点随模式共同变化。σ 仅包含给定模式的一阶贡献。下载保留参考线、地面位置及逐模式响应。"
+      : area
+        ? "本输入自带完整标定。两片多边形各有 3..64 个有序顶点，像素及映射后的地面形状都须严格凸。面积取正值，差值为第一片减第二片，比值为第一片除第二片。面积和 σ 使用 m²，交叉贡献使用 m⁴；仅含给定共享模式的一阶贡献。下载保留顶点、绕向和逐模式响应。"
+        : angle
+          ? "本输入自带完整标定。静态线段的端点先后决定方向；方向从地面 +x 逆时针计，夹角为第二段相对第一段的转角，范围 (−π, π]。σ 是给定模式的一阶角度标准差，跨越切口时须按圆周处理，不能直接拼成普通角度区间。下载保留基线与逐模式响应。"
+          : distance
+            ? "本输入自带完整标定。差值为第一段减第二段，比值为第一段除第二段；σ 仅为给定模式的一阶标准差。重合地面端点会报错。下载保留原精度基线、交叉贡献和逐模式响应。"
+            : "本输入自带完整标定，独立于上方轨迹与控制点拟合。下表单位为 m²；对称块按 xx、xy、yy 排列，交叉块按 xx、xy、yx、yy 排列。下载包含原精度基线和逐模式响应。";
   $("download-calibration-sensitivity").disabled =
     state.response === null || state.input !== sensitivityInput.value;
   $("calibration-sensitivity-compute").disabled = state.pending;
@@ -8253,13 +8286,15 @@ $("calibration-sensitivity-compute").addEventListener("click", async () => {
     Object.assign(state, { response, report, input });
     $("download-calibration-sensitivity").disabled = false;
     sensitivityMessage(
-      mode === "area"
-        ? `已计算 ${report.comparisons.length} 组面积比较、${report.mode_count} 个共享模式。面积差、面积比及其贡献为一阶近似。`
-        : mode === "angle"
-          ? `已计算 ${report.comparisons.length} 组有向夹角、${report.mode_count} 个共享模式。角度和 σ 使用 rad，贡献是一阶圆周切向估计。`
-          : mode === "distance"
-            ? `已计算 ${report.comparisons.length} 组长度比较、${report.mode_count} 个共享模式。差值、比值及其贡献为一阶近似。`
-            : `已计算 ${report.probes.length} 对像素点、${report.mode_count} 个共享模式。矩阵为归一化基线；贡献为一阶近似。`,
+      mode === "line_offset"
+        ? `已计算 ${report.comparisons.length} 组参考线偏移、${report.mode_count} 个共享模式。偏移与 σ 使用 m。`
+        : mode === "area"
+          ? `已计算 ${report.comparisons.length} 组面积比较、${report.mode_count} 个共享模式。面积差、面积比及其贡献为一阶近似。`
+          : mode === "angle"
+            ? `已计算 ${report.comparisons.length} 组有向夹角、${report.mode_count} 个共享模式。角度和 σ 使用 rad，贡献是一阶圆周切向估计。`
+            : mode === "distance"
+              ? `已计算 ${report.comparisons.length} 组长度比较、${report.mode_count} 个共享模式。差值、比值及其贡献为一阶近似。`
+              : `已计算 ${report.probes.length} 对像素点、${report.mode_count} 个共享模式。矩阵为归一化基线；贡献为一阶近似。`,
     );
     renderSensitivity();
   } catch (error) {
@@ -8299,13 +8334,15 @@ async function loadSensitivityExample(explicit = false) {
     sensitivityInput.value = text;
     state.draft = text;
     sensitivityMessage(
-      mode === "area"
-        ? "示例比较两片凸多边形及同片反向绕序；点击计算查看共同尺度如何影响面积差和面积比。"
-        : mode === "angle"
-          ? "示例包含共享转动、平移与尺度模式；点击计算查看单段方向误差、相对夹角与反向端点。"
-          : mode === "distance"
-            ? "示例比较两段长度及同段反向端点；点击计算查看共同尺度如何影响差值和比值。"
-            : "示例包含共同平移与尺度扰动；点击计算可比较单点和位移贡献。",
+      mode === "line_offset"
+        ? `已计算 ${report.comparisons.length} 组参考线偏移、${report.mode_count} 个共享模式。偏移与 σ 使用 m。`
+        : mode === "area"
+          ? "示例比较两片凸多边形及同片反向绕序；点击计算查看共同尺度如何影响面积差和面积比。"
+          : mode === "angle"
+            ? "示例包含共享转动、平移与尺度模式；点击计算查看单段方向误差、相对夹角与反向端点。"
+            : mode === "distance"
+              ? "示例比较两段长度及同段反向端点；点击计算查看共同尺度如何影响差值和比值。"
+              : "示例包含共同平移与尺度扰动；点击计算可比较单点和位移贡献。",
     );
   } catch (error) {
     if (isCurrent()) sensitivityMessage(error.message, true);

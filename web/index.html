@@ -134,7 +134,7 @@
             <details id="calibration-sensitivity-section">
               <summary>标定参数的共享误差</summary>
               <p class="hint">
-                输入给定标定、扰动模式及已校正像素点，可检查点对位移、两段长度或两片凸多边形面积的差值与比值，以及有向线段的方向和夹角。
+                输入给定标定、扰动模式及已校正像素点，可检查点对位移、两段长度或两片凸多边形面积的差值与比值，有向线段的方向和夹角，以及两点到同一参考线的有符号偏移。
                 模式使用归一化标定矩阵的九个行优先系数；同一模式在所有顶点间共享。
                 这是给定模式下的一阶近似，不从拟合残差估计模式，也不包含像素噪声或镜头参数误差。
               </p>
@@ -144,6 +144,7 @@
                 <option value="distance">两段长度</option>
                 <option value="angle">方向与夹角</option>
                 <option value="area">两片面积</option>
+                <option value="line_offset">点到参考线</option>
               </select>
               <button id="calibration-sensitivity-example" class="quiet">
                 共享平移与尺度示例
