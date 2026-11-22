@@ -8,7 +8,7 @@ MoonGround 自身采用 [Apache License 2.0](LICENSE)。下列依赖通过模块
 | `Lyllyl789/moon-kalman` | 0.2.1 | Kalman 预测、更新及 Joseph 协方差公式 | Apache-2.0；[源码](https://github.com/Lyllyl789/moon-kalman)、[注册表](https://mooncakes.io/docs/Lyllyl789/moon-kalman@0.2.1/) |
 | `moonbitlang/async` | 0.21.3 | 原生命令的标准输入、输出和参数适配 | Apache-2.0；[源码](https://github.com/moonbitlang/async)、[注册表](https://mooncakes.io/docs/moonbitlang/async@0.21.3/) |
 
-MoonBit 标准库和工具链由 MoonBit 安装环境提供，遵循其各自上游许可证。MoonGround 的打包产物不包含这些依赖的源码副本。
+Mooncakes 源码包通过模块依赖接入上述组件。原生 CLI 二进制包含编译后的依赖、MoonBit 标准库和运行库；发行 ZIP 随附 Apache-2.0 许可证，以及 [`docs/cli-third-party-licenses.txt`](docs/cli-third-party-licenses.txt) 中保留的上游署名与许可文本。系统动态库由运行环境提供，名称记录在发行包清单中。
 
 ## 开发与可选演示
 
