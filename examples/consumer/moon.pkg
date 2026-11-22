@@ -13,6 +13,7 @@ import {
   "python123-ops/moonground/transit",
   "python123-ops/moonground/velocity",
   "python123-ops/moonground/zones",
+  "python123-ops/moonground/evaluation",
   "python123-ops/moondeteval",
   "moonbitlang/core/debug",
 } for "test"
