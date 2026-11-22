@@ -2,7 +2,7 @@
 
 MoonGround 把固定相机中的目标轨迹转换为米制地面位置、速度和观测路径，面向园区、仓储和其他近似平面的场地。输入是已有目标身份、地面接触锚点和真实时间戳；库负责标定有效域、投影协方差、运动估计、轨迹分段和双向通道过线统计，并支持原子组合更新与完整状态恢复。固定地标检查持续核对原标定的米制残差；需要按检查结果决定是否计算对象测量时，可显式使用 `guarded` 入口。
 
-当前版本为 `0.36.0`。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
+当前版本为 `0.37.0`。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
 
 ## 与现有项目的衔接
 
@@ -2758,7 +2758,45 @@ CLI `--zone-intersection` 首行采用原区域配置，随后逐行读取原 sc
 
 源和单帧各 1 Mi UTF16 单元、深度 32；纯外层 16 Mi，帧文本共 8 Mi／5000 行，完整返回 8 Mi。CLI 保留原物理字节上限、LF／CRLF／无末尾换行、退出码 2 和完整成功前缀。Web 在现区域面板提供独立计算、选帧、上下界、见证和整批下载，见 [`相交诊断说明`](docs/zone-intersection-web.md)。
 
+### 同一标定下的参考线偏移
+
+`calibration.HomographySensitivity::line_offset` 计算有向无限参考线的左正、右负垂距；`compare_line_offsets` 同时比较两点偏移。参考线的两个像素端点和测点共享同一组模式，保留参考线自身的位移和转动。偏移差直接从两点位移及响应计算；线上点和延长线上的点均有效。
+
+```mbt check
+///|
+test "README: shared reference line offsets retain negative cross contribution" {
+  let calibration = @moonground.GroundCalibration::from_homography(
+    [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+    [
+      { x: 0.0, y: 0.0, },
+      { x: 100.0, y: 0.0, },
+      { x: 100.0, y: 100.0, },
+      { x: 0.0, y: 100.0, },
+    ],
+    max_meters_per_pixel=2.0,
+  )
+  let model = @calibration.HomographySensitivity::new(calibration, [
+    [0.125, 0.0, 0.0, 0.0, 0.125, 0.0, 0.0, 0.0, 0.0],
+  ])
+  let result = model.compare_line_offsets(
+    { x: 0.0, y: 4.0, },
+    { x: 8.0, y: 4.0, },
+    { x: 2.0, y: 7.0, },
+    { x: 2.0, y: 2.0, },
+  )
+  assert_eq(result.first.signed_offset_m, 3.0)
+  assert_eq(result.second.signed_offset_m, -2.0)
+  assert_eq(result.cross_contribution_m2, -0.09375)
+  assert_eq(result.difference_m, 5.0)
+  assert_eq(result.difference_std_m, 0.625)
+}
+```
+
+完整协议和数值语义见 [参考线偏移说明](docs/calibration-line-offset.md)，输入示例见 [calibration-line-offset.json](examples/calibration-line-offset.json)。CLI 使用 `--calibration-line-offset`；浏览器在原共享误差面板选择“点到参考线”。
+
 ## 验证与复现
+
+v0.37.0 的参考线偏移验证见 [`validation/calibration-line-offset-results.json`](validation/calibration-line-offset-results.json)：26 组请求、448 组比较、36,000 个标量及 671 组三分量非线性中心差分通过。Fraction 以逆转置线方程和矩阵逆导数独立求参考，160 位 Decimal 计算归一化和贡献；最大误差／容差比为 0.0000913。5 项原生／JavaScript 用例覆盖有符号偏移、负交叉贡献、端点反转、严格原文、最大容量及单请求边界。库四后端各 1,043 项通过；独立 ZIP 消费者见 [`validation/package-v0.37-results.json`](validation/package-v0.37-results.json)。Chromium 151 与 Chrome 157 的六组交互回归均通过，包含五种比较的独立草稿、取消、迟到示例、原精度下载和 390／1440 宽布局。旧功能数值回归采用 `*-v0.37-results.json`，流协议记录仅运行 23 项协议检查。
 
 公开结果记录使用仓库相对路径。运行验证后执行 `python validation/public_reports.py` 整理报告路径，指标、参数与校验值保持原样。
 
@@ -2817,7 +2855,7 @@ python validation/verify.py --binary _build/native/release/build/cmd/main/main.e
 python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.36-results.json
 moon package
 python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.36-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.36.0.zip --output validation/package-v0.36-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.37.0.zip --output validation/package-v0.37-results.json
 ```
 
 v0.36.0 的面积比较验证见 [`validation/calibration-area-results.json`](validation/calibration-area-results.json)：31 个请求、297 组比较、44,339 个标量及 2,460 组四分量非线性中心差分通过。独立参考以 Fraction 对完整闭合鞋带公式及单应商式求精确面积和导数，110 位 Decimal 核对共享贡献；极端面积提高到 800 位。最大误差／容差比为 0.00162；数值误差分别按 m、m²、m⁴ 和无量纲记录，极大面积的绝对误差不代表普通场地的测量误差。8 项原生／JavaScript 用例覆盖共同尺度抵消、负交叉贡献、反射与绕向、严格原文、32 模式×64 比较×64 顶点、晚阶段退化及单请求边界。库四后端各 1,027 项通过，独立 ZIP 消费者记录见 [`validation/package-v0.36-results.json`](validation/package-v0.36-results.json)。共享面板的四种模式在 Chromium 151 和 Chrome 157 核对独立草稿／结果、切换取消、迟到示例、原精度下载、最大批量和 390／1440 宽布局；两种浏览器的完整五组交互测试均通过。既有接口的 35 项参考使用当前产物重跑，记录为 `*-v0.36-results.json`，保留各历史原始记录。

@@ -131,6 +131,8 @@ jobs:
         run: python validation/calibration_angle_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-calibration-angle.json
       - name: Verify shared convex area contrasts against exact cyclic arithmetic
         run: python validation/calibration_area_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-calibration-area.json
+      - name: Verify shared reference line offsets independently
+        run: python validation/calibration_line_offset_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-calibration-line-offset.json
       - name: Exercise process protocol and bounded stream
         run: python validation/stream_test.py --binary "$MOONGROUND_CLI" --frames 3000 --targets 10 --latency-samples 100 --output _build/ci-stream.json
       - name: Check MBMOT consumer and package archive
@@ -139,7 +141,7 @@ jobs:
           moon -C examples/consumer check --target all --deny-warn
           moon -C examples/consumer test --target all --deny-warn
           moon package
-          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.36.0.zip --output _build/ci-package.json
+          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.37.0.zip --output _build/ci-package.json
       - name: Prepare browser test driver
         if: runner.os == 'Linux'
         run: |
@@ -162,7 +164,7 @@ jobs:
         env:
           PLAYWRIGHT_MODULE: ${{ github.workspace }}/_build/browser/node_modules/playwright-core
           MOONGROUND_BROWSER_CHANNEL: chrome
-        run: node --test web/ui.test.cjs web/calibration-sensitivity.ui.test.cjs web/calibration-distance.ui.test.cjs web/calibration-angle.ui.test.cjs web/calibration-area.ui.test.cjs
+        run: node --test web/ui.test.cjs web/calibration-sensitivity.ui.test.cjs web/calibration-distance.ui.test.cjs web/calibration-angle.ui.test.cjs web/calibration-area.ui.test.cjs web/calibration-line-offset.ui.test.cjs
       - name: Make report paths portable
         if: always()
         run: python validation/public_reports.py '_build/ci-*.json'
@@ -209,6 +211,7 @@ jobs:
             _build/ci-calibration-distance.json
             _build/ci-calibration-angle.json
             _build/ci-calibration-area.json
+            _build/ci-calibration-line-offset.json
             _build/ci-stream.json
             _build/ci-package.json
             _build/site/*preview.png

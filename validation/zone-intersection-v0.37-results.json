@@ -1,0 +1,513 @@
+{
+  "format_version": "1",
+  "seed": 20261211,
+  "command": "python validation/zone_intersection_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/zone-intersection-v0.37-results.json",
+  "python": "3.8.7",
+  "numpy": "1.24.4",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "pinned_moon_home": "${MOON_HOME}",
+  "source_sha256": "c60e7f69b9cf722f9adaf88652c8badcc50f2eabd119a1a93bf1f9d27ddcd774",
+  "binary_sha256": "b7d90d31744824ef59c6dafb846b1289bd72d7c74ec0dffeda00eea2cc1eab0d",
+  "independent_reference": "Fraction inverse covariance, exact original input differences, clamped rational segment minimization, closed centre membership; strict rational enclosure and decision checks without tolerance; NumPy secondary only",
+  "scope": "model_position_ellipse_convex_zone_intersection_not_containment_probability_or_physical_occupancy",
+  "exact_numeric_reference": {
+    "rows": 251,
+    "explicit_witnesses": 175,
+    "centre_inside_rows": 76,
+    "decisions": {
+      "intersects": 147,
+      "indeterminate": 2,
+      "disjoint": 102
+    },
+    "maximum_absolute_interval_width": 2.9937604643020797e+292,
+    "maximum_relative_interval_width_exact": "607206759921931855057486040156751921148669949292426355070704074082291018703986040675881151104311373485561233592950435734169426212157380430601040199822215529764552272829699084093400723226279649023719303035418235205686022450274078095854310066947478669022430169537076308657000243845691507596558982525938018789923123223280484352",
+    "maximum_relative_interval_width_decimal": "6.07206759921931855057486E+323",
+    "numpy_crosscheck_rows": 165,
+    "numpy_maximum_absolute_difference": 1.1368683772161603e-13,
+    "cases": 25,
+    "frames": 257,
+    "exact_fraction_bounds_and_decisions": "passed_without_empirical_tolerance",
+    "explicit_fraction_witness_upper": "passed",
+    "stateless_repeat_reordering_exact": true,
+    "old_face_bytes_identical_before_after_intersection": true,
+    "records": [
+      {
+        "name": "slanted_original_boundary",
+        "frames": 8,
+        "rows": 8
+      },
+      {
+        "name": "closed-bands-0",
+        "frames": 7,
+        "rows": 7
+      },
+      {
+        "name": "closed-bands-1",
+        "frames": 7,
+        "rows": 7
+      },
+      {
+        "name": "closed-bands-2",
+        "frames": 7,
+        "rows": 7
+      },
+      {
+        "name": "correlated-1e-150--1",
+        "frames": 4,
+        "rows": 4
+      },
+      {
+        "name": "correlated-1e-150-1",
+        "frames": 4,
+        "rows": 4
+      },
+      {
+        "name": "correlated-1--1",
+        "frames": 4,
+        "rows": 4
+      },
+      {
+        "name": "correlated-1-1",
+        "frames": 4,
+        "rows": 4
+      },
+      {
+        "name": "correlated-1e+150--1",
+        "frames": 4,
+        "rows": 4
+      },
+      {
+        "name": "correlated-1e+150-1",
+        "frames": 4,
+        "rows": 4
+      },
+      {
+        "name": "winding-0",
+        "frames": 3,
+        "rows": 3
+      },
+      {
+        "name": "winding-1",
+        "frames": 3,
+        "rows": 3
+      },
+      {
+        "name": "winding-2",
+        "frames": 3,
+        "rows": 3
+      },
+      {
+        "name": "rotation",
+        "frames": 3,
+        "rows": 3
+      },
+      {
+        "name": "reflection",
+        "frames": 3,
+        "rows": 3
+      },
+      {
+        "name": "translation",
+        "frames": 3,
+        "rows": 3
+      },
+      {
+        "name": "metric_scale",
+        "frames": 3,
+        "rows": 3
+      },
+      {
+        "name": "anisotropic",
+        "frames": 1,
+        "rows": 1
+      },
+      {
+        "name": "supported_correlation",
+        "frames": 2,
+        "rows": 2
+      },
+      {
+        "name": "all_statuses_exact_clock_and_empty",
+        "frames": 9,
+        "rows": 3
+      },
+      {
+        "name": "optional_defaults",
+        "frames": 1,
+        "rows": 1
+      },
+      {
+        "name": "corner-blind-spot",
+        "frames": 4,
+        "rows": 4
+      },
+      {
+        "name": "original-differences",
+        "frames": 3,
+        "rows": 3
+      },
+      {
+        "name": "normal-subnormal-rounding",
+        "frames": 3,
+        "rows": 3
+      },
+      {
+        "name": "seeded-rational-reference",
+        "frames": 160,
+        "rows": 160
+      }
+    ]
+  },
+  "real_motion_and_old_checkpoint_recovery": {
+    "rows": 36,
+    "explicit_witnesses": 0,
+    "centre_inside_rows": 36,
+    "decisions": {
+      "intersects": 36
+    },
+    "maximum_absolute_interval_width": 0.0,
+    "maximum_relative_interval_width_exact": "0",
+    "maximum_relative_interval_width_decimal": "0",
+    "numpy_crosscheck_rows": 0,
+    "numpy_maximum_absolute_difference": 0.0,
+    "cases": 10,
+    "frames": 89,
+    "old_checkpoint_cut_points": 99,
+    "statuses": [
+      "initializing",
+      "numerical_failure",
+      "ready",
+      "rejected_innovation",
+      "rejected_projection",
+      "uncertain"
+    ],
+    "original_authored_motion_numpy": {
+      "authored_without_implementation_output": true,
+      "seed": 20261113,
+      "maximum_absolute_errors": {
+        "filter_state": 0.0,
+        "filter_covariance": 8.673617379884035e-19,
+        "observed_path_length_m": 0.0,
+        "net_displacement_m": 0.0
+      },
+      "interpretation": "Joseph-form NumPy update from a manually authored full session state, including historical path anchors."
+    },
+    "records": [
+      {
+        "name": "identity_path_lifecycle",
+        "frames": 11,
+        "old_checkpoint_cut_points": 12,
+        "rows": 0
+      },
+      {
+        "name": "raw_camera_projection_rejection",
+        "frames": 10,
+        "old_checkpoint_cut_points": 11,
+        "rows": 6
+      },
+      {
+        "name": "exact_int64_time",
+        "frames": 4,
+        "old_checkpoint_cut_points": 5,
+        "rows": 0
+      },
+      {
+        "name": "effective_defaults",
+        "frames": 4,
+        "old_checkpoint_cut_points": 5,
+        "rows": 1
+      },
+      {
+        "name": "extreme_scale_failure_retains_restorable_state",
+        "frames": 2,
+        "old_checkpoint_cut_points": 3,
+        "rows": 0
+      },
+      {
+        "name": "warehouse",
+        "frames": 10,
+        "old_checkpoint_cut_points": 11,
+        "rows": 5
+      },
+      {
+        "name": "distorted-camera",
+        "frames": 15,
+        "old_checkpoint_cut_points": 16,
+        "rows": 12
+      },
+      {
+        "name": "reframe",
+        "frames": 15,
+        "old_checkpoint_cut_points": 16,
+        "rows": 12
+      },
+      {
+        "name": "repeated_crossings",
+        "frames": 9,
+        "old_checkpoint_cut_points": 10,
+        "rows": 0
+      },
+      {
+        "name": "quality_rejects_current_positions",
+        "frames": 9,
+        "old_checkpoint_cut_points": 10,
+        "rows": 0
+      }
+    ]
+  },
+  "strict_and_numerical_rejections": {
+    "rejected_cases": 24,
+    "records": [
+      {
+        "name": "duplicate_vertex",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone must be strictly convex"
+      },
+      {
+        "name": "collinear",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone must be strictly convex"
+      },
+      {
+        "name": "concave",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone must be simple strictly convex and have no repeated vertices"
+      },
+      {
+        "name": "crossed",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone must be simple strictly convex and have no repeated vertices"
+      },
+      {
+        "name": "normal_component_loss",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone normal loses a nonzero component"
+      },
+      {
+        "name": "negative_k",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid zone identity vertex count or sigma multiplier"
+      },
+      {
+        "name": "unknown_zone",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: convex zone: unknown field extra"
+      },
+      {
+        "name": "duplicate_zones",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: duplicate zone identity"
+      },
+      {
+        "name": "work_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone face and track work budget exceeds 65536"
+      },
+      {
+        "name": "unknown_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: zone evidence configuration: unknown field extra"
+      },
+      {
+        "name": "raw_fractional_capacity",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: max_tracks must be a positive 32-bit integer"
+      },
+      {
+        "name": "duplicate_source",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 1: invalid JSON: Duplicate key \"session_id\" at line 1, column 22"
+      },
+      {
+        "name": "wrong_session",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "c8ab408daf2ea95f356cbfeaaa657136349d6619ba61356a2c6ca8c83358bf1d",
+        "stdout_bytes": 453,
+        "stderr": "line 3: intersection frame session time or capacity is invalid"
+      },
+      {
+        "name": "staleReady",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "c8ab408daf2ea95f356cbfeaaa657136349d6619ba61356a2c6ca8c83358bf1d",
+        "stdout_bytes": 453,
+        "stderr": "line 3: Ready intersection sample is not current"
+      },
+      {
+        "name": "nonSPD",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "c8ab408daf2ea95f356cbfeaaa657136349d6619ba61356a2c6ca8c83358bf1d",
+        "stdout_bytes": 453,
+        "stderr": "line 3: measurement covariance must be positive definite"
+      },
+      {
+        "name": "duplicate_target",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "c8ab408daf2ea95f356cbfeaaa657136349d6619ba61356a2c6ca8c83358bf1d",
+        "stdout_bytes": 453,
+        "stderr": "line 3: duplicate measurement track identity"
+      },
+      {
+        "name": "duplicate_segment",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "c8ab408daf2ea95f356cbfeaaa657136349d6619ba61356a2c6ca8c83358bf1d",
+        "stdout_bytes": 453,
+        "stderr": "line 3: intersection frame identities or accepted timestamps are invalid"
+      },
+      {
+        "name": "closed_current",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "c8ab408daf2ea95f356cbfeaaa657136349d6619ba61356a2c6ca8c83358bf1d",
+        "stdout_bytes": 453,
+        "stderr": "line 3: accepted intersection track is also closed"
+      },
+      {
+        "name": "unknown_frame",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "c8ab408daf2ea95f356cbfeaaa657136349d6619ba61356a2c6ca8c83358bf1d",
+        "stdout_bytes": 453,
+        "stderr": "line 3: measurement frame: unknown field extra"
+      },
+      {
+        "name": "fractional_raw_id",
+        "exit_code": 2,
+        "complete_output_lines": 1,
+        "stdout_sha256": "c8ab408daf2ea95f356cbfeaaa657136349d6619ba61356a2c6ca8c83358bf1d",
+        "stdout_bytes": 453,
+        "stderr": "line 3: track_id must be a positive 32-bit integer"
+      },
+      {
+        "name": "near_singular_det_interval",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: ellipse covariance determinant cannot be certified positive at supported precision"
+      },
+      {
+        "name": "unsupported_covariance_scale",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: measurement covariance must be positive definite"
+      },
+      {
+        "name": "quadratic_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: ellipse edge metric length cannot be certified positive at supported precision"
+      },
+      {
+        "name": "threshold_square_overflow",
+        "exit_code": 2,
+        "complete_output_lines": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stderr": "line 2: ellipse intersection bound is not representable"
+      }
+    ],
+    "raw_integral_exponent_token_supported": true,
+    "complete_cli_prefix_preserved": true
+  },
+  "warm_brown_reframe": {
+    "status": "passed",
+    "prefix_frames": 4,
+    "continuation_frames": 4,
+    "exact_enclosure_checked_both_representations": true,
+    "maximum_absolute_bound_endpoint_reframe_differences": {
+      "minimum_quadratic_lower": 8.731149137020111e-11,
+      "minimum_quadratic_upper": 8.731149137020111e-11
+    }
+  },
+  "transport": {
+    "source_frame_utf16_limit": 1048576,
+    "LF_CRLF_unterminated_EOF": "passed",
+    "complete_prefix": "passed"
+  },
+  "web_interchange": {
+    "status": "passed",
+    "summary": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "details": {
+      "cross_runtime": {
+        "cut_points": 9,
+        "motion_checkpoint_runtime_directions": 4,
+        "comparisons": 36
+      },
+      "actual_budgets": {
+        "successful_empty_frames": 5000,
+        "whole_return_utf16": 1063902,
+        "source_frame_limit_utf16": 1048576,
+        "whole_output_limit_utf16": 8388608
+      },
+      "maximum_work": {
+        "maximum_actual_edges_times_targets": 65536,
+        "targets": 128,
+        "zones": 16,
+        "edges_per_zone": 32,
+        "evidence_rows": 2048,
+        "single_whole_return_utf16": 530036,
+        "repeated_output_frames": 32,
+        "equivalent_whole_return_utf16": 16960780
+      }
+    },
+    "command": "node --test --test-reporter=tap web/zone-intersection.test.mjs",
+    "node": "v26.2.0",
+    "source_sha256": "b2197d73fd600041d1ec47dedbd4ab776bb22410e26e27bd27505d78f8633739",
+    "bridge_sha256": "07f9b0dba8b1ef3afd348487f5531c188e54d9deb838108196b745ca3a0e300f",
+    "stdout_sha256": "8478e1adae7273a024a9ed110188786a19730cece6b9adc4b2ffd935fac6d25a"
+  },
+  "status": "passed",
+  "elapsed_seconds": 25.132639
+}
