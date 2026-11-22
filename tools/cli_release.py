@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -38,12 +39,18 @@ def api(endpoint, method=None, body=None, missing=False):
         return gh(*(arguments+['--input',str(path)]),missing=missing)
 
 
+def source_file(commit,name):
+    if not re.fullmatch(r'[0-9a-f]{40}',commit):
+        raise ValueError('release source must be a full commit hash')
+    return subprocess.check_output(['git','show',commit+':'+name],cwd=str(ROOT))
+
+
 def source(version,commit):
-    if version!=packager.module_version() or not manager.VERSION.fullmatch(version):
-        raise ValueError('requested release version differs from moon.mod')
-    actual=subprocess.check_output(['git','rev-parse','HEAD'],cwd=str(ROOT),text=True).strip()
-    if actual!=commit or len(commit)!=40:
-        raise ValueError('release source commit differs from checkout')
+    if not manager.VERSION.fullmatch(version):
+        raise ValueError('invalid release version')
+    versions=re.findall(r'^version\s*=\s*"([^"]+)"\s*$',source_file(commit,'moon.mod').decode('utf-8'),re.M)
+    if versions!=[version]:
+        raise ValueError('requested release version differs from the source moon.mod')
     if subprocess.check_output(['git','status','--porcelain'],cwd=str(ROOT)):
         raise ValueError('release operations require a clean source checkout')
     if os.environ.get('GITHUB_REPOSITORY',manager.REPOSITORY)!=manager.REPOSITORY:
@@ -83,7 +90,7 @@ def inspect_archive(path):
 
 def prepare(directory,output,version,commit,run_id):
     source(version,commit)
-    archives=list(directory.rglob('moonground-cli-*.zip'))
+    archives=sorted(directory.rglob('moonground-cli-*.zip'))
     if len(archives)!=2:
         raise ValueError('one tested archive for each supported target is required')
     reports={}
@@ -116,8 +123,8 @@ def prepare(directory,output,version,commit,run_id):
             raise ValueError('release bytes differ from the actual tested package')
         for key,name in [('manager_sha256','tools/moonground_cli.py'),('packager_sha256','tools/package_cli.py'),
                          ('source_sha256','validation/cli_distribution_verify.py')]:
-            if report[key]!=hashlib.sha256((ROOT/name).read_bytes()).hexdigest():
-                raise ValueError('distribution verification source differs from checkout')
+            if report[key]!=hashlib.sha256(source_file(commit,name)).hexdigest():
+                raise ValueError('distribution verification source differs from the tested commit')
         if script is not None and payload!=script:
             raise ValueError('platform archives contain different manager scripts')
         script=payload
@@ -153,7 +160,17 @@ def prepare(directory,output,version,commit,run_id):
 
 def release_info(tag):
     raw=api('repos/'+manager.REPOSITORY+'/releases/tags/'+tag,missing=True)
-    return json.loads(raw) if raw is not None else None
+    if raw is not None:
+        return json.loads(raw)
+    # Draft releases are found through the authenticated release list; the
+    # tag endpoint can return 404 even when a draft already exists.
+    pages=json.loads(gh('api','repos/'+manager.REPOSITORY+'/releases?per_page=100','--paginate','--slurp'))
+    matches=[release for page in pages for release in page if release['tag_name']==tag]
+    if len(matches)>1:
+        raise ValueError('multiple release drafts identify this tag; select one before retrying')
+    if not matches:
+        return None
+    return json.loads(api('repos/'+manager.REPOSITORY+'/releases/'+str(matches[0]['id'])))
 
 
 def verify_assets(release,files,tag,complete):
@@ -214,6 +231,8 @@ def publish(directory,version,commit):
         gh('release','create',tag,'--repo',manager.REPOSITORY,'--verify-tag','--draft',
            '--title','MoonGround CLI '+version,'--notes-file',str(directory.parent/'cli-release-notes.md'))
         release=release_info(tag)
+    if release is None:
+        raise ValueError('created release draft could not be located; retry without creating another tag')
     present=verify_assets(release,files,tag,complete=not release['draft'])
     if not release['draft']:
         return release['html_url']

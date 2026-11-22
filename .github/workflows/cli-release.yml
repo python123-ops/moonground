@@ -7,6 +7,10 @@ on:
         description: Module version to publish, for example 0.39.0
         required: true
         type: string
+      source_commit:
+        description: Optional full SHA of an already tested main commit; defaults to this workflow commit
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -25,6 +29,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -34,7 +39,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           CLI_VERSION: ${{ inputs.version }}
-          CLI_COMMIT: ${{ github.sha }}
+          CLI_COMMIT: ${{ inputs.source_commit || github.sha }}
         run: python tools/cli_release.py check-ci --version "$CLI_VERSION" --commit "$CLI_COMMIT"
 
   publish:
@@ -49,6 +54,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -63,7 +69,7 @@ jobs:
       - name: Verify package identity, tested hashes and source
         env:
           CLI_VERSION: ${{ inputs.version }}
-          CLI_COMMIT: ${{ github.sha }}
+          CLI_COMMIT: ${{ inputs.source_commit || github.sha }}
           CI_RUN_ID: ${{ needs.verify.outputs.run_id }}
         run: python tools/cli_release.py prepare --input _build/cli-artifacts --output _build/releases --version "$CLI_VERSION" --commit "$CLI_COMMIT" --run-id "$CI_RUN_ID"
       - name: Attest release metadata and the standalone manager
@@ -77,5 +83,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           CLI_VERSION: ${{ inputs.version }}
-          CLI_COMMIT: ${{ github.sha }}
+          CLI_COMMIT: ${{ inputs.source_commit || github.sha }}
         run: python tools/cli_release.py publish --output _build/releases --version "$CLI_VERSION" --commit "$CLI_COMMIT"

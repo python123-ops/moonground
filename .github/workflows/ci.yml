@@ -52,6 +52,7 @@ jobs:
       - name: Verify source and public interfaces
         run: |
           python validation/public_reports.py --check
+          python -m unittest validation/cli_release_test.py
           moon fmt --check
           moon info
           git diff --exit-code -- '*.mbti'
