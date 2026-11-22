@@ -1,0 +1,176 @@
+{
+  "status": "passed",
+  "data_scope": "synthetic_metric_references",
+  "seed": 20261122,
+  "statistics": {
+    "requests": 13,
+    "frames": 10134,
+    "references": 2451,
+    "scalars": 96,
+    "exact_fields": 303,
+    "maximum_tolerance_fraction": 0.0002002493066701717,
+    "maximum_absolute_error_by_unit": {
+      "m": 2.236321950335319e+184,
+      "mps": 6.195739965109914e+182,
+      "dimensionless": 2.3790493384824782e-17
+    }
+  },
+  "cases": [
+    {
+      "name": "empty",
+      "frames": 0,
+      "references": 0
+    },
+    {
+      "name": "unreferenced",
+      "frames": 1,
+      "references": 0
+    },
+    {
+      "name": "all-missing",
+      "frames": 1,
+      "references": 2
+    },
+    {
+      "name": "no-speed-reference",
+      "frames": 1,
+      "references": 1
+    },
+    {
+      "name": "hand-calculated",
+      "frames": 2,
+      "references": 2
+    },
+    {
+      "name": "all-statuses",
+      "frames": 1,
+      "references": 7
+    },
+    {
+      "name": "exact-clocks",
+      "frames": 3,
+      "references": 3
+    },
+    {
+      "name": "random-scale-1e-200",
+      "frames": 40,
+      "references": 464
+    },
+    {
+      "name": "random-scale-1e+200",
+      "frames": 40,
+      "references": 468
+    },
+    {
+      "name": "random-scale-1.0",
+      "frames": 40,
+      "references": 476
+    },
+    {
+      "name": "cancelling-extreme-bias",
+      "frames": 4,
+      "references": 4
+    },
+    {
+      "name": "maximum-wire-frame",
+      "frames": 1,
+      "references": 1024
+    },
+    {
+      "name": "native-10000-frame-accumulation",
+      "frames": 10000,
+      "references": 0
+    }
+  ],
+  "file_adapter_cases": [
+    {
+      "name": "ordered-full-outer-join",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "raw-underflow-retained",
+      "exit_code": 2,
+      "passed": true
+    },
+    {
+      "name": "duplicate-raw-fields",
+      "exit_code": 2,
+      "passed": true
+    },
+    {
+      "name": "out-of-order-references",
+      "exit_code": 2,
+      "passed": true
+    },
+    {
+      "name": "output-input-alias-rejected",
+      "exit_code": 2,
+      "passed": true
+    },
+    {
+      "name": "hardlink-output-alias-rejected",
+      "exit_code": 2,
+      "passed": true
+    },
+    {
+      "name": "empty-measurements-require-session",
+      "exit_code": 2,
+      "passed": true
+    },
+    {
+      "name": "reference-only-log-counts-misses",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "out-of-order-measurements",
+      "exit_code": 2,
+      "passed": true
+    },
+    {
+      "name": "invalid-timeout-nan",
+      "exit_code": 2,
+      "passed": true
+    },
+    {
+      "name": "invalid-timeout-inf",
+      "exit_code": 2,
+      "passed": true
+    },
+    {
+      "name": "invalid-timeout-0",
+      "exit_code": 2,
+      "passed": true
+    },
+    {
+      "name": "invalid-timeout--1",
+      "exit_code": 2,
+      "passed": true
+    }
+  ],
+  "reference": "Offline 160-digit Decimal subtraction, Euclidean norms and direct population reductions; no online accumulator",
+  "decimal_precision": 160,
+  "tolerance": {
+    "rtol": 2e-12,
+    "scale": "maximum absolute evaluated error per unit"
+  },
+  "command": "python validation/measurement_evaluation_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/measurement-evaluation-v0.39-results.json",
+  "python": "3.8.7",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg",
+  "source_sha256": "8c5e787fc1a1a152efc1f9a1355793c9a27ff85d129faaab3797b166150c670a",
+  "adapter_sha256": "9025e4df92ab8ae59e4bc901c7c97f813b90f50c94e1b94205087e1a44d28e7a",
+  "binary_sha256": "f7db686d8d50cc5d8427a24927421d8afe67500d0730e7969590545da2cc6b9b",
+  "elapsed_seconds": 5.2681597,
+  "web_interchange": {
+    "status": "passed",
+    "summary": {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0
+    },
+    "command": "node --test --test-reporter=tap web/measurement-evaluation.test.mjs",
+    "source_sha256": "90392904281a5429babfdb19d442eb833ed8f4d4cb978d4f987919834eb6071c",
+    "bridge_sha256": "28117ebdc7313dc70903127ec6da9948f6256a57b4d335778810a1e50629eb51"
+  }
+}
