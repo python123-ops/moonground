@@ -4,6 +4,7 @@
 import argparse
 import contextlib
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -114,7 +115,8 @@ def manifest(data):
     executable = 'bin/moonground.exe' if target == 'windows-x86_64' else 'bin/moonground'
     expected = {executable, 'moonground_cli.py', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
                 'THIRD_PARTY_LICENSES.txt', 'CLI_README.md'}
-    if value['executable'] != executable or not isinstance(value['files'], dict) or set(value['files']) != expected:
+    extended = expected | {'moonground_jobs.py', 'CLI_JOBS.md'}
+    if value['executable'] != executable or not isinstance(value['files'], dict) or set(value['files']) not in (expected, extended):
         raise ValueError('unexpected CLI payload files')
     if not isinstance(value['source_commit'], str) or not re.fullmatch(r'[0-9a-f]{40}', value['source_commit']):
         raise ValueError('CLI source_commit must be a full commit hash')
@@ -261,8 +263,7 @@ def installed(root, slot, health=False):
     check_runtime(value)
     if not (path/'bin').is_dir() or is_link(path/'bin'):
         raise ValueError('installed executable directory is unsafe')
-    expected_names = {'manifest.json', 'bin', 'moonground_cli.py', 'LICENSE',
-                      'THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_LICENSES.txt', 'CLI_README.md'}
+    expected_names = {'manifest.json', 'bin'} | {name for name in value['files'] if '/' not in name}
     if {item.name for item in path.iterdir()} != expected_names or {item.name for item in (path/'bin').iterdir()} != {Path(value['executable']).name}:
         raise ValueError('installed directory contains undeclared payload files')
     for name, entry in value['files'].items():
@@ -286,7 +287,7 @@ def unpack_verified(archive, destination, expected_digest):
         raise ValueError('archive size or SHA-256 differs from the expected release')
     with zipfile.ZipFile(archive) as package:
         entries = package.infolist()
-        if len(entries) != 7 or len({entry.filename for entry in entries}) != 7:
+        if len(entries) not in (7, 9) or len({entry.filename for entry in entries}) != len(entries):
             raise ValueError('unexpected or duplicate release archive members')
         metadata = package.getinfo('manifest.json')
         if metadata.file_size > 65536:
@@ -440,6 +441,25 @@ def default_prefix():
     return Path.home()/'.local/share/moonground'
 
 
+def job_module(root):
+    state = selection(root)
+    if state is None:
+        raise ValueError('install a CLI release with durable replay support first')
+    for slot in [state['active'], state['previous']]:
+        if slot is None:
+            continue
+        value, path = installed(root, slot)
+        if 'moonground_jobs.py' in value['files']:
+            spec = importlib.util.spec_from_file_location('moonground_durable_jobs', str(path/'moonground_jobs.py'))
+            module = importlib.util.module_from_spec(spec)
+            # The verified version directory is immutable; loading the helper
+            # must not create an undeclared __pycache__ beside its payload.
+            helper = path/'moonground_jobs.py'
+            exec(compile(helper.read_bytes(), str(helper), 'exec'), module.__dict__)
+            return module
+    raise ValueError('installed releases do not contain durable replay support')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--prefix', type=Path, default=default_prefix())
@@ -452,11 +472,43 @@ def main():
     commands.add_parser('status')
     commands.add_parser('path')
     commands.add_parser('rollback')
+    replay = commands.add_parser('replay', help='persist measurement results and checkpoints together')
+    replay.add_argument('--input', required=True)
+    replay.add_argument('--state', required=True)
+    replay.add_argument('--batch-frames', type=int, default=128)
+    replay.add_argument('--batch-bytes', type=int, default=4194304)
+    replay.add_argument('--max-state-mib', type=int, default=256)
+    replay.add_argument('--timeout-seconds', type=float, default=60.0)
+    replay.add_argument('--max-frames', type=int)
+    commands.add_parser('job-status').add_argument('--state', required=True)
+    export = commands.add_parser('job-export')
+    export.add_argument('--state', required=True)
+    export.add_argument('--output', required=True)
+    export.add_argument('--replace-existing', action='store_true')
     execute = commands.add_parser('run')
     execute.add_argument('arguments', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     root = args.prefix.expanduser().resolve()
     try:
+        if args.command in ('replay', 'job-status', 'job-export'):
+            module = job_module(root)
+            options = ['--state', args.state]
+            if args.command == 'replay':
+                selected = selection(root)
+                value, path = installed(root, selected['active'])
+                if 'moonground_jobs.py' not in value['files']:
+                    raise ValueError('select a CLI release with durable replay support')
+                options += ['--binary', str(path/value['executable']), '--input', args.input]
+                for name in ['batch_frames', 'batch_bytes', 'max_state_mib', 'timeout_seconds', 'max_frames']:
+                    if getattr(args, name) is not None:
+                        options += ['--'+name.replace('_', '-'), str(getattr(args, name))]
+                return module.main(['run']+options)
+            if args.command == 'job-export':
+                options += ['--output', args.output]
+                if args.replace_existing:
+                    options += ['--replace-existing']
+                return module.main(['export']+options)
+            return module.main(['status']+options)
         if args.command == 'install':
             if args.archive:
                 if args.sha256 is None:

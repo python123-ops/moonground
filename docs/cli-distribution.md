@@ -9,7 +9,7 @@
 在保存管理脚本的目录中执行，`--prefix` 为本机用户可写的安装目录：
 
 ```sh
-python moonground_cli.py --prefix ./moonground-install install --version 0.39.0
+python moonground_cli.py --prefix ./moonground-install install --version 0.40.0
 python moonground_cli.py --prefix ./moonground-install status
 python moonground_cli.py --prefix ./moonground-install run -- --version
 python moonground_cli.py --prefix ./moonground-install run -- --stream < observations.ndjson
@@ -18,7 +18,7 @@ python moonground_cli.py --prefix ./moonground-install run -- --stream < observa
 离线安装使用已下载的平台 ZIP 和 `SHA256SUMS` 中对应的 SHA-256：
 
 ```sh
-python moonground_cli.py --prefix ./moonground-install install --archive moonground-cli-0.39.0-linux-x86_64.zip --sha256 <64位校验值>
+python moonground_cli.py --prefix ./moonground-install install --archive moonground-cli-0.40.0-linux-x86_64.zip --sha256 <64位校验值>
 ```
 
 Windows 使用名称含 `windows-x86_64` 的 ZIP。`path` 子命令输出当前原生程序的完整路径，也可据此直接启动程序。`run` 将标准输入、输出、错误交给原生进程，并保留其退出码；管理脚本不累积测量结果。安装器不修改全局 PATH 或系统目录。
@@ -43,10 +43,12 @@ moonground-install/
   current.json
   .install.lock
   versions/
-    0.39.0-linux-x86_64/
+    0.40.0-linux-x86_64/
       manifest.json
       bin/moonground
       moonground_cli.py
+      moonground_jobs.py
+      CLI_JOBS.md
       LICENSE
       THIRD_PARTY_NOTICES.md
       THIRD_PARTY_LICENSES.txt
@@ -54,6 +56,8 @@ moonground-install/
 ```
 
 ## 构建与来源
+
+`replay`、`job-status` 和 `job-export` 提供可恢复的测量文件回放，详见[任务回放说明](https://github.com/python123-ops/moonground/blob/main/docs/cli-jobs.md)。新版管理脚本也能验证及选回 `0.39.0` 的旧包；回放新任务需要选择附带回放工具的版本。
 
 发布构建固定 MoonBit `0.10.18+6c83a7f62`，Windows 使用 Server 2022 构建机，Linux 使用 Ubuntu 22.04 构建机。Linux 发行构建要求 glibc 符号基线不高于 2.35；实际系统库名称记录在每包的 `manifest.json`。Windows 包检查静态导入 DLL，拒绝未打包的非系统运行库。
 

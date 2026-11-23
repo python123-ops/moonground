@@ -94,8 +94,10 @@ def create_bundle(binary, output, version, commit, dirty, runtime=None):
     payload = {
         executable: binary.read_bytes(),
         'moonground_cli.py': (ROOT/'tools/moonground_cli.py').read_bytes(),
+        'moonground_jobs.py': (ROOT/'tools/moonground_jobs.py').read_bytes(),
+        'CLI_JOBS.md': (ROOT/'docs/cli-jobs.md').read_bytes(),
         'LICENSE': (ROOT/'LICENSE').read_bytes(),
-        'THIRD_PARTY_NOTICES.md': (ROOT/'THIRD_PARTY_NOTICES.md').read_bytes(),
+        'THIRD_PARTY_NOTICES.md': (ROOT/'THIRD_PARTY_NOTICES.md').read_bytes().replace(b'(docs/cli-third-party-licenses.txt)', b'(THIRD_PARTY_LICENSES.txt)'),
         'THIRD_PARTY_LICENSES.txt': (ROOT/'docs/cli-third-party-licenses.txt').read_bytes(),
         'CLI_README.md': (ROOT/'docs/cli-distribution.md').read_bytes(),
     }
