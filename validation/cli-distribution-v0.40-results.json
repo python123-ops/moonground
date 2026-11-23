@@ -1,0 +1,184 @@
+{
+  "status": "passed",
+  "target": "windows-x86_64",
+  "cases": [
+    {
+      "name": "native-version-matches-module",
+      "passed": true
+    },
+    {
+      "name": "deterministic-zip-for-identical-inputs",
+      "passed": true
+    },
+    {
+      "name": "empty-prefix-and-missing-rollback",
+      "passed": true
+    },
+    {
+      "name": "first-install-real-prerelease-candidate",
+      "passed": true
+    },
+    {
+      "name": "idempotent-install-and-uppercase-offline-checksum",
+      "passed": true
+    },
+    {
+      "name": "archive-digest-mismatch",
+      "passed": true
+    },
+    {
+      "name": "payload-size-or-digest-mismatch",
+      "passed": true
+    },
+    {
+      "name": "native-identity-mismatch",
+      "passed": true
+    },
+    {
+      "name": "truncated-native-header-rejected",
+      "passed": true
+    },
+    {
+      "name": "manifest-target-mismatch",
+      "passed": true
+    },
+    {
+      "name": "boolean-schema-rejected",
+      "passed": true
+    },
+    {
+      "name": "unknown-manifest-field",
+      "passed": true
+    },
+    {
+      "name": "oversized-file-declaration",
+      "passed": true
+    },
+    {
+      "name": "archive-traversal-member",
+      "passed": true
+    },
+    {
+      "name": "duplicate-archive-member",
+      "passed": true
+    },
+    {
+      "name": "archive-symbolic-link-member",
+      "passed": true
+    },
+    {
+      "name": "native-architecture-mismatch",
+      "passed": true
+    },
+    {
+      "name": "selection-write-failure-keeps-old-version",
+      "passed": true
+    },
+    {
+      "name": "concurrent-operation-rejected",
+      "passed": true
+    },
+    {
+      "name": "operating-system-lock-released-after-process-exit",
+      "passed": true
+    },
+    {
+      "name": "managed-stdio-and-native-protocol-parity",
+      "passed": true
+    },
+    {
+      "name": "upgrade-preserves-running-old-process",
+      "passed": true
+    },
+    {
+      "name": "upgrade-selects-new-binary",
+      "passed": true
+    },
+    {
+      "name": "installed-replay-saves-a-committed-prefix",
+      "passed": true
+    },
+    {
+      "name": "installed-replay-resumes-and-reports-progress",
+      "passed": true
+    },
+    {
+      "name": "installed-job-export-matches-direct-native-results",
+      "passed": true
+    },
+    {
+      "name": "installed-helper-loading-does-not-mutate-the-version",
+      "passed": true
+    },
+    {
+      "name": "legacy-seven-file-layout-installs-and-rolls-back",
+      "passed": true
+    },
+    {
+      "name": "rolled-back-layout-can-read-jobs-without-running-an-unsupported-cli",
+      "passed": true
+    },
+    {
+      "name": "same-version-different-build-rejected",
+      "passed": true
+    },
+    {
+      "name": "rollback-preserves-running-new-process",
+      "passed": true
+    },
+    {
+      "name": "checkpoint-created-before-rollback-resumes-after-rollback",
+      "passed": true
+    },
+    {
+      "name": "managed-native-error-exit-code-preserved",
+      "passed": true
+    },
+    {
+      "name": "corrupt-previous-version-blocks-rollback",
+      "passed": true
+    },
+    {
+      "name": "valid-previous-version-recovers-corrupt-active-binary",
+      "passed": true
+    },
+    {
+      "name": "undeclared-installed-files-rejected",
+      "passed": true
+    },
+    {
+      "name": "operator-owned-files-preserved",
+      "passed": true
+    },
+    {
+      "name": "native-run-without-moonbit-or-compiler-path",
+      "passed": true
+    }
+  ],
+  "case_count": 38,
+  "artifacts": {
+    "current_version": "0.40.0",
+    "previous_candidate_version": "0.40.0-rc.1",
+    "current_binary_sha256": "b0da92f722babb3403f71203fa9a31d0a004d6221a4f40ffbb63751d036af84d",
+    "previous_candidate_binary_sha256": "adf62a42a22af7fef572c05c1f0ecd57498220c89dc33e1e12fbc30263b18a4e",
+    "runtime": {
+      "minimum_os": "Windows x86-64; validated on Windows 11 and Server 2022",
+      "dependencies": [
+        "bcrypt.dll",
+        "dbghelp.dll",
+        "KERNEL32.dll",
+        "SHELL32.dll",
+        "WS2_32.dll"
+      ],
+      "glibc_min": null
+    },
+    "archive_sha256": "4b95511cfd537dfac3a90f87ea27e9d712b4ffda1e8f0bc681c8bce845b15bff",
+    "archive_files": 9
+  },
+  "elapsed_seconds": 27.504455699999998,
+  "command": "python validation/cli_distribution_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/cli-distribution-v0.40-results.json",
+  "source_sha256": "76b362525d1bc3903ad7e0dbe3b9427c83f84f435a2276ebd04aaa6a84f16ba0",
+  "manager_sha256": "188e487d606387176ed1132f05462f5c9d662c8e06a1764dfb1daf4b7d5e6366",
+  "packager_sha256": "e1ac97cf9188359dbc6241a979f513a8b61d4328309a84d00be3c1662506902d",
+  "toolchain": "moon 0.1.20261028 (e1e1f15 2026-10-28)\nmoonc v0.10.18+6c83a7f62 (2026-10-28)\nmoonc moonrun 0.1.20261028 (e1e1f15 2026-10-28)\n\nFeature flags enabled: rr_moon_mod,rr_moon_pkg"
+}

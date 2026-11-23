@@ -251,6 +251,40 @@ def run_suite(binary):
         passed('upgrade-preserves-running-old-process')
         assert execute(command+['run','--','--version']).strip()==('moonground '+version).encode()
         passed('upgrade-selects-new-binary')
+        job_input,job_state=directory/'job.ndjson',directory/'job.sqlite'
+        job_input.write_bytes(payload)
+        replay=command+['replay','--input',str(job_input),'--state',str(job_state)]
+        partial=json.loads(execute(replay+['--batch-frames','2','--max-frames','3']))
+        assert partial['frames']==3 and not partial['complete']
+        passed('installed-replay-saves-a-committed-prefix')
+        complete=json.loads(execute(replay+['--batch-frames','3']))
+        assert complete['frames']==5 and complete['complete']
+        assert json.loads(execute(command+['job-status','--state',str(job_state)]))['frames']==5
+        passed('installed-replay-resumes-and-reports-progress')
+        job_output=directory/'job-output.ndjson'
+        execute(command+['job-export','--state',str(job_state),'--output',str(job_output)])
+        assert json_lines(job_output.read_bytes())==baseline
+        passed('installed-job-export-matches-direct-native-results')
+        manager.status(prefix)
+        assert not list((prefix/'versions').rglob('__pycache__'))
+        passed('installed-helper-loading-does-not-mutate-the-version')
+        def legacy_layout(entries):
+            extras={'moonground_jobs.py','CLI_JOBS.md'}
+            entries=[(item,data) for item,data in entries if item.filename not in extras]
+            def remove_extra_files(value):
+                for name in extras: value['files'].pop(name)
+            return manifest_change(entries,remove_extra_files)
+        legacy=directory/'legacy.zip'
+        legacy_digest=mutate_archive(old_archive,legacy,legacy_layout)
+        legacy_prefix=directory/'legacy-install'
+        manager.install_archive(legacy_prefix,legacy,legacy_digest)
+        manager.install_archive(legacy_prefix,new_archive,new['sha256'])
+        assert manager.rollback(legacy_prefix)['version']==old_version
+        passed('legacy-seven-file-layout-installs-and-rolls-back')
+        legacy_command=[sys.executable,str(ROOT/'tools/moonground_cli.py'),'--prefix',str(legacy_prefix)]
+        assert json.loads(execute(legacy_command+['job-status','--state',str(job_state)]))['frames']==5
+        execute(legacy_command+['replay','--input',str(job_input),'--state',str(job_state)],status=2)
+        passed('rolled-back-layout-can-read-jobs-without-running-an-unsupported-cli')
         checkpoint=json.loads(execute(command+['run','--','--checkpoint'],input=encode_records([header]+rows[:3])))
         resumed=encode_records([dict(resume=checkpoint)]+rows[3:])
         expected=json_lines(execute(command+['run','--','--stream'],input=resumed))
@@ -330,7 +364,7 @@ def run_suite(binary):
         return cases,dict(current_version=version,previous_candidate_version=old_version,
                           current_binary_sha256=manager.digest_file(binary),
                           previous_candidate_binary_sha256=manager.digest_file(old_binary),runtime=runtime,
-                          archive_sha256=new['sha256'],archive_files=7)
+                          archive_sha256=new['sha256'],archive_files=9)
 
 
 def read_line_text(process):

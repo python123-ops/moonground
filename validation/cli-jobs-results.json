@@ -1,0 +1,134 @@
+{
+  "status": "passed",
+  "cases": [
+    {
+      "name": "one-pass-measurements-and-final-checkpoint",
+      "passed": true
+    },
+    {
+      "name": "journal-final-header-resumes-native-stream",
+      "passed": true
+    },
+    {
+      "name": "configuration-only-checkpoint",
+      "passed": true
+    },
+    {
+      "name": "journal-crlf-and-no-final-newline",
+      "passed": true
+    },
+    {
+      "name": "native-failure-has-no-final-checkpoint",
+      "passed": true
+    },
+    {
+      "name": "partial-replay-exports-committed-prefix",
+      "passed": true
+    },
+    {
+      "name": "resume-with-different-batch-size-without-duplicate-rows",
+      "passed": true
+    },
+    {
+      "name": "completed-replay-is-idempotent",
+      "passed": true
+    },
+    {
+      "name": "status-reports-only-committed-progress",
+      "passed": true
+    },
+    {
+      "name": "changed-input-is-rejected",
+      "passed": true
+    },
+    {
+      "name": "changed-native-binary-is-rejected",
+      "passed": true
+    },
+    {
+      "name": "export-cannot-overwrite-input",
+      "passed": true
+    },
+    {
+      "name": "export-cannot-overwrite-binary",
+      "passed": true
+    },
+    {
+      "name": "export-cannot-overwrite-database",
+      "passed": true
+    },
+    {
+      "name": "export-existing-file-requires-explicit-replacement",
+      "passed": true
+    },
+    {
+      "name": "failed-export-retains-existing-file",
+      "passed": true
+    },
+    {
+      "name": "failed-export-sync-retains-existing-file",
+      "passed": true
+    },
+    {
+      "name": "export-temporary-files-are-cleaned",
+      "passed": true
+    },
+    {
+      "name": "hard-kill-before-commit-recovers-exactly-once",
+      "passed": true
+    },
+    {
+      "name": "hard-kill-after-commit-recovers-exactly-once",
+      "passed": true
+    },
+    {
+      "name": "writer-lock-and-hard-kill-lock-release",
+      "passed": true
+    },
+    {
+      "name": "bad-later-batch-retains-earlier-commits",
+      "passed": true
+    },
+    {
+      "name": "native-timeout-terminates-child-and-retains-progress",
+      "passed": true
+    },
+    {
+      "name": "sqlite-full-rolls-back-and-larger-budget-resumes",
+      "passed": true
+    },
+    {
+      "name": "unrelated-database-remains-unchanged",
+      "passed": true
+    },
+    {
+      "name": "checkpoint-and-result-gap-is-rejected",
+      "passed": true
+    }
+  ],
+  "case_count": 26,
+  "soak": {
+    "status": "passed",
+    "requested_seconds": 600.0,
+    "wall_seconds": 600.0310000000172,
+    "targets_per_active_frame": 10,
+    "frames": 1041214,
+    "frames_per_second": 1735.2670112043713,
+    "stdout_sha256": "aaffd348b3f90d1123d1cb85470a31b9a70f7c0b1410c2369db9aa599c18716d",
+    "workload": "32 observed frames then explicit removal; fresh identities in each cycle; slowed reader every 1000 results",
+    "memory_samples": 5476,
+    "native_peak_rss_bytes": 10113024,
+    "parent_peak_rss_bytes": 103661568,
+    "native_late_growth_bytes": 1466368,
+    "native_rss_limit_bytes": 268435456,
+    "native_late_growth_limit_bytes": 33554432
+  },
+  "sqlite_version": "3.33.0",
+  "python": "3.8.7",
+  "platform": "Windows-10-10.0.26100-SP0",
+  "source_sha256": "f445b937514142a136012dd0ff4e3f71f1081eece163e46ff2edd56055563484",
+  "runner_sha256": "b6d945025a938a93d45caf3c011b7eee4fa3b71aa12b8e196aa6902e08a5e618",
+  "binary_sha256": "b0da92f722babb3403f71203fa9a31d0a004d6221a4f40ffbb63751d036af84d",
+  "elapsed_seconds": 605.8279999999795,
+  "command": "python validation/cli_jobs_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/cli-jobs-results.json --soak-seconds 600"
+}
