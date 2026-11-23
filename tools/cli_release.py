@@ -72,7 +72,7 @@ def inspect_archive(path):
         raise ValueError('CLI archive exceeds its size limit')
     with zipfile.ZipFile(path) as archive:
         entries=archive.infolist()
-        if len(entries)!=7 or len({item.filename for item in entries})!=7:
+        if len(entries) not in (7,9) or len({item.filename for item in entries})!=len(entries):
             raise ValueError('release archive has unexpected members')
         if archive.getinfo('manifest.json').file_size>65536:
             raise ValueError('release manifest exceeds its size limit')
@@ -101,6 +101,13 @@ def prepare(directory,output,version,commit,run_id):
         reports[value.get('target')]=value
     if set(reports)!=set(manager.TARGETS):
         raise ValueError('platform verification reports are missing')
+    job_reports={}
+    for path in directory.rglob('ci-cli-jobs.json'):
+        value=json.loads(path.read_text(encoding='utf-8'))
+        binary=value.get('binary_sha256')
+        if binary in job_reports:
+            raise ValueError('duplicate durable replay verification report')
+        job_reports[binary]=value
     output.mkdir(parents=True,exist_ok=True)
     artifacts={}
     script=None
@@ -125,6 +132,20 @@ def prepare(directory,output,version,commit,run_id):
                          ('source_sha256','validation/cli_distribution_verify.py')]:
             if report[key]!=hashlib.sha256(source_file(commit,name)).hexdigest():
                 raise ValueError('distribution verification source differs from the tested commit')
+        replay=None
+        if 'moonground_jobs.py' in value['files']:
+            replay=job_reports.get(tested['current_binary_sha256'])
+            if not replay or replay.get('status')!='passed' or not replay.get('cases') or not all(case.get('passed') for case in replay['cases']):
+                raise ValueError('durable replay verification did not pass for the released binary')
+            for key,name in [('runner_sha256','tools/moonground_jobs.py'),('source_sha256','validation/cli_jobs_verify.py')]:
+                if replay[key]!=hashlib.sha256(source_file(commit,name)).hexdigest():
+                    raise ValueError('durable replay verification source differs from the tested commit')
+            if replay['runner_sha256']!=value['files']['moonground_jobs.py']['sha256']:
+                raise ValueError('durable replay helper differs from the tested payload')
+            soak=replay.get('soak',{})
+            if soak.get('status')!='passed' or soak.get('requested_seconds',0)<30 or soak.get('wall_seconds',0)<soak['requested_seconds']:
+                raise ValueError('continuous stream verification is missing or incomplete')
+            report=dict(report,durable_replay=replay)
         if script is not None and payload!=script:
             raise ValueError('platform archives contain different manager scripts')
         script=payload

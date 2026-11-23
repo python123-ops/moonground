@@ -55,15 +55,21 @@ done
 python3 /input/moonground_cli.py --prefix /tmp/moonground install --archive /input/release.zip --sha256 "$CLI_SHA256" >/tmp/install.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground run -- --version-json >/tmp/version.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground run -- --stream </input/warehouse.ndjson >/tmp/output.ndjson
+python3 /input/moonground_cli.py --prefix /tmp/moonground replay --input /input/warehouse.ndjson --state /tmp/measurements.sqlite --batch-frames 3 >/tmp/job.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground job-export --state /tmp/measurements.sqlite --output /tmp/replayed.ndjson >/tmp/export.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground status >/dev/null
 python3 - <<'PY'
-import json
+import json,sqlite3
 with open('/input/expected.json') as stream: expected=json.load(stream)
 with open('/tmp/output.ndjson') as stream: actual=[json.loads(line) for line in stream]
 assert actual==expected
+with open('/tmp/replayed.ndjson') as stream: replayed=[json.loads(line) for line in stream]
+with open('/tmp/job.json') as stream: job=json.load(stream)
+assert replayed==expected and job['complete'] and job['frames']==len(expected)
 with open('/tmp/version.json') as stream: version=json.load(stream)
 with open('/tmp/install.json') as stream: installed=json.load(stream)
 assert version['version']==installed['version']
-print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'])))
+print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],sqlite_version=sqlite3.sqlite_version)))
 PY
 '''
         (directory/'smoke.sh').write_bytes(script.encode('utf-8'))

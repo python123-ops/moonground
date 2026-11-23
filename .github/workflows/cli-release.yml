@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Module version to publish, for example 0.39.0
+        description: Module version to publish, for example 0.40.0
         required: true
         type: string
       source_commit:
