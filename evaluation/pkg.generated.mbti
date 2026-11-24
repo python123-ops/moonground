@@ -12,6 +12,47 @@ import {
 // Errors
 
 // Types and methods
+pub struct AcceptanceCheck {
+  metric : AcceptanceMetric
+  actual : Double?
+  limit : Double
+  passed : Bool
+} derive(@debug.Debug)
+pub fn AcceptanceCheck::to_repr(Self) -> @debug.Repr
+
+pub(all) enum AcceptanceMetric {
+  PositionSamples
+  PositionCoverage
+  PositionMeanAbsoluteError
+  PositionRootMeanSquareError
+  PositionMaximumAbsoluteError
+  SpeedSamples
+  SpeedCoverage
+  SpeedMeanAbsoluteError
+  SpeedRootMeanSquareError
+  SpeedMaximumAbsoluteError
+} derive(Eq, @debug.Debug)
+pub fn AcceptanceMetric::equal(Self, Self) -> Bool
+pub fn AcceptanceMetric::not_equal(Self, Self) -> Bool
+pub fn AcceptanceMetric::to_repr(Self) -> @debug.Repr
+
+pub struct AcceptanceReport {
+  evaluation : EvaluationReport
+  accepted : Bool
+  checks : Array[AcceptanceCheck]
+} derive(@debug.Debug)
+pub fn AcceptanceReport::to_repr(Self) -> @debug.Repr
+
+pub struct AccuracyRequirements {
+  min_samples : Int32
+  min_coverage : Double
+  max_mae : Double?
+  max_rmse : Double?
+  max_error : Double?
+} derive(@debug.Debug)
+pub fn AccuracyRequirements::new(min_samples~ : Int32, min_coverage~ : Double, max_mae? : Double, max_rmse? : Double, max_error? : Double) -> Self raise @types.GroundError
+pub fn AccuracyRequirements::to_repr(Self) -> @debug.Repr
+
 pub struct ErrorStatistics {
   samples : Int32
   mean_absolute_error : Double?
@@ -53,6 +94,7 @@ pub fn EvaluationReport::to_repr(Self) -> @debug.Repr
 pub struct EvaluationSession {
   // private fields
 }
+pub fn EvaluationSession::assess(Self, position? : AccuracyRequirements, speed? : AccuracyRequirements) -> AcceptanceReport raise @types.GroundError
 pub fn EvaluationSession::fork(Self) -> Self
 pub fn EvaluationSession::new(String, max_tracks? : Int32, max_samples? : Int32) -> Self raise @types.GroundError
 pub fn EvaluationSession::report(Self) -> EvaluationReport
