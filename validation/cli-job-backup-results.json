@@ -1,0 +1,198 @@
+{
+  "status": "passed",
+  "cases": [
+    {
+      "name": "verify-hashes-raw-committed-results",
+      "passed": true
+    },
+    {
+      "name": "partial-backup-preserves-offset-checkpoint-and-results",
+      "passed": true
+    },
+    {
+      "name": "source-progress-does-not-change-the-backup",
+      "passed": true
+    },
+    {
+      "name": "restore-accepts-uppercase-checksum-and-preserves-raw-prefix",
+      "passed": true
+    },
+    {
+      "name": "restored-prefix-continues-without-duplicate-or-missing-results",
+      "passed": true
+    },
+    {
+      "name": "completed-backup-restores-idempotently",
+      "passed": true
+    },
+    {
+      "name": "configuration-only-job-can-be-backed-up-and-restored",
+      "passed": true
+    },
+    {
+      "name": "backup-never-replaces-an-existing-file",
+      "passed": true
+    },
+    {
+      "name": "restore-never-replaces-an-existing-state",
+      "passed": true
+    },
+    {
+      "name": "backup-cannot-replace-source-state",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-source-sidecar-.lock",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-source-sidecar--journal",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-source-sidecar--wal",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-source-sidecar--shm",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-wrong-checksum",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-malformed-checksum",
+      "passed": true
+    },
+    {
+      "name": "restore-refuses-existing-destination-journal",
+      "passed": true
+    },
+    {
+      "name": "restore-refuses-external-backup-journal",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-future-schema",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-foreign-application",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-missing-result",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-invalid-result-json",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-text-instead-of-blob",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-extra-trigger",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-extra-table",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-repeated-timestamp",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-truncated",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-foreign-file",
+      "passed": true
+    },
+    {
+      "name": "sync-full-disk-publishes-no-backup",
+      "passed": true
+    },
+    {
+      "name": "copy-full-disk-publishes-no-backup",
+      "passed": true
+    },
+    {
+      "name": "failed-publication-retains-source-and-removes-staging",
+      "passed": true
+    },
+    {
+      "name": "publication-race-preserves-the-concurrent-file",
+      "passed": true
+    },
+    {
+      "name": "expired-operation-publishes-no-backup",
+      "passed": true
+    },
+    {
+      "name": "nan-timeout",
+      "passed": true
+    },
+    {
+      "name": "zero-budget",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-an-active-replay",
+      "passed": true
+    },
+    {
+      "name": "verify-refuses-an-active-replay",
+      "passed": true
+    },
+    {
+      "name": "restore-refuses-an-active-backup-file",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-a-source-over-budget",
+      "passed": true
+    },
+    {
+      "name": "verify-refuses-a-source-over-budget",
+      "passed": true
+    },
+    {
+      "name": "restore-refuses-an-oversized-backup",
+      "passed": true
+    },
+    {
+      "name": "restored-job-still-refuses-a-different-input",
+      "passed": true
+    },
+    {
+      "name": "hard-kill-before-snapshot-publication-recovers",
+      "passed": true
+    },
+    {
+      "name": "hard-kill-after-snapshot-publication-recovers",
+      "passed": true
+    },
+    {
+      "name": "backup-after-writer-kill-recovers-only-committed-rows",
+      "passed": true
+    },
+    {
+      "name": "standalone-backup-verify-restore-cli-and-error-exit",
+      "passed": true
+    }
+  ],
+  "case_count": 46,
+  "source_sha256": "718bb9418974b90c822bfe2486e4ea4a626c4bc065c756b6d2a495fb6082e029",
+  "runner_sha256": "7911ef529f3d5280f85b9749c2f00db5da0b92cdf589981e02fd3f107a1e05c1",
+  "binary_sha256": "cdae13575ecb2aaa670a5da3397bd8fb234c7ef6b892c23c688227fd09d595c5",
+  "sqlite_version": "3.33.0",
+  "python": "3.8.7",
+  "platform": "Windows-10-10.0.26100-SP0",
+  "elapsed_seconds": 3.452999999979511,
+  "command": "python validation/cli_job_backup_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/cli-job-backup-results.json"
+}

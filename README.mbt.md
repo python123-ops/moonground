@@ -2854,6 +2854,12 @@ CLI `--evaluate-measurements` 读取配置和逐行对齐输入，只在 EOF 输
 
 ## 验证与复现
 
+SQLite 任务的完整性检查、单文件备份、校验恢复和持续作业入口见 [文件回放说明](docs/cli-jobs.md)。持续检查轮换固定输入任务，在中点备份恢复后继续，并逐字节核对原生单次结果；报告记录实际时长与资源采样，短时回归和 24 小时运行分别记录。
+
+v0.41.0 的 [备份恢复记录](validation/cli-job-backup-results.json) 包含 46 项检查，覆盖部分与完成任务恢复、零帧配置、损坏和超额快照、复制与同步失败、发布前后强制终止，以及写入进程终止后保留已提交结果。Windows 安装流程覆盖 43 项检查；公开发行包同时附带各平台的回放、备份和短时持续作业报告。
+
+同版本的 [SQLite 持续作业记录](validation/cli-job-soak-results.json) 实际运行 600.187 秒：每个活动帧 10 个目标、按 10 帧／秒控制提交节奏，轮换每份 1,024 帧的固定输入任务，共提交 6,016 帧、完成 5 个任务和 6 次备份恢复。验证进程采样峰值 RSS 为 30.61 MiB，后半程相对前一采样区间最低值增加 4.73 MiB；原生批次进程采样峰值为 11.23 MiB，工作文件采样峰值为 30.65 MiB。该记录是 10 分钟的持续文件作业验证。
+
 v0.40.0 的文件回放与持续流验证见 [`validation/cli-jobs-results.json`](validation/cli-jobs-results.json)：26 项检查覆盖单次流式恢复头、分批接续、提交前后强制终止、数据库配额耗尽后扩容续跑、锁释放、原生批次超时和导出失败。Windows 上实际持续运行 600 秒，处理 1,041,214 帧，每 32 个观测帧显式移除目标并更换身份，期间放慢结果读取以触发管道背压。原生进程采样峰值 RSS 为 9.65 MiB，后半段相对前一采样区间最低值最多增加 1.40 MiB，低于本次设置的 32 MiB 增长阈值。运行包含 Python 产流、管道和结果哈希，期间并行执行开发回归；这次运行时长为 10 分钟。
 
 ```sh
@@ -2861,7 +2867,7 @@ python validation/cli_jobs_verify.py --binary _build/native/release/build/cmd/ma
 python validation/cli_jobs_verify.py --binary _build/native/release/build/cmd/main/main.exe --output _build/cli-jobs-24h.json --soak-seconds 86400
 ```
 
-第二条命令用于独立开展 24 小时持续运行检查，本次没有运行该时长。SQLite 故障检查实际使用数据库页配额和进程强制终止，没有开展整机断电测试。
+24 小时原生流式检查使用第二条命令并单独保存报告。SQLite 故障检查实际使用数据库页配额和进程强制终止，整机断电测试尚未开展。
 
 v0.39.0 的 CLI 安装验证见 [`validation/cli-distribution-results.json`](validation/cli-distribution-results.json)。使用两个实际编译的候选版本，覆盖安装、升级、回退、在运行进程、检查点续接、文件损坏、错误架构、并发锁和切换写入失败共 32 项。公开发行包由 Windows Server 2022 和 Ubuntu 22.04 的 CI 构建并验证，发布流程直接提取同一提交的受测 ZIP；两平台报告和 ZIP 哈希随 Release 提供。Linux 包还在不含 MoonBit、C 编译器和 Node.js 的 Ubuntu 22.04 容器中验证安装与流式回放。
 
@@ -2931,7 +2937,7 @@ python validation/verify.py --binary _build/native/release/build/cmd/main/main.e
 python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.40-results.json
 moon package
 python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.40-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.40.0.zip --output validation/package-v0.40-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.41.0.zip --output validation/package-v0.41-results.json
 ```
 
 v0.36.0 的面积比较验证见 [`validation/calibration-area-results.json`](validation/calibration-area-results.json)：31 个请求、297 组比较、44,339 个标量及 2,460 组四分量非线性中心差分通过。独立参考以 Fraction 对完整闭合鞋带公式及单应商式求精确面积和导数，110 位 Decimal 核对共享贡献；极端面积提高到 800 位。最大误差／容差比为 0.00162；数值误差分别按 m、m²、m⁴ 和无量纲记录，极大面积的绝对误差不代表普通场地的测量误差。8 项原生／JavaScript 用例覆盖共同尺度抵消、负交叉贡献、反射与绕向、严格原文、32 模式×64 比较×64 顶点、晚阶段退化及单请求边界。库四后端各 1,027 项通过，独立 ZIP 消费者记录见 [`validation/package-v0.36-results.json`](validation/package-v0.36-results.json)。共享面板的四种模式在 Chromium 151 和 Chrome 157 核对独立草稿／结果、切换取消、迟到示例、原精度下载、最大批量和 390／1440 宽布局；两种浏览器的完整五组交互测试均通过。既有接口的 35 项参考使用当前产物重跑，记录为 `*-v0.36-results.json`，保留各历史原始记录。
