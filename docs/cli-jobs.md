@@ -60,3 +60,7 @@ python validation/cli_job_soak.py --binary _build/native/release/build/cmd/main/
 `run-dir` 必须为空；`result.json` 每五秒更新实际时长、已提交帧数、恢复次数、内存、磁盘峰值和最后进度。短时 CI 使用相同入口运行 30 秒。只有真实运行达到所需时长、结果匹配、完成恢复循环且资源检查通过，才写入 `passed`；捕获到中断或错误时写入 `interrupted` 或 `failed`。强杀验证进程或整机重启可能留下最后一份 `running` 报告，应结合更新时间和进程状态判断。Windows 上脚本请求系统保持运行，屏幕可以关闭；采样间隔超过 60 秒会判定持续运行中断。整机断电及现场测量精度尚需各自的验收记录。
 
 实现依据：[SQLite Backup API](https://www.sqlite.org/backup.html)、[同步级别](https://www.sqlite.org/pragma.html#pragma_synchronous)。
+
+## 将任务直接用于精度验收
+
+`0.43.0` 起，安装后的 `evaluate --state measurements.sqlite --references references.ndjson` 可直接评估已提交结果，并可通过 `--requirements requirements.json` 应用位置、速度、样本量和可用率门槛。默认只读取已完成任务；检查部分进度需显式使用 `--allow-partial`。报告保留此次提交范围和原结果哈希，随后接续任务不会改变已经生成的报告。完整命令、读取预算及部分进度语义见 [日志评估与验收](https://github.com/python123-ops/moonground/blob/main/docs/cli-evaluation.md#直接评估-sqlite-回放任务)。

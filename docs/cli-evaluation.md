@@ -38,3 +38,21 @@ python moonground_cli.py --prefix ./moonground-install evaluate --measurements m
 也可直接运行发行包中的 `python evaluate_measurements.py --binary ./bin/moonground ...`；Windows 程序名为 `moonground.exe`。恢复旧版本后，可通过已校验的新版辅助脚本运行旧程序已有的统计评估；使用验收门槛时需选择带验收功能的程序版本。
 
 库与协议说明：[测量评估](https://github.com/python123-ops/moonground/blob/main/docs/measurement-evaluation.md)。计算检查使用仓库合成与独立数值参考；现场精度验收使用独立实测数据。
+
+## 直接评估 SQLite 回放任务
+
+`0.43.0` 的安装管理器可直接读取任务数据库，无需先执行 `job-export`：
+
+```sh
+python moonground_cli.py --prefix ./moonground-install evaluate --state measurements.sqlite --references references.ndjson --requirements requirements.json --output acceptance.json
+```
+
+`--state` 与 `--measurements` 二选一。默认要求任务已经完成；需要检查已提交的部分进度时，显式加 `--allow-partial`。部分评估仍与整份参考日志做完整时间外连接，尚未产生的测量计为缺测，不会自动截短参考范围。
+
+读取先核对数据库结构、完整性、提交计数、结果顺序和时间戳，再在同一只读事务中逐行使用原始结果。它与回放、备份共用任务锁；任务正在写入或备份时返回 2，保持原报告。日志对齐完成后释放事务和锁，再启动原生评估程序；后续任务提交不改变已经对齐的评估内容。
+
+报告增加 `measurement_source`，记录此次读取的帧数、提交次数、完成状态、输入偏移、原输入与产出程序哈希、结果字节哈希和检查点哈希，以及实际使用的读取脚本哈希。`binary_sha256` 仍表示执行本次评估的程序，`measurement_source.binary_sha256` 表示产生这些测量的程序，两者分别保留。报告不保存本地文件路径。
+
+`--max-state-mib` 默认 256，限制数据库逻辑页大小；`--state-timeout` 默认 60 秒，约束数据库检查和日志对齐。`--timeout` 继续约束随后进行的原生计算。只读流保留当前结果行；对齐后的原生输入仍使用临时文件，临时磁盘用量随输入增长。空任务需提供 `--session-id`，有参考而无测量时按缺测评估。
+
+输出不得覆盖任务数据库、锁及 SQLite 日志文件，也不得覆盖其硬链接、原输入或产出程序。统计与验收继续使用 0／3／2 的退出状态。可先通过 `job-backup` 保存任务快照，再对快照单独评估并留存参考数据与门槛文件。

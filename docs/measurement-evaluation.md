@@ -32,6 +32,8 @@
 
 两个文件各自按时间严格递增。工具按时间做完整外连接：参考独有时刻补空测量帧以记录缺测，测量独有时刻使用空参考帧并计为没有参考。输出的 `alignment` 保留三类帧数。
 
+安装后的管理器自 `0.43.0` 起也接受 `evaluate --state measurements.sqlite`，直接读取回放任务的已提交结果。默认要求任务完成，部分进度需显式选择；相同的完整时间连接和原生统计仍适用，使用方式见 [SQLite 直接评估](https://github.com/python123-ops/moonground/blob/main/docs/cli-evaluation.md#直接评估-sqlite-回放任务)。
+
 ```sh
 moon build cmd/main --target native --release --deny-warn
 python examples/evaluate_measurements.py --binary _build/native/release/build/cmd/main/main.exe --measurements examples/measurement-evaluation-measurements.ndjson --references examples/measurement-evaluation-reference.ndjson --output _build/evaluation.json
