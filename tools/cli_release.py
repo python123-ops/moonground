@@ -121,6 +121,27 @@ def require_measurement_acceptance(report,adapter_digest,commit):
         raise ValueError('measurement acceptance interchange verification differs from the tested commit')
 
 
+def require_sqlite_evaluation(report,binary_digest,files,commit):
+    if not report or report.get('status')!='passed' or report.get('binary_sha256')!=binary_digest:
+        raise ValueError('SQLite evaluation verification is missing or for a different binary')
+    if not report.get('cases') or not all(case.get('passed') for case in report['cases']):
+        raise ValueError('SQLite evaluation verification cases did not all pass')
+    for key,name in [('source_sha256','validation/sqlite_evaluation_verify.py'),
+                     ('runner_sha256','tools/moonground_jobs.py'),
+                     ('adapter_sha256','examples/evaluate_measurements.py'),
+                     ('manager_sha256','tools/moonground_cli.py'),
+                     ('support_sha256','validation/cli_jobs_verify.py')]:
+        if report.get(key)!=hashlib.sha256(source_file(commit,name)).hexdigest():
+            raise ValueError('SQLite evaluation verification source differs from the tested commit')
+    for key,name in [('runner_sha256','moonground_jobs.py'),('adapter_sha256','evaluate_measurements.py'),
+                     ('manager_sha256','moonground_cli.py')]:
+        if report[key]!=files[name]['sha256']:
+            raise ValueError('SQLite evaluation helper differs from the tested payload')
+    larger=report.get('larger_job',{})
+    if larger.get('frames',0)<4096 or not 0<larger.get('python_peak_bytes',0)<8*1024*1024 or larger.get('logical_state_bytes',0)<=0:
+        raise ValueError('SQLite evaluation bounded-memory run is missing or incomplete')
+
+
 def prepare(directory,output,version,commit,run_id):
     source(version,commit)
     archives=sorted(directory.rglob('moonground-cli-*.zip'))
@@ -144,8 +165,10 @@ def prepare(directory,output,version,commit,run_id):
     backup_reports={}
     soak_reports={}
     acceptance_reports={}
+    sqlite_evaluation_reports={}
     for pattern,state_reports in [('ci-cli-job-backup.json',backup_reports),('ci-cli-job-soak/result.json',soak_reports),
-                                 ('ci-measurement-acceptance.json',acceptance_reports)]:
+                                 ('ci-measurement-acceptance.json',acceptance_reports),
+                                 ('ci-sqlite-evaluation.json',sqlite_evaluation_reports)]:
         for path in directory.rglob(pattern):
             value=json.loads(path.read_text(encoding='utf-8'))
             binary=value.get('binary_sha256')
@@ -201,6 +224,10 @@ def prepare(directory,output,version,commit,run_id):
             acceptance=acceptance_reports.get(tested['current_binary_sha256'])
             require_measurement_acceptance(acceptance,value['files']['evaluate_measurements.py']['sha256'],commit)
             report=dict(report,measurement_acceptance=acceptance)
+            if b'\nclass MeasurementSource:' in source_file(commit,'tools/moonground_jobs.py'):
+                evaluation=sqlite_evaluation_reports.get(tested['current_binary_sha256'])
+                require_sqlite_evaluation(evaluation,tested['current_binary_sha256'],value['files'],commit)
+                report=dict(report,sqlite_evaluation=evaluation)
         if script is not None and payload!=script:
             raise ValueError('platform archives contain different manager scripts')
         script=payload
