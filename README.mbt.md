@@ -2852,7 +2852,21 @@ test "README: metric evaluation retains misses and speed availability" {
 
 CLI `--evaluate-measurements` 读取配置和逐行对齐输入，只在 EOF 输出摘要。现有测量与参考日志可通过 [`examples/evaluate_measurements.py`](examples/evaluate_measurements.py) 做完整时间连接，保存输入哈希及实际配置，完整报告生成后替换输出。库会话在输入、容量或数值错误时保留原累计状态；详细格式与示例见 [测量评估说明](docs/measurement-evaluation.md)。
 
+## 测量验收门槛
+
+`evaluation.AccuracyRequirements` 为位置或速度分别指定有效样本数、最低可用率和 MAE／RMSE／最大误差上限。`EvaluationSession::assess(position?, speed?)` 在同一累计统计上生成逐项判定，保留原误差、偏差与状态计数；位置用 m，速度用 m/s。没有可评分样本时，误差保持 `None`／JSON `null`，对应检查失败。样本数和可用率使用包含等号的下界，误差使用包含等号的上界。
+
+原生 `--accept-measurements`、纯函数 `codec.measurement_acceptance_json` 和 JavaScript `moonground_measurement_acceptance` 使用同一份显式门槛。在预编译发行包中，可直接对齐两份日志并应用门槛文件：
+
+```sh
+python moonground_cli.py --prefix ./moonground-install evaluate --measurements measurements.ndjson --references references.ndjson --requirements requirements.json --output acceptance.json
+```
+
+验收通过退出 0，门槛未达到时保存完整报告并退出 3，输入或执行错误退出 2。门槛文件及两份日志的哈希随报告保留。格式、库接口和合成示例见 [测量评估与验收](docs/measurement-evaluation.md)，安装后操作见 [CLI 日志验收](docs/cli-evaluation.md)。现场参考使用独立实测数据，并记录坐标系、时间同步与身份对应。
+
 ## 验证与复现
+
+v0.42.0 的 [验收判定记录](validation/measurement-acceptance-results.json) 包含 27 组数值请求和 270 项门槛判定，误差与可用率由离线 160 位 Decimal 参考核对。17 项原文协议、9 项文件工具及 6 项原生／JavaScript 一致性检查覆盖缺失参考、速度预热、可用率不足、精确边界、极端有限尺度、原始数字文本与错误后的报告保存。门槛值用于验证软件判定规则。
 
 SQLite 任务的完整性检查、单文件备份、校验恢复和持续作业入口见 [文件回放说明](docs/cli-jobs.md)。持续检查轮换固定输入任务，在中点备份恢复后继续，并逐字节核对原生单次结果；报告记录实际时长与资源采样，短时回归和 24 小时运行分别记录。
 
@@ -2937,7 +2951,7 @@ python validation/verify.py --binary _build/native/release/build/cmd/main/main.e
 python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.40-results.json
 moon package
 python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.40-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.41.0.zip --output validation/package-v0.41-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.42.0.zip --output validation/package-v0.42-results.json
 ```
 
 v0.36.0 的面积比较验证见 [`validation/calibration-area-results.json`](validation/calibration-area-results.json)：31 个请求、297 组比较、44,339 个标量及 2,460 组四分量非线性中心差分通过。独立参考以 Fraction 对完整闭合鞋带公式及单应商式求精确面积和导数，110 位 Decimal 核对共享贡献；极端面积提高到 800 位。最大误差／容差比为 0.00162；数值误差分别按 m、m²、m⁴ 和无量纲记录，极大面积的绝对误差不代表普通场地的测量误差。8 项原生／JavaScript 用例覆盖共同尺度抵消、负交叉贡献、反射与绕向、严格原文、32 模式×64 比较×64 顶点、晚阶段退化及单请求边界。库四后端各 1,027 项通过，独立 ZIP 消费者记录见 [`validation/package-v0.36-results.json`](validation/package-v0.36-results.json)。共享面板的四种模式在 Chromium 151 和 Chrome 157 核对独立草稿／结果、切换取消、迟到示例、原精度下载、最大批量和 390／1440 宽布局；两种浏览器的完整五组交互测试均通过。既有接口的 35 项参考使用当前产物重跑，记录为 `*-v0.36-results.json`，保留各历史原始记录。
