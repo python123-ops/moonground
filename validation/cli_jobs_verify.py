@@ -137,6 +137,42 @@ def suite(binary):
         assert jobs.status(state)['frames']==24
         passed('status-reports-only-committed-progress')
 
+        read_state, next_state = directory/'reader.sqlite', directory/'writer.sqlite'
+        jobs.replay(binary,source,read_state,max_frames=4)
+        jobs.replay(binary,source,next_state,max_frames=5)
+        with contextlib.closing(sqlite3.connect(str(next_state))) as connection:
+            next_document = connection.execute('SELECT document FROM job WHERE id=1').fetchone()[0]
+            next_payload = connection.execute('SELECT payload FROM results WHERE sequence=5').fetchone()[0]
+        entered, committed = threading.Event(), threading.Event()
+        writer_errors = []
+        def concurrent_commit():
+            try:
+                with contextlib.closing(sqlite3.connect(str(read_state),timeout=5)) as connection:
+                    connection.execute('BEGIN IMMEDIATE')
+                    connection.execute('INSERT INTO results(sequence,payload) VALUES(5,?)',(sqlite3.Binary(next_payload),))
+                    connection.execute('UPDATE job SET document=? WHERE id=1',(next_document,))
+                    entered.set()
+                    connection.commit()
+                    committed.set()
+            except BaseException as error:
+                writer_errors.append(str(error))
+                entered.set()
+        writer = threading.Thread(target=concurrent_commit,daemon=True)
+        real_decode = jobs.decode
+        def read_then_commit(data):
+            value = real_decode(data)
+            if isinstance(value,dict) and 'input_sha256' in value:
+                writer.start()
+                assert entered.wait(5)
+                committed.wait(0.2)
+            return value
+        with mock.patch.object(jobs,'decode',side_effect=read_then_commit):
+            assert jobs.status(read_state)['frames']==4
+        writer.join(timeout=5)
+        assert not writer.is_alive() and not writer_errors and committed.is_set()
+        assert jobs.status(read_state)['frames']==5
+        passed('status-pins-one-snapshot-during-a-concurrent-commit')
+
         def rejects(name, operation, database=state):
             before = jobs.status(database)
             try:
@@ -378,6 +414,7 @@ def main():
     result = dict(status='passed',cases=cases,case_count=len(cases),soak=soak(binary,args.soak_seconds,args.targets),
                   sqlite_version=sqlite3.sqlite_version,python=platform.python_version(),platform=platform.platform(),
                   source_sha256=jobs.digest_file(Path(__file__).resolve()),runner_sha256=jobs.digest_file(ROOT/'tools/moonground_jobs.py'),
+                  sampler_sha256=jobs.digest_file(ROOT/'validation/stream_test.py'),
                   binary_sha256=jobs.digest_file(binary),elapsed_seconds=time.monotonic()-started,
                   command='python '+' '.join(sys.argv))
     args.output.parent.mkdir(parents=True,exist_ok=True)

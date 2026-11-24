@@ -257,6 +257,22 @@ def run_suite(binary):
         partial=json.loads(execute(replay+['--batch-frames','2','--max-frames','3']))
         assert partial['frames']==3 and not partial['complete']
         passed('installed-replay-saves-a-committed-prefix')
+        verified=json.loads(execute(command+['job-verify','--state',str(job_state)]))
+        assert verified['frames']==3 and verified['integrity']=='ok'
+        passed('installed-job-verify-checks-committed-results')
+        backup=directory/'job-backup.sqlite'
+        saved=json.loads(execute(command+['job-backup','--state',str(job_state),'--output',str(backup)]))
+        assert saved['sha256']==manager.digest_file(backup)
+        passed('installed-job-backup-reports-a-verified-checksum')
+        recovery=directory/'recovered-job.sqlite'
+        execute(command+['job-restore','--backup',str(backup),'--state',str(recovery),'--sha256',saved['sha256']])
+        execute(command+['replay','--input',str(job_input),'--state',str(recovery)])
+        recovered_output=directory/'recovered-output.ndjson'
+        execute(command+['job-export','--state',str(recovery),'--output',str(recovered_output)])
+        assert json_lines(recovered_output.read_bytes())==baseline
+        passed('installed-restored-job-resumes-with-identical-results')
+        execute(command+['job-restore','--backup',str(backup),'--state',str(directory/'bad-recovery.sqlite'),'--sha256','0'*64],status=2)
+        passed('installed-job-restore-preserves-checksum-error-exit')
         complete=json.loads(execute(replay+['--batch-frames','3']))
         assert complete['frames']==5 and complete['complete']
         assert json.loads(execute(command+['job-status','--state',str(job_state)]))['frames']==5
@@ -283,6 +299,8 @@ def run_suite(binary):
         passed('legacy-seven-file-layout-installs-and-rolls-back')
         legacy_command=[sys.executable,str(ROOT/'tools/moonground_cli.py'),'--prefix',str(legacy_prefix)]
         assert json.loads(execute(legacy_command+['job-status','--state',str(job_state)]))['frames']==5
+        assert json.loads(execute(legacy_command+['job-verify','--state',str(job_state)]))['integrity']=='ok'
+        passed('rolled-back-layout-can-verify-with-the-previous-recovery-helper')
         execute(legacy_command+['replay','--input',str(job_input),'--state',str(job_state)],status=2)
         passed('rolled-back-layout-can-read-jobs-without-running-an-unsupported-cli')
         checkpoint=json.loads(execute(command+['run','--','--checkpoint'],input=encode_records([header]+rows[:3])))

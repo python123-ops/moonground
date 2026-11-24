@@ -88,6 +88,21 @@ def inspect_archive(path):
     return value,script
 
 
+def require_state_recovery(recovery,stability,runner_digest,commit):
+    if not recovery or recovery.get('status')!='passed' or not recovery.get('cases') or not all(case.get('passed') for case in recovery['cases']):
+        raise ValueError('state backup verification did not pass for the released binary')
+    if not stability or stability.get('status')!='passed' or stability.get('requested_seconds',0)<30 or stability.get('wall_seconds',0)<stability['requested_seconds']:
+        raise ValueError('SQLite stability verification is missing or incomplete')
+    if stability.get('completed_jobs',0)<2 or stability.get('backup_restore_cycles',0)<2 or stability.get('largest_sample_gap_seconds',61)>60:
+        raise ValueError('SQLite stability verification lacks continuous replay and restore cycles')
+    for result,name in [(recovery,'validation/cli_job_backup_verify.py'),(stability,'validation/cli_job_soak.py')]:
+        if result.get('source_sha256')!=hashlib.sha256(source_file(commit,name)).hexdigest() or result.get('runner_sha256')!=runner_digest:
+            raise ValueError('state recovery verification source differs from the tested commit')
+    for key,name in [('sampler_sha256','validation/stream_test.py'),('support_sha256','validation/cli_jobs_verify.py')]:
+        if stability.get(key)!=hashlib.sha256(source_file(commit,name)).hexdigest():
+            raise ValueError('SQLite stability sampling source differs from the tested commit')
+
+
 def prepare(directory,output,version,commit,run_id):
     source(version,commit)
     archives=sorted(directory.rglob('moonground-cli-*.zip'))
@@ -108,6 +123,15 @@ def prepare(directory,output,version,commit,run_id):
         if binary in job_reports:
             raise ValueError('duplicate durable replay verification report')
         job_reports[binary]=value
+    backup_reports={}
+    soak_reports={}
+    for pattern,reports in [('ci-cli-job-backup.json',backup_reports),('ci-cli-job-soak/result.json',soak_reports)]:
+        for path in directory.rglob(pattern):
+            value=json.loads(path.read_text(encoding='utf-8'))
+            binary=value.get('binary_sha256')
+            if binary in reports:
+                raise ValueError('duplicate state recovery verification report')
+            reports[binary]=value
     output.mkdir(parents=True,exist_ok=True)
     artifacts={}
     script=None
@@ -146,6 +170,13 @@ def prepare(directory,output,version,commit,run_id):
             if soak.get('status')!='passed' or soak.get('requested_seconds',0)<30 or soak.get('wall_seconds',0)<soak['requested_seconds']:
                 raise ValueError('continuous stream verification is missing or incomplete')
             report=dict(report,durable_replay=replay)
+            if b'\ndef backup(' in source_file(commit,'tools/moonground_jobs.py'):
+                if replay.get('sampler_sha256')!=hashlib.sha256(source_file(commit,'validation/stream_test.py')).hexdigest():
+                    raise ValueError('continuous stream sampling source differs from the tested commit')
+                recovery=backup_reports.get(tested['current_binary_sha256'])
+                stability=soak_reports.get(tested['current_binary_sha256'])
+                require_state_recovery(recovery,stability,replay['runner_sha256'],commit)
+                report=dict(report,state_recovery=recovery,sqlite_stability=stability)
         if script is not None and payload!=script:
             raise ValueError('platform archives contain different manager scripts')
         script=payload

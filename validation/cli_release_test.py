@@ -1,6 +1,7 @@
 """Release lookup and historical artifact promotion contracts."""
 
 import json
+import hashlib
 import os
 from pathlib import Path
 import subprocess
@@ -70,6 +71,42 @@ class ReleaseLookup(unittest.TestCase):
                 release.source('1.2.3',commit)
                 with self.assertRaisesRegex(ValueError,'source moon.mod'):
                     release.source('2.0.0',commit)
+
+
+class StateRecoveryGate(unittest.TestCase):
+    def setUp(self):
+        self.sources={name:name.encode('ascii') for name in ['validation/cli_job_backup_verify.py','validation/cli_job_soak.py','validation/stream_test.py','validation/cli_jobs_verify.py']}
+        self.runner='a'*64
+        self.recovery=dict(status='passed',cases=[dict(passed=True)],runner_sha256=self.runner,
+                           source_sha256=hashlib.sha256(self.sources['validation/cli_job_backup_verify.py']).hexdigest())
+        self.stability=dict(status='passed',requested_seconds=30,wall_seconds=30.1,completed_jobs=7,backup_restore_cycles=8,
+                            largest_sample_gap_seconds=0.08,runner_sha256=self.runner,
+                            source_sha256=hashlib.sha256(self.sources['validation/cli_job_soak.py']).hexdigest())
+        self.stability['sampler_sha256']=hashlib.sha256(self.sources['validation/stream_test.py']).hexdigest()
+        self.stability['support_sha256']=hashlib.sha256(self.sources['validation/cli_jobs_verify.py']).hexdigest()
+
+    def check(self,recovery,stability):
+        with mock.patch.object(release,'source_file',side_effect=lambda commit,name:self.sources[name]):
+            release.require_state_recovery(recovery,stability,self.runner,'b'*40)
+
+    def test_actual_short_run_is_accepted(self):
+        self.check(self.recovery,self.stability)
+
+    def test_incomplete_or_mismatched_backups_are_rejected(self):
+        for name,value in [('status','failed'),('cases',[]),('cases',[dict(passed=False)]),
+                           ('runner_sha256','c'*64),('source_sha256','c'*64)]:
+            with self.subTest(name=name,value=value):
+                result=dict(self.recovery,**{name:value})
+                with self.assertRaises(ValueError):self.check(result,self.stability)
+        with self.assertRaises(ValueError):self.check(None,self.stability)
+
+    def test_requested_time_is_not_substituted_for_elapsed_time(self):
+        for changes in [dict(status='running'),dict(requested_seconds=86400),dict(wall_seconds=29),dict(requested_seconds=10),
+                        dict(completed_jobs=0),dict(backup_restore_cycles=0),dict(largest_sample_gap_seconds=61),
+                        dict(source_sha256='c'*64),dict(runner_sha256='c'*64),dict(sampler_sha256='c'*64),dict(support_sha256='c'*64)]:
+            with self.subTest(changes=changes):
+                with self.assertRaises(ValueError):self.check(self.recovery,dict(self.stability,**changes))
+        with self.assertRaises(ValueError):self.check(self.recovery,None)
 
 
 if __name__=='__main__':

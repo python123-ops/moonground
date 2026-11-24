@@ -56,6 +56,12 @@ python3 /input/moonground_cli.py --prefix /tmp/moonground install --archive /inp
 python3 /input/moonground_cli.py --prefix /tmp/moonground run -- --version-json >/tmp/version.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground run -- --stream </input/warehouse.ndjson >/tmp/output.ndjson
 python3 /input/moonground_cli.py --prefix /tmp/moonground replay --input /input/warehouse.ndjson --state /tmp/measurements.sqlite --batch-frames 3 >/tmp/job.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground job-verify --state /tmp/measurements.sqlite >/tmp/verified.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground job-backup --state /tmp/measurements.sqlite --output /tmp/backup.sqlite >/tmp/backup.json
+backup_sha=$(python3 -c 'import json;print(json.load(open("/tmp/backup.json"))["sha256"])')
+python3 /input/moonground_cli.py --prefix /tmp/moonground job-restore --backup /tmp/backup.sqlite --sha256 "$backup_sha" --state /tmp/restored.sqlite >/tmp/restored.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground replay --input /input/warehouse.ndjson --state /tmp/restored.sqlite >/tmp/resumed.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground job-export --state /tmp/restored.sqlite --output /tmp/restored.ndjson >/tmp/restored-export.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground job-export --state /tmp/measurements.sqlite --output /tmp/replayed.ndjson >/tmp/export.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground status >/dev/null
 python3 - <<'PY'
@@ -66,10 +72,14 @@ assert actual==expected
 with open('/tmp/replayed.ndjson') as stream: replayed=[json.loads(line) for line in stream]
 with open('/tmp/job.json') as stream: job=json.load(stream)
 assert replayed==expected and job['complete'] and job['frames']==len(expected)
+with open('/tmp/restored.ndjson') as stream: recovered=[json.loads(line) for line in stream]
+with open('/tmp/verified.json') as stream: verified=json.load(stream)
+with open('/tmp/resumed.json') as stream: resumed=json.load(stream)
+assert recovered==expected and verified['integrity']=='ok' and resumed['complete'] and resumed['commits']==job['commits']
 with open('/tmp/version.json') as stream: version=json.load(stream)
 with open('/tmp/install.json') as stream: installed=json.load(stream)
 assert version['version']==installed['version']
-print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],sqlite_version=sqlite3.sqlite_version)))
+print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],restored_frames=len(recovered),sqlite_version=sqlite3.sqlite_version)))
 PY
 '''
         (directory/'smoke.sh').write_bytes(script.encode('utf-8'))
