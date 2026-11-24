@@ -7,6 +7,7 @@ Only aggregate counts, hashes, timings and memory statistics are persisted.
 """
 
 import argparse
+import functools
 import ctypes
 import hashlib
 import json
@@ -163,24 +164,31 @@ def protocol_checks(binary):
     return cases
 
 
+@functools.lru_cache(maxsize=1)
+def _windows_memory_api():
+    from ctypes import wintypes
+
+    class Counters(ctypes.Structure):
+        _fields_ = [
+            ("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD),
+            *[(name, ctypes.c_size_t) for name in (
+                "PeakWorkingSetSize", "WorkingSetSize", "QuotaPeakPagedPoolUsage",
+                "QuotaPagedPoolUsage", "QuotaPeakNonPagedPoolUsage",
+                "QuotaNonPagedPoolUsage", "PagefileUsage", "PeakPagefileUsage")],
+        ]
+
+    query = ctypes.windll.psapi.GetProcessMemoryInfo
+    query.argtypes = [wintypes.HANDLE, ctypes.POINTER(Counters), wintypes.DWORD]
+    query.restype = wintypes.BOOL
+    return query, Counters
+
+
 def process_memory(process):
     if os.name == "nt":
         from ctypes import wintypes
-
-        class Counters(ctypes.Structure):
-            _fields_ = [
-                ("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD),
-                *[(name, ctypes.c_size_t) for name in (
-                    "PeakWorkingSetSize", "WorkingSetSize", "QuotaPeakPagedPoolUsage",
-                    "QuotaPagedPoolUsage", "QuotaPeakNonPagedPoolUsage",
-                    "QuotaNonPagedPoolUsage", "PagefileUsage", "PeakPagefileUsage")],
-            ]
-
+        query, Counters = _windows_memory_api()
         counters = Counters()
         counters.cb = ctypes.sizeof(counters)
-        query = ctypes.windll.psapi.GetProcessMemoryInfo
-        query.argtypes = [wintypes.HANDLE, ctypes.POINTER(Counters), wintypes.DWORD]
-        query.restype = wintypes.BOOL
         if query(wintypes.HANDLE(int(process._handle)), ctypes.byref(counters), counters.cb):
             return counters.WorkingSetSize, counters.PeakWorkingSetSize
     elif sys.platform.startswith("linux"):
