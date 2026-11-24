@@ -462,7 +462,7 @@ def job_module(root, capabilities=()):
     raise ValueError('installed releases do not contain the requested replay or state recovery support')
 
 
-def evaluation_module(root):
+def evaluation_module(root, capabilities=()):
     state = selection(root)
     if state is None:
         raise ValueError('install a CLI release with log evaluation support first')
@@ -475,8 +475,9 @@ def evaluation_module(root):
             spec = importlib.util.spec_from_file_location('moonground_log_evaluation', str(helper))
             module = importlib.util.module_from_spec(spec)
             exec(compile(helper.read_bytes(), str(helper), 'exec'), module.__dict__)
-            return module
-    raise ValueError('installed releases do not contain log evaluation support')
+            if all(hasattr(module, name) for name in capabilities):
+                return module
+    raise ValueError('installed releases do not contain the requested log evaluation support')
 
 
 def main():
@@ -491,8 +492,13 @@ def main():
     commands.add_parser('status')
     commands.add_parser('path')
     commands.add_parser('rollback')
-    evaluate = commands.add_parser('evaluate', help='compare two logs; unmet accuracy requirements return exit status 3')
-    evaluate.add_argument('--measurements', required=True)
+    evaluate = commands.add_parser('evaluate', help='compare a log or committed replay with references; unmet requirements return 3')
+    evaluation_source = evaluate.add_mutually_exclusive_group(required=True)
+    evaluation_source.add_argument('--measurements')
+    evaluation_source.add_argument('--state', help='read a checked SQLite replay snapshot without exporting it')
+    evaluate.add_argument('--allow-partial', action='store_true')
+    evaluate.add_argument('--max-state-mib', type=int, default=256)
+    evaluate.add_argument('--state-timeout', type=float, default=60.0)
     evaluate.add_argument('--references', required=True)
     evaluate.add_argument('--requirements')
     evaluate.add_argument('--session-id')
@@ -530,6 +536,8 @@ def main():
     root = args.prefix.expanduser().resolve()
     try:
         if args.command == 'evaluate':
+            if args.allow_partial and args.state is None:
+                raise ValueError('--allow-partial requires --state')
             if args.output is not None:
                 destination = Path(args.output).absolute()
                 destination = destination.parent.resolve()/destination.name
@@ -541,12 +549,17 @@ def main():
             value, path = installed(root, state['active'])
             if args.requirements is not None and 'evaluate_measurements.py' not in value['files']:
                 raise ValueError('select a CLI release with measurement acceptance support')
-            module = evaluation_module(root)
+            module = evaluation_module(root, ('STATE_INPUT_VERSION',) if args.state is not None else ())
+            measurement_source = None
+            if args.state is not None:
+                support = job_module(root, ('MeasurementSource',))
+                measurement_source = support.MeasurementSource(Path(args.state), args.allow_partial,
+                                                               args.max_state_mib, args.state_timeout)
             options = ['--binary', str(path/value['executable'])]
             for name in ['measurements', 'references', 'requirements', 'session_id', 'output', 'max_tracks', 'max_samples', 'max_line_bytes', 'timeout']:
                 if getattr(args, name) is not None:
                     options += ['--'+name.replace('_','-'), str(getattr(args, name))]
-            return module.main(options)
+            return module.main(options, measurement_source=measurement_source) if args.state is not None else module.main(options)
         if args.command in ('replay', 'job-status', 'job-export', 'job-verify', 'job-backup', 'job-restore'):
             capabilities = ('verify', 'backup', 'restore') if args.command in ('job-verify', 'job-backup', 'job-restore') else ()
             module = job_module(root, capabilities)

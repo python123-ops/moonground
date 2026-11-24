@@ -419,6 +419,64 @@ def verify(state_path, max_state_mib=256, timeout=60.0):
         return _inspect(connection, check, max_state_mib)
 
 
+class _MeasurementRows:
+    """Read one verified result row at a time, retaining file readline semantics."""
+    def __init__(self, connection, check):
+        self.cursor = connection.execute('SELECT payload FROM results ORDER BY sequence')
+        self.check = check
+        self.pending = b''
+
+    def readline(self, size=-1):
+        self.check()
+        if size == 0:
+            return b''
+        if not self.pending:
+            row = self.cursor.fetchone()
+            if row is None:
+                return b''
+            self.pending = row[0]
+        count = len(self.pending) if size < 0 else min(size, len(self.pending))
+        result, self.pending = self.pending[:count], self.pending[count:]
+        return result
+
+
+@contextlib.contextmanager
+def _measurement_errors():
+    try:
+        yield
+    except sqlite3.Error as error:
+        raise ValueError('cannot read replay measurements: ' + str(error)) from error
+
+
+class MeasurementSource:
+    """A checked, bounded stream of one committed SQLite replay snapshot."""
+    def __init__(self, state_path, allow_partial=False, max_state_mib=256, timeout=60.0):
+        self.path = _file_path(state_path)
+        self.allow_partial = allow_partial
+        self.max_state_mib = max_state_mib
+        self.timeout = timeout
+        self.protected_paths = [self.path, Path(__file__)] + [
+            self.path.with_name(self.path.name + suffix)
+            for suffix in ['-journal', '-wal', '-shm', '.lock']]
+
+    @contextlib.contextmanager
+    def open(self):
+        check = _deadline(self.timeout, self.max_state_mib)
+        # Share the replay/backup lock: reading never delays an active writer's
+        # commit, and both the inspection and the stream see the same snapshot.
+        regular(self.path)
+        with _measurement_errors(), state_lock(self.path), contextlib.closing(_connect(self.path, readonly=True)) as connection:
+            connection.execute('BEGIN')
+            report = _inspect(connection, check, self.max_state_mib)
+            if not report['complete'] and not self.allow_partial:
+                raise ValueError('replay is incomplete; finish it or explicitly use --allow-partial')
+            report.update(kind='sqlite_replay', partial_requested=self.allow_partial,
+                          max_state_mib=self.max_state_mib, timeout_seconds=self.timeout,
+                          reader_sha256=digest_file(Path(__file__), check))
+            yield _MeasurementRows(connection, check), report
+            check()
+
+
 def _new_state_path(path, source):
     if os.path.lexists(str(path)):
         raise ValueError('destination already exists; choose a new state or backup file')

@@ -6,6 +6,7 @@ temporary file. Metrics are computed by MoonGround, not by this adapter.
 """
 
 import argparse
+import contextlib
 from decimal import Decimal
 import hashlib
 import json
@@ -15,6 +16,8 @@ import subprocess
 import sys
 import tempfile
 import time
+
+STATE_INPUT_VERSION = 1
 
 
 def unique_fields(pairs):
@@ -121,53 +124,75 @@ def compact_requirements(raw):
     return ''.join(result).encode('utf-8')
 
 
-def evaluate(args):
+@contextlib.contextmanager
+def measurement_stream(args, measurement_source):
+    if measurement_source is None:
+        with args.measurements.open('rb') as stream:
+            yield stream, None
+    else:
+        with measurement_source.open() as snapshot:
+            yield snapshot
+
+
+def align(measured_file, reference_file, aligned, args, requirements):
+    measured_hash, reference_hash = hashlib.sha256(), hashlib.sha256()
+    join_counts = dict(paired_frames=0, measurement_only_frames=0, reference_only_frames=0)
+    measured_rows = records(measured_file, 'measurement', measured_hash, args.max_line_bytes)
+    reference_rows = records(reference_file, 'reference', reference_hash, args.max_line_bytes)
+    measured, reference = next(measured_rows, None), next(reference_rows, None)
+    session_id = args.session_id
+    if session_id is None and measured is not None:
+        session_id = measured[1].get('session_id')
+    if not isinstance(session_id, str) or not session_id:
+        raise ValueError('provide --session-id when the measurement log is empty')
+    header = encode(dict(session_id=session_id, max_tracks=args.max_tracks, max_samples=args.max_samples))
+    if requirements is not None:
+        header = header[:-1]+b',"requirements":'+requirements+b'}'
+    aligned.write(header+b'\n')
+    while measured is not None or reference is not None:
+        if reference is None or (measured is not None and measured[0] < reference[0]):
+            clock, measured_data = measured[0], measured[2]
+            reference_data = encode(dict(timestamp_us=str(clock), samples=[]))
+            join_counts['measurement_only_frames'] += 1
+            measured = next(measured_rows, None)
+        elif measured is None or reference[0] < measured[0]:
+            measured_data = empty_measurement(session_id, reference[0])
+            reference_data = reference[2]
+            join_counts['reference_only_frames'] += 1
+            reference = next(reference_rows, None)
+        else:
+            measured_data, reference_data = measured[2], reference[2]
+            join_counts['paired_frames'] += 1
+            measured = next(measured_rows, None)
+            reference = next(reference_rows, None)
+        aligned.write(b'{"measurement":' + measured_data + b',"reference":' + reference_data + b'}\n')
+    return session_id, join_counts, measured_hash.hexdigest(), reference_hash.hexdigest()
+
+
+def evaluate(args, measurement_source=None):
     requirements_path = getattr(args, 'requirements', None)
-    inputs = [args.measurements, args.references, args.binary, Path(__file__)]
+    inputs = [args.references, args.binary, Path(__file__)]
+    inputs += measurement_source.protected_paths if measurement_source is not None else [args.measurements]
     if requirements_path is not None:
         inputs.append(requirements_path)
     check_destination(args.output, inputs)
-    raw_requirements = None
+    raw_requirements, requirements = None, None
     if requirements_path is not None:
         with requirements_path.open('rb') as stream:
             raw_requirements = stream.read(65537)
         requirements = compact_requirements(raw_requirements)
-    measured_hash, reference_hash = hashlib.sha256(), hashlib.sha256()
-    join_counts = dict(paired_frames=0, measurement_only_frames=0, reference_only_frames=0)
     binary_hash = digest_file(args.binary)
     started = time.perf_counter()
-    with args.measurements.open('rb') as measured_file, args.references.open('rb') as reference_file, \
-            tempfile.TemporaryFile('w+b') as aligned, tempfile.TemporaryFile('w+b') as output:
-        measured_rows = records(measured_file, 'measurement', measured_hash, args.max_line_bytes)
-        reference_rows = records(reference_file, 'reference', reference_hash, args.max_line_bytes)
-        measured, reference = next(measured_rows, None), next(reference_rows, None)
-        session_id = args.session_id
-        if session_id is None and measured is not None:
-            session_id = measured[1].get('session_id')
-        if not isinstance(session_id, str) or not session_id:
-            raise ValueError('provide --session-id when the measurement log is empty')
-        header = encode(dict(session_id=session_id, max_tracks=args.max_tracks,
-                             max_samples=args.max_samples))
-        if raw_requirements is not None:
-            header = header[:-1]+b',"requirements":'+requirements+b'}'
-        aligned.write(header+b'\n')
-        while measured is not None or reference is not None:
-            if reference is None or (measured is not None and measured[0] < reference[0]):
-                clock, measured_data = measured[0], measured[2]
-                reference_data = encode(dict(timestamp_us=str(clock), samples=[]))
-                join_counts['measurement_only_frames'] += 1
-                measured = next(measured_rows, None)
-            elif measured is None or reference[0] < measured[0]:
-                measured_data = empty_measurement(session_id, reference[0])
-                reference_data = reference[2]
-                join_counts['reference_only_frames'] += 1
-                reference = next(reference_rows, None)
-            else:
-                measured_data, reference_data = measured[2], reference[2]
-                join_counts['paired_frames'] += 1
-                measured = next(measured_rows, None)
-                reference = next(reference_rows, None)
-            aligned.write(b'{"measurement":' + measured_data + b',"reference":' + reference_data + b'}\n')
+    with tempfile.TemporaryFile('w+b') as aligned, tempfile.TemporaryFile('w+b') as output:
+        with measurement_stream(args, measurement_source) as (measured_file, source_info), args.references.open('rb') as reference_file:
+            if source_info is not None and args.output is not None and args.output.exists():
+                if digest_file(args.output) in {source_info['input_sha256'], source_info['binary_sha256']}:
+                    raise ValueError('output contains the replay input or producing executable')
+            session_id, join_counts, measured_hash, reference_hash = align(
+                measured_file, reference_file, aligned, args, requirements)
+            if source_info is not None and measured_hash != source_info['results_sha256']:
+                raise ValueError('measurement stream differs from the checked replay snapshot')
+        # Release the read transaction and replay lock before native calculation.
         aligned.seek(0)
         command = [str(args.binary.resolve()), '--accept-measurements' if raw_requirements is not None else '--evaluate-measurements',
                    '--max-line-bytes', str(args.max_line_bytes)]
@@ -185,11 +210,13 @@ def evaluate(args):
                 configuration=dict(session_id=session_id, max_tracks=args.max_tracks,
                                    max_samples=args.max_samples, max_line_bytes=args.max_line_bytes,
                                    timeout_seconds=args.timeout),
-                inputs=dict(measurements_sha256=measured_hash.hexdigest(),
-                            references_sha256=reference_hash.hexdigest()),
+                inputs=dict(measurements_sha256=measured_hash,
+                            references_sha256=reference_hash),
                 alignment=join_counts, binary_sha256=binary_hash,
                 adapter_sha256=digest_file(Path(__file__)),
                 elapsed_seconds=time.perf_counter() - started)
+    if source_info is not None:
+        result['measurement_source'] = source_info
     if raw_requirements is not None:
         result['kind'] = 'measurement_acceptance_run'
         result['acceptance'] = {key: report[key] for key in ['accepted', 'requirements', 'checks']}
@@ -213,10 +240,10 @@ def save_atomic(path, content):
             temporary.unlink()
 
 
-def main(argv=None):
+def main(argv=None, measurement_source=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', type=Path, required=True)
-    parser.add_argument('--measurements', type=Path, required=True)
+    parser.add_argument('--measurements', type=Path, required=measurement_source is None)
     parser.add_argument('--references', type=Path, required=True)
     parser.add_argument('--requirements', type=Path,
                         help='explicit position_m/speed_mps JSON requirements; unmet checks return exit status 3')
@@ -232,7 +259,7 @@ def main(argv=None):
             1 <= args.max_line_bytes <= 16777216 and 0.0 < args.timeout < float('inf')):
         parser.error('invalid evaluation capacity or timeout')
     try:
-        result = evaluate(args)
+        result = evaluate(args, measurement_source)
         content = (json.dumps(result, ensure_ascii=True, indent=2, allow_nan=False) + '\n').encode('utf-8')
         if args.output:
             save_atomic(args.output, content)

@@ -1,0 +1,132 @@
+{
+  "status": "passed",
+  "cases": [
+    {
+      "name": "incomplete-replay-requires-explicit-partial-selection",
+      "passed": true
+    },
+    {
+      "name": "partial-snapshot-matches-export-and-retains-all-future-references",
+      "passed": true
+    },
+    {
+      "name": "partial-snapshot-cannot-hide-missing-data-from-coverage-requirements",
+      "passed": true
+    },
+    {
+      "name": "snapshot-and-lock-close-before-native-evaluation-and-later-commits",
+      "passed": true
+    },
+    {
+      "name": "complete-snapshot-and-export-have-identical-native-statistics-and-raw-hashes",
+      "passed": true
+    },
+    {
+      "name": "reader-is-readonly-bounded-and-excludes-concurrent-writers",
+      "passed": true
+    },
+    {
+      "name": "state-sidecars-and-hardlink-aliases-cannot-be-report-destinations",
+      "passed": true
+    },
+    {
+      "name": "original-input-and-producing-executable-are-protected-by-hash",
+      "passed": true
+    },
+    {
+      "name": "late-reference-error-preserves-the-published-report",
+      "passed": true
+    },
+    {
+      "name": "state-inspection-deadline-is-enforced",
+      "passed": true
+    },
+    {
+      "name": "reject-future-version-without-replacing-output",
+      "passed": true
+    },
+    {
+      "name": "reject-foreign-database-without-replacing-output",
+      "passed": true
+    },
+    {
+      "name": "reject-extra-schema-without-replacing-output",
+      "passed": true
+    },
+    {
+      "name": "reject-missing-result-without-replacing-output",
+      "passed": true
+    },
+    {
+      "name": "reject-nonblob-result-without-replacing-output",
+      "passed": true
+    },
+    {
+      "name": "reject-multiline-result-without-replacing-output",
+      "passed": true
+    },
+    {
+      "name": "reject-budget-without-replacing-output",
+      "passed": true
+    },
+    {
+      "name": "corrupt-sqlite-is-a-controlled-input-error",
+      "passed": true
+    },
+    {
+      "name": "stored-raw-underflow-tokens-reach-native-validation",
+      "passed": true
+    },
+    {
+      "name": "complete-empty-job-retains-reference-misses-and-cannot-pass",
+      "passed": true
+    },
+    {
+      "name": "larger-native-job-streams-4096-rows-with-bounded-python-memory",
+      "passed": true
+    },
+    {
+      "name": "installed-manager-uses-both-verified-helpers-for-direct-state-evaluation",
+      "passed": true
+    },
+    {
+      "name": "installed-state-acceptance-uses-the-native-decision",
+      "passed": true
+    },
+    {
+      "name": "installed-state-acceptance-failure-publishes-report-and-exits-three",
+      "passed": true
+    },
+    {
+      "name": "installed-partial-selection-is-explicit-and-keeps-coverage-failures",
+      "passed": true
+    },
+    {
+      "name": "installed-corrupt-state-returns-two-and-keeps-the-existing-report",
+      "passed": true
+    },
+    {
+      "name": "state-and-log-arguments-are-exclusive-and-partial-is-state-only",
+      "passed": true
+    },
+    {
+      "name": "helper-loading-leaves-installed-slots-immutable",
+      "passed": true
+    }
+  ],
+  "binary_sha256": "95b7809a7a82cc193e4ec3d530837163c11ad488380d5a82c21b171ef01ffa62",
+  "python": "3.8.7",
+  "sqlite_version": "3.33.0",
+  "platform": "Windows-10-10.0.26100-SP0",
+  "source_sha256": "c104c52975110274ee661f5cabb7ef580c11a1a1074e720859646109b1404396",
+  "runner_sha256": "cd7f78dfaa87f1c27c9b646e3172770ce6ece7fc872c922322fd60caa7d667c5",
+  "adapter_sha256": "4f6e3463db120e52f88b438bea92b4e7da5d5d8e31f759ef3508c2b1c9c6c27c",
+  "manager_sha256": "0d5c7a4a0d573c73e100132926aef5d7ef40ccd3484c24a18f193973bc9f0b5a",
+  "support_sha256": "56d356ccce7aea76add41922eaaa7929f5c1e054033f7d73d3481436a193e405",
+  "larger_job": {
+    "frames": 4096,
+    "python_peak_bytes": 1107279,
+    "logical_state_bytes": 4214784
+  },
+  "command": "python validation/sqlite_evaluation_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/sqlite-evaluation-results.json"
+}
