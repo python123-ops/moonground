@@ -9,7 +9,7 @@
 在保存管理脚本的目录中执行，`--prefix` 为本机用户可写的安装目录：
 
 ```sh
-python moonground_cli.py --prefix ./moonground-install install --version 0.40.0
+python moonground_cli.py --prefix ./moonground-install install --version 0.42.0
 python moonground_cli.py --prefix ./moonground-install status
 python moonground_cli.py --prefix ./moonground-install run -- --version
 python moonground_cli.py --prefix ./moonground-install run -- --stream < observations.ndjson
@@ -18,10 +18,12 @@ python moonground_cli.py --prefix ./moonground-install run -- --stream < observa
 离线安装使用已下载的平台 ZIP 和 `SHA256SUMS` 中对应的 SHA-256：
 
 ```sh
-python moonground_cli.py --prefix ./moonground-install install --archive moonground-cli-0.40.0-linux-x86_64.zip --sha256 <64位校验值>
+python moonground_cli.py --prefix ./moonground-install install --archive moonground-cli-0.42.0-linux-x86_64.zip --sha256 <64位校验值>
 ```
 
 Windows 使用名称含 `windows-x86_64` 的 ZIP。`path` 子命令输出当前原生程序的完整路径，也可据此直接启动程序。`run` 将标准输入、输出、错误交给原生进程，并保留其退出码；管理脚本不累积测量结果。安装器不修改全局 PATH 或系统目录。
+
+`0.42.0` 的 ZIP 增加日志评估脚本与 `CLI_EVALUATION.md`，可通过 `evaluate` 对齐测量和参考日志，并应用显式验收门槛。安装这一版时使用同一 Release 提供的新版管理脚本；新版安装器同时支持旧版的 7、9 文件包和新版 11 文件包，原有升级、回退及内容校验规则继续适用。
 
 ## 升级和回退
 

@@ -72,7 +72,7 @@ def inspect_archive(path):
         raise ValueError('CLI archive exceeds its size limit')
     with zipfile.ZipFile(path) as archive:
         entries=archive.infolist()
-        if len(entries) not in (7,9) or len({item.filename for item in entries})!=len(entries):
+        if len(entries) not in (7,9,11) or len({item.filename for item in entries})!=len(entries):
             raise ValueError('release archive has unexpected members')
         if archive.getinfo('manifest.json').file_size>65536:
             raise ValueError('release manifest exceeds its size limit')
@@ -103,6 +103,24 @@ def require_state_recovery(recovery,stability,runner_digest,commit):
             raise ValueError('SQLite stability sampling source differs from the tested commit')
 
 
+def require_measurement_acceptance(report,adapter_digest,commit):
+    if not report or report.get('status')!='passed' or report.get('checks',0)<1:
+        raise ValueError('measurement acceptance verification is missing or incomplete')
+    for field in ['numerical_cases','protocol_cases','file_adapter_cases']:
+        if not report.get(field) or not all(case.get('passed') for case in report[field]):
+            raise ValueError('measurement acceptance verification cases did not all pass')
+    for key,name in [('source_sha256','validation/measurement_acceptance_verify.py'),
+                     ('reference_sha256','validation/measurement_evaluation_verify.py'),
+                     ('adapter_sha256','examples/evaluate_measurements.py')]:
+        if report.get(key)!=hashlib.sha256(source_file(commit,name)).hexdigest():
+            raise ValueError('measurement acceptance verification source differs from the tested commit')
+    if report['adapter_sha256']!=adapter_digest:
+        raise ValueError('packaged evaluation adapter differs from the tested helper')
+    web=report.get('web_interchange',{})
+    if web.get('status')!='passed' or web.get('source_sha256')!=hashlib.sha256(source_file(commit,'web/measurement-acceptance.test.mjs')).hexdigest():
+        raise ValueError('measurement acceptance interchange verification differs from the tested commit')
+
+
 def prepare(directory,output,version,commit,run_id):
     source(version,commit)
     archives=sorted(directory.rglob('moonground-cli-*.zip'))
@@ -125,7 +143,9 @@ def prepare(directory,output,version,commit,run_id):
         job_reports[binary]=value
     backup_reports={}
     soak_reports={}
-    for pattern,state_reports in [('ci-cli-job-backup.json',backup_reports),('ci-cli-job-soak/result.json',soak_reports)]:
+    acceptance_reports={}
+    for pattern,state_reports in [('ci-cli-job-backup.json',backup_reports),('ci-cli-job-soak/result.json',soak_reports),
+                                 ('ci-measurement-acceptance.json',acceptance_reports)]:
         for path in directory.rglob(pattern):
             value=json.loads(path.read_text(encoding='utf-8'))
             binary=value.get('binary_sha256')
@@ -177,6 +197,10 @@ def prepare(directory,output,version,commit,run_id):
                 stability=soak_reports.get(tested['current_binary_sha256'])
                 require_state_recovery(recovery,stability,replay['runner_sha256'],commit)
                 report=dict(report,state_recovery=recovery,sqlite_stability=stability)
+        if 'evaluate_measurements.py' in value['files']:
+            acceptance=acceptance_reports.get(tested['current_binary_sha256'])
+            require_measurement_acceptance(acceptance,value['files']['evaluate_measurements.py']['sha256'],commit)
+            report=dict(report,measurement_acceptance=acceptance)
         if script is not None and payload!=script:
             raise ValueError('platform archives contain different manager scripts')
         script=payload

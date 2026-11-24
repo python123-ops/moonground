@@ -81,11 +81,13 @@ jobs:
         run: python tools/package_cli.py --binary "$MOONGROUND_CLI" --release --output _build/cli-release
       - name: Verify Linux release in a clean runtime without build tools
         if: runner.os == 'Linux'
-        run: python validation/cli_runtime_smoke.py --binary "$MOONGROUND_CLI" --archive _build/cli-release/moonground-cli-0.41.0-linux-x86_64.zip --output _build/ci-cli-runtime.json
+        run: python validation/cli_runtime_smoke.py --binary "$MOONGROUND_CLI" --archive _build/cli-release/moonground-cli-0.42.0-linux-x86_64.zip --output _build/ci-cli-runtime.json
       - name: Compare native and JavaScript protocols
         run: node --test web/parity.test.mjs
       - name: Verify measurement evaluation and log joins independently
         run: python validation/measurement_evaluation_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-measurement-evaluation.json
+      - name: Verify explicit accuracy acceptance and failure reports
+        run: python validation/measurement_acceptance_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-measurement-acceptance.json
       - name: Compare independent numerical reference
         run: python validation/verify.py --binary "$MOONGROUND_CLI" --output _build/ci-reference.json
       - name: Verify lens correction and uncertainty thresholds independently
@@ -168,7 +170,7 @@ jobs:
           moon -C examples/consumer check --target all --deny-warn
           moon -C examples/consumer test --target all --deny-warn
           moon package
-          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.41.0.zip --output _build/ci-package.json
+          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.42.0.zip --output _build/ci-package.json
       - name: Prepare browser test driver
         if: runner.os == 'Linux'
         run: |
@@ -213,6 +215,7 @@ jobs:
             _build/ci-cli-runtime.json
             _build/ci-cli-jobs.json
             _build/ci-cli-job-backup.json
+            _build/ci-measurement-acceptance.json
             _build/ci-cli-job-soak/result.json
       - name: Retain validation records
         if: always()
@@ -259,6 +262,7 @@ jobs:
             _build/ci-calibration-area.json
             _build/ci-calibration-line-offset.json
             _build/ci-measurement-evaluation.json
+            _build/ci-measurement-acceptance.json
             _build/ci-cli-distribution.json
             _build/ci-cli-runtime.json
             _build/ci-cli-jobs.json

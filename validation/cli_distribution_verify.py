@@ -281,11 +281,34 @@ def run_suite(binary):
         execute(command+['job-export','--state',str(job_state),'--output',str(job_output)])
         assert json_lines(job_output.read_bytes())==baseline
         passed('installed-job-export-matches-direct-native-results')
+        evaluation_output=directory/'evaluation.json'
+        evaluate=command+['evaluate','--measurements',str(ROOT/'examples/measurement-evaluation-measurements.ndjson'),
+                         '--references',str(ROOT/'examples/measurement-evaluation-reference.ndjson'),'--output',str(evaluation_output)]
+        execute(evaluate)
+        assert json.loads(evaluation_output.read_text())['kind']=='measurement_evaluation_run'
+        passed('installed-log-evaluation-keeps-existing-statistics')
+        execute(evaluate+['--requirements',str(ROOT/'examples/measurement-acceptance-requirements.json')])
+        assert json.loads(evaluation_output.read_text())['acceptance']['accepted']
+        passed('installed-log-acceptance-uses-the-selected-native-program')
+        criteria=directory/'strict-requirements.json'
+        criteria.write_text(json.dumps(dict(speed_mps=dict(min_samples=1,min_coverage=0.95,max_mae=0.05))))
+        execute(evaluate+['--requirements',str(criteria)],status=3)
+        assert not json.loads(evaluation_output.read_text())['acceptance']['accepted']
+        passed('installed-log-acceptance-preserves-failure-exit-and-report')
+        for name,destination in [('version-payload',prefix/'versions/accidental.json'),
+                                 ('selection',prefix/'current.json'),('installation-lock',prefix/'.install.lock')]:
+            before=destination.read_bytes() if destination.exists() else None
+            execute(evaluate+['--output',str(destination)],status=2)
+            assert (destination.read_bytes() if destination.exists() else None)==before
+            passed('installed-evaluation-cannot-replace-'+name)
+        execute(evaluate+['--output',str(prefix/'user-report.json')])
+        assert json.loads((prefix/'user-report.json').read_text())['kind']=='measurement_evaluation_run'
+        passed('installed-evaluation-allows-operator-report-files')
         manager.status(prefix)
         assert not list((prefix/'versions').rglob('__pycache__'))
         passed('installed-helper-loading-does-not-mutate-the-version')
         def legacy_layout(entries):
-            extras={'moonground_jobs.py','CLI_JOBS.md'}
+            extras={'moonground_jobs.py','CLI_JOBS.md','evaluate_measurements.py','CLI_EVALUATION.md'}
             entries=[(item,data) for item,data in entries if item.filename not in extras]
             def remove_extra_files(value):
                 for name in extras: value['files'].pop(name)
@@ -303,6 +326,21 @@ def run_suite(binary):
         passed('rolled-back-layout-can-verify-with-the-previous-recovery-helper')
         execute(legacy_command+['replay','--input',str(job_input),'--state',str(job_state)],status=2)
         passed('rolled-back-layout-can-read-jobs-without-running-an-unsupported-cli')
+        legacy_evaluate=legacy_command+evaluate[len(command):]
+        execute(legacy_evaluate)
+        passed('legacy-selection-can-evaluate-with-the-previous-helper')
+        execute(legacy_evaluate+['--requirements',str(criteria)],status=2)
+        passed('legacy-selection-rejects-unsupported-acceptance')
+        def nine_file_layout(entries):
+            extras={'evaluate_measurements.py','CLI_EVALUATION.md'}
+            entries=[(item,data) for item,data in entries if item.filename not in extras]
+            def remove_evaluation(value):
+                for name in extras:value['files'].pop(name)
+            return manifest_change(entries,remove_evaluation)
+        nine=directory/'nine-file.zip'
+        nine_digest=mutate_archive(old_archive,nine,nine_file_layout)
+        manager.install_archive(directory/'nine-file-install',nine,nine_digest)
+        passed('legacy-nine-file-replay-layout-still-installs')
         checkpoint=json.loads(execute(command+['run','--','--checkpoint'],input=encode_records([header]+rows[:3])))
         resumed=encode_records([dict(resume=checkpoint)]+rows[3:])
         expected=json_lines(execute(command+['run','--','--stream'],input=resumed))
@@ -382,7 +420,7 @@ def run_suite(binary):
         return cases,dict(current_version=version,previous_candidate_version=old_version,
                           current_binary_sha256=manager.digest_file(binary),
                           previous_candidate_binary_sha256=manager.digest_file(old_binary),runtime=runtime,
-                          archive_sha256=new['sha256'],archive_files=9)
+                          archive_sha256=new['sha256'],archive_files=11)
 
 
 def read_line_text(process):

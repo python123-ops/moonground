@@ -113,7 +113,9 @@ class PreparedArtifacts(unittest.TestCase):
     def test_platform_and_state_reports_remain_independent(self):
         names=['tools/moonground_cli.py','tools/package_cli.py','validation/cli_distribution_verify.py',
                'tools/moonground_jobs.py','validation/cli_jobs_verify.py','validation/stream_test.py',
-               'validation/cli_job_backup_verify.py','validation/cli_job_soak.py']
+               'validation/cli_job_backup_verify.py','validation/cli_job_soak.py',
+               'validation/measurement_acceptance_verify.py','validation/measurement_evaluation_verify.py',
+               'examples/evaluate_measurements.py','web/measurement-acceptance.test.mjs']
         sources={name:name.encode('ascii') for name in names}
         sources['tools/moonground_jobs.py']+=b'\ndef backup('
         digest=lambda name:hashlib.sha256(sources[name]).hexdigest()
@@ -131,7 +133,8 @@ class PreparedArtifacts(unittest.TestCase):
                 (directory/(archive.name+'.sha256')).write_text(archive_digest+'  '+archive.name+'\n',encoding='ascii')
                 manifests[str(archive)]=dict(target=target,version=version,source_commit=commit,source_dirty=False,
                     executable='bin/moonground',runtime={},files={'bin/moonground':dict(sha256=binary),
-                    'moonground_jobs.py':dict(sha256=digest('tools/moonground_jobs.py'))})
+                    'moonground_jobs.py':dict(sha256=digest('tools/moonground_jobs.py')),
+                    'evaluate_measurements.py':dict(sha256=digest('examples/evaluate_measurements.py'))})
                 distribution=dict(status='passed',target=target,cases=[dict(passed=True)],
                     artifacts=dict(archive_sha256=archive_digest,current_version=version,current_binary_sha256=binary),
                     manager_sha256=digest('tools/moonground_cli.py'),packager_sha256=digest('tools/package_cli.py'),
@@ -143,8 +146,13 @@ class PreparedArtifacts(unittest.TestCase):
                 stability=dict(common,source_sha256=digest('validation/cli_job_soak.py'),requested_seconds=30,wall_seconds=30.1,
                     completed_jobs=7,backup_restore_cycles=8,largest_sample_gap_seconds=0.1,
                     sampler_sha256=digest('validation/stream_test.py'),support_sha256=digest('validation/cli_jobs_verify.py'))
+                acceptance=dict(common,checks=10,numerical_cases=[dict(passed=True)],protocol_cases=[dict(passed=True)],file_adapter_cases=[dict(passed=True)],
+                    source_sha256=digest('validation/measurement_acceptance_verify.py'),reference_sha256=digest('validation/measurement_evaluation_verify.py'),
+                    adapter_sha256=digest('examples/evaluate_measurements.py'),
+                    web_interchange=dict(status='passed',source_sha256=digest('web/measurement-acceptance.test.mjs')))
                 for name,value in [('ci-cli-distribution.json',distribution),('ci-cli-jobs.json',replay),
-                                   ('ci-cli-job-backup.json',backup),('ci-cli-job-soak/result.json',stability)]:
+                                   ('ci-cli-job-backup.json',backup),('ci-cli-job-soak/result.json',stability),
+                                   ('ci-measurement-acceptance.json',acceptance)]:
                     path=directory/name
                     path.parent.mkdir(parents=True,exist_ok=True)
                     path.write_text(json.dumps(value),encoding='utf-8')
@@ -159,6 +167,25 @@ class PreparedArtifacts(unittest.TestCase):
                 self.assertEqual(record['target'],target)
                 self.assertEqual(record['sqlite_stability']['completed_jobs'],7)
                 self.assertEqual(record['state_recovery']['runner_sha256'],digest('tools/moonground_jobs.py'))
+                self.assertEqual(record['measurement_acceptance']['adapter_sha256'],digest('examples/evaluate_measurements.py'))
+
+
+class AccuracyAcceptanceGate(unittest.TestCase):
+    def test_failed_cases_and_different_adapter_are_rejected(self):
+        names=['validation/measurement_acceptance_verify.py','validation/measurement_evaluation_verify.py',
+               'examples/evaluate_measurements.py','web/measurement-acceptance.test.mjs']
+        sources={name:name.encode('ascii') for name in names}
+        digest=lambda name:hashlib.sha256(sources[name]).hexdigest()
+        record=dict(status='passed',checks=10,numerical_cases=[dict(passed=True)],protocol_cases=[dict(passed=True)],file_adapter_cases=[dict(passed=True)],
+                    source_sha256=digest(names[0]),reference_sha256=digest(names[1]),adapter_sha256=digest(names[2]),
+                    web_interchange=dict(status='passed',source_sha256=digest(names[3])))
+        with mock.patch.object(release,'source_file',side_effect=lambda commit,name:sources[name]):
+            release.require_measurement_acceptance(record,digest(names[2]),'b'*40)
+            for changes in [dict(status='failed'),dict(checks=0),dict(numerical_cases=[]),dict(protocol_cases=[dict(passed=False)]),
+                            dict(file_adapter_cases=[]),dict(reference_sha256='c'*64),dict(web_interchange={})]:
+                with self.subTest(changes=changes):
+                    with self.assertRaises(ValueError):release.require_measurement_acceptance(dict(record,**changes),digest(names[2]),'b'*40)
+            with self.assertRaises(ValueError):release.require_measurement_acceptance(record,'c'*64,'b'*40)
 
 
 if __name__=='__main__':

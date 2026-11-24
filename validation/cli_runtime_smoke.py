@@ -41,6 +41,8 @@ def main():
         shutil.copy2(ROOT/'tools/moonground_cli.py',directory/'moonground_cli.py')
         (directory/'warehouse.ndjson').write_bytes(fixture)
         (directory/'expected.json').write_bytes(json.dumps(expected_rows).encode('utf-8'))
+        for name in ['measurement-evaluation-measurements.ndjson','measurement-evaluation-reference.ndjson','measurement-acceptance-requirements.json']:
+            shutil.copyfile(ROOT/'examples'/name,directory/name)
         script='''#!/bin/sh
 set -eu
 export DEBIAN_FRONTEND=noninteractive
@@ -62,6 +64,7 @@ backup_sha=$(python3 -c 'import json;print(json.load(open("/tmp/backup.json"))["
 python3 /input/moonground_cli.py --prefix /tmp/moonground job-restore --backup /tmp/backup.sqlite --sha256 "$backup_sha" --state /tmp/restored.sqlite >/tmp/restored.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground replay --input /input/warehouse.ndjson --state /tmp/restored.sqlite >/tmp/resumed.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground job-export --state /tmp/restored.sqlite --output /tmp/restored.ndjson >/tmp/restored-export.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --measurements /input/measurement-evaluation-measurements.ndjson --references /input/measurement-evaluation-reference.ndjson --requirements /input/measurement-acceptance-requirements.json --output /tmp/acceptance.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground job-export --state /tmp/measurements.sqlite --output /tmp/replayed.ndjson >/tmp/export.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground status >/dev/null
 python3 - <<'PY'
@@ -76,10 +79,12 @@ with open('/tmp/restored.ndjson') as stream: recovered=[json.loads(line) for lin
 with open('/tmp/verified.json') as stream: verified=json.load(stream)
 with open('/tmp/resumed.json') as stream: resumed=json.load(stream)
 assert recovered==expected and verified['integrity']=='ok' and resumed['complete'] and resumed['commits']==job['commits']
+with open('/tmp/acceptance.json') as stream: acceptance=json.load(stream)
+assert acceptance['acceptance']['accepted'] and acceptance['evaluation']['position_error_m']['samples']==3
 with open('/tmp/version.json') as stream: version=json.load(stream)
 with open('/tmp/install.json') as stream: installed=json.load(stream)
 assert version['version']==installed['version']
-print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],restored_frames=len(recovered),sqlite_version=sqlite3.sqlite_version)))
+print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],restored_frames=len(recovered),acceptance_passed=acceptance['acceptance']['accepted'],sqlite_version=sqlite3.sqlite_version)))
 PY
 '''
         (directory/'smoke.sh').write_bytes(script.encode('utf-8'))

@@ -116,7 +116,8 @@ def manifest(data):
     expected = {executable, 'moonground_cli.py', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
                 'THIRD_PARTY_LICENSES.txt', 'CLI_README.md'}
     extended = expected | {'moonground_jobs.py', 'CLI_JOBS.md'}
-    if value['executable'] != executable or not isinstance(value['files'], dict) or set(value['files']) not in (expected, extended):
+    evaluation = extended | {'evaluate_measurements.py', 'CLI_EVALUATION.md'}
+    if value['executable'] != executable or not isinstance(value['files'], dict) or set(value['files']) not in (expected, extended, evaluation):
         raise ValueError('unexpected CLI payload files')
     if not isinstance(value['source_commit'], str) or not re.fullmatch(r'[0-9a-f]{40}', value['source_commit']):
         raise ValueError('CLI source_commit must be a full commit hash')
@@ -287,7 +288,7 @@ def unpack_verified(archive, destination, expected_digest):
         raise ValueError('archive size or SHA-256 differs from the expected release')
     with zipfile.ZipFile(archive) as package:
         entries = package.infolist()
-        if len(entries) not in (7, 9) or len({entry.filename for entry in entries}) != len(entries):
+        if len(entries) not in (7, 9, 11) or len({entry.filename for entry in entries}) != len(entries):
             raise ValueError('unexpected or duplicate release archive members')
         metadata = package.getinfo('manifest.json')
         if metadata.file_size > 65536:
@@ -461,6 +462,23 @@ def job_module(root, capabilities=()):
     raise ValueError('installed releases do not contain the requested replay or state recovery support')
 
 
+def evaluation_module(root):
+    state = selection(root)
+    if state is None:
+        raise ValueError('install a CLI release with log evaluation support first')
+    for slot in [state['active'], state['previous']]:
+        if slot is None:
+            continue
+        value, path = installed(root, slot)
+        if 'evaluate_measurements.py' in value['files']:
+            helper = path/'evaluate_measurements.py'
+            spec = importlib.util.spec_from_file_location('moonground_log_evaluation', str(helper))
+            module = importlib.util.module_from_spec(spec)
+            exec(compile(helper.read_bytes(), str(helper), 'exec'), module.__dict__)
+            return module
+    raise ValueError('installed releases do not contain log evaluation support')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--prefix', type=Path, default=default_prefix())
@@ -473,6 +491,16 @@ def main():
     commands.add_parser('status')
     commands.add_parser('path')
     commands.add_parser('rollback')
+    evaluate = commands.add_parser('evaluate', help='compare two logs; unmet accuracy requirements return exit status 3')
+    evaluate.add_argument('--measurements', required=True)
+    evaluate.add_argument('--references', required=True)
+    evaluate.add_argument('--requirements')
+    evaluate.add_argument('--session-id')
+    evaluate.add_argument('--output')
+    evaluate.add_argument('--max-tracks', type=int, default=4096)
+    evaluate.add_argument('--max-samples', type=int, default=10000000)
+    evaluate.add_argument('--max-line-bytes', type=int, default=1048576)
+    evaluate.add_argument('--timeout', type=float, default=300.0)
     replay = commands.add_parser('replay', help='persist measurement results and checkpoints together')
     replay.add_argument('--input', required=True)
     replay.add_argument('--state', required=True)
@@ -501,6 +529,24 @@ def main():
     args = parser.parse_args()
     root = args.prefix.expanduser().resolve()
     try:
+        if args.command == 'evaluate':
+            if args.output is not None:
+                destination = Path(args.output).absolute()
+                destination = destination.parent.resolve()/destination.name
+                if destination in [root/'current.json', root/'.install.lock', root/'versions'] or root/'versions' in destination.parents:
+                    raise ValueError('evaluation output must be separate from installed versions and installation metadata')
+            state = selection(root)
+            if state is None:
+                raise ValueError('install a CLI release before evaluating logs')
+            value, path = installed(root, state['active'])
+            if args.requirements is not None and 'evaluate_measurements.py' not in value['files']:
+                raise ValueError('select a CLI release with measurement acceptance support')
+            module = evaluation_module(root)
+            options = ['--binary', str(path/value['executable'])]
+            for name in ['measurements', 'references', 'requirements', 'session_id', 'output', 'max_tracks', 'max_samples', 'max_line_bytes', 'timeout']:
+                if getattr(args, name) is not None:
+                    options += ['--'+name.replace('_','-'), str(getattr(args, name))]
+            return module.main(options)
         if args.command in ('replay', 'job-status', 'job-export', 'job-verify', 'job-backup', 'job-restore'):
             capabilities = ('verify', 'backup', 'restore') if args.command in ('job-verify', 'job-backup', 'job-restore') else ()
             module = job_module(root, capabilities)
