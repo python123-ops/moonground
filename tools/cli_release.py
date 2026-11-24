@@ -125,13 +125,13 @@ def prepare(directory,output,version,commit,run_id):
         job_reports[binary]=value
     backup_reports={}
     soak_reports={}
-    for pattern,reports in [('ci-cli-job-backup.json',backup_reports),('ci-cli-job-soak/result.json',soak_reports)]:
+    for pattern,state_reports in [('ci-cli-job-backup.json',backup_reports),('ci-cli-job-soak/result.json',soak_reports)]:
         for path in directory.rglob(pattern):
             value=json.loads(path.read_text(encoding='utf-8'))
             binary=value.get('binary_sha256')
-            if binary in reports:
+            if binary in state_reports:
                 raise ValueError('duplicate state recovery verification report')
-            reports[binary]=value
+            state_reports[binary]=value
     output.mkdir(parents=True,exist_ok=True)
     artifacts={}
     script=None

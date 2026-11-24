@@ -109,5 +109,57 @@ class StateRecoveryGate(unittest.TestCase):
         with self.assertRaises(ValueError):self.check(self.recovery,None)
 
 
+class PreparedArtifacts(unittest.TestCase):
+    def test_platform_and_state_reports_remain_independent(self):
+        names=['tools/moonground_cli.py','tools/package_cli.py','validation/cli_distribution_verify.py',
+               'tools/moonground_jobs.py','validation/cli_jobs_verify.py','validation/stream_test.py',
+               'validation/cli_job_backup_verify.py','validation/cli_job_soak.py']
+        sources={name:name.encode('ascii') for name in names}
+        sources['tools/moonground_jobs.py']+=b'\ndef backup('
+        digest=lambda name:hashlib.sha256(sources[name]).hexdigest()
+        version,commit='1.2.3','b'*40
+        manifests={}
+        with tempfile.TemporaryDirectory(prefix='moonground-prepared-release-') as temporary:
+            root=Path(temporary)
+            for target in release.manager.TARGETS:
+                directory=root/'input'/target
+                directory.mkdir(parents=True)
+                archive=directory/release.manager.asset_name(version,target)
+                archive.write_bytes(target.encode('ascii'))
+                archive_digest=release.manager.digest_file(archive)
+                binary=hashlib.sha256(('binary-'+target).encode('ascii')).hexdigest()
+                (directory/(archive.name+'.sha256')).write_text(archive_digest+'  '+archive.name+'\n',encoding='ascii')
+                manifests[str(archive)]=dict(target=target,version=version,source_commit=commit,source_dirty=False,
+                    executable='bin/moonground',runtime={},files={'bin/moonground':dict(sha256=binary),
+                    'moonground_jobs.py':dict(sha256=digest('tools/moonground_jobs.py'))})
+                distribution=dict(status='passed',target=target,cases=[dict(passed=True)],
+                    artifacts=dict(archive_sha256=archive_digest,current_version=version,current_binary_sha256=binary),
+                    manager_sha256=digest('tools/moonground_cli.py'),packager_sha256=digest('tools/package_cli.py'),
+                    source_sha256=digest('validation/cli_distribution_verify.py'))
+                common=dict(status='passed',cases=[dict(passed=True)],binary_sha256=binary,runner_sha256=digest('tools/moonground_jobs.py'))
+                replay=dict(common,source_sha256=digest('validation/cli_jobs_verify.py'),sampler_sha256=digest('validation/stream_test.py'),
+                    soak=dict(status='passed',requested_seconds=30,wall_seconds=30.1))
+                backup=dict(common,source_sha256=digest('validation/cli_job_backup_verify.py'))
+                stability=dict(common,source_sha256=digest('validation/cli_job_soak.py'),requested_seconds=30,wall_seconds=30.1,
+                    completed_jobs=7,backup_restore_cycles=8,largest_sample_gap_seconds=0.1,
+                    sampler_sha256=digest('validation/stream_test.py'),support_sha256=digest('validation/cli_jobs_verify.py'))
+                for name,value in [('ci-cli-distribution.json',distribution),('ci-cli-jobs.json',replay),
+                                   ('ci-cli-job-backup.json',backup),('ci-cli-job-soak/result.json',stability)]:
+                    path=directory/name
+                    path.parent.mkdir(parents=True,exist_ok=True)
+                    path.write_text(json.dumps(value),encoding='utf-8')
+            output=root/'release'
+            with mock.patch.object(release,'source'),\
+                 mock.patch.object(release,'source_file',side_effect=lambda commit,name:sources[name]),\
+                 mock.patch.object(release,'inspect_archive',side_effect=lambda path:(manifests[str(path)],sources['tools/moonground_cli.py'])):
+                index=release.prepare(root/'input',output,version,commit,1)
+            self.assertEqual(set(index['artifacts']),set(release.manager.TARGETS))
+            for target in release.manager.TARGETS:
+                record=json.loads((output/('verification-'+target+'.json')).read_text())
+                self.assertEqual(record['target'],target)
+                self.assertEqual(record['sqlite_stability']['completed_jobs'],7)
+                self.assertEqual(record['state_recovery']['runner_sha256'],digest('tools/moonground_jobs.py'))
+
+
 if __name__=='__main__':
     unittest.main()
