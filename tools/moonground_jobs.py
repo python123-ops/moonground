@@ -21,10 +21,12 @@ MAX_OUTPUT_LINE = 32 * 1024 * 1024
 MAX_BATCH_OUTPUT = 128 * 1024 * 1024
 
 
-def digest_file(path):
+def digest_file(path, check=None):
     digest = hashlib.sha256()
     with path.open('rb') as stream:
         for data in iter(lambda: stream.read(1024 * 1024), b''):
+            if check is not None:
+                check()
             digest.update(data)
     return digest.hexdigest()
 
@@ -87,12 +89,12 @@ def state_lock(path):
                 fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
 
 
-def _connect(path, create=False):
+def _connect(path, create=False, readonly=False):
     if path.exists():
         regular(path)
     elif not create:
         raise ValueError('replay state does not exist')
-    connection = sqlite3.connect(path.as_uri() + ('?mode=rwc' if create else '?mode=rw'),
+    connection = sqlite3.connect(path.as_uri() + ('?mode=ro' if readonly else '?mode=rwc' if create else '?mode=rw'),
                                  uri=True, isolation_level=None, timeout=1.0)
     try:
         app = connection.execute('PRAGMA application_id').fetchone()[0]
@@ -158,6 +160,7 @@ def _status(connection, value):
 
 def status(path):
     with contextlib.closing(_connect(path)) as connection:
+        connection.execute('BEGIN')
         return _status(connection, _document(connection))
 
 
@@ -264,7 +267,7 @@ def replay(binary, source_path, state_path, batch_frames=128, batch_bytes=419430
         identity = dict(input_sha256=digest.hexdigest(), input_bytes=stamp[2], binary_sha256=digest_file(binary))
         with contextlib.closing(_connect(state_path, create=not state_path.exists())) as connection:
             connection.execute('PRAGMA journal_mode=DELETE')
-            connection.execute('PRAGMA synchronous=FULL')
+            connection.execute('PRAGMA synchronous=EXTRA')
             page_size = connection.execute('PRAGMA page_size').fetchone()[0]
             pages = max_state_mib * 1024 * 1024 // page_size
             if connection.execute('PRAGMA page_count').fetchone()[0] > pages:
@@ -348,6 +351,166 @@ def export(state_path, destination, replace_existing=False):
                 temporary.unlink()
 
 
+def _file_path(path):
+    path = path.absolute()
+    return path.parent.resolve() / path.name
+
+
+def _deadline(timeout, max_state_mib):
+    if not math.isfinite(timeout) or not 0 < timeout <= 86400 or type(max_state_mib) is not int or not 1 <= max_state_mib <= 1048576:
+        raise ValueError('state budget and timeout must be positive and bounded')
+    end = time.monotonic() + timeout
+    def check():
+        if time.monotonic() >= end:
+            raise ValueError('state operation timed out; no destination was published')
+    return check
+
+
+def _inspect(connection, check, max_state_mib):
+    check()
+    def interrupted():
+        check()
+        return 0
+    # Bound long integrity scans as well as the incremental copy.
+    connection.set_progress_handler(interrupted, 1000)
+    expected = {
+        'job': 'CREATE TABLE job (id INTEGER PRIMARY KEY CHECK(id=1), document TEXT NOT NULL)',
+        'results': 'CREATE TABLE results (sequence INTEGER PRIMARY KEY, payload BLOB NOT NULL)',
+    }
+    actual = connection.execute('SELECT type,name,sql FROM sqlite_master ORDER BY name LIMIT 3').fetchall()
+    if actual != [('table', name, expected[name]) for name in sorted(expected)]:
+        raise ValueError('unsupported replay database structure')
+    size = connection.execute('PRAGMA page_count').fetchone()[0] * connection.execute('PRAGMA page_size').fetchone()[0]
+    if size > max_state_mib * 1024 * 1024:
+        raise ValueError('state exceeds the requested database budget')
+    if connection.execute('PRAGMA integrity_check(1)').fetchall() != [('ok',)]:
+        raise ValueError('replay database failed its integrity check')
+    if connection.execute('SELECT count(*) FROM job').fetchone()[0] != 1:
+        raise ValueError('state must contain exactly one initialized replay')
+    value = _document(connection)
+    if value is None or (value['frames'] and value['resume'] is None):
+        raise ValueError('state has no initialized replay or checkpoint')
+    digest = hashlib.sha256()
+    previous = None
+    for (payload,) in connection.execute('SELECT payload FROM results ORDER BY sequence'):
+        check()
+        if not isinstance(payload, bytes) or len(payload) > MAX_OUTPUT_LINE or not payload.endswith(b'\n') or len(payload.splitlines()) != 1:
+            raise ValueError('invalid stored measurement bytes')
+        record = decode(payload)
+        if not isinstance(record, dict) or record.get('schema_version') != '0.2.0' or 'resume' in record:
+            raise ValueError('invalid stored measurement record')
+        timestamp = record.get('timestamp_us')
+        if not isinstance(timestamp, str) or not timestamp.isascii() or not timestamp.isdecimal() or not 0 <= int(timestamp) <= 9223372036854775807 or str(int(timestamp)) != timestamp:
+            raise ValueError('invalid stored measurement timestamp')
+        if previous is not None and int(timestamp) <= previous:
+            raise ValueError('stored measurement timestamps are not increasing')
+        previous = int(timestamp)
+        digest.update(payload)
+    check()
+    return dict(_status(connection, value), integrity='ok', results_sha256=digest.hexdigest(),
+                checkpoint_sha256=hashlib.sha256(value['resume'].encode('utf-8')).hexdigest() if value['resume'] else None)
+
+
+def verify(state_path, max_state_mib=256, timeout=60.0):
+    state_path = _file_path(state_path)
+    check = _deadline(timeout, max_state_mib)
+    with state_lock(state_path), contextlib.closing(_connect(state_path)) as connection:
+        connection.execute('BEGIN')
+        return _inspect(connection, check, max_state_mib)
+
+
+def _new_state_path(path, source):
+    if os.path.lexists(str(path)):
+        raise ValueError('destination already exists; choose a new state or backup file')
+    for suffix in ['', '-journal', '-wal', '-shm', '.lock']:
+        if path == source.with_name(source.name + suffix):
+            raise ValueError('destination overlaps source state files')
+    for suffix in ['-journal', '-wal', '-shm']:
+        if os.path.lexists(str(path.with_name(path.name + suffix))):
+            raise ValueError('destination has existing SQLite journal files')
+
+
+def _sync_directory(path):
+    if os.name != 'nt':
+        descriptor = os.open(str(path), os.O_RDONLY | getattr(os, 'O_DIRECTORY', 0))
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
+
+def _snapshot(source_path, destination, max_state_mib, timeout, expected_digest=None):
+    source_path, destination = _file_path(source_path), _file_path(destination)
+    check = _deadline(timeout, max_state_mib)
+    regular(source_path)
+    if source_path.stat().st_size > max_state_mib * 1024 * 1024:
+        raise ValueError('state exceeds the requested database budget')
+    _new_state_path(destination, source_path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    with state_lock(source_path), state_lock(destination):
+        _new_state_path(destination, source_path)
+        if expected_digest is not None:
+            # A backup is a standalone, closed database. Never recover or apply
+            # an external journal to bytes whose checksum the operator supplied.
+            if any(os.path.lexists(str(source_path.with_name(source_path.name + suffix))) for suffix in ['-journal', '-wal', '-shm']):
+                raise ValueError('backup must be a standalone database without journal files')
+            if source_path.stat().st_size > max_state_mib * 1024 * 1024:
+                raise ValueError('backup exceeds the requested database budget')
+            if digest_file(source_path, check) != expected_digest:
+                raise ValueError('backup SHA-256 differs from the expected checksum')
+        try:
+            with contextlib.closing(_connect(source_path, readonly=expected_digest is not None)) as source:
+                source.execute('BEGIN')
+                before = _inspect(source, check, max_state_mib)
+                with tempfile.NamedTemporaryFile(dir=str(destination.parent), prefix='.moonground-snapshot-', delete=False) as stream:
+                    temporary = Path(stream.name)
+                with contextlib.closing(sqlite3.connect(str(temporary), isolation_level=None)) as target:
+                    target.execute('PRAGMA synchronous=EXTRA')
+                    def progress(status, remaining, total):
+                        check()
+                        if total * source.execute('PRAGMA page_size').fetchone()[0] > max_state_mib * 1024 * 1024:
+                            raise ValueError('snapshot exceeds the requested database budget')
+                    source.backup(target, pages=256, progress=progress, sleep=0.02)
+                    target.execute('BEGIN')
+                    after = _inspect(target, check, max_state_mib)
+                    if before != after:
+                        raise ValueError('snapshot differs from the committed source state')
+            if expected_digest is not None and digest_file(source_path, check) != expected_digest:
+                raise ValueError('backup changed while it was being restored')
+            with temporary.open('r+b') as stream:
+                os.fsync(stream.fileno())
+            digest, size = digest_file(temporary, check), temporary.stat().st_size
+            check()
+            # Hard-link publication cannot overwrite a path created after the
+            # initial check. The staged database is on the same filesystem.
+            os.link(str(temporary), str(destination))
+            _sync_directory(destination.parent)
+            return dict(after, sha256=digest, bytes=size)
+        finally:
+            if temporary is not None:
+                for suffix in ['', '-journal', '-wal', '-shm']:
+                    staged = temporary.with_name(temporary.name + suffix)
+                    if staged.exists():
+                        staged.unlink()
+
+
+def backup(state_path, destination, max_state_mib=256, timeout=60.0):
+    return _snapshot(state_path, destination, max_state_mib, timeout)
+
+
+def restore(backup_path, state_path, sha256, max_state_mib=256, timeout=60.0):
+    if not isinstance(sha256, str) or len(sha256) != 64 or any(c not in '0123456789abcdefABCDEF' for c in sha256):
+        raise ValueError('restore requires the backup SHA-256 checksum')
+    return _snapshot(backup_path, state_path, max_state_mib, timeout, sha256.lower())
+
+
+def add_state_arguments(parser):
+    parser.add_argument('--state', type=Path, required=True)
+    parser.add_argument('--max-state-mib', type=int, default=256)
+    parser.add_argument('--timeout-seconds', type=float, default=60.0)
+
+
 def add_run_arguments(parser, binary=True):
     if binary:
         parser.add_argument('--binary', type=Path, required=True)
@@ -369,6 +532,14 @@ def main(argv=None):
     output.add_argument('--state', type=Path, required=True)
     output.add_argument('--output', type=Path, required=True)
     output.add_argument('--replace-existing', action='store_true')
+    add_state_arguments(commands.add_parser('verify'))
+    snapshot = commands.add_parser('backup')
+    add_state_arguments(snapshot)
+    snapshot.add_argument('--output', type=Path, required=True)
+    recovery = commands.add_parser('restore')
+    add_state_arguments(recovery)
+    recovery.add_argument('--backup', type=Path, required=True)
+    recovery.add_argument('--sha256', required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == 'run':
@@ -376,6 +547,12 @@ def main(argv=None):
                            args.max_state_mib, args.timeout_seconds, args.max_frames)
         elif args.command == 'status':
             value = status(args.state.resolve())
+        elif args.command == 'verify':
+            value = verify(args.state, args.max_state_mib, args.timeout_seconds)
+        elif args.command == 'backup':
+            value = backup(args.state, args.output, args.max_state_mib, args.timeout_seconds)
+        elif args.command == 'restore':
+            value = restore(args.backup, args.state, args.sha256, args.max_state_mib, args.timeout_seconds)
         else:
             value = export(args.state, args.output, args.replace_existing)
         print(encode(value))

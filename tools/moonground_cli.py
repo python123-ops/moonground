@@ -441,7 +441,7 @@ def default_prefix():
     return Path.home()/'.local/share/moonground'
 
 
-def job_module(root):
+def job_module(root, capabilities=()):
     state = selection(root)
     if state is None:
         raise ValueError('install a CLI release with durable replay support first')
@@ -456,8 +456,9 @@ def job_module(root):
             # must not create an undeclared __pycache__ beside its payload.
             helper = path/'moonground_jobs.py'
             exec(compile(helper.read_bytes(), str(helper), 'exec'), module.__dict__)
-            return module
-    raise ValueError('installed releases do not contain durable replay support')
+            if all(hasattr(module, name) for name in capabilities):
+                return module
+    raise ValueError('installed releases do not contain the requested replay or state recovery support')
 
 
 def main():
@@ -485,14 +486,32 @@ def main():
     export.add_argument('--state', required=True)
     export.add_argument('--output', required=True)
     export.add_argument('--replace-existing', action='store_true')
+    for name in ['job-verify', 'job-backup', 'job-restore']:
+        operation = commands.add_parser(name)
+        operation.add_argument('--state', required=True)
+        operation.add_argument('--max-state-mib', type=int, default=256)
+        operation.add_argument('--timeout-seconds', type=float, default=60.0)
+        if name == 'job-backup':
+            operation.add_argument('--output', required=True)
+        if name == 'job-restore':
+            operation.add_argument('--backup', required=True)
+            operation.add_argument('--sha256', required=True)
     execute = commands.add_parser('run')
     execute.add_argument('arguments', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     root = args.prefix.expanduser().resolve()
     try:
-        if args.command in ('replay', 'job-status', 'job-export'):
-            module = job_module(root)
+        if args.command in ('replay', 'job-status', 'job-export', 'job-verify', 'job-backup', 'job-restore'):
+            capabilities = ('verify', 'backup', 'restore') if args.command in ('job-verify', 'job-backup', 'job-restore') else ()
+            module = job_module(root, capabilities)
             options = ['--state', args.state]
+            if args.command in ('job-verify', 'job-backup', 'job-restore'):
+                options += ['--max-state-mib', str(args.max_state_mib), '--timeout-seconds', str(args.timeout_seconds)]
+                if args.command == 'job-backup':
+                    options += ['--output', args.output]
+                elif args.command == 'job-restore':
+                    options += ['--backup', args.backup, '--sha256', args.sha256]
+                return module.main([args.command[4:]]+options)
             if args.command == 'replay':
                 selected = selection(root)
                 value, path = installed(root, selected['active'])
