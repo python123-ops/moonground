@@ -5,3 +5,11 @@ pub fn moonground_measurement_evaluation(source : String) -> String {
     error => failure(error.message())
   }
 }
+
+///|
+/// Explicit position/speed acceptance without changing measurement statistics.
+pub fn moonground_measurement_acceptance(source : String) -> String {
+  @codec.measurement_acceptance_json(source) catch {
+    error => failure(error.message())
+  }
+}

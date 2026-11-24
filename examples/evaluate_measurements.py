@@ -90,8 +90,48 @@ def check_destination(output, inputs):
             raise ValueError('output must differ from the input logs and executable')
 
 
+def compact_requirements(raw):
+    if len(raw) > 65536:
+        raise ValueError('requirements file exceeds 65536 bytes')
+    text = raw.decode('utf-8')
+    # Validate before removing whitespace, so malformed adjacent tokens cannot
+    # be joined into a valid number. Keep numeric spellings for MoonGround.
+    try:
+        value = json.loads(text, object_pairs_hook=unique_fields, parse_float=str,
+                           parse_int=str, parse_constant=invalid_constant)
+    except RecursionError as error:
+        raise ValueError('requirements nesting is too deep') from error
+    if not isinstance(value, dict):
+        raise ValueError('requirements must be a JSON object')
+    result, quoted, escaped = [], False, False
+    for character in text:
+        if quoted:
+            result.append(character)
+            if escaped:
+                escaped = False
+            elif character == '\\':
+                escaped = True
+            elif character == '"':
+                quoted = False
+        elif character == '"':
+            quoted = True
+            result.append(character)
+        elif character not in ' \r\n\t':
+            result.append(character)
+    return ''.join(result).encode('utf-8')
+
+
 def evaluate(args):
-    check_destination(args.output, [args.measurements, args.references, args.binary])
+    requirements_path = getattr(args, 'requirements', None)
+    inputs = [args.measurements, args.references, args.binary, Path(__file__)]
+    if requirements_path is not None:
+        inputs.append(requirements_path)
+    check_destination(args.output, inputs)
+    raw_requirements = None
+    if requirements_path is not None:
+        with requirements_path.open('rb') as stream:
+            raw_requirements = stream.read(65537)
+        requirements = compact_requirements(raw_requirements)
     measured_hash, reference_hash = hashlib.sha256(), hashlib.sha256()
     join_counts = dict(paired_frames=0, measurement_only_frames=0, reference_only_frames=0)
     binary_hash = digest_file(args.binary)
@@ -106,8 +146,11 @@ def evaluate(args):
             session_id = measured[1].get('session_id')
         if not isinstance(session_id, str) or not session_id:
             raise ValueError('provide --session-id when the measurement log is empty')
-        aligned.write(encode(dict(session_id=session_id, max_tracks=args.max_tracks,
-                                  max_samples=args.max_samples)) + b'\n')
+        header = encode(dict(session_id=session_id, max_tracks=args.max_tracks,
+                             max_samples=args.max_samples))
+        if raw_requirements is not None:
+            header = header[:-1]+b',"requirements":'+requirements+b'}'
+        aligned.write(header+b'\n')
         while measured is not None or reference is not None:
             if reference is None or (measured is not None and measured[0] < reference[0]):
                 clock, measured_data = measured[0], measured[2]
@@ -126,15 +169,19 @@ def evaluate(args):
                 reference = next(reference_rows, None)
             aligned.write(b'{"measurement":' + measured_data + b',"reference":' + reference_data + b'}\n')
         aligned.seek(0)
-        command = [str(args.binary.resolve()), '--evaluate-measurements',
+        command = [str(args.binary.resolve()), '--accept-measurements' if raw_requirements is not None else '--evaluate-measurements',
                    '--max-line-bytes', str(args.max_line_bytes)]
         process = subprocess.run(command, stdin=aligned, stdout=output, stderr=subprocess.PIPE,
                                  timeout=args.timeout)
-        if process.returncode:
+        if process.returncode != 0 and not (raw_requirements is not None and process.returncode == 3):
             raise ValueError('MoonGround evaluation failed: ' + process.stderr.decode('utf-8', 'replace').strip())
         output.seek(0)
         report = json.loads(output.read().decode('utf-8'), parse_constant=invalid_constant)
-    return dict(schema_version='0.1.0', kind='measurement_evaluation_run', evaluation=report,
+        if raw_requirements is not None and (report.get('kind') != 'measurement_acceptance' or
+                type(report.get('accepted')) is not bool or process.returncode != (0 if report['accepted'] else 3)):
+            raise ValueError('native acceptance decision and exit status disagree')
+    result = dict(schema_version='0.1.0', kind='measurement_evaluation_run',
+                evaluation=report['evaluation'] if raw_requirements is not None else report,
                 configuration=dict(session_id=session_id, max_tracks=args.max_tracks,
                                    max_samples=args.max_samples, max_line_bytes=args.max_line_bytes,
                                    timeout_seconds=args.timeout),
@@ -143,6 +190,11 @@ def evaluate(args):
                 alignment=join_counts, binary_sha256=binary_hash,
                 adapter_sha256=digest_file(Path(__file__)),
                 elapsed_seconds=time.perf_counter() - started)
+    if raw_requirements is not None:
+        result['kind'] = 'measurement_acceptance_run'
+        result['acceptance'] = {key: report[key] for key in ['accepted', 'requirements', 'checks']}
+        result['inputs']['requirements_sha256'] = hashlib.sha256(raw_requirements).hexdigest()
+    return result
 
 
 def save_atomic(path, content):
@@ -161,11 +213,13 @@ def save_atomic(path, content):
             temporary.unlink()
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', type=Path, required=True)
     parser.add_argument('--measurements', type=Path, required=True)
     parser.add_argument('--references', type=Path, required=True)
+    parser.add_argument('--requirements', type=Path,
+                        help='explicit position_m/speed_mps JSON requirements; unmet checks return exit status 3')
     parser.add_argument('--session-id')
     parser.add_argument('--output', type=Path)
     parser.add_argument('--max-tracks', type=int, default=4096)
@@ -173,7 +227,7 @@ def main():
     parser.add_argument('--max-line-bytes', type=int, default=1048576)
     parser.add_argument('--timeout', type=float, default=300.0,
                         help='native evaluator time limit in seconds, after joining input logs')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if not (1 <= args.max_tracks <= 4096 and 1 <= args.max_samples <= 2147483647 and
             1 <= args.max_line_bytes <= 16777216 and 0.0 < args.timeout < float('inf')):
         parser.error('invalid evaluation capacity or timeout')
@@ -184,9 +238,10 @@ def main():
             save_atomic(args.output, content)
         else:
             sys.stdout.write(content.decode('utf-8'))
+        return 3 if result.get('acceptance', {}).get('accepted') is False else 0
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
         parser.exit(2, str(error) + '\n')
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

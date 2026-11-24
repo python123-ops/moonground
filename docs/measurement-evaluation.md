@@ -53,13 +53,45 @@ python examples/evaluate_measurements.py --binary _build/native/release/build/cm
 
 `codec.measurement_evaluation_json` 及 JavaScript 导出 `moonground_measurement_evaluation` 接受 `{"source":"配置原文","frames":"逐行包装帧原文"}`，返回同一摘要。纯批次外层最多 16 Mi UTF-16 单元，帧文本最多 8 Mi、5,000 行。原生流不受纯批次数量上限限制，保留配置的总样本容量。
 
-计算完成后，按场景要求的位置／速度容差和最低可用率评估报告。参考数据的坐标系、时间同步、身份对应和测量方法应随现场数据保留。
+## 显式验收门槛
+
+`0.42.0` 增加 `AccuracyRequirements::new(min_samples~, min_coverage~, max_mae?, max_rmse?, max_error?)` 和 `EvaluationSession::assess(position?, speed?)`。同一份累计统计可应用不同门槛，调用不改变累计状态。位置上限使用 m，速度上限使用 m/s；至少选中一个量，每个量至少配置一项有限、非负的误差上限。
+
+样本量检查采用该量实际进入误差统计的样本数，速度仍只取带参考的 `ready` 样本。样本数和可用率取包含等号的下界，误差取包含等号的上界。没有误差统计时对应的 `actual` 为 `null`，检查失败。`AcceptanceReport` 同时包含原 `EvaluationReport`、整体 `accepted` 和逐项 `checks`，未选择的量不参与判定。
+
+```mbt check
+///|
+test "empty measurements cannot satisfy accuracy requirements" {
+  let evaluator = @evaluation.EvaluationSession::new("acceptance-example")
+  let limits = @evaluation.AccuracyRequirements::new(
+    min_samples=1,
+    min_coverage=0.95,
+    max_rmse=0.1,
+  )
+  assert_false(evaluator.assess(position=limits).accepted)
+}
+```
+
+独立文件工具增加 `--requirements`；预编译发行包内置相同脚本，并通过管理器的 `evaluate` 命令调用：
+
+```sh
+python examples/evaluate_measurements.py --binary _build/native/release/build/cmd/main/main.exe --measurements examples/measurement-evaluation-measurements.ndjson --references examples/measurement-evaluation-reference.ndjson --requirements examples/measurement-acceptance-requirements.json --output _build/acceptance.json
+```
+
+仓库门槛文件用于上文的合成偏移示例。两份日志使用完整外连接，额外参考时刻的缺测会降低可用率，额外测量时刻不会充当参考数据。门槛未达到时仍保存完整报告并退出 3；输入或执行错误退出 2，保留已有输出。省略门槛文件时，原有统计输出与退出行为保持一致。
+
+原文入口 `--accept-measurements` 的首行增加 `requirements`，其值为 `{"position_m":{...},"speed_mps":{...}}`。每项包含 `min_samples`、`min_coverage`，以及任选的 `max_mae`、`max_rmse`、`max_error`；省略未启用的误差上限。后续帧使用原来的 `{measurement,reference}` 协议，在 EOF 输出 `measurement_acceptance`，包含 `requirements`、`checks`、`accepted` 和完整 `evaluation`。晚阶段输入错误不输出判定摘要。
+
+`codec.MeasurementAcceptanceReplay` 与纯函数 `codec.measurement_acceptance_json`、JavaScript `moonground_measurement_acceptance` 使用同一规则；纯批次容量与原评估适配器一致。门槛文件允许排版空白，最大 64 KiB，原始数字文本交给 MoonGround 校验；重复键、未知字段、非有限及非零下溢数字拒绝。
+
+参考数据的坐标系、时间同步、身份对应和测量方法应随现场数据保留。误差与可用率门槛执行软件判定，独立参考数据的获取和测量条件由现场验收记录说明。安装后的完整命令见 [CLI 日志验收说明](cli-evaluation.md)。
 
 ## 复现数值检查
 
 ```sh
 node web/build.mjs
 python validation/measurement_evaluation_verify.py --binary _build/native/release/build/cmd/main/main.exe --web
+python validation/measurement_acceptance_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output _build/measurement-acceptance.json
 ```
 
 独立参考将匹配样本离线展开，用 160 位 Decimal 直接求总体误差、平方和及偏差，结果见 [数值记录](../validation/measurement-evaluation-results.json)。记录中的合成尺度压力场景核对软件计算；现场精度使用独立实测参考数据评估。

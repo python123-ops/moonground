@@ -71,3 +71,14 @@ test "packaged evaluator retains projection failure IDs from the measurement API
   assert_eq(report.position_error_m.mean_absolute_error, None)
   assert_eq(report.position_coverage, Some(0.0))
 }
+///|
+test "consumer applies explicit accuracy requirements without accepting empty data" {
+  let evaluator = @evaluation.EvaluationSession::new("consumer-acceptance")
+  let requirements = @evaluation.AccuracyRequirements::new(min_samples=1, min_coverage=0.0, max_rmse=0.1)
+  let result = evaluator.assess(position=requirements, speed=requirements)
+  assert_false(result.accepted)
+  assert_eq(result.checks.length(), 6)
+  assert_eq(result.checks[0].metric, @evaluation.PositionSamples)
+  assert_eq(result.checks[1].actual, None)
+  assert_eq(requirements.max_rmse, Some(0.1))
+}

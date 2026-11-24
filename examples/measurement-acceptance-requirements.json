@@ -1,0 +1,13 @@
+{
+  "position_m": {
+    "min_samples": 3,
+    "min_coverage": 0.75,
+    "max_rmse": 0.25,
+    "max_error": 0.25
+  },
+  "speed_mps": {
+    "min_samples": 1,
+    "min_coverage": 0.25,
+    "max_mae": 0.05
+  }
+}

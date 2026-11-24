@@ -69,6 +69,13 @@ pub fn MeasurementEvaluationReplay::open(
     ["session_id", "max_tracks", "max_samples"],
     "measurement evaluation configuration",
   )
+  measurement_evaluator(fields)
+}
+
+///|
+fn measurement_evaluator(
+  fields : Map[String, Json],
+) -> MeasurementEvaluationReplay raise @types.GroundError {
   let max_tracks = match fields.get("max_tracks") {
     Some(value) => positive_int(value, "max_tracks")
     None => 4096

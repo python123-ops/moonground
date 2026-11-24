@@ -70,6 +70,8 @@ pub fn guarded_json(String) -> String raise @types.GroundError
 
 pub fn health_json(String) -> String raise @types.GroundError
 
+pub fn measurement_acceptance_json(String) -> String raise @types.GroundError
+
 pub fn measurement_evaluation_json(String) -> String raise @types.GroundError
 
 pub fn project_json(String) -> String raise @types.GroundError
@@ -243,6 +245,14 @@ pub struct HealthReplay {
 pub fn HealthReplay::checkpoint_json(Self) -> String raise @types.GroundError
 pub fn HealthReplay::open(String) -> Self raise @types.GroundError
 pub fn HealthReplay::process_line(Self, String) -> String raise @types.GroundError
+
+pub struct MeasurementAcceptanceReplay {
+  // private fields
+}
+pub fn MeasurementAcceptanceReplay::accepted(Self) -> Bool
+pub fn MeasurementAcceptanceReplay::open(String) -> Self raise @types.GroundError
+pub fn MeasurementAcceptanceReplay::process_line(Self, String) -> Unit raise @types.GroundError
+pub fn MeasurementAcceptanceReplay::report_json(Self) -> String
 
 pub struct MeasurementEvaluationReplay {
   // private fields
