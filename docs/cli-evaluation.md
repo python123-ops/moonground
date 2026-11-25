@@ -93,3 +93,23 @@ python moonground_cli.py --prefix ./moonground-install evaluate --state measurem
 可以追加尚未处理的未来参考；修改、删除或补入已经越过水位的参考会拒绝接续。测量历史变化、任务回退、输入或产出程序不一致也返回 2，并保留原有报告。通过备份／恢复得到的同一逻辑任务可以接续。旧的 `--checkpoint --state` 报告缺少参考游标，需重新生成一份 `--committed-only` 报告作为起点。此模式要求当前选中的发行版本同时带有增量评估和读取工具；回退旧版后需重新选回支持版本。
 
 每次仍逐行检查数据库和参考历史，读取成本随历史增长；原生计算和对齐临时文件只包含新增范围。参考全文件的 JSON、时间顺序和重复字段在扫描时检查，暂缓记录的样本字段在进入计算范围时由原生程序检查。空快照暂缓全部参考，首次评估需提供会话身份。未加 `--committed-only` 的 SQLite 评估继续包含整份参考日志；文件分段接续方式保持不变。
+
+## 保存评估任务状态
+
+`0.46.0` 可用独立的 `--evaluation-state` 文件保存完整报告和检查点。重复运行同一命令时，自动使用最后一条已提交记录作为起点，无需手工选择上一份报告：
+
+```sh
+python moonground_cli.py --prefix ./moonground-install evaluate --state measurements.sqlite --allow-partial --committed-only --evaluation-state evaluations.sqlite --references references.ndjson --requirements requirements.json --output current-evaluation.json
+python moonground_cli.py --prefix ./moonground-install evaluation-status --evaluation-state evaluations.sqlite
+python moonground_cli.py --prefix ./moonground-install evaluation-export --evaluation-state evaluations.sqlite --sequence 1 --output first-evaluation.json
+```
+
+评估状态与测量回放数据库分开保存，原回放数据库格式保持不变。此入口要求 `--state --committed-only`，与 `--resume` 互斥。任务身份、历史测量和参考前缀仍按增量评估规则核对；会话身份和样本容量自动恢复，验收门槛继续由每次调用显式提供。需要选择同时支持此功能的当前程序和辅助脚本。
+
+每次完成计算都会提交一条记录，包括验收返回 3 的情况。记录中的 `evaluation_state.sequence` 是精确十进制字符串，`parent_sha256` 与 `inputs.resume_sha256` 同时指向上一条报告的字节哈希。首次记录的父哈希为 `null`。没有新增测量时仍保存本次检查，累计样本数不增加；改变门槛可重新检查同一份累计统计。
+
+进程在提交前中断时，继续使用上一条记录；提交后中断时，新记录已经可用。状态先提交，再写 `--output` 或标准输出；输出失败后，可用 `evaluation-status` 确认记录数，再用 `evaluation-export` 取回报告。导出逐字节保留原报告，省略 `--sequence` 时取最新记录；覆盖已有导出文件需显式加 `--replace-existing`。状态文件、其侧文件、回放输入与程序均不能作为报告的覆盖目标。
+
+状态查询核对数据库结构、完整性、连续序号、报告哈希和父记录关系。并发调用同一评估状态时，后来的调用返回 2；原生计算期间不持有评估数据库的 SQLite 事务，提交前再次核对记录水位。输入、计算或提交失败不增加记录，原报告保留。
+
+`--max-evaluation-mib` 默认 256，限制评估数据库大小；达到预算后可提高预算继续运行。`--evaluation-timeout` 默认 60 秒，分别约束状态检查和提交阶段，`--timeout` 仍约束原生计算。状态文件位于可写目录，便于锁定、提交和中断后的 SQLite 恢复。每次会逐条核对已有记录，内存只保留当前报告和最新检查点；存储量、检查时间随评估次数增长。单份报告上限 1 MiB。继续计算仍需保留原回放数据库和参考日志。
