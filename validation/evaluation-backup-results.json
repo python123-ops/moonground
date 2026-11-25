@@ -1,0 +1,257 @@
+{
+  "status": "passed",
+  "cases": [
+    {
+      "name": "snapshot-preserves-every-report-byte-and-committed-head-at-the-requested-hash",
+      "passed": true
+    },
+    {
+      "name": "later-evaluation-progress-does-not-change-the-published-snapshot",
+      "passed": true
+    },
+    {
+      "name": "checksum-restoration-accepts-uppercase-and-retains-historical-report-bytes",
+      "passed": true
+    },
+    {
+      "name": "restored-state-continues-only-the-three-newly-committed-measurement-frames",
+      "passed": true
+    },
+    {
+      "name": "restored-completion-matches-the-original-chain-and-a-fresh-native-calculation",
+      "passed": true
+    },
+    {
+      "name": "completed-evaluation-restores-without-repeating-any-samples",
+      "passed": true
+    },
+    {
+      "name": "initialized-empty-evaluation-state-can-be-snapshotted-and-start-later",
+      "passed": true
+    },
+    {
+      "name": "stale-expected-report-hash-refuses-a-later-head",
+      "passed": true
+    },
+    {
+      "name": "invalid-report-hash-0",
+      "passed": true
+    },
+    {
+      "name": "invalid-report-hash-63",
+      "passed": true
+    },
+    {
+      "name": "invalid-report-hash-64",
+      "passed": true
+    },
+    {
+      "name": "invalid-backup-checksum-0-",
+      "passed": true
+    },
+    {
+      "name": "invalid-backup-checksum-63-f",
+      "passed": true
+    },
+    {
+      "name": "invalid-backup-checksum-64-x",
+      "passed": true
+    },
+    {
+      "name": "invalid-backup-checksum-64-f",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-an-existing-destination",
+      "passed": true
+    },
+    {
+      "name": "restore-refuses-an-existing-destination",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-source-path",
+      "passed": true
+    },
+    {
+      "name": "restore-refuses-backup-path",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-source-sidecar--journal",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-source-sidecar--wal",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-source-sidecar--shm",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-source-sidecar-.lock",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-destination-journal--journal",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-destination-journal--wal",
+      "passed": true
+    },
+    {
+      "name": "backup-refuses-destination-journal--shm",
+      "passed": true
+    },
+    {
+      "name": "restore-refuses-external-backup-journal--journal",
+      "passed": true
+    },
+    {
+      "name": "restore-refuses-external-backup-journal--wal",
+      "passed": true
+    },
+    {
+      "name": "restore-refuses-external-backup-journal--shm",
+      "passed": true
+    },
+    {
+      "name": "measurement-database-is-not-an-evaluation-snapshot",
+      "passed": true
+    },
+    {
+      "name": "measurement-restore-cannot-consume-an-evaluation-database",
+      "passed": true
+    },
+    {
+      "name": "backup-rejects-wrong-application",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-self-checksummed-wrong-application",
+      "passed": true
+    },
+    {
+      "name": "backup-rejects-future-version",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-self-checksummed-future-version",
+      "passed": true
+    },
+    {
+      "name": "backup-rejects-extra-table",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-self-checksummed-extra-table",
+      "passed": true
+    },
+    {
+      "name": "backup-rejects-broken-digest",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-self-checksummed-broken-digest",
+      "passed": true
+    },
+    {
+      "name": "backup-rejects-missing-generation",
+      "passed": true
+    },
+    {
+      "name": "restore-rejects-self-checksummed-missing-generation",
+      "passed": true
+    },
+    {
+      "name": "active-evaluation-refuses-a-concurrent-backup",
+      "passed": true
+    },
+    {
+      "name": "restore-refuses-a-concurrently-held-destination",
+      "passed": true
+    },
+    {
+      "name": "backup-publication-failure-keeps-source-and-destination",
+      "passed": true
+    },
+    {
+      "name": "restore-publication-failure-keeps-source-and-destination",
+      "passed": true
+    },
+    {
+      "name": "backup-database-budget-refuses-retired-pages",
+      "passed": true
+    },
+    {
+      "name": "restore-database-budget-refuses-retired-pages",
+      "passed": true
+    },
+    {
+      "name": "larger-budget-restores-the-same-complete-report-history",
+      "passed": true
+    },
+    {
+      "name": "backup-expired-budget-does-not-publish-a-destination",
+      "passed": true
+    },
+    {
+      "name": "restore-expired-budget-does-not-publish-a-destination",
+      "passed": true
+    },
+    {
+      "name": "copied-database-header-is-checked-before-publication",
+      "passed": true
+    },
+    {
+      "name": "backup-survives-process-death-before-publication",
+      "passed": true
+    },
+    {
+      "name": "backup-survives-process-death-after-publication",
+      "passed": true
+    },
+    {
+      "name": "restore-survives-process-death-before-publication",
+      "passed": true
+    },
+    {
+      "name": "restore-survives-process-death-after-publication",
+      "passed": true
+    },
+    {
+      "name": "wal-source-creates-a-restorable-standalone-snapshot",
+      "passed": true
+    },
+    {
+      "name": "installed-manager-backs-up-and-restores-with-verified-helper-payloads",
+      "passed": true
+    },
+    {
+      "name": "installed-restoration-continues-the-native-checkpoint-without-new-samples",
+      "passed": true
+    },
+    {
+      "name": "manager-protects-installed-versions-metadata-and-its-own-script",
+      "passed": true
+    },
+    {
+      "name": "installed-helpers-remain-immutable-after-snapshot-and-restoration",
+      "passed": true
+    }
+  ],
+  "binary_sha256": "558182374406d38654c8c438ccfed80de5ed3a76e2a807b32a9f0354a2a65ed9",
+  "source_sha256": "c24e8b23638b629d2b32a7df764e722ca772d0010e20b4470fb763db25978c59",
+  "runner_sha256": "153df3a25d245441271848ff05c22cb1feb00ab55a22af12a5d2a8d0aef5d48e",
+  "adapter_sha256": "55daaa452be9ce4e3ab2410e3a605483fcbb8f6b43da0805e5726277e99ae1b2",
+  "manager_sha256": "688f6a3374ed8b057a721cbfc984bb6e29144ca170227423b6584e9226a18530",
+  "support_sha256": "56d356ccce7aea76add41922eaaa7929f5c1e054033f7d73d3481436a193e405",
+  "python": "3.8.7",
+  "sqlite_version": "3.33.0",
+  "platform": "Windows-10-10.0.26100-SP0",
+  "forced_publication_crashes": 4,
+  "wal_restoration": true,
+  "command": "python validation/evaluation_backup_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/evaluation-backup-results.json"
+}
