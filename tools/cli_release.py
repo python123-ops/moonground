@@ -167,6 +167,25 @@ def require_evaluation_checkpoint(report,binary_digest,files,commit):
         raise ValueError('evaluation checkpoint runtime interchange did not pass for this source')
 
 
+def require_state_continuation(report,binary_digest,files,commit):
+    if not report or report.get('status')!='passed' or report.get('binary_sha256')!=binary_digest:
+        raise ValueError('state continuation verification is missing or for a different binary')
+    if not report.get('cases') or not all(case.get('passed') for case in report['cases']):
+        raise ValueError('state continuation cases did not all pass')
+    if report.get('independent_statistics',{}).get('scalars',0)<1:
+        raise ValueError('state continuation independent statistics are missing')
+    for key,name in [('source_sha256','validation/state_continuation_verify.py'),
+                     ('runner_sha256','tools/moonground_jobs.py'),('adapter_sha256','examples/evaluate_measurements.py'),
+                     ('manager_sha256','tools/moonground_cli.py'),('support_sha256','validation/cli_jobs_verify.py'),
+                     ('reference_sha256','validation/measurement_evaluation_verify.py')]:
+        if report.get(key)!=hashlib.sha256(source_file(commit,name)).hexdigest():
+            raise ValueError('state continuation verification source differs from the tested commit')
+    for key,name in [('runner_sha256','moonground_jobs.py'),('adapter_sha256','evaluate_measurements.py'),
+                     ('manager_sha256','moonground_cli.py')]:
+        if report[key]!=files[name]['sha256']:
+            raise ValueError('state continuation helper differs from the tested payload')
+
+
 def prepare(directory,output,version,commit,run_id):
     source(version,commit)
     archives=sorted(directory.rglob('moonground-cli-*.zip'))
@@ -192,10 +211,12 @@ def prepare(directory,output,version,commit,run_id):
     acceptance_reports={}
     sqlite_evaluation_reports={}
     evaluation_checkpoint_reports={}
+    state_continuation_reports={}
     for pattern,state_reports in [('ci-cli-job-backup.json',backup_reports),('ci-cli-job-soak/result.json',soak_reports),
                                  ('ci-measurement-acceptance.json',acceptance_reports),
                                  ('ci-sqlite-evaluation.json',sqlite_evaluation_reports),
-                                 ('ci-evaluation-checkpoint.json',evaluation_checkpoint_reports)]:
+                                 ('ci-evaluation-checkpoint.json',evaluation_checkpoint_reports),
+                                 ('ci-state-continuation.json',state_continuation_reports)]:
         for path in directory.rglob(pattern):
             value=json.loads(path.read_text(encoding='utf-8'))
             binary=value.get('binary_sha256')
@@ -259,6 +280,10 @@ def prepare(directory,output,version,commit,run_id):
                 checkpoint=evaluation_checkpoint_reports.get(tested['current_binary_sha256'])
                 require_evaluation_checkpoint(checkpoint,tested['current_binary_sha256'],value['files'],commit)
                 report=dict(report,evaluation_checkpoint=checkpoint)
+            if b'\nSTATE_CONTINUATION_VERSION = 1' in source_file(commit,'examples/evaluate_measurements.py'):
+                continuation=state_continuation_reports.get(tested['current_binary_sha256'])
+                require_state_continuation(continuation,tested['current_binary_sha256'],value['files'],commit)
+                report=dict(report,state_continuation=continuation)
         if script is not None and payload!=script:
             raise ValueError('platform archives contain different manager scripts')
         script=payload

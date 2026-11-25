@@ -81,7 +81,7 @@ jobs:
         run: python tools/package_cli.py --binary "$MOONGROUND_CLI" --release --output _build/cli-release
       - name: Verify Linux release in a clean runtime without build tools
         if: runner.os == 'Linux'
-        run: python validation/cli_runtime_smoke.py --binary "$MOONGROUND_CLI" --archive _build/cli-release/moonground-cli-0.44.0-linux-x86_64.zip --output _build/ci-cli-runtime.json
+        run: python validation/cli_runtime_smoke.py --binary "$MOONGROUND_CLI" --archive _build/cli-release/moonground-cli-0.45.0-linux-x86_64.zip --output _build/ci-cli-runtime.json
       - name: Compare native and JavaScript protocols
         run: node --test web/parity.test.mjs
       - name: Verify measurement evaluation and log joins independently
@@ -92,6 +92,8 @@ jobs:
         run: python validation/sqlite_evaluation_verify.py --binary "$MOONGROUND_CLI" --output _build/ci-sqlite-evaluation.json
       - name: Verify complete evaluation checkpoints and runtime continuation
         run: python validation/evaluation_checkpoint_verify.py --binary "$MOONGROUND_CLI" --web --output _build/ci-evaluation-checkpoint.json
+      - name: Verify append-only SQLite evaluation and reference prefix continuity
+        run: python validation/state_continuation_verify.py --binary "$MOONGROUND_CLI" --output _build/ci-state-continuation.json
       - name: Compare independent numerical reference
         run: python validation/verify.py --binary "$MOONGROUND_CLI" --output _build/ci-reference.json
       - name: Verify lens correction and uncertainty thresholds independently
@@ -174,7 +176,7 @@ jobs:
           moon -C examples/consumer check --target all --deny-warn
           moon -C examples/consumer test --target all --deny-warn
           moon package
-          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.44.0.zip --output _build/ci-package.json
+          python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.45.0.zip --output _build/ci-package.json
       - name: Prepare browser test driver
         if: runner.os == 'Linux'
         run: |
@@ -222,6 +224,7 @@ jobs:
             _build/ci-measurement-acceptance.json
             _build/ci-sqlite-evaluation.json
             _build/ci-evaluation-checkpoint.json
+            _build/ci-state-continuation.json
             _build/ci-cli-job-soak/result.json
       - name: Retain validation records
         if: always()
@@ -271,6 +274,7 @@ jobs:
             _build/ci-measurement-acceptance.json
             _build/ci-sqlite-evaluation.json
             _build/ci-evaluation-checkpoint.json
+            _build/ci-state-continuation.json
             _build/ci-cli-distribution.json
             _build/ci-cli-runtime.json
             _build/ci-cli-jobs.json

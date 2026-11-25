@@ -1,0 +1,194 @@
+{
+  "status": "passed",
+  "cases": [
+    {
+      "name": "committed-window-still-requires-explicit-partial-selection",
+      "passed": true
+    },
+    {
+      "name": "initial-window-includes-reference-only-gaps-and-defers-future-references",
+      "passed": true
+    },
+    {
+      "name": "default-snapshot-retains-all-future-reference-misses",
+      "passed": true
+    },
+    {
+      "name": "old-snapshot-checkpoint-cannot-silently-acquire-a-reference-cursor",
+      "passed": true
+    },
+    {
+      "name": "unchanged-state-continuation-does-not-repeat-any-calculation",
+      "passed": true
+    },
+    {
+      "name": "unprocessed-future-reference-appends-are-allowed-and-fingerprinted",
+      "passed": true
+    },
+    {
+      "name": "reference-prefix-identity-survives-line-ending-normalization",
+      "passed": true
+    },
+    {
+      "name": "append-3-frames-matches-fresh-native-and-independent-decimal-statistics",
+      "passed": true
+    },
+    {
+      "name": "append-6-frames-matches-fresh-native-and-independent-decimal-statistics",
+      "passed": true
+    },
+    {
+      "name": "older-database-snapshot-cannot-follow-a-newer-report",
+      "passed": true
+    },
+    {
+      "name": "reject-old-measurement-edit",
+      "passed": true
+    },
+    {
+      "name": "reject-different-input",
+      "passed": true
+    },
+    {
+      "name": "reject-different-producer",
+      "passed": true
+    },
+    {
+      "name": "reject-historical-reference-edit",
+      "passed": true
+    },
+    {
+      "name": "reject-historical-reference-delete",
+      "passed": true
+    },
+    {
+      "name": "reject-historical-reference-backfill",
+      "passed": true
+    },
+    {
+      "name": "reject-historical-reference-truncate",
+      "passed": true
+    },
+    {
+      "name": "reject-invalid-future-json",
+      "passed": true
+    },
+    {
+      "name": "reject-future-order-error",
+      "passed": true
+    },
+    {
+      "name": "reject-future-duplicate-key",
+      "passed": true
+    },
+    {
+      "name": "deferred-sample-schema-is-checked-when-it-enters-the-window",
+      "passed": true
+    },
+    {
+      "name": "new-raw-measurement-underflow-is-rejected-by-native-validation",
+      "passed": true
+    },
+    {
+      "name": "reject-new-reference-at-already-evaluated-watermark",
+      "passed": true
+    },
+    {
+      "name": "reject-invalid-cursor-version",
+      "passed": true
+    },
+    {
+      "name": "reject-invalid-cursor-count-type",
+      "passed": true
+    },
+    {
+      "name": "reject-invalid-cursor-count-spelling",
+      "passed": true
+    },
+    {
+      "name": "reject-invalid-cursor-hash",
+      "passed": true
+    },
+    {
+      "name": "reject-invalid-cursor-watermark",
+      "passed": true
+    },
+    {
+      "name": "reject-invalid-checkpoint-watermark",
+      "passed": true
+    },
+    {
+      "name": "reject-invalid-snapshot-count-type",
+      "passed": true
+    },
+    {
+      "name": "reject-invalid-snapshot-offset-regression",
+      "passed": true
+    },
+    {
+      "name": "reject-invalid-snapshot-digest",
+      "passed": true
+    },
+    {
+      "name": "physical-backup-and-restore-preserve-logical-continuation-identity",
+      "passed": true
+    },
+    {
+      "name": "new-requirements-check-the-complete-cumulative-statistics",
+      "passed": true
+    },
+    {
+      "name": "requirements-are-explicit-per-call-and-not-inherited-from-a-parent",
+      "passed": true
+    },
+    {
+      "name": "zero-committed-frames-defer-all-references-and-can-start-later",
+      "passed": true
+    },
+    {
+      "name": "int64-clocks-and-append-after-missing-final-newline-remain-exact",
+      "passed": true
+    },
+    {
+      "name": "installed-manager-loads-verified-helpers-and-continues-only-new-rows",
+      "passed": true
+    },
+    {
+      "name": "installed-cumulative-acceptance-failure-publishes-report-and-exits-three",
+      "passed": true
+    },
+    {
+      "name": "state-resume-requires-explicit-committed-window-mode",
+      "passed": true
+    },
+    {
+      "name": "committed-window-mode-is-state-only",
+      "passed": true
+    },
+    {
+      "name": "installed-version-slots-stay-immutable",
+      "passed": true
+    }
+  ],
+  "independent_statistics": {
+    "scalars": 33,
+    "exact_fields": 60,
+    "maximum_tolerance_fraction": 3.539700781416274e-05,
+    "maximum_absolute_error_by_unit": {
+      "m": 4.945268543471858e-21,
+      "mps": 9.035018124334413e-21,
+      "dimensionless": 4.0371746350005693e-17
+    }
+  },
+  "binary_sha256": "5ad58aeab9abd7eb72be83d2126c98dd4d80dbbf2e0cdc6e083f7c0837bd78ef",
+  "python": "3.8.7",
+  "sqlite_version": "3.33.0",
+  "platform": "Windows-10-10.0.26100-SP0",
+  "source_sha256": "65deeee2a6a41cbd199575cbc1e8936180c8a7be3964e9c847a53e9934d0dcad",
+  "runner_sha256": "8fcff5bb3fd8d6d162344016e1621d243091021a1d4355f4e49464e54b7e363d",
+  "adapter_sha256": "3ecf3ca11fde76e76f58958dc65a5df21034e267bd06258d2e8b9acba447b001",
+  "manager_sha256": "69258f3a1c425b596ed49016c31fce1155a7bf83fdc9b8b5c2370db02362ab91",
+  "support_sha256": "56d356ccce7aea76add41922eaaa7929f5c1e054033f7d73d3481436a193e405",
+  "reference_sha256": "8c5e787fc1a1a152efc1f9a1355793c9a27ff85d129faaab3797b166150c670a",
+  "command": "python validation/state_continuation_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/state-continuation-results.json"
+}

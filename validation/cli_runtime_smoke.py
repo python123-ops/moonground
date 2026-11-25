@@ -70,6 +70,10 @@ python3 /input/moonground_cli.py --prefix /tmp/moonground job-export --state /tm
 python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --state /tmp/measurements.sqlite --references /input/empty-reference.ndjson --checkpoint --output /tmp/state-evaluation.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --measurements /tmp/replayed.ndjson --references /input/empty-reference.ndjson --output /tmp/log-evaluation.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --measurements /input/empty-reference.ndjson --references /input/empty-reference.ndjson --resume /tmp/state-evaluation.json --output /tmp/continued-evaluation.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground replay --input /input/warehouse.ndjson --state /tmp/incremental.sqlite --max-frames 3 >/tmp/partial-job.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --state /tmp/incremental.sqlite --allow-partial --committed-only --references /input/empty-reference.ndjson --output /tmp/incremental-first.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground replay --input /input/warehouse.ndjson --state /tmp/incremental.sqlite >/dev/null
+python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --state /tmp/incremental.sqlite --committed-only --references /input/empty-reference.ndjson --resume /tmp/incremental-first.json --output /tmp/incremental-final.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground status >/dev/null
 python3 - <<'PY'
 import json,sqlite3
@@ -91,10 +95,16 @@ assert state_evaluation['evaluation']==log_evaluation['evaluation']
 assert state_evaluation['inputs']==log_evaluation['inputs'] and state_evaluation['measurement_source']['frames']==job['frames']
 with open('/tmp/continued-evaluation.json') as stream: continued=json.load(stream)
 assert continued['evaluation']==state_evaluation['evaluation'] and continued['resume']==state_evaluation['resume']
+with open('/tmp/incremental-first.json') as stream: incremental_first=json.load(stream)
+with open('/tmp/incremental-final.json') as stream: incremental_final=json.load(stream)
+assert incremental_first['measurement_source']['frames']==3
+assert incremental_final['evaluation']==state_evaluation['evaluation'] and incremental_final['resume']==state_evaluation['resume']
+assert incremental_final['measurement_source']['evaluated_frames']==job['frames']-3
+assert incremental_final['reference_cursor']['prefix_records']=='0'
 with open('/tmp/version.json') as stream: version=json.load(stream)
 with open('/tmp/install.json') as stream: installed=json.load(stream)
 assert version['version']==installed['version']
-print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],restored_frames=len(recovered),acceptance_passed=acceptance['acceptance']['accepted'],sqlite_evaluation_passed=True,evaluation_checkpoint_passed=True,sqlite_version=sqlite3.sqlite_version)))
+print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],restored_frames=len(recovered),acceptance_passed=acceptance['acceptance']['accepted'],sqlite_evaluation_passed=True,evaluation_checkpoint_passed=True,state_continuation_passed=True,sqlite_version=sqlite3.sqlite_version)))
 PY
 '''
         (directory/'smoke.sh').write_bytes(script.encode('utf-8'))
