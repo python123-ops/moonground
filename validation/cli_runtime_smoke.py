@@ -76,6 +76,13 @@ python3 /input/moonground_cli.py --prefix /tmp/moonground replay --input /input/
 python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --state /tmp/incremental.sqlite --committed-only --references /input/empty-reference.ndjson --evaluation-state /tmp/evaluations.sqlite --output /tmp/incremental-final.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground evaluation-status --evaluation-state /tmp/evaluations.sqlite >/tmp/evaluation-status.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground evaluation-export --evaluation-state /tmp/evaluations.sqlite --sequence 1 --output /tmp/exported-first.json >/dev/null
+report_sha=$(python3 -c 'import json;print(json.load(open("/tmp/evaluation-status.json"))["latest_sha256"])')
+python3 /input/moonground_cli.py --prefix /tmp/moonground evaluation-backup --evaluation-state /tmp/evaluations.sqlite --expected-report-sha256 "$report_sha" --output /tmp/evaluation-backup.sqlite >/tmp/evaluation-backup.json
+evaluation_sha=$(python3 -c 'import json;print(json.load(open("/tmp/evaluation-backup.json"))["sha256"])')
+python3 /input/moonground_cli.py --prefix /tmp/moonground evaluation-restore --evaluation-state /tmp/restored-evaluations.sqlite --backup /tmp/evaluation-backup.sqlite --sha256 "$evaluation_sha" >/dev/null
+python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --state /tmp/incremental.sqlite --committed-only --references /input/empty-reference.ndjson --evaluation-state /tmp/restored-evaluations.sqlite --output /tmp/restored-evaluation.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground evaluation-export --evaluation-state /tmp/restored-evaluations.sqlite --sequence 1 --output /tmp/restored-first.json >/dev/null
+python3 /input/moonground_cli.py --prefix /tmp/moonground evaluation-status --evaluation-state /tmp/restored-evaluations.sqlite >/tmp/restored-evaluation-status.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground status >/dev/null
 python3 - <<'PY'
 import json,sqlite3
@@ -106,10 +113,15 @@ assert incremental_final['reference_cursor']['prefix_records']=='0'
 with open('/tmp/evaluation-status.json') as stream: evaluation_status=json.load(stream)
 assert evaluation_status['records']=='2' and evaluation_status['latest_frames']==str(job['frames'])
 assert open('/tmp/exported-first.json','rb').read()==open('/tmp/incremental-first.json','rb').read()
+with open('/tmp/restored-evaluation.json') as stream: restored_evaluation=json.load(stream)
+with open('/tmp/restored-evaluation-status.json') as stream: restored_evaluation_status=json.load(stream)
+assert restored_evaluation['resume']==incremental_final['resume'] and restored_evaluation['measurement_source']['evaluated_frames']==0
+assert restored_evaluation_status['records']=='3'
+assert open('/tmp/restored-first.json','rb').read()==open('/tmp/incremental-first.json','rb').read()
 with open('/tmp/version.json') as stream: version=json.load(stream)
 with open('/tmp/install.json') as stream: installed=json.load(stream)
 assert version['version']==installed['version']
-print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],restored_frames=len(recovered),acceptance_passed=acceptance['acceptance']['accepted'],sqlite_evaluation_passed=True,evaluation_checkpoint_passed=True,state_continuation_passed=True,evaluation_state_passed=True,sqlite_version=sqlite3.sqlite_version)))
+print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],restored_frames=len(recovered),acceptance_passed=acceptance['acceptance']['accepted'],sqlite_evaluation_passed=True,evaluation_checkpoint_passed=True,state_continuation_passed=True,evaluation_state_passed=True,evaluation_backup_passed=True,sqlite_version=sqlite3.sqlite_version)))
 PY
 '''
         (directory/'smoke.sh').write_bytes(script.encode('utf-8'))

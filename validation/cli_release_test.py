@@ -117,9 +117,10 @@ class PreparedArtifacts(unittest.TestCase):
                'validation/measurement_acceptance_verify.py','validation/measurement_evaluation_verify.py',
                'examples/evaluate_measurements.py','web/measurement-acceptance.test.mjs',
                'validation/sqlite_evaluation_verify.py','validation/evaluation_checkpoint_verify.py',
-               'web/evaluation-checkpoint.test.mjs','validation/state_continuation_verify.py','validation/evaluation_state_verify.py']
+               'web/evaluation-checkpoint.test.mjs','validation/state_continuation_verify.py','validation/evaluation_state_verify.py',
+               'validation/evaluation_backup_verify.py']
         sources={name:name.encode('ascii') for name in names}
-        sources['tools/moonground_jobs.py']+=b'\ndef backup(\nclass MeasurementSource:'
+        sources['tools/moonground_jobs.py']+=b'\ndef backup(\nclass MeasurementSource:\nEVALUATION_SNAPSHOT_VERSION = 1'
         sources['examples/evaluate_measurements.py']+=b'\nCHECKPOINT_INPUT_VERSION = 1\nSTATE_CONTINUATION_VERSION = 1\nEVALUATION_STORE_VERSION = 1'
         digest=lambda name:hashlib.sha256(sources[name]).hexdigest()
         version,commit='1.2.3','b'*40
@@ -172,11 +173,14 @@ class PreparedArtifacts(unittest.TestCase):
                 stored=dict(common,source_sha256=digest('validation/evaluation_state_verify.py'),
                     adapter_sha256=digest('examples/evaluate_measurements.py'),manager_sha256=digest('tools/moonground_cli.py'),
                     support_sha256=digest('validation/cli_jobs_verify.py'),forced_commit_crashes=2,initialized_publication_failures=2)
+                snapshot=dict(common,source_sha256=digest('validation/evaluation_backup_verify.py'),
+                    adapter_sha256=digest('examples/evaluate_measurements.py'),manager_sha256=digest('tools/moonground_cli.py'),
+                    support_sha256=digest('validation/cli_jobs_verify.py'),forced_publication_crashes=4,wal_restoration=True)
                 for name,value in [('ci-cli-distribution.json',distribution),('ci-cli-jobs.json',replay),
                                    ('ci-cli-job-backup.json',backup),('ci-cli-job-soak/result.json',stability),
                                    ('ci-measurement-acceptance.json',acceptance),('ci-sqlite-evaluation.json',sqlite_evaluation),
                                    ('ci-evaluation-checkpoint.json',checkpoint),('ci-state-continuation.json',continuation),
-                                   ('ci-evaluation-state.json',stored)]:
+                                   ('ci-evaluation-state.json',stored),('ci-evaluation-backup.json',snapshot)]:
                     path=directory/name
                     path.parent.mkdir(parents=True,exist_ok=True)
                     path.write_text(json.dumps(value),encoding='utf-8')
@@ -190,6 +194,8 @@ class PreparedArtifacts(unittest.TestCase):
                 record=json.loads((output/('verification-'+target+'.json')).read_text())
                 self.assertEqual(record['target'],target)
                 self.assertEqual(record['sqlite_stability']['completed_jobs'],7)
+                self.assertEqual(record['evaluation_backup']['forced_publication_crashes'],4)
+                self.assertTrue(record['evaluation_backup']['wal_restoration'])
                 self.assertEqual(record['state_recovery']['runner_sha256'],digest('tools/moonground_jobs.py'))
                 self.assertEqual(record['measurement_acceptance']['adapter_sha256'],digest('examples/evaluate_measurements.py'))
                 self.assertEqual(record['sqlite_evaluation']['larger_job']['frames'],4096)
@@ -313,6 +319,29 @@ class EvaluationStateGate(unittest.TestCase):
             for name in files:
                 with self.subTest(name=name):
                     with self.assertRaises(ValueError):release.require_evaluation_state(record,'a'*64,dict(files,**{name:dict(sha256='c'*64)}),'b'*40)
+
+
+class EvaluationBackupGate(unittest.TestCase):
+    def test_failed_crashes_wal_or_unbound_backup_helpers_cannot_be_published(self):
+        names=['validation/evaluation_backup_verify.py','tools/moonground_jobs.py','examples/evaluate_measurements.py',
+               'tools/moonground_cli.py','validation/cli_jobs_verify.py']
+        sources={name:name.encode('ascii') for name in names}
+        digest=lambda name:hashlib.sha256(sources[name]).hexdigest()
+        hashes=dict(zip(['source_sha256','runner_sha256','adapter_sha256','manager_sha256','support_sha256'],[digest(name) for name in names]))
+        record=dict(hashes,status='passed',binary_sha256='a'*64,cases=[dict(passed=True)],forced_publication_crashes=4,wal_restoration=True)
+        files={name:dict(sha256=digest(source)) for name,source in [
+            ('moonground_jobs.py',names[1]),('evaluate_measurements.py',names[2]),('moonground_cli.py',names[3])]}
+        with mock.patch.object(release,'source_file',side_effect=lambda commit,name:sources[name]):
+            release.require_evaluation_backup(record,'a'*64,files,'b'*40)
+            changes=[dict(status='failed'),dict(binary_sha256='c'*64),dict(cases=[]),dict(cases=[dict(passed=False)]),
+                     dict(forced_publication_crashes=3),dict(wal_restoration=False)]+[{key:'c'*64} for key in hashes]
+            for change in changes:
+                with self.subTest(change=change):
+                    with self.assertRaises(ValueError):release.require_evaluation_backup(dict(record,**change),'a'*64,files,'b'*40)
+            with self.assertRaises(ValueError):release.require_evaluation_backup(None,'a'*64,files,'b'*40)
+            for name in files:
+                with self.subTest(name=name):
+                    with self.assertRaises(ValueError):release.require_evaluation_backup(record,'a'*64,dict(files,**{name:dict(sha256='c'*64)}),'b'*40)
 
 
 if __name__=='__main__':

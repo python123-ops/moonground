@@ -2,7 +2,7 @@
 
 MoonGround 把固定相机中的目标轨迹转换为米制地面位置、速度和观测路径，面向园区、仓储和其他近似平面的场地。输入是已有目标身份、地面接触锚点和真实时间戳；库负责标定有效域、投影协方差、运动估计、轨迹分段和双向通道过线统计，并支持原子组合更新与完整状态恢复。固定地标检查持续核对原标定的米制残差；需要按检查结果决定是否计算对象测量时，可显式使用 `guarded` 入口。
 
-当前版本为 `0.46.0`。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
+当前版本为 `0.47.0`。源码使用 Apache-2.0 许可证，仓库为 [python123-ops/moonground](https://github.com/python123-ops/moonground)。
 
 ## 与现有项目的衔接
 
@@ -1153,12 +1153,12 @@ test "README: evidence transit windows resume aggregates at the original confirm
 
 原生 `--stream-checkpoint` 使用与 `--stream` 相同的输入和测量结果，在成功 EOF 后额外输出一行 `{"resume":<完整检查点>}`。失败输入仍返回状态 2，已输出的帧保留，末尾不输出恢复头。文件回放工具以这条最终恢复头作为一批计算完成的条件。
 
-Windows x86-64 与 Linux x86-64 的预编译 CLI 见 [Releases](https://github.com/python123-ops/moonground/releases/tag/v0.46.0)。解压后运行 `bin/moonground`，Windows 使用 `bin/moonground.exe`，无需安装 MoonBit 或编译器。`--version` 输出程序版本，`--version-json` 同时提供测量协议版本。
+Windows x86-64 与 Linux x86-64 的预编译 CLI 见 [Releases](https://github.com/python123-ops/moonground/releases/tag/v0.47.0)。解压后运行 `bin/moonground`，Windows 使用 `bin/moonground.exe`，无需安装 MoonBit 或编译器。`--version` 输出程序版本，`--version-json` 同时提供测量协议版本。
 
 需要保留多个版本时，可使用发行页附带的管理脚本。Python 3.8 及以上版本运行以下命令；新版本校验并试运行成功后才切换，已有进程继续使用旧程序：
 
 ```sh
-python moonground_cli.py --prefix ./moonground-install install --version 0.46.0
+python moonground_cli.py --prefix ./moonground-install install --version 0.47.0
 python moonground_cli.py --prefix ./moonground-install run -- --stream < observations.ndjson
 python moonground_cli.py --prefix ./moonground-install rollback
 ```
@@ -2872,6 +2872,8 @@ python moonground_cli.py --prefix ./moonground-install evaluate --measurements m
 
 `0.46.0` 的 `--evaluation-state` 自动接续最后一条已提交评估，保留每次报告及检查点。可用 `evaluation-status` 查询水位，`evaluation-export` 取回最新或历史报告。用法与中断后的恢复行为见 [保存评估任务状态](docs/cli-evaluation.md#保存评估任务状态)。[持久化评估检查](validation/evaluation-state-results.json) 覆盖 45 项用例，包含提交前后实际强制终止、文件发布中断、输出失败、历史变化、并发、数据库预算及安装后调用。
 
+`0.47.0` 增加 `evaluation-backup` 和 `evaluation-restore`，备份全部评估历史，核对文件校验和后恢复并继续累计。可用预期报告哈希固定备份水位，恢复保留每份报告原文。[备份和恢复说明](docs/cli-evaluation.md#备份和恢复评估状态)包含命令和数据保留要求；[验证记录](validation/evaluation-backup-results.json)覆盖 60 项检查，包含四次实际进程终止、WAL、容量与超时、错误校验和及恢复后的完整重算对照。
+
 [增量评估记录](validation/state-continuation-results.json) 包含 42 项检查，覆盖与完整重算和独立 Decimal 参考比对、历史修改／回填拒绝、空快照、备份恢复、精确时间戳、原始数字文本及安装后命令。
 
 `0.44.0` 的评估检查点保留完整累计状态，计算库、原生 CLI 和 JavaScript 可相互接续。文件工具使用 `--checkpoint` 保存状态，`--resume previous-report.json` 读取后续时间段日志；累计统计与本次输入范围分别记录。用法见 [评估检查点](docs/measurement-evaluation.md#评估检查点) 和 [CLI 分段评估](docs/cli-evaluation.md#分段评估与检查点)。
@@ -2965,7 +2967,7 @@ python validation/verify.py --binary _build/native/release/build/cmd/main/main.e
 python validation/stream_test.py --binary _build/native/release/build/cmd/main/main.exe --frames 3000 --targets 10 --latency-samples 100 --output validation/stream-v0.40-results.json
 moon package
 python validation/camera_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/camera-v0.40-results.json
-python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.46.0.zip --output validation/package-v0.46-results.json
+python examples/consumer/archive_smoke.py --archive _build/publish/python123-ops-moonground-0.47.0.zip --output validation/package-v0.47-results.json
 ```
 
 v0.36.0 的面积比较验证见 [`validation/calibration-area-results.json`](validation/calibration-area-results.json)：31 个请求、297 组比较、44,339 个标量及 2,460 组四分量非线性中心差分通过。独立参考以 Fraction 对完整闭合鞋带公式及单应商式求精确面积和导数，110 位 Decimal 核对共享贡献；极端面积提高到 800 位。最大误差／容差比为 0.00162；数值误差分别按 m、m²、m⁴ 和无量纲记录，极大面积的绝对误差不代表普通场地的测量误差。8 项原生／JavaScript 用例覆盖共同尺度抵消、负交叉贡献、反射与绕向、严格原文、32 模式×64 比较×64 顶点、晚阶段退化及单请求边界。库四后端各 1,027 项通过，独立 ZIP 消费者记录见 [`validation/package-v0.36-results.json`](validation/package-v0.36-results.json)。共享面板的四种模式在 Chromium 151 和 Chrome 157 核对独立草稿／结果、切换取消、迟到示例、原精度下载、最大批量和 390／1440 宽布局；两种浏览器的完整五组交互测试均通过。既有接口的 35 项参考使用当前产物重跑，记录为 `*-v0.36-results.json`，保留各历史原始记录。

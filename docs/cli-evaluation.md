@@ -113,3 +113,22 @@ python moonground_cli.py --prefix ./moonground-install evaluation-export --evalu
 状态查询核对数据库结构、完整性、连续序号、报告哈希和父记录关系。并发调用同一评估状态时，后来的调用返回 2；原生计算期间不持有评估数据库的 SQLite 事务，提交前再次核对记录水位。输入、计算或提交失败不增加记录，原报告保留。
 
 `--max-evaluation-mib` 默认 256，限制评估数据库大小；达到预算后可提高预算继续运行。`--evaluation-timeout` 默认 60 秒，分别约束状态检查和提交阶段，`--timeout` 仍约束原生计算。状态文件位于可写目录，便于锁定、提交和中断后的 SQLite 恢复。每次会逐条核对已有记录，内存只保留当前报告和最新检查点；存储量、检查时间随评估次数增长。单份报告上限 1 MiB。继续计算仍需保留原回放数据库和参考日志。
+
+## 备份和恢复评估状态
+
+`0.47.0` 增加独立的评估状态备份。安装对应版本后，使用发布包中的管理脚本：
+
+```sh
+python moonground_cli.py --prefix ./moonground-install evaluation-status --evaluation-state evaluations.sqlite
+python moonground_cli.py --prefix ./moonground-install evaluation-backup --evaluation-state evaluations.sqlite --output evaluations-backup.sqlite --expected-report-sha256 <latest_sha256>
+python moonground_cli.py --prefix ./moonground-install evaluation-restore --backup evaluations-backup.sqlite --sha256 <备份返回的sha256> --evaluation-state recovered-evaluations.sqlite
+python moonground_cli.py --prefix ./moonground-install evaluate --state measurements.sqlite --allow-partial --committed-only --evaluation-state recovered-evaluations.sqlite --references references.ndjson --requirements requirements.json --output recovered-report.json
+```
+
+备份保存全部报告原文、父哈希和完整检查点，生成单个已关闭的 SQLite 文件；支持尚无报告、部分完成和已经完成的评估状态，也支持源数据库处于 WAL 模式。返回值包含文件 `sha256`、字节数、记录数和最新报告哈希。`--expected-report-sha256` 可省略；提供时在锁定的数据库快照内核对最新报告，水位已变化则拒绝备份。它是报告字节的哈希，恢复时的 `--sha256` 则是整个备份文件的哈希，两者用途不同。
+
+恢复必须提供备份文件校验和，并使用新的目标路径。已有目标、遗留 SQLite 日志、错误数据库类型、损坏的历史记录或不符的校验和均返回 2。复制完成后再次检查结构、历史和数据库身份，最后发布文件；发布前中断可重试，发布后中断可查询目标状态。恢复不会修改源备份，原报告仍可按序号逐字节导出。继续评估时只计算恢复水位之后的新增测量；没有新提交时不重复累计样本。
+
+两个命令均支持 `--max-evaluation-mib`（默认 256）和 `--evaluation-timeout`（默认 60 秒）。预算覆盖源检查、复制和发布前校验，容量限制包含已分配但尚未回收的数据库页。备份时保留返回的校验和，并另存原测量回放数据库、参考日志和验收门槛；继续原回放任务还需保留原产出程序。
+
+评估数据库格式仍为 MGE1、版本 1，测量回放数据库格式不变。状态备份和恢复只使用经安装清单校验的辅助脚本；选回旧版后，管理器可使用保留的上一版本中支持该操作的脚本。继续原生评估仍要求当前选中的版本支持相应入口。安装及版本回退见 [CLI 分发说明](cli-distribution.md)。
