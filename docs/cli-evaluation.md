@@ -72,6 +72,24 @@ python moonground_cli.py --prefix ./moonground-install evaluate --measurements p
 
 会话身份和样本容量从检查点恢复，显式重复参数时必须一致。验收门槛由本次 `--requirements` 提供，可在同一统计状态上重新选择；不提供时只生成统计报告。门槛未达到而返回 3 的报告仍包含有效检查点。只有展示统计、没有 `resume` 的旧报告不能用于接续。
 
-`--checkpoint` 也可与 `--state` 一起使用，将已提交快照的评估结果导出为检查点。`--resume` 与 `--state` 分开使用，避免再次计算完整数据库。部分任务的评估仍包含整份参考日志的缺测；补充旧时刻的测量时应重新评估该范围，接续仅接收更晚的时间。
+`--checkpoint` 也可与 `--state` 一起使用，将已提交快照的评估结果导出为检查点。默认的部分任务评估仍包含整份参考日志的缺测；补充旧时刻的测量时应重新评估该范围。接续文件日志只接收更晚的时间；接续同一数据库使用下面的显式时间范围。
 
 检查点保留样本数、状态计数、偏差、完整缩放平方和及精确时间水位，不保存样本历史。需要选择支持检查点的当前发行版本；选回旧版本后，原有统计和 SQLite 评估入口继续可用。原文协议、计算库与 JavaScript 接口见 [评估检查点](https://github.com/python123-ops/moonground/blob/main/docs/measurement-evaluation.md#评估检查点)。
+
+## 随回放进度增量评估
+
+`0.45.0` 增加 `--committed-only`。它将参考范围限定到任务最后一个已提交测量时刻，自动保存完整评估检查点和参考游标。未完成的任务仍需显式加 `--allow-partial`：
+
+```sh
+python moonground_cli.py --prefix ./moonground-install evaluate --state measurements.sqlite --allow-partial --committed-only --references references.ndjson --output evaluation-1.json
+# 继续回放同一任务后，使用新路径保存下一份报告。
+python moonground_cli.py --prefix ./moonground-install evaluate --state measurements.sqlite --allow-partial --committed-only --references references.ndjson --resume evaluation-1.json --requirements requirements.json --output evaluation-2.json
+```
+
+首次调用计算水位之前的全部测量和参考记录；后续调用核对上一报告的任务身份、测量前缀和参考前缀，只将新增测量与 `(上一水位, 当前水位]` 内的参考送入原生计算器。区间内只有参考的时刻仍计为缺测，水位之后的参考暂缓计算。`evaluation`、`resume` 和验收结论覆盖累计样本，`alignment` 与输入流哈希只对应本次计算。没有新提交时，累计统计和检查点保持一致。
+
+报告用 `state_scope: "through_committed_measurements"` 标明此范围。`measurement_source` 保存完整快照的帧数、哈希及精确 `last_timestamp_us`，另记录本次 `evaluated_frames`、`evaluated_results_sha256` 和上次快照信息。`reference_cursor` 保存已处理记录数、记录前缀哈希、时间水位、本次／暂缓记录数及整份参考文件哈希。计数和时间游标使用精确十进制字符串；记录前缀逐行保留 JSON 原文，忽略 LF／CRLF 分隔符差异。原始输入、每份参考和报告应一同保留。
+
+可以追加尚未处理的未来参考；修改、删除或补入已经越过水位的参考会拒绝接续。测量历史变化、任务回退、输入或产出程序不一致也返回 2，并保留原有报告。通过备份／恢复得到的同一逻辑任务可以接续。旧的 `--checkpoint --state` 报告缺少参考游标，需重新生成一份 `--committed-only` 报告作为起点。此模式要求当前选中的发行版本同时带有增量评估和读取工具；回退旧版后需重新选回支持版本。
+
+每次仍逐行检查数据库和参考历史，读取成本随历史增长；原生计算和对齐临时文件只包含新增范围。参考全文件的 JSON、时间顺序和重复字段在扫描时检查，暂缓记录的样本字段在进入计算范围时由原生程序检查。空快照暂缓全部参考，首次评估需提供会话身份。未加 `--committed-only` 的 SQLite 评估继续包含整份参考日志；文件分段接续方式保持不变。

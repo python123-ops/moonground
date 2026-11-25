@@ -9,7 +9,7 @@
 在保存管理脚本的目录中执行，`--prefix` 为本机用户可写的安装目录：
 
 ```sh
-python moonground_cli.py --prefix ./moonground-install install --version 0.44.0
+python moonground_cli.py --prefix ./moonground-install install --version 0.45.0
 python moonground_cli.py --prefix ./moonground-install status
 python moonground_cli.py --prefix ./moonground-install run -- --version
 python moonground_cli.py --prefix ./moonground-install run -- --stream < observations.ndjson
@@ -18,7 +18,7 @@ python moonground_cli.py --prefix ./moonground-install run -- --stream < observa
 离线安装使用已下载的平台 ZIP 和 `SHA256SUMS` 中对应的 SHA-256：
 
 ```sh
-python moonground_cli.py --prefix ./moonground-install install --archive moonground-cli-0.44.0-linux-x86_64.zip --sha256 <64位校验值>
+python moonground_cli.py --prefix ./moonground-install install --archive moonground-cli-0.45.0-linux-x86_64.zip --sha256 <64位校验值>
 ```
 
 Windows 使用名称含 `windows-x86_64` 的 ZIP。`path` 子命令输出当前原生程序的完整路径，也可据此直接启动程序。`run` 将标准输入、输出、错误交给原生进程，并保留其退出码；管理脚本不累积测量结果。安装器不修改全局 PATH 或系统目录。
@@ -45,12 +45,14 @@ moonground-install/
   current.json
   .install.lock
   versions/
-    0.40.0-linux-x86_64/
+    0.45.0-linux-x86_64/
       manifest.json
       bin/moonground
       moonground_cli.py
       moonground_jobs.py
       CLI_JOBS.md
+      evaluate_measurements.py
+      CLI_EVALUATION.md
       LICENSE
       THIRD_PARTY_NOTICES.md
       THIRD_PARTY_LICENSES.txt
