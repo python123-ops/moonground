@@ -142,6 +142,31 @@ def require_sqlite_evaluation(report,binary_digest,files,commit):
         raise ValueError('SQLite evaluation bounded-memory run is missing or incomplete')
 
 
+def require_evaluation_checkpoint(report,binary_digest,files,commit):
+    if not report or report.get('status')!='passed' or report.get('binary_sha256')!=binary_digest:
+        raise ValueError('evaluation checkpoint verification is missing or for a different binary')
+    for key in ['numerical_cases','protocol_cases','file_adapter_cases']:
+        if not report.get(key) or not all(case.get('passed') for case in report[key]):
+            raise ValueError('evaluation checkpoint verification cases did not all pass')
+    if report.get('checks',0)<1 or not 0<report.get('max_checkpoint_bytes',0)<=16384:
+        raise ValueError('evaluation checkpoint population or size checks are incomplete')
+    for key,name in [('source_sha256','validation/evaluation_checkpoint_verify.py'),
+                     ('reference_sha256','validation/measurement_evaluation_verify.py'),
+                     ('acceptance_reference_sha256','validation/measurement_acceptance_verify.py'),
+                     ('adapter_sha256','examples/evaluate_measurements.py'),
+                     ('manager_sha256','tools/moonground_cli.py'),('runner_sha256','tools/moonground_jobs.py'),
+                     ('support_sha256','validation/cli_jobs_verify.py')]:
+        if report.get(key)!=hashlib.sha256(source_file(commit,name)).hexdigest():
+            raise ValueError('evaluation checkpoint verification source differs from the tested commit')
+    for key,name in [('adapter_sha256','evaluate_measurements.py'),('manager_sha256','moonground_cli.py'),
+                     ('runner_sha256','moonground_jobs.py')]:
+        if report[key]!=files[name]['sha256']:
+            raise ValueError('evaluation checkpoint helper differs from the tested payload')
+    web=report.get('web_interchange',{})
+    if web.get('status')!='passed' or web.get('source_sha256')!=hashlib.sha256(source_file(commit,'web/evaluation-checkpoint.test.mjs')).hexdigest():
+        raise ValueError('evaluation checkpoint runtime interchange did not pass for this source')
+
+
 def prepare(directory,output,version,commit,run_id):
     source(version,commit)
     archives=sorted(directory.rglob('moonground-cli-*.zip'))
@@ -166,9 +191,11 @@ def prepare(directory,output,version,commit,run_id):
     soak_reports={}
     acceptance_reports={}
     sqlite_evaluation_reports={}
+    evaluation_checkpoint_reports={}
     for pattern,state_reports in [('ci-cli-job-backup.json',backup_reports),('ci-cli-job-soak/result.json',soak_reports),
                                  ('ci-measurement-acceptance.json',acceptance_reports),
-                                 ('ci-sqlite-evaluation.json',sqlite_evaluation_reports)]:
+                                 ('ci-sqlite-evaluation.json',sqlite_evaluation_reports),
+                                 ('ci-evaluation-checkpoint.json',evaluation_checkpoint_reports)]:
         for path in directory.rglob(pattern):
             value=json.loads(path.read_text(encoding='utf-8'))
             binary=value.get('binary_sha256')
@@ -228,6 +255,10 @@ def prepare(directory,output,version,commit,run_id):
                 evaluation=sqlite_evaluation_reports.get(tested['current_binary_sha256'])
                 require_sqlite_evaluation(evaluation,tested['current_binary_sha256'],value['files'],commit)
                 report=dict(report,sqlite_evaluation=evaluation)
+            if b'\nCHECKPOINT_INPUT_VERSION = 1' in source_file(commit,'examples/evaluate_measurements.py'):
+                checkpoint=evaluation_checkpoint_reports.get(tested['current_binary_sha256'])
+                require_evaluation_checkpoint(checkpoint,tested['current_binary_sha256'],value['files'],commit)
+                report=dict(report,evaluation_checkpoint=checkpoint)
         if script is not None and payload!=script:
             raise ValueError('platform archives contain different manager scripts')
         script=payload

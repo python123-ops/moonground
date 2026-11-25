@@ -67,8 +67,9 @@ python3 /input/moonground_cli.py --prefix /tmp/moonground replay --input /input/
 python3 /input/moonground_cli.py --prefix /tmp/moonground job-export --state /tmp/restored.sqlite --output /tmp/restored.ndjson >/tmp/restored-export.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --measurements /input/measurement-evaluation-measurements.ndjson --references /input/measurement-evaluation-reference.ndjson --requirements /input/measurement-acceptance-requirements.json --output /tmp/acceptance.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground job-export --state /tmp/measurements.sqlite --output /tmp/replayed.ndjson >/tmp/export.json
-python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --state /tmp/measurements.sqlite --references /input/empty-reference.ndjson --output /tmp/state-evaluation.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --state /tmp/measurements.sqlite --references /input/empty-reference.ndjson --checkpoint --output /tmp/state-evaluation.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --measurements /tmp/replayed.ndjson --references /input/empty-reference.ndjson --output /tmp/log-evaluation.json
+python3 /input/moonground_cli.py --prefix /tmp/moonground evaluate --measurements /input/empty-reference.ndjson --references /input/empty-reference.ndjson --resume /tmp/state-evaluation.json --output /tmp/continued-evaluation.json
 python3 /input/moonground_cli.py --prefix /tmp/moonground status >/dev/null
 python3 - <<'PY'
 import json,sqlite3
@@ -88,10 +89,12 @@ with open('/tmp/state-evaluation.json') as stream: state_evaluation=json.load(st
 with open('/tmp/log-evaluation.json') as stream: log_evaluation=json.load(stream)
 assert state_evaluation['evaluation']==log_evaluation['evaluation']
 assert state_evaluation['inputs']==log_evaluation['inputs'] and state_evaluation['measurement_source']['frames']==job['frames']
+with open('/tmp/continued-evaluation.json') as stream: continued=json.load(stream)
+assert continued['evaluation']==state_evaluation['evaluation'] and continued['resume']==state_evaluation['resume']
 with open('/tmp/version.json') as stream: version=json.load(stream)
 with open('/tmp/install.json') as stream: installed=json.load(stream)
 assert version['version']==installed['version']
-print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],restored_frames=len(recovered),acceptance_passed=acceptance['acceptance']['accepted'],sqlite_evaluation_passed=True,sqlite_version=sqlite3.sqlite_version)))
+print('MOONGROUND_RUNTIME_RESULT='+json.dumps(dict(status='passed',frames=len(actual),version=version['version'],replay_frames=job['frames'],restored_frames=len(recovered),acceptance_passed=acceptance['acceptance']['accepted'],sqlite_evaluation_passed=True,evaluation_checkpoint_passed=True,sqlite_version=sqlite3.sqlite_version)))
 PY
 '''
         (directory/'smoke.sh').write_bytes(script.encode('utf-8'))

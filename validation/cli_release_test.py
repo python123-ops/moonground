@@ -116,9 +116,11 @@ class PreparedArtifacts(unittest.TestCase):
                'validation/cli_job_backup_verify.py','validation/cli_job_soak.py',
                'validation/measurement_acceptance_verify.py','validation/measurement_evaluation_verify.py',
                'examples/evaluate_measurements.py','web/measurement-acceptance.test.mjs',
-               'validation/sqlite_evaluation_verify.py']
+               'validation/sqlite_evaluation_verify.py','validation/evaluation_checkpoint_verify.py',
+               'web/evaluation-checkpoint.test.mjs']
         sources={name:name.encode('ascii') for name in names}
         sources['tools/moonground_jobs.py']+=b'\ndef backup(\nclass MeasurementSource:'
+        sources['examples/evaluate_measurements.py']+=b'\nCHECKPOINT_INPUT_VERSION = 1'
         digest=lambda name:hashlib.sha256(sources[name]).hexdigest()
         version,commit='1.2.3','b'*40
         manifests={}
@@ -156,9 +158,17 @@ class PreparedArtifacts(unittest.TestCase):
                     adapter_sha256=digest('examples/evaluate_measurements.py'),manager_sha256=digest('tools/moonground_cli.py'),
                     support_sha256=digest('validation/cli_jobs_verify.py'),
                     larger_job=dict(frames=4096,python_peak_bytes=1100000,logical_state_bytes=4000000))
+                checkpoint=dict(common,source_sha256=digest('validation/evaluation_checkpoint_verify.py'),
+                    reference_sha256=digest('validation/measurement_evaluation_verify.py'),
+                    acceptance_reference_sha256=digest('validation/measurement_acceptance_verify.py'),
+                    adapter_sha256=digest('examples/evaluate_measurements.py'),manager_sha256=digest('tools/moonground_cli.py'),
+                    support_sha256=digest('validation/cli_jobs_verify.py'),checks=10,max_checkpoint_bytes=1024,
+                    numerical_cases=[dict(passed=True)],protocol_cases=[dict(passed=True)],file_adapter_cases=[dict(passed=True)],
+                    web_interchange=dict(status='passed',source_sha256=digest('web/evaluation-checkpoint.test.mjs')))
                 for name,value in [('ci-cli-distribution.json',distribution),('ci-cli-jobs.json',replay),
                                    ('ci-cli-job-backup.json',backup),('ci-cli-job-soak/result.json',stability),
-                                   ('ci-measurement-acceptance.json',acceptance),('ci-sqlite-evaluation.json',sqlite_evaluation)]:
+                                   ('ci-measurement-acceptance.json',acceptance),('ci-sqlite-evaluation.json',sqlite_evaluation),
+                                   ('ci-evaluation-checkpoint.json',checkpoint)]:
                     path=directory/name
                     path.parent.mkdir(parents=True,exist_ok=True)
                     path.write_text(json.dumps(value),encoding='utf-8')
@@ -175,6 +185,7 @@ class PreparedArtifacts(unittest.TestCase):
                 self.assertEqual(record['state_recovery']['runner_sha256'],digest('tools/moonground_jobs.py'))
                 self.assertEqual(record['measurement_acceptance']['adapter_sha256'],digest('examples/evaluate_measurements.py'))
                 self.assertEqual(record['sqlite_evaluation']['larger_job']['frames'],4096)
+                self.assertEqual(record['evaluation_checkpoint']['max_checkpoint_bytes'],1024)
 
 
 class AccuracyAcceptanceGate(unittest.TestCase):
@@ -218,6 +229,33 @@ class SQLiteEvaluationGate(unittest.TestCase):
                     with self.assertRaises(ValueError):release.require_sqlite_evaluation(dict(record,**changes),'a'*64,files,'b'*40)
             with self.assertRaises(ValueError):release.require_sqlite_evaluation(None,'a'*64,files,'b'*40)
             with self.assertRaises(ValueError):release.require_sqlite_evaluation(record,'a'*64,dict(files,**{'moonground_jobs.py':dict(sha256='c'*64)}),'b'*40)
+
+
+class EvaluationCheckpointGate(unittest.TestCase):
+    def test_missing_failed_and_unbound_continuation_results_cannot_be_published(self):
+        names=['validation/evaluation_checkpoint_verify.py','validation/measurement_evaluation_verify.py',
+               'validation/measurement_acceptance_verify.py','examples/evaluate_measurements.py',
+               'tools/moonground_cli.py','tools/moonground_jobs.py','validation/cli_jobs_verify.py',
+               'web/evaluation-checkpoint.test.mjs']
+        sources={name:name.encode('ascii') for name in names}
+        digest=lambda name:hashlib.sha256(sources[name]).hexdigest()
+        record=dict(status='passed',binary_sha256='a'*64,numerical_cases=[dict(passed=True)],protocol_cases=[dict(passed=True)],
+                    file_adapter_cases=[dict(passed=True)],checks=10,max_checkpoint_bytes=1024,
+                    source_sha256=digest(names[0]),reference_sha256=digest(names[1]),acceptance_reference_sha256=digest(names[2]),
+                    adapter_sha256=digest(names[3]),manager_sha256=digest(names[4]),runner_sha256=digest(names[5]),support_sha256=digest(names[6]),
+                    web_interchange=dict(status='passed',source_sha256=digest(names[7])))
+        files={name:dict(sha256=digest(source)) for name,source in [
+            ('evaluate_measurements.py',names[3]),('moonground_cli.py',names[4]),('moonground_jobs.py',names[5])]}
+        with mock.patch.object(release,'source_file',side_effect=lambda commit,name:sources[name]):
+            release.require_evaluation_checkpoint(record,'a'*64,files,'b'*40)
+            for changes in [dict(status='failed'),dict(binary_sha256='c'*64),dict(numerical_cases=[]),
+                            dict(protocol_cases=[dict(passed=False)]),dict(file_adapter_cases=[]),dict(checks=0),
+                            dict(max_checkpoint_bytes=0),dict(max_checkpoint_bytes=16385),dict(source_sha256='c'*64),
+                            dict(reference_sha256='c'*64),dict(adapter_sha256='c'*64),dict(web_interchange={})]:
+                with self.subTest(changes=changes):
+                    with self.assertRaises(ValueError):release.require_evaluation_checkpoint(dict(record,**changes),'a'*64,files,'b'*40)
+            with self.assertRaises(ValueError):release.require_evaluation_checkpoint(None,'a'*64,files,'b'*40)
+            with self.assertRaises(ValueError):release.require_evaluation_checkpoint(record,'a'*64,dict(files,**{'moonground_cli.py':dict(sha256='c'*64)}),'b'*40)
 
 
 if __name__=='__main__':
