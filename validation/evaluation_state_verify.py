@@ -375,6 +375,19 @@ def suite(binary):
                 raise AssertionError('invalid export generation succeeded')
             assert not missing_export.exists()
         passed('missing-generation-does-not-create-an-export-file')
+        before_publication = int(store.status()['records'])
+        original_save = adapter.save_atomic
+        contended = [False]
+        def save_with_contender(path, content):
+            if not contended[0]:
+                contended[0] = True
+                run(expected=2)
+            return original_save(path, content)
+        with mock.patch.object(adapter, 'save_atomic', side_effect=save_with_contender):
+            run()
+        assert contended[0] and int(store.status()['records']) == before_publication+1
+        assert json.loads(report.read_bytes())['evaluation_state']['sequence'] == str(before_publication+1)
+        passed('writer-lock-remains-held-through-optional-report-publication')
         # The real installed manager includes all three entry points.
         bundle = packager.create_bundle(binary, directory/'bundle', packager.module_version(), '0'*40, True)
         prefix = directory/'install'

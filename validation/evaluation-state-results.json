@@ -162,6 +162,10 @@
       "passed": true
     },
     {
+      "name": "writer-lock-remains-held-through-optional-report-publication",
+      "passed": true
+    },
+    {
       "name": "installed-manager-evaluates-queries-and-exports-verified-storage",
       "passed": true
     },
@@ -179,9 +183,9 @@
     }
   ],
   "binary_sha256": "300129b5dd3babc5c809461653bb822ba4e0b63c5870b5827edef91b92cb4382",
-  "source_sha256": "2a8062bb7a28bc8655ff1788e23e844c85e6e7c923c15501ee6c9549e9c5d4df",
+  "source_sha256": "ba29bbf787d70c5fe9a3e13d6c383561d3b4f0c4d24af71de469feb651c85426",
   "runner_sha256": "1c6661cd17b799aafb24f599eabe7d28d6b0fb7ef907cfc0949ab70b0e935ee1",
-  "adapter_sha256": "5b12e5f85cd9a8ff22a998d535366077effc7a3e62349918ed3da48765ebb82e",
+  "adapter_sha256": "55daaa452be9ce4e3ab2410e3a605483fcbb8f6b43da0805e5726277e99ae1b2",
   "manager_sha256": "ff51e97ada25de2dd439e194a0376ecd0e3b50b0b2094f2636b40e74c631eb2b",
   "support_sha256": "56d356ccce7aea76add41922eaaa7929f5c1e054033f7d73d3481436a193e405",
   "python": "3.8.7",

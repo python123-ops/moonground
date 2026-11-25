@@ -2870,7 +2870,7 @@ python moonground_cli.py --prefix ./moonground-install evaluate --measurements m
 
 ## 验证与复现
 
-`0.46.0` 的 `--evaluation-state` 自动接续最后一条已提交评估，保留每次报告及检查点。可用 `evaluation-status` 查询水位，`evaluation-export` 取回最新或历史报告。用法与中断后的恢复行为见 [保存评估任务状态](docs/cli-evaluation.md#保存评估任务状态)。[持久化评估检查](validation/evaluation-state-results.json) 覆盖 44 项用例，包含提交前后实际强制终止、文件发布中断、输出失败、历史变化、并发、数据库预算及安装后调用。
+`0.46.0` 的 `--evaluation-state` 自动接续最后一条已提交评估，保留每次报告及检查点。可用 `evaluation-status` 查询水位，`evaluation-export` 取回最新或历史报告。用法与中断后的恢复行为见 [保存评估任务状态](docs/cli-evaluation.md#保存评估任务状态)。[持久化评估检查](validation/evaluation-state-results.json) 覆盖 45 项用例，包含提交前后实际强制终止、文件发布中断、输出失败、历史变化、并发、数据库预算及安装后调用。
 
 [增量评估记录](validation/state-continuation-results.json) 包含 42 项检查，覆盖与完整重算和独立 Decimal 参考比对、历史修改／回填拒绝、空快照、备份恢复、精确时间戳、原始数字文本及安装后命令。
 

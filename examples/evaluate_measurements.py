@@ -460,6 +460,7 @@ def report_bytes(result):
     return (json.dumps(result, ensure_ascii=True, indent=2, allow_nan=False)+'\n').encode('utf-8')
 
 
+@contextlib.contextmanager
 def evaluate_stored(args, measurement_source):
     if measurement_source is None or not args.committed_only or args.resume is not None:
         raise ValueError('--evaluation-state requires --state --committed-only and replaces --resume')
@@ -479,7 +480,7 @@ def evaluate_stored(args, measurement_source):
         result['evaluation_state'] = dict(version=1, sequence=str(number+1), parent_sha256=parent)
         content = report_bytes(result)
         writer.append(content)
-    return result, content
+        yield result, content
 
 
 def main(argv=None, measurement_source=None):
@@ -508,17 +509,19 @@ def main(argv=None, measurement_source=None):
             1 <= args.max_line_bytes <= 16777216 and 0.0 < args.timeout < float('inf')):
         parser.error('invalid evaluation capacity or timeout')
     try:
-        if args.evaluation_state is not None:
-            result, content = evaluate_stored(args, measurement_source)
-        else:
-            if args.max_evaluation_mib is not None or args.evaluation_timeout is not None:
-                raise ValueError('evaluation state budgets require --evaluation-state')
-            result = evaluate(args, measurement_source)
-            content = report_bytes(result)
-        if args.output:
-            save_atomic(args.output, content)
-        else:
-            sys.stdout.write(content.decode('utf-8'))
+        with contextlib.ExitStack() as resources:
+            if args.evaluation_state is not None:
+                result, content = resources.enter_context(evaluate_stored(args, measurement_source))
+            else:
+                if args.max_evaluation_mib is not None or args.evaluation_timeout is not None:
+                    raise ValueError('evaluation state budgets require --evaluation-state')
+                result = evaluate(args, measurement_source)
+                content = report_bytes(result)
+            if args.output:
+                save_atomic(args.output, content)
+            else:
+                sys.stdout.write(content.decode('utf-8'))
+                sys.stdout.flush()
         return 3 if result.get('acceptance', {}).get('accepted') is False else 0
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
         parser.exit(2, str(error) + '\n')
