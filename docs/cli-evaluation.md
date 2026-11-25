@@ -56,3 +56,22 @@ python moonground_cli.py --prefix ./moonground-install evaluate --state measurem
 `--max-state-mib` 默认 256，限制数据库逻辑页大小；`--state-timeout` 默认 60 秒，约束数据库检查和日志对齐。`--timeout` 继续约束随后进行的原生计算。只读流保留当前结果行；对齐后的原生输入仍使用临时文件，临时磁盘用量随输入增长。空任务需提供 `--session-id`，有参考而无测量时按缺测评估。
 
 输出不得覆盖任务数据库、锁及 SQLite 日志文件，也不得覆盖其硬链接、原输入或产出程序。统计与验收继续使用 0／3／2 的退出状态。可先通过 `job-backup` 保存任务快照，再对快照单独评估并留存参考数据与门槛文件。
+
+## 分段评估与检查点
+
+使用 `0.44.0` Release 附带的 `moonground_cli.py`。先处理第一段日志并将检查点保存在报告中：
+
+```sh
+python moonground_cli.py --prefix ./moonground-install evaluate --measurements part-1-measurements.ndjson --references part-1-references.ndjson --checkpoint --output part-1.json
+python moonground_cli.py --prefix ./moonground-install evaluate --measurements part-2-measurements.ndjson --references part-2-references.ndjson --resume part-1.json --requirements requirements.json --output part-2.json
+```
+
+`--resume` 自动在新报告中继续保存 `resume`。输入必须是后续时间段：对齐后的每个时间戳都严格晚于上一检查点的 `last_timestamp_us`。两份日志应在同一个时间边界拆分；重叠、重复或乱序的时刻返回 2，保留已有报告。此入口接收下一段日志，不会在原文件中查找偏移或重放之前的行。
+
+`evaluation` 和验收检查覆盖全部累计样本；`alignment_scope: "current_inputs"` 表明 `alignment` 只统计本次两份输入。新报告记录本次日志哈希及 `inputs.resume_sha256`，据此连接分段报告。检查点、各段原始测量、参考数据及报告一同保存。输出使用新路径，拒绝覆盖作为输入的恢复报告及其硬链接。
+
+会话身份和样本容量从检查点恢复，显式重复参数时必须一致。验收门槛由本次 `--requirements` 提供，可在同一统计状态上重新选择；不提供时只生成统计报告。门槛未达到而返回 3 的报告仍包含有效检查点。只有展示统计、没有 `resume` 的旧报告不能用于接续。
+
+`--checkpoint` 也可与 `--state` 一起使用，将已提交快照的评估结果导出为检查点。`--resume` 与 `--state` 分开使用，避免再次计算完整数据库。部分任务的评估仍包含整份参考日志的缺测；补充旧时刻的测量时应重新评估该范围，接续仅接收更晚的时间。
+
+检查点保留样本数、状态计数、偏差、完整缩放平方和及精确时间水位，不保存样本历史。需要选择支持检查点的当前发行版本；选回旧版本后，原有统计和 SQLite 评估入口继续可用。原文协议、计算库与 JavaScript 接口见 [评估检查点](https://github.com/python123-ops/moonground/blob/main/docs/measurement-evaluation.md#评估检查点)。

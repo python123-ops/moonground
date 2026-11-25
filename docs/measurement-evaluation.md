@@ -2,6 +2,18 @@
 
 将 MoonGround 输出的位置、速度与独立参考数据按时间和身份对齐，计算误差、偏差和可用率。现场参考位置应来自独立测量，评估点与标定拟合点分开；位置使用同一地面坐标系的 m，速度使用 m/s。
 
+## 评估检查点
+
+`0.44.0` 增加 `EvaluationSession::checkpoint()`、`EvaluationSession::from_checkpoint()`、`EvaluationCheckpoint` 与 `ErrorAccumulatorCheckpoint`。完整状态保留缩放平方和、绝对误差均值、最大值、偏差、各类计数、身份、容量和精确时间水位；恢复后按原顺序继续计算，累计结果与同一序列单次评估一致。状态只含标量与不可变结构，不保存历史帧。
+
+恢复检查版本、有限数值、样本及状态计数的对应关系、容量、时间范围、缩放矩及偏差。空统计仍保持无数据，零误差样本与空样本分别恢复；极大、极小及次正规尺度保留原累计状态。计数相加使用 Int64，避免损坏的 Int32 计数在校验时溢出。`EvaluationCounts` 支持公开构造，检查点入口统一校验外部构造的计数。
+
+原生 `--evaluate-measurements-checkpoint` 与 `--accept-measurements-checkpoint` 接收原配置或恢复头，成功 EOF 返回一行 `{"report":<原摘要>,"resume":<完整评估检查点>}`。验收未达到时仍返回该完整对象并退出 3；输入错误退出 2，不输出摘要或新检查点。恢复头为 `{"resume":<评估检查点>}`，验收模式另提供本次 `requirements`。恢复头不能同时覆盖 `session_id`、`max_tracks` 或 `max_samples`。
+
+`MeasurementEvaluationReplay` 与 `MeasurementAcceptanceReplay` 提供 `checkpoint_json()` 恢复头和 `report_with_checkpoint_json()` 完整结果。纯批次入口为 `codec.measurement_evaluation_checkpoint_json`、`codec.measurement_acceptance_checkpoint_json`；JavaScript 对应 `moonground_measurement_evaluation_checkpoint`、`moonground_measurement_acceptance_checkpoint`。它们沿用 `{"source":"配置或恢复头原文","frames":"逐行对齐帧原文"}`，保留 5,000 行／8 Mi 帧文本上限。
+
+版本 1 检查点的 `counts.frames`、首尾微秒时间均使用十进制字符串；其余容量和样本数为 Int32，数值累计量为有限 Double。原文解析拒绝重复键、未知字段、非零数字下溢及不精确的整数计数，检查点上限 16 Ki UTF-16 单元。后续时间戳必须严格增加，失败帧不改变计数、时间水位或数值状态。文件分段用法见 [CLI 分段评估](https://github.com/python123-ops/moonground/blob/main/docs/cli-evaluation.md#分段评估与检查点)。
+
 ## 库接口
 
 导入 `python123-ops/moonground/evaluation`，用 `ReferenceSample::new(track_id, position_m, speed_mps?)` 提供参考样本。速度未知时省略 `speed_mps`，零速度通过 `speed_mps=0.0` 明确给出。

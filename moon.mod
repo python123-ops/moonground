@@ -1,6 +1,6 @@
 name = "python123-ops/moonground"
 
-version = "0.43.0"
+version = "0.44.0"
 
 readme = "README.md"
 
