@@ -109,6 +109,20 @@ def suite(binary):
                 raise AssertionError('writer unexpectedly acquired the reader lock')
         assert state.read_bytes() == before
         passed('reader-is-readonly-bounded-and-excludes-concurrent-writers')
+        # Retain the partially consumed reader while renaming the database.
+        # Windows forbids this if a statement still owns its file handle.
+        renamed = directory/'renamed.sqlite'
+        state.replace(renamed)
+        renamed.replace(state)
+        try:
+            with jobs.MeasurementSource(state).open() as (failed_stream, _):
+                failed_stream.readline(7)
+                raise ValueError('caller stopped reading')
+        except ValueError as error:
+            assert str(error) == 'caller stopped reading'
+        state.replace(renamed)
+        renamed.replace(state)
+        passed('partial-read-and-caller-failure-release-database-file-handles')
         # Failed native evaluation must leave an already published report intact.
         output = directory/'report.json'
         output.write_bytes(b'previous report\n')
@@ -133,7 +147,10 @@ def suite(binary):
         assert output.read_bytes() == b'previous report\n'
         config.references = reference
         passed('late-reference-error-preserves-the-published-report')
-        rejected(timeout=1e-12, text='timed out')
+        # Advance across a real budget boundary; do not depend on the host's
+        # monotonic clock resolving an interval smaller than its clock tick.
+        with mock.patch.object(jobs.time, 'monotonic', side_effect=[100.0, 101.0]):
+            rejected(timeout=0.5, text='timed out')
         passed('state-inspection-deadline-is-enforced')
         for name, mutate in [
             ('future-version', lambda c:c.execute('PRAGMA user_version=2')),

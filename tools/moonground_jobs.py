@@ -504,8 +504,14 @@ class MeasurementSource:
             report.update(kind='sqlite_replay', partial_requested=self.allow_partial,
                           max_state_mib=self.max_state_mib, timeout_seconds=self.timeout,
                           reader_sha256=digest_file(Path(__file__), check))
-            yield _MeasurementRows(connection, check, report, start), report
-            check()
+            rows = _MeasurementRows(connection, check, report, start)
+            try:
+                yield rows, report
+                check()
+            finally:
+                # An unfinished SQLite cursor otherwise keeps the file open on
+                # Windows even after Connection.close(), until its reader dies.
+                rows.cursor.close()
 
 
 def _new_state_path(path, source):
