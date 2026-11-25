@@ -19,6 +19,7 @@ APPLICATION_ID = 0x4D474A31
 MAX_LINE = 16 * 1024 * 1024
 MAX_OUTPUT_LINE = 32 * 1024 * 1024
 MAX_BATCH_OUTPUT = 128 * 1024 * 1024
+STATE_CONTINUATION_VERSION = 1
 
 
 def digest_file(path, check=None):
@@ -421,10 +422,13 @@ def verify(state_path, max_state_mib=256, timeout=60.0):
 
 class _MeasurementRows:
     """Read one verified result row at a time, retaining file readline semantics."""
-    def __init__(self, connection, check):
-        self.cursor = connection.execute('SELECT payload FROM results ORDER BY sequence')
+    def __init__(self, connection, check, report, start_sequence=0):
+        self.cursor = connection.execute('SELECT payload FROM results WHERE sequence>? ORDER BY sequence', (start_sequence,))
         self.check = check
         self.pending = b''
+        self.digest = hashlib.sha256()
+        self.report = report
+        report['evaluated_results_sha256'] = self.digest.hexdigest()
 
     def readline(self, size=-1):
         self.check()
@@ -435,6 +439,8 @@ class _MeasurementRows:
             if row is None:
                 return b''
             self.pending = row[0]
+            self.digest.update(self.pending)
+            self.report['evaluated_results_sha256'] = self.digest.hexdigest()
         count = len(self.pending) if size < 0 else min(size, len(self.pending))
         result, self.pending = self.pending[:count], self.pending[count:]
         return result
@@ -460,7 +466,7 @@ class MeasurementSource:
             for suffix in ['-journal', '-wal', '-shm', '.lock']]
 
     @contextlib.contextmanager
-    def open(self):
+    def open(self, previous=None):
         check = _deadline(self.timeout, self.max_state_mib)
         # Share the replay/backup lock: reading never delays an active writer's
         # commit, and both the inspection and the stream see the same snapshot.
@@ -470,10 +476,35 @@ class MeasurementSource:
             report = _inspect(connection, check, self.max_state_mib)
             if not report['complete'] and not self.allow_partial:
                 raise ValueError('replay is incomplete; finish it or explicitly use --allow-partial')
+            row = connection.execute('SELECT payload FROM results ORDER BY sequence DESC LIMIT 1').fetchone()
+            report['last_timestamp_us'] = decode(row[0])['timestamp_us'] if row else None
+            start = 0
+            if previous is not None:
+                for name in ['frames', 'input_offset', 'input_bytes']:
+                    if type(previous.get(name)) is not int or not 0 <= previous[name] <= 9223372036854775807:
+                        raise ValueError('invalid previous replay counter: ' + name)
+                if type(previous.get('complete')) is not bool:
+                    raise ValueError('invalid previous replay completion flag')
+                if any(previous.get(name) != report[name] for name in ['input_sha256', 'input_bytes', 'binary_sha256']):
+                    raise ValueError('replay input or producing executable differs from the previous report')
+                start = previous['frames']
+                if report['frames'] < start or report['input_offset'] < previous['input_offset'] or (
+                        previous['complete'] and (not report['complete'] or report['frames'] != start)):
+                    raise ValueError('replay moved behind the previous committed snapshot')
+                digest, last = hashlib.sha256(), None
+                for (payload,) in connection.execute('SELECT payload FROM results WHERE sequence<=? ORDER BY sequence', (start,)):
+                    check()
+                    digest.update(payload)
+                    last = decode(payload)['timestamp_us']
+                if digest.hexdigest() != previous.get('results_sha256') or last != previous.get('last_timestamp_us'):
+                    raise ValueError('previously evaluated replay results have changed')
+                report['previous_frames'] = start
+                report['previous_results_sha256'] = digest.hexdigest()
+            report['evaluated_frames'] = report['frames'] - start
             report.update(kind='sqlite_replay', partial_requested=self.allow_partial,
                           max_state_mib=self.max_state_mib, timeout_seconds=self.timeout,
                           reader_sha256=digest_file(Path(__file__), check))
-            yield _MeasurementRows(connection, check), report
+            yield _MeasurementRows(connection, check, report, start), report
             check()
 
 

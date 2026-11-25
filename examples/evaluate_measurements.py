@@ -19,6 +19,8 @@ import time
 
 STATE_INPUT_VERSION = 1
 CHECKPOINT_INPUT_VERSION = 1
+STATE_CONTINUATION_VERSION = 1
+REFERENCE_PREFIX_DOMAIN = b'moonground/reference-prefix/v1\0'
 
 
 class RawNumber(str):
@@ -70,7 +72,7 @@ def resume_input(path):
         encoded = exact_json(checkpoint).encode('utf-8')
         if len(encoded) > 16384:
             raise ValueError('evaluation checkpoint exceeds 16384 bytes')
-        return encoded,session_id,limits,hashlib.sha256(raw).hexdigest()
+        return encoded,session_id,limits,hashlib.sha256(raw).hexdigest(),document
     except RecursionError as error:
         raise ValueError('resume JSON nesting is too deep') from error
 
@@ -123,6 +125,108 @@ def records(stream, label, digest, limit):
         # Preserve raw numeric tokens for MoonGround's strict parser, including
         # nonzero tokens that underflow binary64. Only timestamps route the join.
         yield clock, value, raw.rstrip(b'\r\n')
+
+
+def unsigned_token(value, label):
+    if not isinstance(value, RawNumber) or not value.isascii() or not value.isdecimal() or len(value) > 19 or str(int(value)) != value or int(value) > 9223372036854775807:
+        raise ValueError('invalid previous ' + label)
+    return int(value)
+
+
+def clock_string(value):
+    if value is None:
+        return None
+    if type(value) is not str or not value.isascii() or not value.isdecimal() or len(value) > 19 or str(int(value)) != value or int(value) > 9223372036854775807:
+        raise ValueError('invalid previous timestamp')
+    return int(value)
+
+
+def checked_digest(value):
+    if type(value) is not str or len(value) != 64 or any(c not in '0123456789abcdef' for c in value):
+        raise ValueError('invalid previous prefix digest')
+    return value
+
+
+def state_continuation(document):
+    source, cursor = document.get('measurement_source'), document.get('reference_cursor')
+    if document.get('state_scope') != 'through_committed_measurements' or not isinstance(source, dict) or not isinstance(cursor, dict):
+        raise ValueError('state continuation needs a previous --committed-only report')
+    if source.get('kind') != 'sqlite_replay' or unsigned_token(cursor.get('version'), 'reference cursor version') != 1:
+        raise ValueError('unsupported state continuation report')
+    previous = {name:unsigned_token(source.get(name), 'replay '+name)
+                for name in ['frames', 'input_offset', 'input_bytes']}
+    previous.update({name:checked_digest(source.get(name))
+                     for name in ['results_sha256', 'input_sha256', 'binary_sha256']})
+    previous['complete'] = source.get('complete')
+    through = clock_string(source.get('last_timestamp_us'))
+    previous['last_timestamp_us'] = None if through is None else str(through)
+    if type(previous['complete']) is not bool or previous['input_offset'] > previous['input_bytes'] or (
+            previous['complete'] and previous['input_offset'] != previous['input_bytes']) or (
+            (previous['frames'] == 0) != (through is None)):
+        raise ValueError('invalid previous replay progress')
+    if clock_string(cursor.get('through_timestamp_us')) != through or clock_string(document['resume'].get('last_timestamp_us')) != through:
+        raise ValueError('previous checkpoint and committed watermark disagree')
+    count = cursor.get('prefix_records')
+    if type(count) is not str or not count.isascii() or not count.isdecimal() or len(count) > 19 or str(int(count)) != count or int(count) > 9223372036854775807:
+        raise ValueError('invalid previous reference record count')
+    if through is None and int(count) != 0:
+        raise ValueError('empty replay has a nonempty reference prefix')
+    return previous, dict(prefix_records=int(count), record_prefix_sha256=checked_digest(cursor.get('record_prefix_sha256')),
+                          through_timestamp_us=through)
+
+
+class _ReferenceWindow:
+    """Scan a reference log, checking history and yielding only the new window."""
+    def __init__(self, stream, through, previous, limit, check):
+        self.digest = hashlib.sha256()
+        self.rows = records(stream, 'reference', self.digest, limit)
+        self.prefix = hashlib.sha256(REFERENCE_PREFIX_DOMAIN)
+        self.through = clock_string(through)
+        self.after = previous['through_timestamp_us'] if previous else None
+        self.previous = previous
+        self.old_count = previous['prefix_records'] if previous else 0
+        self.total = self.consumed = self.evaluated = 0
+        self.pending = b''
+        self.check = check
+        if previous and self.old_count == 0 and self.prefix.hexdigest() != previous['record_prefix_sha256']:
+            raise ValueError('previously evaluated reference prefix has changed')
+
+    def readline(self, size=-1):
+        if size == 0:
+            return b''
+        while not self.pending:
+            self.check()
+            row = next(self.rows, None)
+            if row is None:
+                if self.total < self.old_count:
+                    raise ValueError('previously evaluated reference records were removed')
+                return b''
+            clock, _, payload = row
+            self.total += 1
+            if self.total <= self.old_count:
+                if self.after is None or clock > self.after:
+                    raise ValueError('previous reference prefix exceeds its watermark')
+            elif self.after is not None and clock <= self.after:
+                raise ValueError('reference backfill overlaps the previous committed watermark')
+            if self.through is not None and clock <= self.through:
+                self.prefix.update(len(payload).to_bytes(8, 'big'))
+                self.prefix.update(payload)
+                self.consumed += 1
+            if self.previous and self.total == self.old_count and self.prefix.hexdigest() != self.previous['record_prefix_sha256']:
+                raise ValueError('previously evaluated reference prefix has changed')
+            if self.total > self.old_count and self.through is not None and clock <= self.through:
+                self.evaluated += 1
+                self.pending = payload + b'\n'
+        count = len(self.pending) if size < 0 else min(size, len(self.pending))
+        data, self.pending = self.pending[:count], self.pending[count:]
+        return data
+
+    def report(self):
+        return dict(version=1, prefix_records=str(self.consumed), record_prefix_sha256=self.prefix.hexdigest(),
+                    through_timestamp_us=None if self.through is None else str(self.through),
+                    after_timestamp_us=None if self.after is None else str(self.after),
+                    total_records=str(self.total), evaluated_records=str(self.evaluated),
+                    deferred_records=str(self.total-self.consumed), file_sha256=self.digest.hexdigest())
 
 
 def empty_measurement(session_id, clock):
@@ -185,7 +289,8 @@ def measurement_stream(args, measurement_source):
         with args.measurements.open('rb') as stream:
             yield stream, None
     else:
-        with measurement_source.open() as snapshot:
+        options = {'previous':args.previous_source} if hasattr(args, 'previous_source') else {}
+        with measurement_source.open(**options) as snapshot:
             yield snapshot
 
 
@@ -238,11 +343,17 @@ def evaluate(args, measurement_source=None):
         inputs.append(resume_path)
     check_destination(args.output, inputs)
     resume_hash = None
-    checkpoint_mode = getattr(args,'checkpoint',False) or resume_path is not None
+    committed_only = getattr(args, 'committed_only', False)
+    if committed_only and measurement_source is None:
+        raise ValueError('--committed-only requires --state')
+    checkpoint_mode = getattr(args,'checkpoint',False) or resume_path is not None or committed_only
+    previous_cursor = None
     if resume_path is not None:
-        if measurement_source is not None:
-            raise ValueError('--resume needs subsequent log chunks, not a complete replay database')
-        raw_checkpoint,session_id,limits,resume_hash = resume_input(resume_path)
+        if measurement_source is not None and not committed_only:
+            raise ValueError('--resume with --state requires --committed-only')
+        raw_checkpoint,session_id,limits,resume_hash,document = resume_input(resume_path)
+        if committed_only:
+            args.previous_source, previous_cursor = state_continuation(document)
         if args.session_id is not None and args.session_id != session_id:
             raise ValueError('resume session_id differs from the requested session')
         args.session_id = session_id
@@ -262,14 +373,20 @@ def evaluate(args, measurement_source=None):
         requirements = compact_requirements(raw_requirements)
     binary_hash = digest_file(args.binary)
     started = time.perf_counter()
+    reference_window = None
     with tempfile.TemporaryFile('w+b') as aligned, tempfile.TemporaryFile('w+b') as output:
         with measurement_stream(args, measurement_source) as (measured_file, source_info), args.references.open('rb') as reference_file:
             if source_info is not None and args.output is not None and args.output.exists():
                 if digest_file(args.output) in {source_info['input_sha256'], source_info['binary_sha256']}:
                     raise ValueError('output contains the replay input or producing executable')
+            selected_reference = reference_file
+            if committed_only:
+                reference_window = _ReferenceWindow(reference_file, source_info['last_timestamp_us'],
+                                                    previous_cursor, args.max_line_bytes, measured_file.check)
+                selected_reference = reference_window
             session_id, join_counts, measured_hash, reference_hash = align(
-                measured_file, reference_file, aligned, args, requirements)
-            if source_info is not None and measured_hash != source_info['results_sha256']:
+                measured_file, selected_reference, aligned, args, requirements)
+            if source_info is not None and measured_hash != source_info['evaluated_results_sha256']:
                 raise ValueError('measurement stream differs from the checked replay snapshot')
         # Release the read transaction and replay lock before native calculation.
         aligned.seek(0)
@@ -302,6 +419,9 @@ def evaluate(args, measurement_source=None):
                 elapsed_seconds=time.perf_counter() - started)
     if source_info is not None:
         result['measurement_source'] = source_info
+    if reference_window is not None:
+        result['state_scope'] = 'through_committed_measurements'
+        result['reference_cursor'] = reference_window.report()
     if checkpoint_mode:
         result['resume'] = next_checkpoint
         result['alignment_scope'] = 'current_inputs'
@@ -338,6 +458,7 @@ def main(argv=None, measurement_source=None):
     parser.add_argument('--requirements', type=Path,
                         help='explicit position_m/speed_mps JSON requirements; unmet checks return exit status 3')
     parser.add_argument('--checkpoint',action='store_true',help='include complete evaluation continuation state in the report')
+    parser.add_argument('--committed-only', action='store_true',help='evaluate references through the committed replay watermark and save a continuation cursor')
     parser.add_argument('--resume',type=Path,help='continue from a checkpoint report using later, disjoint log chunks')
     parser.add_argument('--session-id')
     parser.add_argument('--output', type=Path)

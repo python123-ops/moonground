@@ -442,11 +442,11 @@ def default_prefix():
     return Path.home()/'.local/share/moonground'
 
 
-def job_module(root, capabilities=()):
+def job_module(root, capabilities=(), selected_only=False):
     state = selection(root)
     if state is None:
         raise ValueError('install a CLI release with durable replay support first')
-    for slot in [state['active'], state['previous']]:
+    for slot in ([state['active']] if selected_only else [state['active'], state['previous']]):
         if slot is None:
             continue
         value, path = installed(root, slot)
@@ -502,6 +502,7 @@ def main():
     evaluate.add_argument('--references', required=True)
     evaluate.add_argument('--requirements')
     evaluate.add_argument('--checkpoint',action='store_true')
+    evaluate.add_argument('--committed-only', action='store_true', help='evaluate through the committed replay watermark; permits checked state continuation')
     evaluate.add_argument('--resume')
     evaluate.add_argument('--session-id')
     evaluate.add_argument('--output')
@@ -540,8 +541,10 @@ def main():
         if args.command == 'evaluate':
             if args.allow_partial and args.state is None:
                 raise ValueError('--allow-partial requires --state')
-            if args.resume is not None and args.state is not None:
-                raise ValueError('--resume needs later log chunks, not --state')
+            if args.committed_only and args.state is None:
+                raise ValueError('--committed-only requires --state')
+            if args.resume is not None and args.state is not None and not args.committed_only:
+                raise ValueError('--resume with --state requires --committed-only')
             if args.output is not None:
                 destination = Path(args.output).absolute()
                 destination = destination.parent.resolve()/destination.name
@@ -553,12 +556,13 @@ def main():
             value, path = installed(root, state['active'])
             if args.requirements is not None and 'evaluate_measurements.py' not in value['files']:
                 raise ValueError('select a CLI release with measurement acceptance support')
-            checkpoint_mode = args.checkpoint or args.resume is not None
-            capabilities = ('CHECKPOINT_INPUT_VERSION',) if checkpoint_mode else ('STATE_INPUT_VERSION',) if args.state is not None else ()
+            checkpoint_mode = args.checkpoint or args.resume is not None or args.committed_only
+            capabilities = ('STATE_CONTINUATION_VERSION',) if args.committed_only else ('CHECKPOINT_INPUT_VERSION',) if checkpoint_mode else ('STATE_INPUT_VERSION',) if args.state is not None else ()
             module = evaluation_module(root, capabilities, selected_only=checkpoint_mode)
             measurement_source = None
             if args.state is not None:
-                support = job_module(root, ('MeasurementSource',))
+                support = job_module(root, ('MeasurementSource', 'STATE_CONTINUATION_VERSION') if args.committed_only else ('MeasurementSource',),
+                                     selected_only=args.committed_only)
                 measurement_source = support.MeasurementSource(Path(args.state), args.allow_partial,
                                                                args.max_state_mib, args.state_timeout)
             options = ['--binary', str(path/value['executable'])]
@@ -567,6 +571,8 @@ def main():
                     options += ['--'+name.replace('_','-'), str(getattr(args, name))]
             if args.checkpoint:
                 options += ['--checkpoint']
+            if args.committed_only:
+                options += ['--committed-only']
             return module.main(options, measurement_source=measurement_source) if args.state is not None else module.main(options)
         if args.command in ('replay', 'job-status', 'job-export', 'job-verify', 'job-backup', 'job-restore'):
             capabilities = ('verify', 'backup', 'restore') if args.command in ('job-verify', 'job-backup', 'job-restore') else ()
