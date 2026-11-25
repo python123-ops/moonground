@@ -20,6 +20,7 @@ import time
 STATE_INPUT_VERSION = 1
 CHECKPOINT_INPUT_VERSION = 1
 STATE_CONTINUATION_VERSION = 1
+EVALUATION_STORE_VERSION = 1
 REFERENCE_PREFIX_DOMAIN = b'moonground/reference-prefix/v1\0'
 
 
@@ -43,6 +44,10 @@ def exact_json(value):
 def resume_input(path):
     with path.open('rb') as stream:
         raw = stream.read(1048577)
+    return resume_bytes(raw)
+
+
+def resume_bytes(raw):
     if len(raw) > 1048576:
         raise ValueError('resume file exceeds 1048576 bytes')
     try:
@@ -331,7 +336,7 @@ def align(measured_file, reference_file, aligned, args, requirements):
     return session_id, join_counts, measured_hash.hexdigest(), reference_hash.hexdigest()
 
 
-def evaluate(args, measurement_source=None):
+def evaluate(args, measurement_source=None, resume_content=None):
     args = argparse.Namespace(**vars(args))
     requirements_path = getattr(args, 'requirements', None)
     inputs = [args.references, args.binary, Path(__file__)]
@@ -346,12 +351,13 @@ def evaluate(args, measurement_source=None):
     committed_only = getattr(args, 'committed_only', False)
     if committed_only and measurement_source is None:
         raise ValueError('--committed-only requires --state')
-    checkpoint_mode = getattr(args,'checkpoint',False) or resume_path is not None or committed_only
+    resuming = resume_path is not None or resume_content is not None
+    checkpoint_mode = getattr(args,'checkpoint',False) or resuming or committed_only
     previous_cursor = None
-    if resume_path is not None:
+    if resuming:
         if measurement_source is not None and not committed_only:
             raise ValueError('--resume with --state requires --committed-only')
-        raw_checkpoint,session_id,limits,resume_hash,document = resume_input(resume_path)
+        raw_checkpoint,session_id,limits,resume_hash,document = resume_input(resume_path) if resume_path is not None else resume_bytes(resume_content)
         if committed_only:
             args.previous_source, previous_cursor = state_continuation(document)
         if args.session_id is not None and args.session_id != session_id:
@@ -450,6 +456,32 @@ def save_atomic(path, content):
             temporary.unlink()
 
 
+def report_bytes(result):
+    return (json.dumps(result, ensure_ascii=True, indent=2, allow_nan=False)+'\n').encode('utf-8')
+
+
+def evaluate_stored(args, measurement_source):
+    if measurement_source is None or not args.committed_only or args.resume is not None:
+        raise ValueError('--evaluation-state requires --state --committed-only and replaces --resume')
+    if not hasattr(measurement_source, 'evaluation_store'):
+        raise ValueError('select a release with durable evaluation state support')
+    store = measurement_source.evaluation_store(args.evaluation_state,
+                                               args.max_evaluation_mib if args.max_evaluation_mib is not None else 256,
+                                               args.evaluation_timeout if args.evaluation_timeout is not None else 60.0)
+    protected = [args.binary, args.references, Path(__file__)]+measurement_source.protected_paths
+    protected += [path for path in [args.requirements, args.output] if path is not None]
+    for destination in store.protected_paths:
+        check_destination(destination, protected)
+    check_destination(args.output, store.protected_paths)
+    with store.open() as writer:
+        number, parent, previous = writer.head
+        result = evaluate(args, measurement_source, resume_content=previous)
+        result['evaluation_state'] = dict(version=1, sequence=str(number+1), parent_sha256=parent)
+        content = report_bytes(result)
+        writer.append(content)
+    return result, content
+
+
 def main(argv=None, measurement_source=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', type=Path, required=True)
@@ -460,6 +492,9 @@ def main(argv=None, measurement_source=None):
     parser.add_argument('--checkpoint',action='store_true',help='include complete evaluation continuation state in the report')
     parser.add_argument('--committed-only', action='store_true',help='evaluate references through the committed replay watermark and save a continuation cursor')
     parser.add_argument('--resume',type=Path,help='continue from a checkpoint report using later, disjoint log chunks')
+    parser.add_argument('--evaluation-state', type=Path, help='atomically store reports and resume from the latest committed evaluation')
+    parser.add_argument('--max-evaluation-mib', type=int)
+    parser.add_argument('--evaluation-timeout', type=float)
     parser.add_argument('--session-id')
     parser.add_argument('--output', type=Path)
     parser.add_argument('--max-tracks', type=int)
@@ -473,8 +508,13 @@ def main(argv=None, measurement_source=None):
             1 <= args.max_line_bytes <= 16777216 and 0.0 < args.timeout < float('inf')):
         parser.error('invalid evaluation capacity or timeout')
     try:
-        result = evaluate(args, measurement_source)
-        content = (json.dumps(result, ensure_ascii=True, indent=2, allow_nan=False) + '\n').encode('utf-8')
+        if args.evaluation_state is not None:
+            result, content = evaluate_stored(args, measurement_source)
+        else:
+            if args.max_evaluation_mib is not None or args.evaluation_timeout is not None:
+                raise ValueError('evaluation state budgets require --evaluation-state')
+            result = evaluate(args, measurement_source)
+            content = report_bytes(result)
         if args.output:
             save_atomic(args.output, content)
         else:

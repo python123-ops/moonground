@@ -480,6 +480,15 @@ def evaluation_module(root, capabilities=(), selected_only=False):
     raise ValueError('installed releases do not contain the requested log evaluation support')
 
 
+def check_evaluation_destination(root, value):
+    destination = Path(value).absolute()
+    destination = destination.parent.resolve()/destination.name
+    if destination in [root/'current.json', root/'.install.lock', root/'versions'] or root/'versions' in destination.parents or (
+            destination == Path(__file__).resolve()) or (
+            destination.exists() and os.path.samefile(destination, Path(__file__))):
+        raise ValueError('evaluation output must be separate from installed versions, installation metadata and the manager')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--prefix', type=Path, default=default_prefix())
@@ -504,12 +513,24 @@ def main():
     evaluate.add_argument('--checkpoint',action='store_true')
     evaluate.add_argument('--committed-only', action='store_true', help='evaluate through the committed replay watermark; permits checked state continuation')
     evaluate.add_argument('--resume')
+    evaluate.add_argument('--evaluation-state')
+    evaluate.add_argument('--max-evaluation-mib', type=int)
+    evaluate.add_argument('--evaluation-timeout', type=float)
     evaluate.add_argument('--session-id')
     evaluate.add_argument('--output')
     evaluate.add_argument('--max-tracks', type=int)
     evaluate.add_argument('--max-samples', type=int)
     evaluate.add_argument('--max-line-bytes', type=int, default=1048576)
     evaluate.add_argument('--timeout', type=float, default=300.0)
+    for name in ['evaluation-status', 'evaluation-export']:
+        operation = commands.add_parser(name)
+        operation.add_argument('--evaluation-state', required=True)
+        operation.add_argument('--max-evaluation-mib', type=int, default=256)
+        operation.add_argument('--evaluation-timeout', type=float, default=60.0)
+        if name == 'evaluation-export':
+            operation.add_argument('--output', required=True)
+            operation.add_argument('--sequence', type=int)
+            operation.add_argument('--replace-existing', action='store_true')
     replay = commands.add_parser('replay', help='persist measurement results and checkpoints together')
     replay.add_argument('--input', required=True)
     replay.add_argument('--state', required=True)
@@ -545,11 +566,15 @@ def main():
                 raise ValueError('--committed-only requires --state')
             if args.resume is not None and args.state is not None and not args.committed_only:
                 raise ValueError('--resume with --state requires --committed-only')
+            if args.evaluation_state is not None and (args.state is None or not args.committed_only or args.resume is not None):
+                raise ValueError('--evaluation-state requires --state --committed-only and replaces --resume')
+            if args.evaluation_state is None and (args.max_evaluation_mib is not None or args.evaluation_timeout is not None):
+                raise ValueError('evaluation state budgets require --evaluation-state')
             if args.output is not None:
-                destination = Path(args.output).absolute()
-                destination = destination.parent.resolve()/destination.name
-                if destination in [root/'current.json', root/'.install.lock', root/'versions'] or root/'versions' in destination.parents:
-                    raise ValueError('evaluation output must be separate from installed versions and installation metadata')
+                check_evaluation_destination(root, args.output)
+            if args.evaluation_state is not None:
+                for suffix in ['', '-journal', '-wal', '-shm', '.lock']:
+                    check_evaluation_destination(root, args.evaluation_state+suffix)
             state = selection(root)
             if state is None:
                 raise ValueError('install a CLI release before evaluating logs')
@@ -557,11 +582,11 @@ def main():
             if args.requirements is not None and 'evaluate_measurements.py' not in value['files']:
                 raise ValueError('select a CLI release with measurement acceptance support')
             checkpoint_mode = args.checkpoint or args.resume is not None or args.committed_only
-            capabilities = ('STATE_CONTINUATION_VERSION',) if args.committed_only else ('CHECKPOINT_INPUT_VERSION',) if checkpoint_mode else ('STATE_INPUT_VERSION',) if args.state is not None else ()
+            capabilities = ('EVALUATION_STORE_VERSION',) if args.evaluation_state is not None else ('STATE_CONTINUATION_VERSION',) if args.committed_only else ('CHECKPOINT_INPUT_VERSION',) if checkpoint_mode else ('STATE_INPUT_VERSION',) if args.state is not None else ()
             module = evaluation_module(root, capabilities, selected_only=checkpoint_mode)
             measurement_source = None
             if args.state is not None:
-                support = job_module(root, ('MeasurementSource', 'STATE_CONTINUATION_VERSION') if args.committed_only else ('MeasurementSource',),
+                support = job_module(root, ('MeasurementSource', 'EVALUATION_STORE_VERSION') if args.evaluation_state is not None else ('MeasurementSource', 'STATE_CONTINUATION_VERSION') if args.committed_only else ('MeasurementSource',),
                                      selected_only=args.committed_only)
                 measurement_source = support.MeasurementSource(Path(args.state), args.allow_partial,
                                                                args.max_state_mib, args.state_timeout)
@@ -573,7 +598,24 @@ def main():
                 options += ['--checkpoint']
             if args.committed_only:
                 options += ['--committed-only']
+            if args.evaluation_state is not None:
+                for name in ['evaluation_state', 'max_evaluation_mib', 'evaluation_timeout']:
+                    if getattr(args, name) is not None:
+                        options += ['--'+name.replace('_', '-'), str(getattr(args, name))]
             return module.main(options, measurement_source=measurement_source) if args.state is not None else module.main(options)
+        if args.command in ('evaluation-status', 'evaluation-export'):
+            if args.command == 'evaluation-export':
+                check_evaluation_destination(root, args.output)
+            module = job_module(root, ('EvaluationStore', 'EVALUATION_STORE_VERSION'))
+            options = [args.command, '--evaluation-state', args.evaluation_state,
+                       '--max-evaluation-mib', str(args.max_evaluation_mib), '--evaluation-timeout', str(args.evaluation_timeout)]
+            if args.command == 'evaluation-export':
+                options += ['--output', args.output]
+                if args.sequence is not None:
+                    options += ['--sequence', str(args.sequence)]
+                if args.replace_existing:
+                    options += ['--replace-existing']
+            return module.main(options)
         if args.command in ('replay', 'job-status', 'job-export', 'job-verify', 'job-backup', 'job-restore'):
             capabilities = ('verify', 'backup', 'restore') if args.command in ('job-verify', 'job-backup', 'job-restore') else ()
             module = job_module(root, capabilities)

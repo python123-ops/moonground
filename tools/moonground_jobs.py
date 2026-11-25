@@ -20,6 +20,10 @@ MAX_LINE = 16 * 1024 * 1024
 MAX_OUTPUT_LINE = 32 * 1024 * 1024
 MAX_BATCH_OUTPUT = 128 * 1024 * 1024
 STATE_CONTINUATION_VERSION = 1
+EVALUATION_STORE_VERSION = 1
+EVALUATION_APPLICATION_ID = 0x4D474531
+MAX_EVALUATION_REPORT = 1048576
+EVALUATION_TABLE = 'CREATE TABLE evaluations (sequence INTEGER PRIMARY KEY, parent_sha256 TEXT, sha256 TEXT NOT NULL, document BLOB NOT NULL)'
 
 
 def digest_file(path, check=None):
@@ -465,6 +469,9 @@ class MeasurementSource:
             self.path.with_name(self.path.name + suffix)
             for suffix in ['-journal', '-wal', '-shm', '.lock']]
 
+    def evaluation_store(self, path, max_state_mib=256, timeout=60.0):
+        return EvaluationStore(path, max_state_mib, timeout)
+
     @contextlib.contextmanager
     def open(self, previous=None):
         check = _deadline(self.timeout, self.max_state_mib)
@@ -600,6 +607,282 @@ def restore(backup_path, state_path, sha256, max_state_mib=256, timeout=60.0):
     return _snapshot(backup_path, state_path, max_state_mib, timeout, sha256.lower())
 
 
+class _EvaluationNumber(str):
+    """Retain numeric tokens while inspecting stored reports."""
+
+
+def _evaluation_number(token):
+    value = float(token)
+    nonzero = any(c in '123456789' for c in token.lower().split('e')[0])
+    if not math.isfinite(value) or (value == 0.0 and nonzero):
+        raise ValueError('stored evaluation contains a nonfinite or underflowed number')
+    return _EvaluationNumber(token)
+
+
+def _evaluation_document(payload, sequence, parent):
+    if not isinstance(payload, bytes) or len(payload) > MAX_EVALUATION_REPORT:
+        raise ValueError('evaluation report exceeds 1048576 bytes or is not a BLOB')
+    def fields(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('duplicate evaluation report field: ' + key)
+            result[key] = value
+        return result
+    def invalid(value):
+        raise ValueError('invalid evaluation JSON constant: ' + value)
+    try:
+        document = json.loads(payload.decode('utf-8'), object_pairs_hook=fields,
+                              parse_int=_evaluation_number, parse_float=_evaluation_number, parse_constant=invalid)
+        stack = [(document, 0)]
+        while stack:
+            value, depth = stack.pop()
+            if depth > 32:
+                raise ValueError('evaluation report exceeds nesting depth 32')
+            if isinstance(value, dict):
+                stack.extend((child, depth+1) for child in value.values())
+            elif isinstance(value, list):
+                stack.extend((child, depth+1) for child in value)
+    except (UnicodeError, RecursionError) as error:
+        raise ValueError('invalid evaluation report JSON') from error
+    if not isinstance(document, dict) or document.get('schema_version') != '0.1.0' or document.get('kind') not in (
+            'measurement_evaluation_run', 'measurement_acceptance_run') or document.get('state_scope') != 'through_committed_measurements':
+        raise ValueError('evaluation state requires a committed-only report')
+    metadata = document.get('evaluation_state')
+    if not isinstance(metadata, dict) or set(metadata) != {'version', 'sequence', 'parent_sha256'} or (
+            type(metadata['version']) is not _EvaluationNumber or metadata['version'] != '1') or (
+            type(metadata['sequence']) is not str or metadata['sequence'] != str(sequence)) or metadata['parent_sha256'] != parent:
+        raise ValueError('evaluation report generation or parent differs from its record')
+    inputs = document.get('inputs')
+    if not isinstance(inputs, dict) or inputs.get('resume_sha256') != parent:
+        raise ValueError('evaluation resume digest differs from its parent record')
+    source, cursor, checkpoint = (document.get(name) for name in ['measurement_source', 'reference_cursor', 'resume'])
+    if not isinstance(source, dict) or source.get('kind') != 'sqlite_replay' or not isinstance(cursor, dict) or not isinstance(checkpoint, dict):
+        raise ValueError('evaluation state has no replay snapshot, reference cursor or checkpoint')
+    for name in ['frames', 'input_offset', 'input_bytes']:
+        token = source.get(name)
+        if type(token) is not _EvaluationNumber or not token.isascii() or not token.isdecimal() or len(token) > 19 or str(int(token)) != token or int(token) > 9223372036854775807:
+            raise ValueError('invalid stored evaluation counter: ' + name)
+    for name in ['input_sha256', 'binary_sha256', 'results_sha256']:
+        token = source.get(name)
+        if type(token) is not str or len(token) != 64 or any(c not in '0123456789abcdef' for c in token):
+            raise ValueError('invalid stored evaluation source digest')
+    clock = source.get('last_timestamp_us')
+    if clock is not None and (type(clock) is not str or not clock.isascii() or not clock.isdecimal() or len(clock) > 19 or str(int(clock)) != clock or int(clock) > 9223372036854775807):
+        raise ValueError('invalid stored evaluation timestamp')
+    if (int(source['frames']) == 0) != (clock is None) or type(source.get('complete')) is not bool or (
+            int(source['input_offset']) > int(source['input_bytes'])) or (
+            source['complete'] and source['input_offset'] != source['input_bytes']):
+        raise ValueError('invalid stored evaluation progress')
+    if type(cursor.get('through_timestamp_us')) is not type(clock) or type(checkpoint.get('last_timestamp_us')) is not type(clock) or cursor.get('through_timestamp_us') != clock or checkpoint.get('last_timestamp_us') != clock:
+        raise ValueError('stored evaluation watermarks disagree')
+    return document
+
+
+@contextlib.contextmanager
+def _evaluation_errors():
+    try:
+        yield
+    except sqlite3.Error as error:
+        raise ValueError('cannot access evaluation state: ' + str(error)) from error
+
+
+def _evaluation_connect(path, readonly=False):
+    regular(path)
+    connection = sqlite3.connect(path.as_uri()+('?mode=ro' if readonly else '?mode=rw'),
+                                uri=True, isolation_level=None, timeout=1.0)
+    try:
+        if connection.execute('PRAGMA application_id').fetchone()[0] != EVALUATION_APPLICATION_ID or connection.execute('PRAGMA user_version').fetchone()[0] != 1:
+            raise ValueError('not a supported MoonGround evaluation state database')
+        return connection
+    except BaseException:
+        connection.close()
+        raise
+
+
+def _evaluation_initialize(path):
+    # Publish a fully initialized, closed database. A crash before publication
+    # cannot leave an empty file at the requested state path.
+    temporary = None
+    try:
+        if any(os.path.lexists(str(path.with_name(path.name+suffix))) for suffix in ['-journal', '-wal', '-shm']):
+            raise ValueError('new evaluation state has existing SQLite journal files')
+        with tempfile.NamedTemporaryFile(dir=str(path.parent), prefix='.moonground-evaluation-', delete=False) as stream:
+            temporary = Path(stream.name)
+        with contextlib.closing(sqlite3.connect(str(temporary), isolation_level=None)) as connection:
+            connection.execute('PRAGMA synchronous=EXTRA')
+            connection.execute('BEGIN IMMEDIATE')
+            connection.execute('PRAGMA application_id='+str(EVALUATION_APPLICATION_ID))
+            connection.execute('PRAGMA user_version=1')
+            connection.execute(EVALUATION_TABLE)
+            connection.execute('COMMIT')
+        with temporary.open('r+b') as stream:
+            os.fsync(stream.fileno())
+        os.link(str(temporary), str(path))
+        _sync_directory(path.parent)
+    finally:
+        if temporary is not None:
+            for suffix in ['', '-journal', '-wal', '-shm']:
+                item = temporary.with_name(temporary.name+suffix)
+                if item.exists():
+                    item.unlink()
+
+
+def _evaluation_progress(previous, source):
+    if previous is not None and (any(source[name] != previous[name]
+            for name in ['input_sha256', 'input_bytes', 'binary_sha256']) or
+            int(source['frames']) < int(previous['frames']) or
+            int(source['input_offset']) < int(previous['input_offset']) or
+            (previous['complete'] and (not source['complete'] or source['frames'] != previous['frames']))):
+        raise ValueError('evaluation history changed its replay identity or moved backwards')
+
+
+def _evaluation_head(connection, check, max_state_mib):
+    check()
+    def interrupted():
+        check()
+        return 0
+    connection.set_progress_handler(interrupted, 1000)
+    if connection.execute('SELECT type,name,sql FROM sqlite_master ORDER BY name LIMIT 2').fetchall() != [('table', 'evaluations', EVALUATION_TABLE)]:
+        raise ValueError('unsupported evaluation state structure')
+    if connection.execute('PRAGMA page_count').fetchone()[0] * connection.execute('PRAGMA page_size').fetchone()[0] > max_state_mib*1024*1024:
+        raise ValueError('evaluation state exceeds its database budget')
+    if connection.execute('PRAGMA integrity_check(1)').fetchall() != [('ok',)]:
+        raise ValueError('evaluation state failed its integrity check')
+    number, previous, latest, previous_source = 0, None, None, None
+    with contextlib.closing(connection.execute('SELECT sequence,parent_sha256,sha256,document FROM evaluations ORDER BY sequence')) as rows:
+        for sequence, parent, digest, payload in rows:
+            check()
+            number += 1
+            if sequence != number or parent != previous or not isinstance(payload, bytes) or hashlib.sha256(payload).hexdigest() != digest:
+                raise ValueError('evaluation state record sequence, parent or digest differs')
+            document = _evaluation_document(payload, sequence, parent)
+            source = document['measurement_source']
+            _evaluation_progress(previous_source, source)
+            previous_source = source
+            previous, latest = digest, payload
+    check()
+    return number, previous, latest
+
+
+class _EvaluationWriter:
+    def __init__(self, connection, head, max_state_mib, timeout):
+        self.connection, self.head = connection, head
+        self.max_state_mib, self.timeout = max_state_mib, timeout
+
+    def append(self, payload):
+        check = _deadline(self.timeout, self.max_state_mib)
+        number, previous, raw = self.head
+        if number >= 9223372036854775807:
+            raise ValueError('evaluation state generation is exhausted')
+        document = _evaluation_document(payload, number+1, previous)
+        if raw is not None:
+            saved = json.loads(raw, parse_int=_EvaluationNumber, parse_float=_EvaluationNumber)
+            _evaluation_progress(saved['measurement_source'], document['measurement_source'])
+        digest = hashlib.sha256(payload).hexdigest()
+        self.connection.execute('BEGIN IMMEDIATE')
+        try:
+            if _evaluation_head(self.connection, check, self.max_state_mib) != self.head:
+                raise ValueError('evaluation state changed during calculation')
+            self.connection.execute('INSERT INTO evaluations(sequence,parent_sha256,sha256,document) VALUES(?,?,?,?)',
+                                    (number+1, previous, digest, sqlite3.Binary(payload)))
+            check()
+            self.connection.execute('COMMIT')
+        except BaseException:
+            if self.connection.in_transaction:
+                self.connection.execute('ROLLBACK')
+            raise
+        finally:
+            self.connection.set_progress_handler(None, 0)
+        self.head = number+1, digest, payload
+        return digest
+
+
+class EvaluationStore:
+    """Persist complete evaluation reports independently of the replay database."""
+    def __init__(self, path, max_state_mib=256, timeout=60.0):
+        self.path = _file_path(path)
+        self.max_state_mib, self.timeout = max_state_mib, timeout
+        self.protected_paths = [self.path]+[self.path.with_name(self.path.name+suffix)
+                                           for suffix in ['-journal', '-wal', '-shm', '.lock']]
+
+    @contextlib.contextmanager
+    def open(self):
+        check = _deadline(self.timeout, self.max_state_mib)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with _evaluation_errors(), state_lock(self.path):
+            if not self.path.exists():
+                _evaluation_initialize(self.path)
+            with contextlib.closing(_evaluation_connect(self.path)) as connection:
+                connection.execute('PRAGMA synchronous=EXTRA')
+                page_size = connection.execute('PRAGMA page_size').fetchone()[0]
+                connection.execute('PRAGMA max_page_count='+str(self.max_state_mib*1024*1024//page_size))
+                connection.execute('BEGIN')
+                head = _evaluation_head(connection, check, self.max_state_mib)
+                connection.execute('COMMIT')
+                connection.set_progress_handler(None, 0)
+                # No SQLite transaction is held during native calculation.
+                yield _EvaluationWriter(connection, head, self.max_state_mib, self.timeout)
+
+    def status(self):
+        return self._read()[0]
+
+    def _read(self, sequence=None):
+        check = _deadline(self.timeout, self.max_state_mib)
+        with _evaluation_errors(), state_lock(self.path), contextlib.closing(_evaluation_connect(self.path)) as connection:
+            connection.execute('BEGIN')
+            number, digest, payload = _evaluation_head(connection, check, self.max_state_mib)
+            parent = connection.execute('SELECT parent_sha256 FROM evaluations WHERE sequence=?', (number,)).fetchone() if payload else None
+            latest = _evaluation_document(payload, number, parent[0]) if payload else None
+            source = latest['measurement_source'] if latest else {}
+            summary = dict(kind='evaluation_state', version=1, integrity='ok', records=str(number),
+                           latest_sha256=digest, latest_frames=str(source['frames']) if latest else None,
+                           last_timestamp_us=source.get('last_timestamp_us'), complete=source.get('complete'),
+                           input_sha256=source.get('input_sha256'), binary_sha256=source.get('binary_sha256'),
+                           evaluation_binary_sha256=latest.get('binary_sha256') if latest else None,
+                           adapter_sha256=latest.get('adapter_sha256') if latest else None,
+                           logical_state_bytes=connection.execute('PRAGMA page_count').fetchone()[0]*connection.execute('PRAGMA page_size').fetchone()[0])
+            if sequence is not None:
+                if type(sequence) is not int or not 1 <= sequence <= number:
+                    raise ValueError('evaluation sequence is not present')
+                digest, payload = connection.execute('SELECT sha256,document FROM evaluations WHERE sequence=?', (sequence,)).fetchone()
+            elif not payload:
+                return summary, None, None
+            return summary, digest, payload
+
+    def export(self, destination, sequence=None, replace_existing=False):
+        destination = _file_path(destination)
+        if os.path.lexists(str(destination)):
+            regular(destination)
+            if not replace_existing:
+                raise ValueError('evaluation export destination already exists; use --replace-existing or a new path')
+        for protected in self.protected_paths+[Path(__file__)]:
+            if destination == protected or (destination.exists() and protected.exists() and os.path.samefile(destination, protected)):
+                raise ValueError('evaluation export overlaps protected state files')
+        summary, digest, payload = self._read(sequence)
+        if payload is None:
+            raise ValueError('evaluation state has no committed reports')
+        if destination.exists() and digest_file(destination) in {summary['input_sha256'], summary['binary_sha256'], summary['evaluation_binary_sha256'], summary['adapter_sha256']}:
+            raise ValueError('evaluation export contains the replay input or producing executable')
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile('wb', dir=str(destination.parent), prefix='.moonground-evaluation-export-', delete=False) as stream:
+                temporary = Path(stream.name)
+                stream.write(payload)
+                stream.flush()
+                os.fsync(stream.fileno())
+            if replace_existing:
+                os.replace(str(temporary), str(destination))
+            else:
+                os.link(str(temporary), str(destination))
+            _sync_directory(destination.parent)
+        finally:
+            if temporary is not None and temporary.exists():
+                temporary.unlink()
+        return dict(sequence=str(sequence) if sequence is not None else summary['records'], sha256=digest, bytes=len(payload))
+
+
 def add_state_arguments(parser):
     parser.add_argument('--state', type=Path, required=True)
     parser.add_argument('--max-state-mib', type=int, default=256)
@@ -616,6 +899,12 @@ def add_run_arguments(parser, binary=True):
     parser.add_argument('--max-state-mib', type=int, default=256)
     parser.add_argument('--timeout-seconds', type=float, default=60.0)
     parser.add_argument('--max-frames', type=int)
+
+
+def add_evaluation_state_arguments(parser):
+    parser.add_argument('--evaluation-state', type=Path, required=True)
+    parser.add_argument('--max-evaluation-mib', type=int, default=256)
+    parser.add_argument('--evaluation-timeout', type=float, default=60.0)
 
 
 def main(argv=None):
@@ -635,9 +924,18 @@ def main(argv=None):
     add_state_arguments(recovery)
     recovery.add_argument('--backup', type=Path, required=True)
     recovery.add_argument('--sha256', required=True)
+    add_evaluation_state_arguments(commands.add_parser('evaluation-status'))
+    evaluation_export = commands.add_parser('evaluation-export')
+    add_evaluation_state_arguments(evaluation_export)
+    evaluation_export.add_argument('--output', type=Path, required=True)
+    evaluation_export.add_argument('--sequence', type=int)
+    evaluation_export.add_argument('--replace-existing', action='store_true')
     args = parser.parse_args(argv)
     try:
-        if args.command == 'run':
+        if args.command in ('evaluation-status', 'evaluation-export'):
+            store = EvaluationStore(args.evaluation_state, args.max_evaluation_mib, args.evaluation_timeout)
+            value = store.status() if args.command == 'evaluation-status' else store.export(args.output, args.sequence, args.replace_existing)
+        elif args.command == 'run':
             value = replay(args.binary, args.input, args.state, args.batch_frames, args.batch_bytes,
                            args.max_state_mib, args.timeout_seconds, args.max_frames)
         elif args.command == 'status':
