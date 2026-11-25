@@ -522,7 +522,7 @@ def main():
     evaluate.add_argument('--max-samples', type=int)
     evaluate.add_argument('--max-line-bytes', type=int, default=1048576)
     evaluate.add_argument('--timeout', type=float, default=300.0)
-    for name in ['evaluation-status', 'evaluation-export']:
+    for name in ['evaluation-status', 'evaluation-export', 'evaluation-backup', 'evaluation-restore']:
         operation = commands.add_parser(name)
         operation.add_argument('--evaluation-state', required=True)
         operation.add_argument('--max-evaluation-mib', type=int, default=256)
@@ -531,6 +531,12 @@ def main():
             operation.add_argument('--output', required=True)
             operation.add_argument('--sequence', type=int)
             operation.add_argument('--replace-existing', action='store_true')
+        elif name == 'evaluation-backup':
+            operation.add_argument('--output', required=True)
+            operation.add_argument('--expected-report-sha256')
+        elif name == 'evaluation-restore':
+            operation.add_argument('--backup', required=True)
+            operation.add_argument('--sha256', required=True)
     replay = commands.add_parser('replay', help='persist measurement results and checkpoints together')
     replay.add_argument('--input', required=True)
     replay.add_argument('--state', required=True)
@@ -603,10 +609,14 @@ def main():
                     if getattr(args, name) is not None:
                         options += ['--'+name.replace('_', '-'), str(getattr(args, name))]
             return module.main(options, measurement_source=measurement_source) if args.state is not None else module.main(options)
-        if args.command in ('evaluation-status', 'evaluation-export'):
-            if args.command == 'evaluation-export':
+        if args.command in ('evaluation-status', 'evaluation-export', 'evaluation-backup', 'evaluation-restore'):
+            if args.command in ('evaluation-export', 'evaluation-backup'):
                 check_evaluation_destination(root, args.output)
-            module = job_module(root, ('EvaluationStore', 'EVALUATION_STORE_VERSION'))
+            elif args.command == 'evaluation-restore':
+                for suffix in ['', '-journal', '-wal', '-shm', '.lock']:
+                    check_evaluation_destination(root, args.evaluation_state+suffix)
+            capabilities = ('EvaluationStore', 'EVALUATION_SNAPSHOT_VERSION') if args.command in ('evaluation-backup', 'evaluation-restore') else ('EvaluationStore', 'EVALUATION_STORE_VERSION')
+            module = job_module(root, capabilities)
             options = [args.command, '--evaluation-state', args.evaluation_state,
                        '--max-evaluation-mib', str(args.max_evaluation_mib), '--evaluation-timeout', str(args.evaluation_timeout)]
             if args.command == 'evaluation-export':
@@ -615,6 +625,12 @@ def main():
                     options += ['--sequence', str(args.sequence)]
                 if args.replace_existing:
                     options += ['--replace-existing']
+            elif args.command == 'evaluation-backup':
+                options += ['--output', args.output]
+                if args.expected_report_sha256 is not None:
+                    options += ['--expected-report-sha256', args.expected_report_sha256]
+            elif args.command == 'evaluation-restore':
+                options += ['--backup', args.backup, '--sha256', args.sha256]
             return module.main(options)
         if args.command in ('replay', 'job-status', 'job-export', 'job-verify', 'job-backup', 'job-restore'):
             capabilities = ('verify', 'backup', 'restore') if args.command in ('job-verify', 'job-backup', 'job-restore') else ()

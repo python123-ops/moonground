@@ -21,6 +21,7 @@ MAX_OUTPUT_LINE = 32 * 1024 * 1024
 MAX_BATCH_OUTPUT = 128 * 1024 * 1024
 STATE_CONTINUATION_VERSION = 1
 EVALUATION_STORE_VERSION = 1
+EVALUATION_SNAPSHOT_VERSION = 1
 EVALUATION_APPLICATION_ID = 0x4D474531
 MAX_EVALUATION_REPORT = 1048576
 EVALUATION_TABLE = 'CREATE TABLE evaluations (sequence INTEGER PRIMARY KEY, parent_sha256 TEXT, sha256 TEXT NOT NULL, document BLOB NOT NULL)'
@@ -541,7 +542,7 @@ def _sync_directory(path):
             os.close(descriptor)
 
 
-def _snapshot(source_path, destination, max_state_mib, timeout, expected_digest=None):
+def _database_snapshot(source_path, destination, max_state_mib, timeout, connect, inspect, expected_digest=None):
     source_path, destination = _file_path(source_path), _file_path(destination)
     check = _deadline(timeout, max_state_mib)
     regular(source_path)
@@ -562,9 +563,9 @@ def _snapshot(source_path, destination, max_state_mib, timeout, expected_digest=
             if digest_file(source_path, check) != expected_digest:
                 raise ValueError('backup SHA-256 differs from the expected checksum')
         try:
-            with contextlib.closing(_connect(source_path, readonly=expected_digest is not None)) as source:
+            with contextlib.closing(connect(source_path, readonly=expected_digest is not None)) as source:
                 source.execute('BEGIN')
-                before = _inspect(source, check, max_state_mib)
+                before = inspect(source, check, max_state_mib)
                 with tempfile.NamedTemporaryFile(dir=str(destination.parent), prefix='.moonground-snapshot-', delete=False) as stream:
                     temporary = Path(stream.name)
                 with contextlib.closing(sqlite3.connect(str(temporary), isolation_level=None)) as target:
@@ -575,7 +576,10 @@ def _snapshot(source_path, destination, max_state_mib, timeout, expected_digest=
                             raise ValueError('snapshot exceeds the requested database budget')
                     source.backup(target, pages=256, progress=progress, sleep=0.02)
                     target.execute('BEGIN')
-                    after = _inspect(target, check, max_state_mib)
+                    for pragma in ['application_id', 'user_version']:
+                        if source.execute('PRAGMA '+pragma).fetchone() != target.execute('PRAGMA '+pragma).fetchone():
+                            raise ValueError('snapshot database identity differs from its source')
+                    after = inspect(target, check, max_state_mib)
                     if before != after:
                         raise ValueError('snapshot differs from the committed source state')
             if expected_digest is not None and digest_file(source_path, check) != expected_digest:
@@ -595,6 +599,10 @@ def _snapshot(source_path, destination, max_state_mib, timeout, expected_digest=
                     staged = temporary.with_name(temporary.name + suffix)
                     if staged.exists():
                         staged.unlink()
+
+
+def _snapshot(source_path, destination, max_state_mib, timeout, expected_digest=None):
+    return _database_snapshot(source_path, destination, max_state_mib, timeout, _connect, _inspect, expected_digest)
 
 
 def backup(state_path, destination, max_state_mib=256, timeout=60.0):
@@ -798,6 +806,26 @@ class _EvaluationWriter:
         return digest
 
 
+def _evaluation_summary(connection, head):
+    number, digest, payload = head
+    parent = connection.execute('SELECT parent_sha256 FROM evaluations WHERE sequence=?', (number,)).fetchone() if payload else None
+    latest = _evaluation_document(payload, number, parent[0]) if payload else None
+    source = latest['measurement_source'] if latest else {}
+    return dict(kind='evaluation_state', version=1, integrity='ok', records=str(number),
+                latest_sha256=digest, latest_frames=str(source['frames']) if latest else None,
+                last_timestamp_us=source.get('last_timestamp_us'), complete=source.get('complete'),
+                input_sha256=source.get('input_sha256'), binary_sha256=source.get('binary_sha256'),
+                evaluation_binary_sha256=latest.get('binary_sha256') if latest else None,
+                adapter_sha256=latest.get('adapter_sha256') if latest else None,
+                logical_state_bytes=connection.execute('PRAGMA page_count').fetchone()[0]*connection.execute('PRAGMA page_size').fetchone()[0])
+
+
+def _evaluation_snapshot_info(connection, check, max_state_mib):
+    report = _evaluation_summary(connection, _evaluation_head(connection, check, max_state_mib))
+    check()
+    return report
+
+
 class EvaluationStore:
     """Persist complete evaluation reports independently of the replay database."""
     def __init__(self, path, max_state_mib=256, timeout=60.0):
@@ -832,16 +860,7 @@ class EvaluationStore:
         with _evaluation_errors(), state_lock(self.path), contextlib.closing(_evaluation_connect(self.path)) as connection:
             connection.execute('BEGIN')
             number, digest, payload = _evaluation_head(connection, check, self.max_state_mib)
-            parent = connection.execute('SELECT parent_sha256 FROM evaluations WHERE sequence=?', (number,)).fetchone() if payload else None
-            latest = _evaluation_document(payload, number, parent[0]) if payload else None
-            source = latest['measurement_source'] if latest else {}
-            summary = dict(kind='evaluation_state', version=1, integrity='ok', records=str(number),
-                           latest_sha256=digest, latest_frames=str(source['frames']) if latest else None,
-                           last_timestamp_us=source.get('last_timestamp_us'), complete=source.get('complete'),
-                           input_sha256=source.get('input_sha256'), binary_sha256=source.get('binary_sha256'),
-                           evaluation_binary_sha256=latest.get('binary_sha256') if latest else None,
-                           adapter_sha256=latest.get('adapter_sha256') if latest else None,
-                           logical_state_bytes=connection.execute('PRAGMA page_count').fetchone()[0]*connection.execute('PRAGMA page_size').fetchone()[0])
+            summary = _evaluation_summary(connection, (number, digest, payload))
             if sequence is not None:
                 if type(sequence) is not int or not 1 <= sequence <= number:
                     raise ValueError('evaluation sequence is not present')
@@ -881,6 +900,27 @@ class EvaluationStore:
             if temporary is not None and temporary.exists():
                 temporary.unlink()
         return dict(sequence=str(sequence) if sequence is not None else summary['records'], sha256=digest, bytes=len(payload))
+
+    def backup(self, destination, expected_report_sha256=None):
+        if expected_report_sha256 is not None:
+            if type(expected_report_sha256) is not str or len(expected_report_sha256) != 64 or any(c not in '0123456789abcdefABCDEF' for c in expected_report_sha256):
+                raise ValueError('expected report SHA-256 must contain 64 hexadecimal digits')
+            expected_report_sha256 = expected_report_sha256.lower()
+        def inspect(connection, check, budget):
+            report = _evaluation_snapshot_info(connection, check, budget)
+            if expected_report_sha256 is not None and report['latest_sha256'] != expected_report_sha256:
+                raise ValueError('evaluation head differs from the expected report SHA-256')
+            return report
+        with _evaluation_errors():
+            return _database_snapshot(self.path, destination, self.max_state_mib, self.timeout,
+                                      _evaluation_connect, inspect)
+
+    def restore(self, backup_path, sha256):
+        if type(sha256) is not str or len(sha256) != 64 or any(c not in '0123456789abcdefABCDEF' for c in sha256):
+            raise ValueError('restore requires the evaluation backup SHA-256 checksum')
+        with _evaluation_errors():
+            return _database_snapshot(backup_path, self.path, self.max_state_mib, self.timeout,
+                                      _evaluation_connect, _evaluation_snapshot_info, sha256.lower())
 
 
 def add_state_arguments(parser):
@@ -930,11 +970,26 @@ def main(argv=None):
     evaluation_export.add_argument('--output', type=Path, required=True)
     evaluation_export.add_argument('--sequence', type=int)
     evaluation_export.add_argument('--replace-existing', action='store_true')
+    evaluation_backup = commands.add_parser('evaluation-backup')
+    add_evaluation_state_arguments(evaluation_backup)
+    evaluation_backup.add_argument('--output', type=Path, required=True)
+    evaluation_backup.add_argument('--expected-report-sha256')
+    evaluation_restore = commands.add_parser('evaluation-restore')
+    add_evaluation_state_arguments(evaluation_restore)
+    evaluation_restore.add_argument('--backup', type=Path, required=True)
+    evaluation_restore.add_argument('--sha256', required=True)
     args = parser.parse_args(argv)
     try:
-        if args.command in ('evaluation-status', 'evaluation-export'):
+        if args.command in ('evaluation-status', 'evaluation-export', 'evaluation-backup', 'evaluation-restore'):
             store = EvaluationStore(args.evaluation_state, args.max_evaluation_mib, args.evaluation_timeout)
-            value = store.status() if args.command == 'evaluation-status' else store.export(args.output, args.sequence, args.replace_existing)
+            if args.command == 'evaluation-status':
+                value = store.status()
+            elif args.command == 'evaluation-export':
+                value = store.export(args.output, args.sequence, args.replace_existing)
+            elif args.command == 'evaluation-backup':
+                value = store.backup(args.output, args.expected_report_sha256)
+            else:
+                value = store.restore(args.backup, args.sha256)
         elif args.command == 'run':
             value = replay(args.binary, args.input, args.state, args.batch_frames, args.batch_bytes,
                            args.max_state_mib, args.timeout_seconds, args.max_frames)
