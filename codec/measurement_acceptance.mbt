@@ -96,7 +96,7 @@ pub fn MeasurementAcceptanceReplay::open(
   let fields = object(document, "measurement acceptance configuration")
   allowed_fields(
     fields,
-    ["session_id", "max_tracks", "max_samples", "requirements"],
+    ["session_id", "max_tracks", "max_samples", "requirements", "resume"],
     "measurement acceptance configuration",
   )
   let requirements = object(required(fields, "requirements"), "requirements")
@@ -153,8 +153,9 @@ pub fn MeasurementAcceptanceReplay::accepted(
 
 ///|
 /// Pure bounded batch with the same explicit requirements as the native stream.
-pub fn measurement_acceptance_json(
+fn measurement_acceptance_batch(
   source : String,
+  checkpoint~ : Bool,
 ) -> String raise @types.GroundError {
   let fields = object(
     parse_checkpoint_document(source, max_units=16777216),
@@ -180,5 +181,23 @@ pub fn measurement_acceptance_json(
   for line in lines {
     replay.process_line(line.to_owned())
   }
-  replay.report_json()
+  if checkpoint {
+    replay.report_with_checkpoint_json()
+  } else {
+    replay.report_json()
+  }
+}
+
+///|
+pub fn measurement_acceptance_json(
+  source : String,
+) -> String raise @types.GroundError {
+  measurement_acceptance_batch(source, checkpoint=false)
+}
+
+///|
+pub fn measurement_acceptance_checkpoint_json(
+  source : String,
+) -> String raise @types.GroundError {
+  measurement_acceptance_batch(source, checkpoint=true)
 }

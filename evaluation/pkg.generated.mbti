@@ -53,6 +53,15 @@ pub struct AccuracyRequirements {
 pub fn AccuracyRequirements::new(min_samples~ : Int32, min_coverage~ : Double, max_mae? : Double, max_rmse? : Double, max_error? : Double) -> Self raise @types.GroundError
 pub fn AccuracyRequirements::to_repr(Self) -> @debug.Repr
 
+pub(all) struct ErrorAccumulatorCheckpoint {
+  samples : Int32
+  mean_absolute : Double
+  scale : Double
+  scaled_squares : Double
+  maximum : Double
+} derive(@debug.Debug)
+pub fn ErrorAccumulatorCheckpoint::to_repr(Self) -> @debug.Repr
+
 pub struct ErrorStatistics {
   samples : Int32
   mean_absolute_error : Double?
@@ -61,7 +70,22 @@ pub struct ErrorStatistics {
 } derive(@debug.Debug)
 pub fn ErrorStatistics::to_repr(Self) -> @debug.Repr
 
-pub struct EvaluationCounts {
+pub(all) struct EvaluationCheckpoint {
+  version : Int32
+  session_id : String
+  max_tracks : Int32
+  max_samples : Int32
+  counts : EvaluationCounts
+  first_timestamp_us : Int64?
+  last_timestamp_us : Int64?
+  position : ErrorAccumulatorCheckpoint
+  speed : ErrorAccumulatorCheckpoint
+  position_bias_m : @types.Point2
+  speed_bias_mps : Double
+} derive(@debug.Debug)
+pub fn EvaluationCheckpoint::to_repr(Self) -> @debug.Repr
+
+pub(all) struct EvaluationCounts {
   frames : Int64
   references : Int32
   speed_references : Int32
@@ -95,7 +119,9 @@ pub struct EvaluationSession {
   // private fields
 }
 pub fn EvaluationSession::assess(Self, position? : AccuracyRequirements, speed? : AccuracyRequirements) -> AcceptanceReport raise @types.GroundError
+pub fn EvaluationSession::checkpoint(Self) -> EvaluationCheckpoint
 pub fn EvaluationSession::fork(Self) -> Self
+pub fn EvaluationSession::from_checkpoint(EvaluationCheckpoint) -> Self raise @types.GroundError
 pub fn EvaluationSession::new(String, max_tracks? : Int32, max_samples? : Int32) -> Self raise @types.GroundError
 pub fn EvaluationSession::report(Self) -> EvaluationReport
 pub fn EvaluationSession::update(Self, @motion.FrameResult, Int64, Array[ReferenceSample], projection_failures? : Array[Int32]) -> EvaluationReport raise @types.GroundError

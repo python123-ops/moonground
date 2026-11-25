@@ -18,6 +18,8 @@ options(
         "moonground_calibration_line_offset",
         "moonground_measurement_evaluation",
         "moonground_measurement_acceptance",
+        "moonground_measurement_evaluation_checkpoint",
+        "moonground_measurement_acceptance_checkpoint",
         "moonground_create",
         "moonground_update",
         "moonground_close",

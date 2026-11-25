@@ -42,7 +42,7 @@ pub extend ErrorStatistics with @debug.Debug::{to_repr}
 ///|
 /// Status counts concern reference samples. Measurements without a reference
 /// are counted separately and never enter accuracy or availability denominators.
-pub struct EvaluationCounts {
+pub(all) struct EvaluationCounts {
   frames : Int64
   references : Int32
   speed_references : Int32

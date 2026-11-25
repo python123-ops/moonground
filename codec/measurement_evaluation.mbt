@@ -66,7 +66,7 @@ pub fn MeasurementEvaluationReplay::open(
   let fields = object(document, "measurement evaluation configuration")
   allowed_fields(
     fields,
-    ["session_id", "max_tracks", "max_samples"],
+    ["session_id", "max_tracks", "max_samples", "resume"],
     "measurement evaluation configuration",
   )
   measurement_evaluator(fields)
@@ -76,6 +76,18 @@ pub fn MeasurementEvaluationReplay::open(
 fn measurement_evaluator(
   fields : Map[String, Json],
 ) -> MeasurementEvaluationReplay raise @types.GroundError {
+  if fields.get("resume") is Some(value) {
+    for name in ["session_id", "max_tracks", "max_samples"] {
+      if fields.contains(name) {
+        raise invalid("evaluation resume cannot override identity or capacity")
+      }
+    }
+    let checkpoint = evaluation_checkpoint(value)
+    return {
+      evaluator: @evaluation.EvaluationSession::from_checkpoint(checkpoint),
+      max_tracks: checkpoint.max_tracks,
+    }
+  }
   let max_tracks = match fields.get("max_tracks") {
     Some(value) => positive_int(value, "max_tracks")
     None => 4096
@@ -157,8 +169,9 @@ pub fn MeasurementEvaluationReplay::report_json(
 ///|
 /// Pure bounded adapter for JavaScript and short replay batches. Native CLI
 /// evaluates the same per-line protocol without retaining the whole input.
-pub fn measurement_evaluation_json(
+fn measurement_evaluation_batch(
   source : String,
+  checkpoint~ : Bool,
 ) -> String raise @types.GroundError {
   let fields = object(
     parse_checkpoint_document(source, max_units=16777216),
@@ -188,5 +201,23 @@ pub fn measurement_evaluation_json(
   for line in lines {
     replay.process_line(line.to_owned())
   }
-  replay.report_json()
+  if checkpoint {
+    replay.report_with_checkpoint_json()
+  } else {
+    replay.report_json()
+  }
+}
+
+///|
+pub fn measurement_evaluation_json(
+  source : String,
+) -> String raise @types.GroundError {
+  measurement_evaluation_batch(source, checkpoint=false)
+}
+
+///|
+pub fn measurement_evaluation_checkpoint_json(
+  source : String,
+) -> String raise @types.GroundError {
+  measurement_evaluation_batch(source, checkpoint=true)
 }
