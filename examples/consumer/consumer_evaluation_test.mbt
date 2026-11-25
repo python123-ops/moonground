@@ -82,3 +82,22 @@ test "consumer applies explicit accuracy requirements without accepting empty da
   assert_eq(result.checks[1].actual, None)
   assert_eq(requirements.max_rmse, Some(0.1))
 }
+///|
+test "registry consumer restores complete evaluation state with exact times" {
+  let session = @evaluation.EvaluationSession::new("consumer-checkpoint")
+  let saved = session.checkpoint()
+  let restored = @evaluation.EvaluationSession::from_checkpoint(saved)
+  let result = restored.update({ session_id: "consumer-checkpoint",
+    timestamp_us: 9007199254740993L, tracks: [], closed_segment_ids: [] },
+    9007199254740993L, [])
+  assert_eq(result.counts.frames, 1L)
+  assert_eq(restored.checkpoint().last_timestamp_us, Some(9007199254740993L))
+  assert_eq(saved.counts.frames, 0L)
+}
+
+///|
+test "registry consumer uses strict raw evaluation resume headers" {
+  let first = @codec.MeasurementEvaluationReplay::open("{\"session_id\":\"consumer-checkpoint\"}")
+  let restored = @codec.MeasurementEvaluationReplay::open(first.checkpoint_json())
+  assert_eq(restored.report_with_checkpoint_json(), first.report_with_checkpoint_json())
+}

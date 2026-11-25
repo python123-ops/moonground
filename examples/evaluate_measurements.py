@@ -18,6 +18,61 @@ import tempfile
 import time
 
 STATE_INPUT_VERSION = 1
+CHECKPOINT_INPUT_VERSION = 1
+
+
+class RawNumber(str):
+    """An original JSON numeric token, distinct from a JSON string."""
+
+
+def exact_json(value):
+    if isinstance(value, RawNumber):
+        return str(value)
+    if isinstance(value, str) or value is None or isinstance(value, bool):
+        return json.dumps(value, ensure_ascii=True, allow_nan=False)
+    if isinstance(value, list):
+        return '['+','.join(exact_json(item) for item in value)+']'
+    if isinstance(value, dict):
+        return '{'+','.join(json.dumps(key,ensure_ascii=True)+':'+exact_json(item)
+                            for key,item in value.items())+'}'
+    raise ValueError('unsupported checkpoint JSON value')
+
+
+def resume_input(path):
+    with path.open('rb') as stream:
+        raw = stream.read(1048577)
+    if len(raw) > 1048576:
+        raise ValueError('resume file exceeds 1048576 bytes')
+    try:
+        document = json.loads(raw.decode('utf-8'),object_pairs_hook=unique_fields,
+                              parse_float=RawNumber,parse_int=RawNumber,parse_constant=invalid_constant)
+        stack = [(document,0)]
+        while stack:
+            value,depth = stack.pop()
+            if depth > 32:
+                raise ValueError('resume JSON exceeds nesting depth 32')
+            if isinstance(value,dict):
+                stack.extend((child,depth+1) for child in value.values())
+            elif isinstance(value,list):
+                stack.extend((child,depth+1) for child in value)
+        checkpoint = document.get('resume') if isinstance(document,dict) else None
+        if not isinstance(checkpoint,dict):
+            raise ValueError('resume file needs a complete evaluation resume object')
+        limits = {}
+        for name in ['max_tracks','max_samples']:
+            token = checkpoint.get(name)
+            if not isinstance(token,RawNumber) or len(token)>10 or not token.isascii() or not token.isdecimal():
+                raise ValueError('resume capacity must be a positive integer')
+            limits[name] = int(token)
+        session_id = checkpoint.get('session_id')
+        if type(session_id) is not str or not session_id:
+            raise ValueError('resume session_id must be a nonempty string')
+        encoded = exact_json(checkpoint).encode('utf-8')
+        if len(encoded) > 16384:
+            raise ValueError('evaluation checkpoint exceeds 16384 bytes')
+        return encoded,session_id,limits,hashlib.sha256(raw).hexdigest()
+    except RecursionError as error:
+        raise ValueError('resume JSON nesting is too deep') from error
 
 
 def unique_fields(pairs):
@@ -145,7 +200,9 @@ def align(measured_file, reference_file, aligned, args, requirements):
         session_id = measured[1].get('session_id')
     if not isinstance(session_id, str) or not session_id:
         raise ValueError('provide --session-id when the measurement log is empty')
-    header = encode(dict(session_id=session_id, max_tracks=args.max_tracks, max_samples=args.max_samples))
+    header = getattr(args,'resume_header',None)
+    if header is None:
+        header = encode(dict(session_id=session_id, max_tracks=args.max_tracks, max_samples=args.max_samples))
     if requirements is not None:
         header = header[:-1]+b',"requirements":'+requirements+b'}'
     aligned.write(header+b'\n')
@@ -170,12 +227,34 @@ def align(measured_file, reference_file, aligned, args, requirements):
 
 
 def evaluate(args, measurement_source=None):
+    args = argparse.Namespace(**vars(args))
     requirements_path = getattr(args, 'requirements', None)
     inputs = [args.references, args.binary, Path(__file__)]
     inputs += measurement_source.protected_paths if measurement_source is not None else [args.measurements]
     if requirements_path is not None:
         inputs.append(requirements_path)
+    resume_path = getattr(args,'resume',None)
+    if resume_path is not None:
+        inputs.append(resume_path)
     check_destination(args.output, inputs)
+    resume_hash = None
+    checkpoint_mode = getattr(args,'checkpoint',False) or resume_path is not None
+    if resume_path is not None:
+        if measurement_source is not None:
+            raise ValueError('--resume needs subsequent log chunks, not a complete replay database')
+        raw_checkpoint,session_id,limits,resume_hash = resume_input(resume_path)
+        if args.session_id is not None and args.session_id != session_id:
+            raise ValueError('resume session_id differs from the requested session')
+        args.session_id = session_id
+        for name,value in limits.items():
+            if getattr(args,name) is not None and getattr(args,name) != value:
+                raise ValueError('resume capacity differs from the requested '+name)
+            setattr(args,name,value)
+        args.resume_header = b'{"resume":'+raw_checkpoint+b'}'
+    if args.max_tracks is None:
+        args.max_tracks = 4096
+    if args.max_samples is None:
+        args.max_samples = 10000000
     raw_requirements, requirements = None, None
     if requirements_path is not None:
         with requirements_path.open('rb') as stream:
@@ -194,7 +273,8 @@ def evaluate(args, measurement_source=None):
                 raise ValueError('measurement stream differs from the checked replay snapshot')
         # Release the read transaction and replay lock before native calculation.
         aligned.seek(0)
-        command = [str(args.binary.resolve()), '--accept-measurements' if raw_requirements is not None else '--evaluate-measurements',
+        mode = '--accept-measurements' if raw_requirements is not None else '--evaluate-measurements'
+        command = [str(args.binary.resolve()), mode+('-checkpoint' if checkpoint_mode else ''),
                    '--max-line-bytes', str(args.max_line_bytes)]
         process = subprocess.run(command, stdin=aligned, stdout=output, stderr=subprocess.PIPE,
                                  timeout=args.timeout)
@@ -202,6 +282,11 @@ def evaluate(args, measurement_source=None):
             raise ValueError('MoonGround evaluation failed: ' + process.stderr.decode('utf-8', 'replace').strip())
         output.seek(0)
         report = json.loads(output.read().decode('utf-8'), parse_constant=invalid_constant)
+        next_checkpoint = None
+        if checkpoint_mode:
+            if set(report) != {'report','resume'} or not isinstance(report['resume'],dict):
+                raise ValueError('native evaluation checkpoint envelope is incomplete')
+            next_checkpoint, report = report['resume'], report['report']
         if raw_requirements is not None and (report.get('kind') != 'measurement_acceptance' or
                 type(report.get('accepted')) is not bool or process.returncode != (0 if report['accepted'] else 3)):
             raise ValueError('native acceptance decision and exit status disagree')
@@ -217,6 +302,11 @@ def evaluate(args, measurement_source=None):
                 elapsed_seconds=time.perf_counter() - started)
     if source_info is not None:
         result['measurement_source'] = source_info
+    if checkpoint_mode:
+        result['resume'] = next_checkpoint
+        result['alignment_scope'] = 'current_inputs'
+    if resume_hash is not None:
+        result['inputs']['resume_sha256'] = resume_hash
     if raw_requirements is not None:
         result['kind'] = 'measurement_acceptance_run'
         result['acceptance'] = {key: report[key] for key in ['accepted', 'requirements', 'checks']}
@@ -247,15 +337,18 @@ def main(argv=None, measurement_source=None):
     parser.add_argument('--references', type=Path, required=True)
     parser.add_argument('--requirements', type=Path,
                         help='explicit position_m/speed_mps JSON requirements; unmet checks return exit status 3')
+    parser.add_argument('--checkpoint',action='store_true',help='include complete evaluation continuation state in the report')
+    parser.add_argument('--resume',type=Path,help='continue from a checkpoint report using later, disjoint log chunks')
     parser.add_argument('--session-id')
     parser.add_argument('--output', type=Path)
-    parser.add_argument('--max-tracks', type=int, default=4096)
-    parser.add_argument('--max-samples', type=int, default=10000000)
+    parser.add_argument('--max-tracks', type=int)
+    parser.add_argument('--max-samples', type=int)
     parser.add_argument('--max-line-bytes', type=int, default=1048576)
     parser.add_argument('--timeout', type=float, default=300.0,
                         help='native evaluator time limit in seconds, after joining input logs')
     args = parser.parse_args(argv)
-    if not (1 <= args.max_tracks <= 4096 and 1 <= args.max_samples <= 2147483647 and
+    if not ((args.max_tracks is None or 1 <= args.max_tracks <= 4096) and
+            (args.max_samples is None or 1 <= args.max_samples <= 2147483647) and
             1 <= args.max_line_bytes <= 16777216 and 0.0 < args.timeout < float('inf')):
         parser.error('invalid evaluation capacity or timeout')
     try:

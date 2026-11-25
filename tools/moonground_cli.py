@@ -462,11 +462,11 @@ def job_module(root, capabilities=()):
     raise ValueError('installed releases do not contain the requested replay or state recovery support')
 
 
-def evaluation_module(root, capabilities=()):
+def evaluation_module(root, capabilities=(), selected_only=False):
     state = selection(root)
     if state is None:
         raise ValueError('install a CLI release with log evaluation support first')
-    for slot in [state['active'], state['previous']]:
+    for slot in ([state['active']] if selected_only else [state['active'], state['previous']]):
         if slot is None:
             continue
         value, path = installed(root, slot)
@@ -501,10 +501,12 @@ def main():
     evaluate.add_argument('--state-timeout', type=float, default=60.0)
     evaluate.add_argument('--references', required=True)
     evaluate.add_argument('--requirements')
+    evaluate.add_argument('--checkpoint',action='store_true')
+    evaluate.add_argument('--resume')
     evaluate.add_argument('--session-id')
     evaluate.add_argument('--output')
-    evaluate.add_argument('--max-tracks', type=int, default=4096)
-    evaluate.add_argument('--max-samples', type=int, default=10000000)
+    evaluate.add_argument('--max-tracks', type=int)
+    evaluate.add_argument('--max-samples', type=int)
     evaluate.add_argument('--max-line-bytes', type=int, default=1048576)
     evaluate.add_argument('--timeout', type=float, default=300.0)
     replay = commands.add_parser('replay', help='persist measurement results and checkpoints together')
@@ -538,6 +540,8 @@ def main():
         if args.command == 'evaluate':
             if args.allow_partial and args.state is None:
                 raise ValueError('--allow-partial requires --state')
+            if args.resume is not None and args.state is not None:
+                raise ValueError('--resume needs later log chunks, not --state')
             if args.output is not None:
                 destination = Path(args.output).absolute()
                 destination = destination.parent.resolve()/destination.name
@@ -549,16 +553,20 @@ def main():
             value, path = installed(root, state['active'])
             if args.requirements is not None and 'evaluate_measurements.py' not in value['files']:
                 raise ValueError('select a CLI release with measurement acceptance support')
-            module = evaluation_module(root, ('STATE_INPUT_VERSION',) if args.state is not None else ())
+            checkpoint_mode = args.checkpoint or args.resume is not None
+            capabilities = ('CHECKPOINT_INPUT_VERSION',) if checkpoint_mode else ('STATE_INPUT_VERSION',) if args.state is not None else ()
+            module = evaluation_module(root, capabilities, selected_only=checkpoint_mode)
             measurement_source = None
             if args.state is not None:
                 support = job_module(root, ('MeasurementSource',))
                 measurement_source = support.MeasurementSource(Path(args.state), args.allow_partial,
                                                                args.max_state_mib, args.state_timeout)
             options = ['--binary', str(path/value['executable'])]
-            for name in ['measurements', 'references', 'requirements', 'session_id', 'output', 'max_tracks', 'max_samples', 'max_line_bytes', 'timeout']:
+            for name in ['measurements', 'references', 'requirements', 'resume', 'session_id', 'output', 'max_tracks', 'max_samples', 'max_line_bytes', 'timeout']:
                 if getattr(args, name) is not None:
                     options += ['--'+name.replace('_','-'), str(getattr(args, name))]
+            if args.checkpoint:
+                options += ['--checkpoint']
             return module.main(options, measurement_source=measurement_source) if args.state is not None else module.main(options)
         if args.command in ('replay', 'job-status', 'job-export', 'job-verify', 'job-backup', 'job-restore'):
             capabilities = ('verify', 'backup', 'restore') if args.command in ('job-verify', 'job-backup', 'job-restore') else ()

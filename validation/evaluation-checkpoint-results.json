@@ -1,0 +1,501 @@
+{
+  "status": "passed",
+  "data_scope": "synthetic_metric_references",
+  "numerical_cases": [
+    {
+      "name": "empty",
+      "cut": 0,
+      "frames": 0,
+      "passed": true
+    },
+    {
+      "name": "unreferenced",
+      "cut": 0,
+      "frames": 1,
+      "passed": true
+    },
+    {
+      "name": "unreferenced",
+      "cut": 1,
+      "frames": 1,
+      "passed": true
+    },
+    {
+      "name": "all-missing",
+      "cut": 0,
+      "frames": 1,
+      "passed": true
+    },
+    {
+      "name": "all-missing",
+      "cut": 1,
+      "frames": 1,
+      "passed": true
+    },
+    {
+      "name": "no-speed-reference",
+      "cut": 0,
+      "frames": 1,
+      "passed": true
+    },
+    {
+      "name": "no-speed-reference",
+      "cut": 1,
+      "frames": 1,
+      "passed": true
+    },
+    {
+      "name": "hand-calculated",
+      "cut": 0,
+      "frames": 2,
+      "passed": true
+    },
+    {
+      "name": "hand-calculated",
+      "cut": 1,
+      "frames": 2,
+      "passed": true
+    },
+    {
+      "name": "hand-calculated",
+      "cut": 2,
+      "frames": 2,
+      "passed": true
+    },
+    {
+      "name": "all-statuses",
+      "cut": 0,
+      "frames": 1,
+      "passed": true
+    },
+    {
+      "name": "all-statuses",
+      "cut": 1,
+      "frames": 1,
+      "passed": true
+    },
+    {
+      "name": "exact-clocks",
+      "cut": 0,
+      "frames": 3,
+      "passed": true
+    },
+    {
+      "name": "exact-clocks",
+      "cut": 1,
+      "frames": 3,
+      "passed": true
+    },
+    {
+      "name": "exact-clocks",
+      "cut": 3,
+      "frames": 3,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1e-200",
+      "cut": 0,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1e-200",
+      "cut": 1,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1e-200",
+      "cut": 20,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1e-200",
+      "cut": 40,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1e+200",
+      "cut": 0,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1e+200",
+      "cut": 1,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1e+200",
+      "cut": 20,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1e+200",
+      "cut": 40,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1.0",
+      "cut": 0,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1.0",
+      "cut": 1,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1.0",
+      "cut": 20,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "random-scale-1.0",
+      "cut": 40,
+      "frames": 40,
+      "passed": true
+    },
+    {
+      "name": "cancelling-extreme-bias",
+      "cut": 0,
+      "frames": 4,
+      "passed": true
+    },
+    {
+      "name": "cancelling-extreme-bias",
+      "cut": 1,
+      "frames": 4,
+      "passed": true
+    },
+    {
+      "name": "cancelling-extreme-bias",
+      "cut": 2,
+      "frames": 4,
+      "passed": true
+    },
+    {
+      "name": "cancelling-extreme-bias",
+      "cut": 4,
+      "frames": 4,
+      "passed": true
+    },
+    {
+      "name": "maximum-wire-frame",
+      "cut": 0,
+      "frames": 1,
+      "passed": true
+    },
+    {
+      "name": "maximum-wire-frame",
+      "cut": 1,
+      "frames": 1,
+      "passed": true
+    },
+    {
+      "name": "native-10000-frame-accumulation",
+      "cut": 0,
+      "frames": 10000,
+      "passed": true
+    },
+    {
+      "name": "native-10000-frame-accumulation",
+      "cut": 1,
+      "frames": 10000,
+      "passed": true
+    },
+    {
+      "name": "native-10000-frame-accumulation",
+      "cut": 5000,
+      "frames": 10000,
+      "passed": true
+    },
+    {
+      "name": "native-10000-frame-accumulation",
+      "cut": 10000,
+      "frames": 10000,
+      "passed": true
+    }
+  ],
+  "statistics": {
+    "scalars": 96,
+    "exact_fields": 303,
+    "maximum_tolerance_fraction": 0.0002002493066701717,
+    "maximum_absolute_error_by_unit": {
+      "m": 2.236321950335319e+184,
+      "mps": 6.195739965109914e+182,
+      "dimensionless": 2.3790493384824782e-17
+    }
+  },
+  "checks": 222,
+  "max_checkpoint_bytes": 805,
+  "protocol_cases": [
+    {
+      "name": "invalid-version-2",
+      "passed": true
+    },
+    {
+      "name": "invalid-session_id-",
+      "passed": true
+    },
+    {
+      "name": "invalid-max_tracks-0",
+      "passed": true
+    },
+    {
+      "name": "invalid-max_tracks-4097",
+      "passed": true
+    },
+    {
+      "name": "invalid-max_samples-0",
+      "passed": true
+    },
+    {
+      "name": "invalid-first_timestamp_us-None",
+      "passed": true
+    },
+    {
+      "name": "invalid-last_timestamp_us--1",
+      "passed": true
+    },
+    {
+      "name": "invalid-first_timestamp_us-1",
+      "passed": true
+    },
+    {
+      "name": "invalid-position_bias_m-[1e+308, 0]",
+      "passed": true
+    },
+    {
+      "name": "invalid-speed_bias_mps-1e+308",
+      "passed": true
+    },
+    {
+      "name": "invalid-extra-0",
+      "passed": true
+    },
+    {
+      "name": "invalid-count-references-2",
+      "passed": true
+    },
+    {
+      "name": "invalid-count-speed_references-2",
+      "passed": true
+    },
+    {
+      "name": "invalid-count-measurements-0",
+      "passed": true
+    },
+    {
+      "name": "invalid-count-without_reference-1",
+      "passed": true
+    },
+    {
+      "name": "invalid-count-ready-0",
+      "passed": true
+    },
+    {
+      "name": "invalid-count-missing-1",
+      "passed": true
+    },
+    {
+      "name": "invalid-count-initializing--1",
+      "passed": true
+    },
+    {
+      "name": "invalid-count-frames-0",
+      "passed": true
+    },
+    {
+      "name": "invalid-count-frames-1",
+      "passed": true
+    },
+    {
+      "name": "invalid-accumulator-samples-0",
+      "passed": true
+    },
+    {
+      "name": "invalid-accumulator-scale--1",
+      "passed": true
+    },
+    {
+      "name": "invalid-accumulator-maximum-1",
+      "passed": true
+    },
+    {
+      "name": "invalid-accumulator-scaled_squares-0",
+      "passed": true
+    },
+    {
+      "name": "invalid-accumulator-scaled_squares-2",
+      "passed": true
+    },
+    {
+      "name": "invalid-accumulator-mean_absolute-6",
+      "passed": true
+    },
+    {
+      "name": "missing-version",
+      "passed": true
+    },
+    {
+      "name": "missing-session_id",
+      "passed": true
+    },
+    {
+      "name": "missing-max_tracks",
+      "passed": true
+    },
+    {
+      "name": "missing-max_samples",
+      "passed": true
+    },
+    {
+      "name": "missing-first_timestamp_us",
+      "passed": true
+    },
+    {
+      "name": "missing-last_timestamp_us",
+      "passed": true
+    },
+    {
+      "name": "missing-counts",
+      "passed": true
+    },
+    {
+      "name": "missing-position",
+      "passed": true
+    },
+    {
+      "name": "missing-speed",
+      "passed": true
+    },
+    {
+      "name": "missing-position_bias_m",
+      "passed": true
+    },
+    {
+      "name": "missing-speed_bias_mps",
+      "passed": true
+    },
+    {
+      "name": "resume-cannot-override-session_id",
+      "passed": true
+    },
+    {
+      "name": "resume-cannot-override-max_tracks",
+      "passed": true
+    },
+    {
+      "name": "resume-cannot-override-max_samples",
+      "passed": true
+    },
+    {
+      "name": "raw-duplicate",
+      "passed": true
+    },
+    {
+      "name": "raw-underflow",
+      "passed": true
+    },
+    {
+      "name": "raw-rounded-fraction",
+      "passed": true
+    },
+    {
+      "name": "raw-overflow",
+      "passed": true
+    },
+    {
+      "name": "overlap-and-late-duplicate-have-no-summary-or-checkpoint",
+      "passed": true
+    }
+  ],
+  "file_adapter_cases": [
+    {
+      "name": "file-report-contains-complete-state-and-custom-capacities",
+      "passed": true
+    },
+    {
+      "name": "failed-acceptance-report-still-contains-valid-continuation-state",
+      "passed": true
+    },
+    {
+      "name": "next-log-chunk-restores-capacities-and-cumulative-metrics",
+      "passed": true
+    },
+    {
+      "name": "resume-cannot-change-session-or-capacity",
+      "passed": true
+    },
+    {
+      "name": "resume-input-cannot-be-replaced-by-the-new-report",
+      "passed": true
+    },
+    {
+      "name": "overlapping-log-chunk-preserves-both-existing-reports",
+      "passed": true
+    },
+    {
+      "name": "empty-continuation-keeps-the-original-population",
+      "passed": true
+    },
+    {
+      "name": "file-rejects-summary-only-without-replacing-report",
+      "passed": true
+    },
+    {
+      "name": "file-rejects-duplicate-without-replacing-report",
+      "passed": true
+    },
+    {
+      "name": "file-rejects-underflow-without-replacing-report",
+      "passed": true
+    },
+    {
+      "name": "file-rejects-too-large-without-replacing-report",
+      "passed": true
+    },
+    {
+      "name": "installed-evaluate-checkpoint-and-resume-use-the-native-state",
+      "passed": true
+    },
+    {
+      "name": "database-snapshot-can-export-a-checkpoint-but-cannot-be-reprocessed-as-a-later-chunk",
+      "passed": true
+    },
+    {
+      "name": "checkpoint-helper-loading-preserves-immutable-version-slots",
+      "passed": true
+    }
+  ],
+  "binary_sha256": "7318f3ddbaaef338c0449ab359f5d3c6d8fa8600d40a64c2ec6c2f327887e199",
+  "source_sha256": "e8c0f2a0ed86b8acd90262cf689f42b657f55c7273c84f054512408902a3a3bb",
+  "reference_sha256": "8c5e787fc1a1a152efc1f9a1355793c9a27ff85d129faaab3797b166150c670a",
+  "acceptance_reference_sha256": "713d9516f821ccc09adf4a43a9b4f48ba4a543831f5262ac3504852b441ff0a9",
+  "adapter_sha256": "aae458c0d2d1949cd152879693fc3e3a24ba3bac4b05754b2771a667f4badc50",
+  "manager_sha256": "b2d5541b33d5d146c25d50e5901dbe999a07cc5d5a4697d19418a45b1c3934bd",
+  "runner_sha256": "cd7f78dfaa87f1c27c9b646e3172770ce6ece7fc872c922322fd60caa7d667c5",
+  "support_sha256": "56d356ccce7aea76add41922eaaa7929f5c1e054033f7d73d3481436a193e405",
+  "python": "3.8.7",
+  "decimal_precision": 160,
+  "seed": 20261122,
+  "command": "python validation/evaluation_checkpoint_verify.py --binary _build/native/release/build/cmd/main/main.exe --web --output validation/evaluation-checkpoint-results.json",
+  "web_interchange": {
+    "status": "passed",
+    "summary": {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0
+    },
+    "source_sha256": "1ef771c58b9b882d088553415dc8b911f84a9f86efc8e0f8bbc7bf1125e0dc35"
+  }
+}
