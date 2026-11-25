@@ -1,0 +1,193 @@
+{
+  "status": "passed",
+  "cases": [
+    {
+      "name": "state-mode-must-explicitly-select-the-committed-reference-window",
+      "passed": true
+    },
+    {
+      "name": "failed-acceptance-still-commits-a-complete-initial-report-and-checkpoint",
+      "passed": true
+    },
+    {
+      "name": "export-preserves-every-original-report-byte",
+      "passed": true
+    },
+    {
+      "name": "later-call-automatically-restores-capacity-and-calculates-only-new-commits",
+      "passed": true
+    },
+    {
+      "name": "cumulative-acceptance-and-native-checkpoint-match-a-fresh-calculation",
+      "passed": true
+    },
+    {
+      "name": "earlier-generations-remain-exportable-after-later-commits",
+      "passed": true
+    },
+    {
+      "name": "historical-reference-changes-keep-the-last-committed-evaluation-and-output",
+      "passed": true
+    },
+    {
+      "name": "failed-first-calculation-leaves-an-empty-state-that-can-be-retried",
+      "passed": true
+    },
+    {
+      "name": "one-evaluation-writer-holds-the-state-until-publication-finishes",
+      "passed": true
+    },
+    {
+      "name": "output-save-failure-leaves-a-recoverable-commit-and-does-not-repeat-samples",
+      "passed": true
+    },
+    {
+      "name": "forced-process-death-before-commit-recovers-the-correct-generation",
+      "passed": true
+    },
+    {
+      "name": "forced-process-death-after-commit-recovers-the-correct-generation",
+      "passed": true
+    },
+    {
+      "name": "generation-comparison-rejects-a-state-changed-during-calculation",
+      "passed": true
+    },
+    {
+      "name": "writer-rejects-a-different-replay-before-creating-a-record",
+      "passed": true
+    },
+    {
+      "name": "native-calculation-time-does-not-consume-the-next-storage-phase-budget",
+      "passed": true
+    },
+    {
+      "name": "expired-inspection-budget-preserves-committed-records",
+      "passed": true
+    },
+    {
+      "name": "reject-digest-without-publishing-a-new-report",
+      "passed": true
+    },
+    {
+      "name": "reject-parent-without-publishing-a-new-report",
+      "passed": true
+    },
+    {
+      "name": "reject-missing-generation-without-publishing-a-new-report",
+      "passed": true
+    },
+    {
+      "name": "reject-foreign-application-without-publishing-a-new-report",
+      "passed": true
+    },
+    {
+      "name": "reject-future-version-without-publishing-a-new-report",
+      "passed": true
+    },
+    {
+      "name": "reject-extra-table-without-publishing-a-new-report",
+      "passed": true
+    },
+    {
+      "name": "reject-self-checksummed-duplicate-field",
+      "passed": true
+    },
+    {
+      "name": "reject-self-checksummed-numeric-underflow",
+      "passed": true
+    },
+    {
+      "name": "reject-self-checksummed-numeric-watermark",
+      "passed": true
+    },
+    {
+      "name": "reject-self-checksummed-generation-mismatch",
+      "passed": true
+    },
+    {
+      "name": "reject-self-checksummed-different-replay",
+      "passed": true
+    },
+    {
+      "name": "evaluation-state-cannot-overwrite-replay-or-input-files-and-the-executable",
+      "passed": true
+    },
+    {
+      "name": "reports-cannot-overwrite-evaluation-state-or-its-sidecars",
+      "passed": true
+    },
+    {
+      "name": "state-sidecar-paths-cannot-overlap-reference-inputs",
+      "passed": true
+    },
+    {
+      "name": "manual-resume-and-invalid-storage-budgets-are-rejected",
+      "passed": true
+    },
+    {
+      "name": "preexisting-empty-or-foreign-files-are-not-initialized-as-evaluation-state",
+      "passed": true
+    },
+    {
+      "name": "initialized-database-publication-recovers-before-link",
+      "passed": true
+    },
+    {
+      "name": "initialized-database-publication-recovers-after-link",
+      "passed": true
+    },
+    {
+      "name": "database-budget-exhaustion-rolls-back-the-new-generation",
+      "passed": true
+    },
+    {
+      "name": "larger-budget-resumes-from-the-last-committed-evaluation",
+      "passed": true
+    },
+    {
+      "name": "zero-frame-evaluations-retain-null-watermarks-and-can-be-resumed",
+      "passed": true
+    },
+    {
+      "name": "atomic-export-failure-preserves-existing-output-and-allows-retry",
+      "passed": true
+    },
+    {
+      "name": "export-protects-the-state-input-and-producing-binary",
+      "passed": true
+    },
+    {
+      "name": "missing-generation-does-not-create-an-export-file",
+      "passed": true
+    },
+    {
+      "name": "installed-manager-evaluates-queries-and-exports-verified-storage",
+      "passed": true
+    },
+    {
+      "name": "absent-generation-export-is-a-controlled-error-and-preserves-output",
+      "passed": true
+    },
+    {
+      "name": "manager-protects-its-installation-and-own-script-from-storage-writes",
+      "passed": true
+    },
+    {
+      "name": "all-installed-helper-payloads-remain-immutable",
+      "passed": true
+    }
+  ],
+  "binary_sha256": "300129b5dd3babc5c809461653bb822ba4e0b63c5870b5827edef91b92cb4382",
+  "source_sha256": "2a8062bb7a28bc8655ff1788e23e844c85e6e7c923c15501ee6c9549e9c5d4df",
+  "runner_sha256": "1c6661cd17b799aafb24f599eabe7d28d6b0fb7ef907cfc0949ab70b0e935ee1",
+  "adapter_sha256": "5b12e5f85cd9a8ff22a998d535366077effc7a3e62349918ed3da48765ebb82e",
+  "manager_sha256": "ff51e97ada25de2dd439e194a0376ecd0e3b50b0b2094f2636b40e74c631eb2b",
+  "support_sha256": "56d356ccce7aea76add41922eaaa7929f5c1e054033f7d73d3481436a193e405",
+  "python": "3.8.7",
+  "sqlite_version": "3.33.0",
+  "platform": "Windows-10-10.0.26100-SP0",
+  "forced_commit_crashes": 2,
+  "initialized_publication_failures": 2,
+  "command": "python validation/evaluation_state_verify.py --binary _build/native/release/build/cmd/main/main.exe --output validation/evaluation-state-results.json"
+}
